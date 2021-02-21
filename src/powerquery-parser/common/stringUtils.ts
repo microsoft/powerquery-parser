@@ -12,11 +12,33 @@ export const enum NewlineKind {
     DoubleCharacter = "DoubleCharacter", // CARRIAGE RETURN + LINE FEED
 }
 
+export const enum IdentifierKind {
+    Generalized = "Generalized",
+    Invalid = "Invalid",
+    Quote = "Quote",
+    QuoteRequired = "QuoteRequired",
+    Regular = "Regular",
+}
+
 export interface GraphemePosition {
     readonly lineNumber: number;
     readonly lineCodeUnit: number;
     readonly columnNumber: number;
     readonly maybeCodeUnit: number | undefined;
+}
+
+// A quick and dirty way to do string formatting.
+// Does not handle any escaping.
+export function assertGetFormatted(template: string, args: Map<string, string>): string {
+    let result: string = template;
+
+    for (const [key, value] of args.entries()) {
+        const formatKey: string = `{${key}}`;
+        Assert.isTrue(template.indexOf(formatKey) !== -1, `unknown formatKey`, { formatKey });
+        result = result.replace(formatKey, value);
+    }
+
+    return result;
 }
 
 export function columnNumberFrom(text: string, requiredCodeUnit: number): number {
@@ -54,16 +76,28 @@ export function graphemePositionFrom(
     };
 }
 
-export function normalizeIdentifier(text: string): string {
-    return isQuotedIdentifier(text) ? text.slice(2, text.length - 1) : text;
-}
-
-export function isIdentifier(text: string, allowTrailingPeriod: boolean): boolean {
-    return maybeIdentifierLength(text, 0, allowTrailingPeriod) === text.length;
+export function identifierKind(text: string, allowTrailingPeriod: boolean): IdentifierKind {
+    if (isRegularIdentifier(text, allowTrailingPeriod)) {
+        return IdentifierKind.Regular;
+    } else if (isQuotedIdentifier(text)) {
+        return isRegularIdentifier(text.slice(2, -1), false) ? IdentifierKind.Quote : IdentifierKind.QuoteRequired;
+    } else if (isGeneralizedIdentifier(text)) {
+        return IdentifierKind.Generalized;
+    } else {
+        return IdentifierKind.Invalid;
+    }
 }
 
 export function isGeneralizedIdentifier(text: string): boolean {
     return maybeGeneralizedIdentifierLength(text, 0) === text.length;
+}
+
+export function isRegularIdentifier(text: string, allowTrailingPeriod: boolean): boolean {
+    return maybeIdentifierLength(text, 0, allowTrailingPeriod) === text.length;
+}
+
+export function isNumeric(text: string): boolean {
+    return maybeRegexMatchLength(Pattern.Numeric, text, 0) === text.length;
 }
 
 export function isQuotedIdentifier(text: string): boolean {
@@ -164,6 +198,48 @@ export function maybeGeneralizedIdentifierLength(text: string, index: number): n
     return index !== startingIndex ? index - startingIndex : undefined;
 }
 
+export function maybeNewlineKindAt(text: string, index: number): NewlineKind | undefined {
+    const chr1: string = text[index];
+
+    switch (chr1) {
+        case `\u000d`: {
+            const chr2: string | undefined = text[index + 1];
+            return chr2 === `\u000a` ? NewlineKind.DoubleCharacter : NewlineKind.SingleCharacter;
+        }
+
+        case `\u000a`:
+        case `\u0085`:
+        case `\u2028`:
+            return NewlineKind.SingleCharacter;
+
+        default:
+            return undefined;
+    }
+}
+
+export function maybeNormalizeNumber(text: string): string | undefined {
+    let isPositive: boolean = true;
+    let charOffset: number = 0;
+    let char: string | undefined = text[charOffset];
+
+    while (char === "+" || char === "-") {
+        if (char === "-") {
+            isPositive = !isPositive;
+        }
+
+        charOffset += 1;
+        char = text[charOffset];
+    }
+
+    const allButUnaryOperators: string = text.slice(charOffset);
+
+    if (maybeRegexMatchLength(Pattern.Numeric, allButUnaryOperators, 0) !== allButUnaryOperators.length) {
+        return undefined;
+    }
+
+    return isPositive === true ? allButUnaryOperators : `-${allButUnaryOperators}`;
+}
+
 export function maybeQuotedIdentifier(text: string, index: number): number | undefined {
     if (text[index] !== "#" || text[index + 1] !== '"') {
         return undefined;
@@ -199,37 +275,13 @@ export function maybeQuotedIdentifier(text: string, index: number): number | und
     return index !== startingIndex ? index - startingIndex : undefined;
 }
 
-export function maybeNewlineKindAt(text: string, index: number): NewlineKind | undefined {
-    const chr1: string = text[index];
-
-    switch (chr1) {
-        case `\u000d`: {
-            const chr2: string | undefined = text[index + 1];
-            return chr2 === `\u000a` ? NewlineKind.DoubleCharacter : NewlineKind.SingleCharacter;
-        }
-
-        case `\u000a`:
-        case `\u0085`:
-        case `\u2028`:
-            return NewlineKind.SingleCharacter;
-
-        default:
-            return undefined;
+export function normalizeIdentifier(text: string): string {
+    if (isQuotedIdentifier(text)) {
+        const stripped: string = text.slice(2, -1);
+        return isRegularIdentifier(stripped, false) ? stripped : text;
+    } else {
+        return text;
     }
-}
-
-// A quick and dirty way to do string formatting.
-// Does not handle any escaping.
-export function assertGetFormatted(template: string, args: Map<string, string>): string {
-    let result: string = template;
-
-    for (const [key, value] of args.entries()) {
-        const formatKey: string = `{${key}}`;
-        Assert.isTrue(template.indexOf(formatKey) !== -1, `unknown formatKey`, { formatKey });
-        result = result.replace(formatKey, value);
-    }
-
-    return result;
 }
 
 const enum IdentifierRegexpState {

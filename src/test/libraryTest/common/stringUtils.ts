@@ -6,14 +6,14 @@ import "mocha";
 import { StringUtils } from "../../..";
 
 describe("StringUtils", () => {
-    describe(`isIdentifier`, () => {
+    describe(`isRegularIdentifier`, () => {
         describe(`valid`, () => {
-            it(`foo`, () => expect(StringUtils.isIdentifier("foo", false), "should be true").to.be.true);
-            it(`foo`, () => expect(StringUtils.isIdentifier("foo", true), "should be true").to.be.true);
-            it(`foo.`, () => expect(StringUtils.isIdentifier("foo.", true), "should be true").to.be.true);
+            it(`foo`, () => expect(StringUtils.isRegularIdentifier("foo", false), "should be true").to.be.true);
+            it(`foo`, () => expect(StringUtils.isRegularIdentifier("foo", true), "should be true").to.be.true);
+            it(`foo.`, () => expect(StringUtils.isRegularIdentifier("foo.", true), "should be true").to.be.true);
         });
         describe(`invalid`, () => {
-            it(`foo.`, () => expect(StringUtils.isIdentifier("foo.", false), "should be false").to.be.false);
+            it(`foo.`, () => expect(StringUtils.isRegularIdentifier("foo.", false), "should be false").to.be.false);
         });
     });
 
@@ -43,8 +43,15 @@ describe("StringUtils", () => {
         });
     });
 
-    describe(`normalizeIdentifier`, () => {
-        it(`foo`, () => expect(StringUtils.normalizeIdentifier(`foo`)).to.equal(`foo`));
-        it(`#"foo"`, () => expect(StringUtils.normalizeIdentifier(`#"foo"`)).to.equal(`foo`));
+    describe(`maybeNormalizeNumber`, () => {
+        // tslint:disable-next-line: chai-vague-errors
+        it(`foo`, () => expect(StringUtils.maybeNormalizeNumber(`foo`)).to.be.undefined);
+        it(`1`, () => expect(StringUtils.maybeNormalizeNumber(`1`)).to.equal("1"));
+        it(`-1`, () => expect(StringUtils.maybeNormalizeNumber(`-1`)).to.equal("-1"));
+        it(`--1`, () => expect(StringUtils.maybeNormalizeNumber(`--1`)).to.equal("1"));
+        it(`+1`, () => expect(StringUtils.maybeNormalizeNumber(`+1`)).to.equal("1"));
+        it(`-+1`, () => expect(StringUtils.maybeNormalizeNumber(`-+1`)).to.equal("-1"));
+        it(`+-1`, () => expect(StringUtils.maybeNormalizeNumber(`+-1`)).to.equal("-1"));
+        it(`--1E1`, () => expect(StringUtils.maybeNormalizeNumber(`--1E1`)).to.equal("1E1"));
     });
 });

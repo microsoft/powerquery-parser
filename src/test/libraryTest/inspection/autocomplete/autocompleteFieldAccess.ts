@@ -334,7 +334,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                     `[cat = 1, car = 2][ [ cat|`,
                 );
-                const expected: AbridgedAutocompleteFieldAccess = [];
+                const expected: AbridgedAutocompleteFieldAccess = ["cat"];
                 const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
                     DefaultSettings,
                     text,
@@ -530,11 +530,11 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
     });
 
     describe(`GeneralizedIdentifier`, () => {
-        it(`[#"foo" = 1][|`, () => {
+        it(`[#"regularIdentifier" = 1, #"generalized identifier" = 2][|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `[#"foo" = 1][|`,
+                `[#"regularIdentifier" = 1, #"generalized identifier" = 2][|`,
             );
-            const expected: AbridgedAutocompleteFieldAccess = [`#"foo"`];
+            const expected: AbridgedAutocompleteFieldAccess = [`regularIdentifier`, `#"generalized identifier"`];
             const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
                 DefaultSettings,
                 text,

@@ -2,4 +2,5 @@
 // Licensed under the MIT license.
 
 export * from "./scope";
-export * from "./scopeItem";
+export * from "./scopeInspection";
+export * as ScopeUtils from "./scopeUtils";

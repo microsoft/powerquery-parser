@@ -5,7 +5,7 @@ import { Token } from "../../language";
 import { IParseState, NodeIdMap, ParseError } from "../../parser";
 import { InspectionSettings } from "../../settings";
 import { TMaybeActiveNode } from "../activeNode";
-import { TypeCache } from "../type/commonTypes";
+import { TypeCache } from "../typeCache";
 import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
 import { tryAutocompleteKeyword } from "./autocompleteKeyword/autocompleteKeyword";
 import { tryAutocompleteLanguageConstant } from "./autocompleteLanguageConstant";

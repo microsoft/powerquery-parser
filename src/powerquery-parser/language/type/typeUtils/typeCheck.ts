@@ -162,12 +162,14 @@ function typeCheckRecordOrTable(
     for (const [key, type] of valueFields.entries()) {
         const maybeSchemaValueType: Type.TType | undefined = schemaFields.get(key);
         if (maybeSchemaValueType !== undefined) {
-            if (isCompatible(type, maybeSchemaValueType)) {
+            const schemaValueType: Type.TType = maybeSchemaValueType;
+
+            if (isCompatible(type, schemaValueType)) {
                 validFields.push(key);
             } else {
                 mismatches.push({
                     key,
-                    expected: maybeSchemaValueType,
+                    expected: schemaValueType,
                     actual: type,
                 });
             }

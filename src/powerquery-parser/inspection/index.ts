@@ -9,3 +9,4 @@ export * from "./position";
 export * from "./scope";
 export * from "./task";
 export * from "./type";
+export * from "./typeCache";

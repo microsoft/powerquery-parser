@@ -97,12 +97,9 @@ export function readGeneralizedIdentifier<S extends IParseState = IParseState>(
     const contiguousIdentifierStartIndex: number = tokens[tokenRangeStartIndex].positionStart.codeUnit;
     const contiguousIdentifierEndIndex: number = tokens[tokenRangeEndIndex - 1].positionEnd.codeUnit;
     const literal: string = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
+    const literalKind: StringUtils.IdentifierKind = StringUtils.identifierKind(literal, true);
 
-    if (
-        !StringUtils.isIdentifier(literal, true) &&
-        !StringUtils.isGeneralizedIdentifier(literal) &&
-        !StringUtils.isQuotedIdentifier(literal)
-    ) {
+    if (literalKind === StringUtils.IdentifierKind.Invalid) {
         throw new ParseError.ExpectedGeneralizedIdentifierError(
             state.locale,
             IParseStateUtils.maybeTokenWithColumnNumber(state, state.tokenIndex + 1),

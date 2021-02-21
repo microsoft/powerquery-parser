@@ -8,8 +8,15 @@ import { Ast } from "../../language";
 export interface KeyValuePair<T extends Ast.GeneralizedIdentifier | Ast.Identifier> {
     readonly source: TXorNode;
     readonly key: T;
+    readonly pairKind: PairKind;
     readonly keyLiteral: string;
     readonly maybeValue: TXorNode | undefined;
+}
+
+export const enum PairKind {
+    LetExpression = "LetExpression",
+    Record = "Record",
+    SectionMember = "Section",
 }
 
 // -------------------------------
@@ -209,7 +216,9 @@ export function iterLetExpression(
         1,
         [Ast.NodeKind.ArrayWrapper],
     );
-    return maybeArrayWrapper === undefined ? [] : iterKeyValuePairs(nodeIdMapCollection, maybeArrayWrapper);
+    return maybeArrayWrapper === undefined
+        ? []
+        : iterKeyValuePairs(nodeIdMapCollection, maybeArrayWrapper, PairKind.LetExpression);
 }
 
 // Return all ListItem children under the given ListExpression/ListLiteral.
@@ -229,7 +238,9 @@ export function iterRecord(
         nodeIdMapCollection,
         record,
     );
-    return maybeArrayWrapper === undefined ? [] : iterKeyValuePairs(nodeIdMapCollection, maybeArrayWrapper);
+    return maybeArrayWrapper === undefined
+        ? []
+        : iterKeyValuePairs(nodeIdMapCollection, maybeArrayWrapper, PairKind.Record);
 }
 
 // Return all key-value-pair children under the given Section.
@@ -247,6 +258,7 @@ export function iterSection(
                 key: namePairedExpression.key,
                 keyLiteral: namePairedExpression.key.literal,
                 maybeValue: XorNodeUtils.astFactory(namePairedExpression.value),
+                pairKind: PairKind.SectionMember,
             };
         });
     }
@@ -295,6 +307,7 @@ export function iterSection(
                 2,
                 undefined,
             ),
+            pairKind: PairKind.SectionMember,
         });
     }
 
@@ -304,6 +317,7 @@ export function iterSection(
 function iterKeyValuePairs<T extends Ast.GeneralizedIdentifier | Ast.Identifier>(
     nodeIdMapCollection: NodeIdMap.Collection,
     arrayWrapper: TXorNode,
+    pairKind: PairKind,
 ): ReadonlyArray<KeyValuePair<T>> {
     const partial: KeyValuePair<T>[] = [];
     for (const keyValuePair of iterArrayWrapper(nodeIdMapCollection, arrayWrapper)) {
@@ -328,6 +342,7 @@ function iterKeyValuePairs<T extends Ast.GeneralizedIdentifier | Ast.Identifier>
                 2,
                 undefined,
             ),
+            pairKind,
         });
     }
 

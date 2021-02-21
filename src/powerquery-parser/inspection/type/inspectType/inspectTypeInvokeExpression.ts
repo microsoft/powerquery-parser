@@ -14,8 +14,8 @@ export function inspectTypeInvokeExpression(state: InspectTypeState, xorNode: TX
         state,
         xorNode,
     );
-    if (maybeRequest !== undefined) {
-        const maybeType: Type.TType | undefined = state.settings.externalTypeResolver(maybeRequest);
+    if (maybeRequest !== undefined && state.settings.maybeExternalTypeResolver) {
+        const maybeType: Type.TType | undefined = state.settings.maybeExternalTypeResolver(maybeRequest);
         if (maybeType !== undefined) {
             return maybeType;
         }

@@ -7,8 +7,9 @@ import { Ast, ExternalType, ExternalTypeUtils, Type, TypeUtils } from "../../../
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { InspectionSettings } from "../../../settings";
 import { NodeScope, ScopeById, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";
-import { TypeById } from "../commonTypes";
+import { TypeById } from "../../typeCache";
 import { inspectTypeConstant } from "./inspectTypeConstant";
+import { inspectTypeEachExpression } from "./inspectTypeEachExpression";
 import { inspectTypeErrorHandlingExpression } from "./inspectTypeErrorHandlingExpression";
 import { inspectTypeFieldProjection } from "./inspectTypeFieldProjection";
 import { inspectTypeFieldSelector } from "./inspectTypeFieldSelector";
@@ -100,17 +101,16 @@ export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem)
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     switch (scopeItem.kind) {
+        case ScopeItemKind.LetVariable:
+        case ScopeItemKind.RecordField:
+        case ScopeItemKind.SectionMember:
+            return scopeItem.maybeValue === undefined ? Type.UnknownInstance : inspectXor(state, scopeItem.maybeValue);
+
         case ScopeItemKind.Each:
             return inspectXor(state, scopeItem.eachExpression);
 
-        case ScopeItemKind.KeyValuePair:
-            return scopeItem.maybeValue === undefined ? Type.UnknownInstance : inspectXor(state, scopeItem.maybeValue);
-
         case ScopeItemKind.Parameter:
             return TypeUtils.parameterFactory(scopeItem);
-
-        case ScopeItemKind.SectionMember:
-            return scopeItem.maybeValue === undefined ? Type.UnknownInstance : inspectXor(state, scopeItem.maybeValue);
 
         case ScopeItemKind.Undefined:
             return Type.UnknownInstance;
@@ -160,7 +160,6 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TTy
 
         case Ast.NodeKind.AsType:
         case Ast.NodeKind.AsNullablePrimitiveType:
-        case Ast.NodeKind.EachExpression:
         case Ast.NodeKind.FieldTypeSpecification:
         case Ast.NodeKind.OtherwiseExpression:
         case Ast.NodeKind.ParenthesizedExpression:
@@ -210,6 +209,10 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TTy
 
         case Ast.NodeKind.Constant:
             result = inspectTypeConstant(xorNode);
+            break;
+
+        case Ast.NodeKind.EachExpression:
+            result = inspectTypeEachExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.ErrorHandlingExpression:
@@ -336,26 +339,34 @@ export function maybeDereferencedIdentifierType(state: InspectTypeState, xorNode
     // The deferenced identifier can't be resolved within the local scope.
     // It either is either an invalid identifier or an external identifier (e.g `Odbc.Database`).
     if (maybeScopeItem === undefined) {
-        return maybeExternalValueType(state.settings.externalTypeResolver, deferencedLiteral);
+        const maybeResolver: ExternalType.TExternalTypeResolverFn | undefined =
+            state.settings.maybeExternalTypeResolver;
+
+        if (maybeResolver === undefined) {
+            return undefined;
+        }
+
+        const request: ExternalType.ExternalValueTypeRequest = ExternalTypeUtils.valueTypeRequestFactory(
+            deferencedLiteral,
+        );
+        return maybeResolver(request);
     }
     const scopeItem: TScopeItem = maybeScopeItem;
 
     let maybeNextXorNode: TXorNode | undefined;
     switch (scopeItem.kind) {
+        case ScopeItemKind.LetVariable:
+        case ScopeItemKind.RecordField:
+        case ScopeItemKind.SectionMember:
+            maybeNextXorNode = scopeItem.maybeValue;
+            break;
+
         case ScopeItemKind.Each:
             maybeNextXorNode = scopeItem.eachExpression;
             break;
 
-        case ScopeItemKind.KeyValuePair:
-            maybeNextXorNode = scopeItem.maybeValue;
-            break;
-
         case ScopeItemKind.Parameter:
             return TypeUtils.parameterFactory(scopeItem);
-
-        case ScopeItemKind.SectionMember:
-            maybeNextXorNode = scopeItem.maybeValue;
-            break;
 
         case ScopeItemKind.Undefined:
             return undefined;
@@ -429,10 +440,8 @@ function recursiveIdentifierDereferenceHelper(state: InspectTypeState, xorNode: 
         case ScopeItemKind.Undefined:
             return xorNode;
 
-        case ScopeItemKind.KeyValuePair:
-            maybeNextXorNode = scopeItem.maybeValue;
-            break;
-
+        case ScopeItemKind.LetVariable:
+        case ScopeItemKind.RecordField:
         case ScopeItemKind.SectionMember:
             maybeNextXorNode = scopeItem.maybeValue;
             break;
@@ -447,12 +456,4 @@ function recursiveIdentifierDereferenceHelper(state: InspectTypeState, xorNode: 
             maybeNextXorNode.node.kind === Ast.NodeKind.IdentifierExpression)
         ? recursiveIdentifierDereferenceHelper(state, maybeNextXorNode)
         : xorNode;
-}
-
-function maybeExternalValueType(
-    externalTypeResolverFn: ExternalType.TExternalTypeResolverFn,
-    identifierLiteral: string,
-): Type.TType | undefined {
-    const request: ExternalType.ExternalValueTypeRequest = ExternalTypeUtils.valueTypeRequestFactory(identifierLiteral);
-    return externalTypeResolverFn(request);
 }

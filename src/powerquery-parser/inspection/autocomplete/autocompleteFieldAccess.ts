@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, ResultUtils } from "../../common";
+import { Assert, CommonError, ResultUtils, StringUtils } from "../../common";
 import { Ast, Token, Type } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import {
@@ -18,7 +18,7 @@ import { InspectionSettings } from "../../settings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { Position, PositionUtils } from "../position";
 import { TriedType, tryType } from "../type";
-import { TypeCache } from "../type/commonTypes";
+import { TypeCache } from "../typeCache";
 import {
     AutocompleteFieldAccess,
     AutocompleteItem,
@@ -285,24 +285,28 @@ function autoCompleteItemsFactory(
     inspectedFieldAccess: InspectedFieldAccess,
 ): ReadonlyArray<AutocompleteItem> {
     const fieldAccessNames: ReadonlyArray<string> = inspectedFieldAccess.fieldNames;
-
-    const possibleAutocompleteItems: AutocompleteItem[] = [];
+    const autocompleteItems: AutocompleteItem[] = [];
 
     const maybeIdentifierUnderPosition: string | undefined = inspectedFieldAccess.maybeIdentifierUnderPosition;
     for (const [key, type] of fieldEntries) {
-        if (fieldAccessNames.includes(key) === true) {
+        if (
+            (fieldAccessNames.includes(key) && key !== maybeIdentifierUnderPosition) ||
+            (maybeIdentifierUnderPosition && !key.startsWith(maybeIdentifierUnderPosition))
+        ) {
             continue;
         }
 
-        if (maybeIdentifierUnderPosition === undefined || key.indexOf(maybeIdentifierUnderPosition) === 0) {
-            possibleAutocompleteItems.push({
-                key,
-                type,
-            });
-        }
+        // If the key is a quoted identifier but doesn't need to be one then slice out the quote contents.
+        const identifierKind: StringUtils.IdentifierKind = StringUtils.identifierKind(key, false);
+        const normalizedKey: string = identifierKind === StringUtils.IdentifierKind.Quote ? key.slice(2, -1) : key;
+
+        autocompleteItems.push({
+            key: normalizedKey,
+            type,
+        });
     }
 
-    return possibleAutocompleteItems;
+    return autocompleteItems;
 }
 
 function maybeTypablePrimaryExpression(

@@ -2,24 +2,20 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError, Result, ResultUtils } from "../common";
-import { Ast } from "../language";
-import {
-    AncestryUtils,
-    NodeIdMap,
-    NodeIdMapIterator,
-    NodeIdMapUtils,
-    TXorNode,
-    XorNodeKind,
-    XorNodeUtils,
-} from "../parser";
-import { CommonSettings } from "../settings";
+import { Ast, Type } from "../language";
+import { AncestryUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../parser";
+import { InspectionSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
-import { Position, PositionUtils } from "./position";
+import { assertGetOrCreateNodeScope, NodeScope, ScopeItemKind, TScopeItem } from "./scope";
+import { TriedType, tryType } from "./type";
+import { createTypeCache, TypeCache } from "./typeCache";
 
 export type TriedInvokeExpression = Result<InvokeExpression | undefined, CommonError.CommonError>;
 
 export interface InvokeExpression {
     readonly xorNode: TXorNode;
+    readonly functionType: Type.TType;
+    readonly isNameInLocalScope: boolean;
     readonly maybeName: string | undefined;
     readonly maybeArguments: InvokeExpressionArgs | undefined;
 }
@@ -30,101 +26,91 @@ export interface InvokeExpressionArgs {
 }
 
 export function tryInvokeExpression(
-    settings: CommonSettings,
+    settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
     maybeActiveNode: TMaybeActiveNode,
+    maybeTypeCache: TypeCache | undefined = undefined,
 ): TriedInvokeExpression {
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return ResultUtils.okFactory(undefined);
     }
 
     return ResultUtils.ensureResult(settings.locale, () =>
-        inspectInvokeExpression(nodeIdMapCollection, maybeActiveNode),
+        inspectInvokeExpression(
+            settings,
+            nodeIdMapCollection,
+            leafNodeIds,
+            maybeActiveNode,
+            maybeTypeCache ?? createTypeCache(),
+        ),
     );
 }
 
 function inspectInvokeExpression(
+    settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
     activeNode: ActiveNode,
+    typeCache: TypeCache,
 ): InvokeExpression | undefined {
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const numAncestors: number = activeNode.ancestry.length;
-    const position: Position = activeNode.position;
 
     for (let ancestryIndex: number = 0; ancestryIndex < numAncestors; ancestryIndex += 1) {
         const xorNode: TXorNode = ancestry[ancestryIndex];
-        if (!isInvokeExpressionContent(position, xorNode)) {
-            continue;
-        }
 
-        return {
-            xorNode,
-            maybeName: maybeInvokeExpressionName(nodeIdMapCollection, xorNode),
-            maybeArguments: inspectInvokeExpressionArguments(nodeIdMapCollection, activeNode, ancestryIndex),
-        };
+        if (xorNode.node.kind === Ast.NodeKind.InvokeExpression) {
+            const previousNode: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
+                nodeIdMapCollection,
+                xorNode.node.id,
+            );
+
+            const triedPreviousNodeType: TriedType = tryType(
+                settings,
+                nodeIdMapCollection,
+                leafNodeIds,
+                previousNode.node.id,
+                typeCache,
+            );
+            const functionType: Type.TType = Assert.unwrapOk(triedPreviousNodeType);
+            const maybeName: string | undefined = NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(
+                nodeIdMapCollection,
+                xorNode.node.id,
+            );
+
+            // Try to find out if the identifier is a local or external name.
+            let isNameInLocalScope: boolean;
+            if (maybeName !== undefined) {
+                // Seed local scope
+                const scope: NodeScope = Assert.unwrapOk(
+                    assertGetOrCreateNodeScope(
+                        settings,
+                        nodeIdMapCollection,
+                        leafNodeIds,
+                        xorNode.node.id,
+                        typeCache.scopeById,
+                    ),
+                );
+                const maybeNameScopeItem: TScopeItem | undefined = scope.get(maybeName);
+
+                isNameInLocalScope =
+                    maybeNameScopeItem !== undefined && maybeNameScopeItem.kind !== ScopeItemKind.Undefined;
+            } else {
+                isNameInLocalScope = false;
+            }
+
+            return {
+                xorNode,
+                functionType,
+                isNameInLocalScope,
+                maybeName,
+                maybeArguments: inspectInvokeExpressionArguments(nodeIdMapCollection, activeNode, ancestryIndex),
+            };
+        }
     }
 
     return undefined;
-}
-
-function isInvokeExpressionContent(position: Position, xorNode: TXorNode): boolean {
-    if (xorNode.node.kind !== Ast.NodeKind.InvokeExpression) {
-        return false;
-    }
-
-    // Check if position is in the wrapped contents (InvokeExpression arguments).
-    if (xorNode.kind === XorNodeKind.Ast) {
-        const invokeExprAstNode: Ast.InvokeExpression = xorNode.node as Ast.InvokeExpression;
-        if (!PositionUtils.isInAst(position, invokeExprAstNode.content, true, true)) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-function maybeInvokeExpressionName(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    invokeExpr: TXorNode,
-): string | undefined {
-    XorNodeUtils.assertAstNodeKind(invokeExpr, Ast.NodeKind.InvokeExpression);
-
-    // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
-    // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
-    let maybeName: string | undefined;
-    if (invokeExpr.node.maybeAttributeIndex === 0) {
-        // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
-        const recursiveArrayXorNode: TXorNode = NodeIdMapUtils.assertGetParentXor(
-            nodeIdMapCollection,
-            invokeExpr.node.id,
-        );
-        const recursiveExprXorNode: TXorNode = NodeIdMapUtils.assertGetParentXor(
-            nodeIdMapCollection,
-            recursiveArrayXorNode.node.id,
-        );
-        const headXorNode: TXorNode = NodeIdMapUtils.assertGetChildXorByAttributeIndex(
-            nodeIdMapCollection,
-            recursiveExprXorNode.node.id,
-            0,
-            undefined,
-        );
-        if (headXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
-            Assert.isTrue(
-                headXorNode.kind === XorNodeKind.Ast,
-                `the younger IdentifierExpression sibling should've finished parsing before the InvokeExpression node was reached`,
-                { identifierExpressionNodeId: headXorNode.node.id, invokeExpressionNodeId: invokeExpr.node.id },
-            );
-
-            const identifierExpression: Ast.IdentifierExpression = headXorNode.node as Ast.IdentifierExpression;
-            maybeName =
-                identifierExpression.maybeInclusiveConstant === undefined
-                    ? identifierExpression.identifier.literal
-                    : identifierExpression.maybeInclusiveConstant.constantKind +
-                      identifierExpression.identifier.literal;
-        }
-    }
-
-    return maybeName;
 }
 
 function inspectInvokeExpressionArguments(

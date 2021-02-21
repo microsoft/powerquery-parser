@@ -11,17 +11,32 @@ export type TExtendedType =
     | DefinedTable
     | FunctionType
     | ListType
+    | NumberLiteral
     | PrimaryPrimitiveType
     | RecordType
     | TableType
-    | TableTypePrimaryExpression;
+    | TableTypePrimaryExpression
+    | TextLiteral;
 export type TExtendedTypeKind =
     | TypeKind.Any
     | TypeKind.Function
     | TypeKind.List
+    | TypeKind.Number
     | TypeKind.Record
     | TypeKind.Table
+    | TypeKind.Text
     | TypeKind.Type;
+
+export type TPrimitiveTypeLiteral = NumberLiteral | TextLiteral;
+export type TPrimitiveTypeLiteralExtendedKind = ExtendedTypeKind.NumberLiteral | ExtendedTypeKind.TextLiteral;
+
+export type TAny = Any | AnyUnion;
+export type TList = List | DefinedList;
+export type TFunction = Function | DefinedFunction;
+export type TNumber = Number | NumberLiteral;
+export type TRecord = Record | DefinedRecord;
+export type TTable = Table | DefinedTable;
+export type TText = Text | TextLiteral;
 
 export type Action = IPrimitiveType<TypeKind.Action>;
 export type Any = IPrimitiveType<TypeKind.Any>;
@@ -129,11 +144,17 @@ export const enum ExtendedTypeKind {
     // `type list { number }`
     ListType = "ListType",
 
+    // `1`
+    NumberLiteral = "NumberLiteral",
+
     // `type number`
     PrimaryPrimitiveType = "PrimaryPrimitiveType",
 
     // `type record [ a, b = number, ...]`
     RecordType = "RecordType",
+
+    // '"foo"`
+    TextLiteral = "TextLiteral",
 
     // `type table [a, b = text]
     TableType = "TableType",
@@ -152,6 +173,10 @@ export interface IType<T extends TypeKind = TypeKind> {
 export interface IExtendedType extends IType {
     readonly kind: TExtendedTypeKind;
     readonly maybeExtendedKind: ExtendedTypeKind;
+}
+
+export interface IPrimitiveLiteral extends IExtendedType {
+    readonly literal: string;
 }
 
 // ------------------------------------------
@@ -240,6 +265,12 @@ export interface ListType extends IExtendedType {
     readonly itemType: TType;
 }
 
+export interface NumberLiteral extends IPrimitiveLiteral {
+    readonly kind: TypeKind.Number;
+    readonly maybeExtendedKind: ExtendedTypeKind.NumberLiteral;
+    readonly normalizedLiteral: number;
+}
+
 export interface PrimaryPrimitiveType extends IExtendedType {
     readonly kind: TypeKind.Type;
     readonly maybeExtendedKind: ExtendedTypeKind.PrimaryPrimitiveType;
@@ -262,6 +293,11 @@ export interface TableTypePrimaryExpression extends IExtendedType {
     readonly kind: TypeKind.Type;
     readonly maybeExtendedKind: ExtendedTypeKind.TableTypePrimaryExpression;
     readonly primaryExpression: TType;
+}
+
+export interface TextLiteral extends IPrimitiveLiteral {
+    readonly kind: TypeKind.Text;
+    readonly maybeExtendedKind: ExtendedTypeKind.TextLiteral;
 }
 
 // -------------------------------------------------------

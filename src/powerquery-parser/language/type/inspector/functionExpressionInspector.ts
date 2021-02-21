@@ -7,7 +7,7 @@ import { Ast, AstUtils } from "../../ast";
 
 export interface InspectedFunctionExpression {
     readonly parameters: ReadonlyArray<InspectedFunctionParameter>;
-    readonly returnType: Type.TType;
+    readonly returnType: Type.TPrimitiveType;
 }
 
 // Omit "nameLiteral" since we're going to include the `name` identifier.

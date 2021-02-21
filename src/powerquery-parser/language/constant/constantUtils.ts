@@ -181,8 +181,7 @@ export function isPrimitiveTypeConstantKind(
     maybePrimitiveTypeConstantKind: string,
 ): maybePrimitiveTypeConstantKind is Constant.PrimitiveTypeConstantKind {
     switch (maybePrimitiveTypeConstantKind) {
-        case Constant.LanguageConstantKind.Nullable:
-        case Constant.LanguageConstantKind.Optional:
+        case Constant.PrimitiveTypeConstantKind.Action:
         case Constant.PrimitiveTypeConstantKind.Any:
         case Constant.PrimitiveTypeConstantKind.AnyNonNull:
         case Constant.PrimitiveTypeConstantKind.Binary:
@@ -194,11 +193,13 @@ export function isPrimitiveTypeConstantKind(
         case Constant.PrimitiveTypeConstantKind.List:
         case Constant.PrimitiveTypeConstantKind.Logical:
         case Constant.PrimitiveTypeConstantKind.None:
+        case Constant.PrimitiveTypeConstantKind.Null:
         case Constant.PrimitiveTypeConstantKind.Number:
         case Constant.PrimitiveTypeConstantKind.Record:
         case Constant.PrimitiveTypeConstantKind.Table:
         case Constant.PrimitiveTypeConstantKind.Text:
         case Constant.PrimitiveTypeConstantKind.Time:
+        case Constant.PrimitiveTypeConstantKind.Type:
             return true;
         default:
             return false;
