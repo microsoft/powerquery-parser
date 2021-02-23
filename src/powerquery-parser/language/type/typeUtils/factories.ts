@@ -3,8 +3,7 @@
 
 import { Type } from "..";
 import { Assert, CommonError, StringUtils } from "../../../common";
-import { ParameterScopeItem } from "../../../inspection";
-import { PrimitiveTypeConstantMap, primitiveTypeMapKey, typeKindFromPrimitiveTypeConstantKind } from "./primitive";
+import { PrimitiveTypeConstantMap, primitiveTypeMapKey } from "./primitive";
 import { dedupe } from "./typeUtils";
 
 export function primitiveTypeFactory<T extends Type.TypeKind>(isNullable: boolean, typeKind: T): Type.TPrimitiveType {
@@ -113,18 +112,6 @@ export function numberLiteralFactory(isNullable: boolean, literal: string): Type
         maybeExtendedKind: Type.ExtendedTypeKind.NumberLiteral,
         literal,
         normalizedLiteral: Number.parseFloat(Assert.asDefined(StringUtils.maybeNormalizeNumber(literal))),
-    };
-}
-
-export function parameterFactory(parameter: ParameterScopeItem): Type.TPrimitiveType {
-    if (parameter.maybeType === undefined) {
-        return Type.NoneInstance;
-    }
-
-    return {
-        kind: typeKindFromPrimitiveTypeConstantKind(parameter.maybeType),
-        maybeExtendedKind: undefined,
-        isNullable: parameter.isNullable,
     };
 }
 

@@ -1,6 +1,7 @@
 import "mocha";
 import * as path from "path";
-import { DefaultSettings, Parser, ResultUtils, Settings, Task } from "../..";
+import { DefaultSettings, Parser, Settings, Task } from "../..";
+import { TaskUtils } from "../../powerquery-parser";
 import { TestFileUtils } from "../testUtils";
 
 const parsers: ReadonlyArray<[Settings, string]> = [
@@ -31,10 +32,8 @@ function parseAllFiles<S extends Parser.IParseState>(settings: Settings<S>, pars
             const testName: string = testNameFromFilePath(filePath);
 
             it(testName, () => {
-                const triedLexParse: Task.TriedLexParse<S> = TestFileUtils.tryLexParse(settings, filePath);
-                if (!ResultUtils.isOk(triedLexParse)) {
-                    throw triedLexParse.error;
-                }
+                const triedLexParseTask: Task.TriedLexParseTask<S> = TestFileUtils.tryLexParse(settings, filePath);
+                TaskUtils.assertParseOk(triedLexParseTask);
             });
         }
     });

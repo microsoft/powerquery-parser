@@ -13,12 +13,12 @@ interface ChildIdsByIdEntry {
 }
 
 function actualFactory<S extends Parser.IParseState = Parser.IParseState>(
-    lexParseOk: Task.LexParseOk<S>,
+    lexParseOk: Task.ParseTaskOk<S>,
 ): ChildIdsByIdEntry[] {
     const actual: ChildIdsByIdEntry[] = [];
-    const astNodeById: Parser.NodeIdMap.AstNodeById = lexParseOk.state.contextState.nodeIdMapCollection.astNodeById;
+    const astNodeById: Parser.NodeIdMap.AstNodeById = lexParseOk.nodeIdMapCollection.astNodeById;
 
-    for (const [key, value] of lexParseOk.state.contextState.nodeIdMapCollection.childIdsById.entries()) {
+    for (const [key, value] of lexParseOk.nodeIdMapCollection.childIdsById.entries()) {
         actual.push({
             childNodeIds: value,
             id: key,

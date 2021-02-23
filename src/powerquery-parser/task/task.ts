@@ -2,13 +2,18 @@
 // Licensed under the MIT license.
 
 import { Lexer, Parser } from "..";
-import { CommonError, Result, ResultKind } from "../common";
+import { CommonError, ResultKind } from "../common";
 import { Ast } from "../language";
-import { IParseState, NodeIdMap, ParseError, ParseOk } from "../parser";
+import { IParseState, NodeIdMap } from "../parser";
 
 export type TriedLexTask = LexTaskOk | LexTaskErr;
 
-export type TriedParseTask = ParseTaskOk | ParseTaskCommonErr | ParseTaskParseErr;
+export type TriedParseTask<S extends IParseState = IParseState> =
+    | ParseTaskOk
+    | ParseTaskCommonErr
+    | ParseTaskParseErr<S>;
+
+export type TriedLexParseTask<S extends IParseState = IParseState> = LexTaskErr | TriedParseTask<S>;
 
 export const enum TaskStage {
     Lex = "Lex",
@@ -69,13 +74,4 @@ export interface ParseTaskParseErr<S extends IParseState = IParseState>
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     // Indirection to parseState.contextState.leafNodeIds
     readonly leafNodeIds: ReadonlyArray<number>;
-}
-
-export type TriedLexParse<S extends IParseState = IParseState> = Result<
-    LexParseOk<S>,
-    Lexer.LexError.TLexError | ParseError.TParseError<S>
->;
-
-export interface LexParseOk<S extends IParseState = IParseState> extends ParseOk<S> {
-    readonly lexerSnapshot: Lexer.LexerSnapshot;
 }

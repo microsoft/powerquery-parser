@@ -3,7 +3,17 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Assert, DefaultLocale, DefaultSettings, Language, Parser, Settings, Task, Traverse } from "../../..";
+import {
+    Assert,
+    DefaultLocale,
+    DefaultSettings,
+    Language,
+    Parser,
+    Settings,
+    Task,
+    TaskUtils,
+    Traverse,
+} from "../../..";
 import { TestAssertUtils } from "../../testUtils";
 
 type AbridgedNode = [Language.Ast.NodeKind, number | undefined];
@@ -17,7 +27,7 @@ interface NthNodeOfKindState extends Traverse.IState<Language.Ast.TNode | undefi
 }
 
 function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
-    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+    const lexParseOk: Task.ParseTaskOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
     const state: CollectAbridgeNodeState = {
         locale: DefaultLocale,
         result: [],
@@ -28,8 +38,8 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
         AbridgedNode[]
     >(
         state,
-        lexParseOk.state.contextState.nodeIdMapCollection,
-        lexParseOk.root,
+        lexParseOk.nodeIdMapCollection,
+        lexParseOk.ast,
         Traverse.VisitNodeStrategy.BreadthFirst,
         collectAbridgeNodeVisit,
         Traverse.assertGetAllAstChildren,
@@ -45,7 +55,7 @@ function assertGetNthNodeOfKind<N extends Language.Ast.TNode>(
     nodeKind: Language.Ast.NodeKind,
     nthRequired: number,
 ): N {
-    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+    const parseTaskOk: Task.ParseTaskOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
     const state: NthNodeOfKindState = {
         locale: DefaultLocale,
         result: undefined,
@@ -59,8 +69,8 @@ function assertGetNthNodeOfKind<N extends Language.Ast.TNode>(
         Language.Ast.TNode | undefined
     >(
         state,
-        lexParseOk.state.contextState.nodeIdMapCollection,
-        lexParseOk.root,
+        parseTaskOk.nodeIdMapCollection,
+        parseTaskOk.ast,
         Traverse.VisitNodeStrategy.BreadthFirst,
         nthNodeVisit,
         Traverse.assertGetAllAstChildren,
@@ -101,11 +111,11 @@ describe("Parser.AbridgedNode", () => {
                 parser: Parser.RecursiveDescentParser,
                 maybeParserEntryPointFn: Parser.RecursiveDescentParser.readParameterSpecificationList,
             };
-            const triedLexParse: Task.TriedLexParse = Task.tryLexParse(
+            const triedLexParseTask: Task.TriedLexParseTask = TaskUtils.tryLexParse(
                 customSettings,
                 "(a as number, optional b as text)",
             );
-            Assert.isOk(triedLexParse);
+            TaskUtils.assertParseOk(triedLexParseTask);
         });
     });
 
