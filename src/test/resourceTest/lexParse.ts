@@ -33,7 +33,7 @@ function parseAllFiles<S extends Parser.IParseState>(settings: Settings<S>, pars
 
             it(testName, () => {
                 const triedLexParseTask: Task.TriedLexParseTask<S> = TestFileUtils.tryLexParse(settings, filePath);
-                TaskUtils.assertParseOk(triedLexParseTask);
+                TaskUtils.assertIsParseStageOk(triedLexParseTask);
             });
         }
     });

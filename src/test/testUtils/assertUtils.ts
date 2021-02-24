@@ -10,7 +10,7 @@ export function assertGetLexParseOk<S extends Parser.IParseState = Parser.IParse
     text: string,
 ): Task.ParseTaskOk<S> {
     const triedLexParseTask: Task.TriedLexParseTask<S> = TaskUtils.tryLexParse(settings, text);
-    TaskUtils.assertParseOk(triedLexParseTask);
+    TaskUtils.assertIsParseStageOk(triedLexParseTask);
 
     return triedLexParseTask;
 }

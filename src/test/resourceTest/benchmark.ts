@@ -82,7 +82,7 @@ function parseAllFiles(settings: ParseSettings<BenchmarkState>, parserName: stri
                 console.log(`\tRun ${index} of ${NumberOfRunsPerFile}`);
             }
             const triedLexParse: Task.TriedLexParseTask<BenchmarkState> = TestFileUtils.tryLexParse(settings, filePath);
-            TaskUtils.assertParseOk(triedLexParse);
+            TaskUtils.assertIsParseStageOk(triedLexParse);
             timings.push(triedLexParse.parseState.functionTimestamps);
         }
 

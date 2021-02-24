@@ -115,7 +115,7 @@ describe("Parser.AbridgedNode", () => {
                 customSettings,
                 "(a as number, optional b as text)",
             );
-            TaskUtils.assertParseOk(triedLexParseTask);
+            TaskUtils.assertIsParseStageOk(triedLexParseTask);
         });
     });
 

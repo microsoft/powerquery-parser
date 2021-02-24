@@ -6,14 +6,16 @@ import { CommonError, ResultKind } from "../common";
 import { Ast } from "../language";
 import { IParseState, NodeIdMap } from "../parser";
 
-export type TriedLexTask = LexTaskOk | LexTaskErr;
+export type TTask<S extends IParseState = IParseState> = TriedLexTask | TriedParseTask<S>;
+
+export type TriedLexTask = LexTaskOk | LexTaskError;
 
 export type TriedParseTask<S extends IParseState = IParseState> =
     | ParseTaskOk
-    | ParseTaskCommonErr
-    | ParseTaskParseErr<S>;
+    | ParseTaskCommonError
+    | ParseTaskParseError<S>;
 
-export type TriedLexParseTask<S extends IParseState = IParseState> = LexTaskErr | TriedParseTask<S>;
+export type TriedLexParseTask<S extends IParseState = IParseState> = LexTaskError | TriedParseTask<S>;
 
 export const enum TaskStage {
     Lex = "Lex",
@@ -34,7 +36,7 @@ export interface LexTaskOk extends ILexTask {
     readonly lexerSnapshot: Lexer.LexerSnapshot;
 }
 
-export interface LexTaskErr extends ILexTask {
+export interface LexTaskError extends ILexTask {
     readonly resultKind: ResultKind.Err;
     readonly error: Lexer.LexError.TLexError;
 }
@@ -54,19 +56,19 @@ export interface ParseTaskOk<S extends IParseState = IParseState> extends IParse
     readonly leafNodeIds: ReadonlyArray<number>;
 }
 
-export interface IParseTaskErr<T> extends IParseTask {
+export interface IParseTaskError<T> extends IParseTask {
     readonly resultKind: ResultKind.Err;
     readonly error: T;
     readonly isCommonError: boolean;
 }
 
-export interface ParseTaskCommonErr extends IParseTaskErr<CommonError.CommonError> {
+export interface ParseTaskCommonError extends IParseTaskError<CommonError.CommonError> {
     readonly resultKind: ResultKind.Err;
     readonly isCommonError: true;
 }
 
-export interface ParseTaskParseErr<S extends IParseState = IParseState>
-    extends IParseTaskErr<Parser.ParseError.ParseError> {
+export interface ParseTaskParseError<S extends IParseState = IParseState>
+    extends IParseTaskError<Parser.ParseError.ParseError> {
     readonly resultKind: ResultKind.Err;
     readonly isCommonError: false;
     readonly parseState: S;

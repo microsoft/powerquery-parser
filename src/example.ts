@@ -14,15 +14,15 @@ function parseText(text: string): void {
     const task: Task.TriedLexParseTask = TaskUtils.tryLexParse(DefaultSettings, text);
 
     // If it was a success then dump the abstract syntax tree (AST) as verbose JSON to console.
-    if (TaskUtils.isParseOk(task)) {
+    if (TaskUtils.isParseStageOk(task)) {
         console.log(JSON.stringify(task.ast, undefined, 4));
     }
     // Else if the error was during lexing then dump the error to console.
-    else if (TaskUtils.isLexErr(task)) {
+    else if (TaskUtils.isLexStageError(task)) {
         console.log(task.error.message);
     }
     // Else if the error was during parsing then dump the error to the console.
-    else if (TaskUtils.isParseErr(task)) {
+    else if (TaskUtils.isParseStageError(task)) {
         // If we branch on isCommonError we can know if a CommonError or ParseError was thrown.
         console.log(
             `a ${task.isCommonError ? "CommonError" : "ParseError"} was thrown during parsing: ${task.error.message}`,
