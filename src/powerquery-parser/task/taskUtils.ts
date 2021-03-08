@@ -55,7 +55,7 @@ export function assertIsLexStageError<S extends IParseState = IParseState>(
 ): asserts task is LexTaskError {
     if (!isLexStageError(task)) {
         throw new CommonError.InvariantError(`assert failed, expected a different task result kind`, {
-            expectedResultKind: ResultKind.Ok,
+            expectedResultKind: ResultKind.Err,
             expectedTaskStage: TaskStage.Lex,
             actualResultKind: task.resultKind,
             acutalTaskStage: task.stage,
@@ -79,7 +79,7 @@ export function assertIsParseStage<S extends IParseState = IParseState>(
 ): asserts task is TriedParseTask<S> {
     if (!isParseStage(task)) {
         throw new CommonError.InvariantError(`assert failed, expected a different task stage kind`, {
-            actualResultKind: task.resultKind,
+            expectedTaskStage: TaskStage.Parse,
             acutalTaskStage: task.stage,
         });
     }
