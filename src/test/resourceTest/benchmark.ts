@@ -5,11 +5,12 @@
 import performanceNow = require("performance-now");
 
 import "mocha";
-import { DefaultLocale, Lexer, Parser, ParseSettings, ResultUtils, Task } from "../..";
+import * as path from "path";
+
+import { DefaultLocale, Lexer, Parser, ParseSettings, Task } from "../..";
+import { TaskUtils } from "../../powerquery-parser";
 import { TestFileUtils } from "../testUtils";
 import { BenchmarkParser, BenchmarkState, FunctionTimestamp } from "./benchmarkParser";
-
-import * as path from "path";
 
 interface FileSummary {
     readonly parserName: string;
@@ -80,11 +81,9 @@ function parseAllFiles(settings: ParseSettings<BenchmarkState>, parserName: stri
                 // tslint:disable-next-line: no-console
                 console.log(`\tRun ${index} of ${NumberOfRunsPerFile}`);
             }
-            const triedLexParse: Task.TriedLexParse<BenchmarkState> = TestFileUtils.tryLexParse(settings, filePath);
-            if (!ResultUtils.isOk(triedLexParse)) {
-                throw triedLexParse.error;
-            }
-            timings.push(triedLexParse.value.state.functionTimestamps);
+            const triedLexParse: Task.TriedLexParseTask<BenchmarkState> = TestFileUtils.tryLexParse(settings, filePath);
+            TaskUtils.assertIsParseStageOk(triedLexParse);
+            timings.push(triedLexParse.parseState.functionTimestamps);
         }
 
         let singleRunDurationMin: number = Number.MAX_SAFE_INTEGER;

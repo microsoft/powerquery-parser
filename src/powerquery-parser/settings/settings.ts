@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ICancellationToken } from "../common";
-import { Ast, ExternalType } from "../language";
+import { Ast } from "../language";
 import { LexerSnapshot } from "../lexer";
 import { DefaultLocale } from "../localization";
 import { CombinatorialParser, IParser, IParseState, IParseStateUtils, TParseStateFactoryOverrides } from "../parser";
@@ -23,11 +23,7 @@ export interface ParseSettings<S extends IParseState = IParseState> extends Comm
     readonly maybeParserEntryPointFn: ((state: S, parser: IParser<S>) => Ast.TNode) | undefined;
 }
 
-export interface InspectionSettings extends CommonSettings {
-    readonly maybeExternalTypeResolver: ExternalType.TExternalTypeResolverFn | undefined;
-}
-
-export type Settings<S extends IParseState = IParseState> = LexSettings & ParseSettings<S> & InspectionSettings;
+export type Settings<S extends IParseState = IParseState> = LexSettings & ParseSettings<S>;
 
 export const DefaultSettings: Settings<IParseState> = {
     maybeCancellationToken: undefined,
@@ -38,5 +34,4 @@ export const DefaultSettings: Settings<IParseState> = {
         maybeOverrides: TParseStateFactoryOverrides<IParseState> | undefined,
     ) => IParseStateUtils.stateFactory(lexerSnapshot, maybeOverrides),
     maybeParserEntryPointFn: undefined,
-    maybeExternalTypeResolver: (_request: ExternalType.TExternalTypeRequest) => undefined,
 };

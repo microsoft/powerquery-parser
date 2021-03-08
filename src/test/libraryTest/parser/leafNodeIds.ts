@@ -10,8 +10,8 @@ describe("Parser.Children", () => {
     it(`let x = foo(){0} in x`, () => {
         const text: string = `let x = foo(){0} in x`;
         const expected: ReadonlyArray<number> = [2, 6, 7, 12, 15, 17, 19, 22, 23, 24, 28];
-        const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
-        const actual: ReadonlyArray<number> = lexParseOk.state.contextState.leafNodeIds;
+        const lexParseOk: Task.ParseTaskOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+        const actual: ReadonlyArray<number> = lexParseOk.leafNodeIds;
         expect(expected).to.have.members(actual);
     });
 });

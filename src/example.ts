@@ -3,7 +3,7 @@
 
 /* tslint:disable:no-console */
 
-import { Assert, DefaultSettings, Inspection, Lexer, Parser, ResultUtils, Task } from ".";
+import { Assert, DefaultSettings, Lexer, ResultUtils, Task, TaskUtils } from ".";
 
 parseText(`let x = 1 in try x otherwise 2`);
 
@@ -11,21 +11,25 @@ parseText(`let x = 1 in try x otherwise 2`);
 function parseText(text: string): void {
     // Try lexing and parsing the argument which returns a Result object.
     // A Result<T, E> is the union (Ok<T> | Err<E>).
-    const triedLexParse: Task.TriedLexParse = Task.tryLexParse(DefaultSettings, text);
+    const task: Task.TriedLexParseTask = TaskUtils.tryLexParse(DefaultSettings, text);
 
-    // If the Result is an Ok, then dump the jsonified abstract syntax tree (AST) which was parsed.
-    if (ResultUtils.isOk(triedLexParse)) {
-        console.log(JSON.stringify(triedLexParse.value, undefined, 4));
+    // If it was a success then dump the abstract syntax tree (AST) as verbose JSON to console.
+    if (TaskUtils.isParseStageOk(task)) {
+        console.log(JSON.stringify(task.ast, undefined, 4));
     }
-    // Else the Result is an Err, then log the jsonified error.
-    else {
-        console.log(triedLexParse.error.message);
-        console.log(JSON.stringify(triedLexParse.error, undefined, 4));
+    // Else if the error was during lexing then dump the error to console.
+    else if (TaskUtils.isLexStageError(task)) {
+        console.log(task.error.message);
+    }
+    // Else if the error was during parsing then dump the error to the console.
+    else if (TaskUtils.isParseStageError(task)) {
+        // If we branch on isCommonError we can know if a CommonError or ParseError was thrown.
+        console.log(
+            `a ${task.isCommonError ? "CommonError" : "ParseError"} was thrown during parsing: ${task.error.message}`,
+        );
 
-        // If the error occured during parsing, then log the jsonified parsing context,
-        // which is what was parsed up until the error was thrown.
-        if (Parser.ParseError.isParseError(triedLexParse.error)) {
-            console.log(JSON.stringify(triedLexParse.error.state.contextState, undefined, 4));
+        if (!task.isCommonError) {
+            console.log(`parsed ${task.leafNodeIds.length} leaf nodes`);
         }
     }
 }
@@ -104,43 +108,5 @@ function lexText(text: string): void {
         const error: Lexer.LexError.LexError = triedLexerSnapshot.error;
         console.log(error.innerError.message);
         console.log(JSON.stringify(error.innerError, undefined, 4));
-    }
-}
-
-// @ts-ignore
-function inspectText(text: string, position: Inspection.Position): void {
-    // Having a LexError thrown will abort the inspection and return the offending LexError.
-    // So long as a TriedParse is created from reaching the parsing stage then an inspection will be returned.
-    const triedInspection: Task.TriedLexParseInspect = Task.tryLexParseInspection(DefaultSettings, text, position);
-    if (ResultUtils.isErr(triedInspection)) {
-        console.log(`Inspection failed due to: ${triedInspection.error.message}`);
-        return;
-    }
-    const inspection: Inspection.Inspection = triedInspection.value;
-
-    // A helper function grabs all autocomplete keys.
-    console.log(`Suggested for autocomplete: ${Inspection.AutocompleteUtils.keys(inspection.autocomplete).join(", ")}`);
-
-    // If an inspection for scope was successful, and if that inspection returned any members.
-    if (ResultUtils.isOk(inspection.triedNodeScope) && inspection.triedNodeScope.value !== undefined) {
-        const nodeScope: Inspection.NodeScope = inspection.triedNodeScope.value;
-
-        for (const identifier of nodeScope.keys()) {
-            console.log(`Identifier: ${identifier} has type ${nodeScope.get(identifier)!.kind}`);
-        }
-    }
-
-    // An inspection which checks if the cursor is in an invoke expression, and if so returns related metadata.
-    // If an inspection for the invoke expression was succesful.
-    if (ResultUtils.isOk(inspection.triedInvokeExpression) && inspection.triedInvokeExpression.value !== undefined) {
-        const invokeExpression: Inspection.InvokeExpression = inspection.triedInvokeExpression.value;
-
-        console.log(`InvokeExpression name: ${invokeExpression.maybeName ?? "<null>"}`);
-        console.log(
-            `InvokeExpression number of arguments: ${invokeExpression.maybeArguments?.numArguments ?? "<null>"}`,
-        );
-        console.log(
-            `InvokeExpression argument position: ${invokeExpression.maybeArguments?.argumentOrdinal ?? "<null>"}`,
-        );
     }
 }
