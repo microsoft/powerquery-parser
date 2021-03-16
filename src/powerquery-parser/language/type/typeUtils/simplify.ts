@@ -25,19 +25,19 @@ export function simplify(types: ReadonlyArray<Type.PqType>): ReadonlyArray<Type.
     }
 
     return [
-        ...categorized.maybeAction?.primitives.values(),
-        ...categorized.maybeAnyNonNull?.primitives.values(),
-        ...categorized.maybeBinary?.primitives.values(),
-        ...categorized.maybeDate?.primitives.values(),
-        ...categorized.maybeDateTime?.primitives.values(),
-        ...categorized.maybeDateTimeZone?.primitives.values(),
-        ...categorized.maybeDuration?.primitives.values(),
-        ...categorized.maybeLogical?.primitives.values(),
-        ...categorized.maybeNone?.primitives.values(),
-        ...categorized.maybeNotApplicable?.primitives.values(),
-        ...categorized.maybeNull?.primitives.values(),
-        ...categorized.maybeTime?.primitives.values(),
-        ...categorized.maybeUnknown?.primitives.values(),
+        ...(categorized.maybeAction?.primitives.values() ?? []),
+        ...(categorized.maybeAnyNonNull?.primitives.values() ?? []),
+        ...(categorized.maybeBinary?.primitives.values() ?? []),
+        ...(categorized.maybeDate?.primitives.values() ?? []),
+        ...(categorized.maybeDateTime?.primitives.values() ?? []),
+        ...(categorized.maybeDateTimeZone?.primitives.values() ?? []),
+        ...(categorized.maybeDuration?.primitives.values() ?? []),
+        ...(categorized.maybeLogical?.primitives.values() ?? []),
+        ...(categorized.maybeNone?.primitives.values() ?? []),
+        ...(categorized.maybeNotApplicable?.primitives.values() ?? []),
+        ...(categorized.maybeNull?.primitives.values() ?? []),
+        ...(categorized.maybeTime?.primitives.values() ?? []),
+        ...(categorized.maybeUnknown?.primitives.values() ?? []),
 
         ...maybeSimplifyFunction(categorized.maybeFunction),
         ...maybeSimplifyList(categorized.maybeList),
@@ -72,36 +72,36 @@ function maybeFindAny(categorized: CategorizedPqTypes): Type.Any | undefined {
     return firstNullableElseFirst(maybeAnySet);
 }
 
-function maybeSimplifyFunction(maybeCategory: FunctionCategory | undefined): ReadonlyArray<Type.TFunction> | undefined {
-    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedFunctions) : undefined;
+function maybeSimplifyFunction(maybeCategory: FunctionCategory | undefined): ReadonlyArray<Type.TFunction> {
+    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedFunctions) : [];
 }
 
-function maybeSimplifyList(maybeCategory: ListCategory | undefined): ReadonlyArray<Type.TList> | undefined {
-    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedLists) : undefined;
+function maybeSimplifyList(maybeCategory: ListCategory | undefined): ReadonlyArray<Type.TList> {
+    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedLists) : [];
 }
 
-function maybeSimplifyNumber(maybeCategory: NumberCategory | undefined): ReadonlyArray<Type.TNumber> | undefined {
-    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.literals) : undefined;
+function maybeSimplifyNumber(maybeCategory: NumberCategory | undefined): ReadonlyArray<Type.TNumber> {
+    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.literals) : [];
 }
 
-function maybeSimplifyRecord(maybeCategory: RecordCategory | undefined): ReadonlyArray<Type.TRecord> | undefined {
-    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedRecords) : undefined;
+function maybeSimplifyRecord(maybeCategory: RecordCategory | undefined): ReadonlyArray<Type.TRecord> {
+    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedRecords) : [];
 }
 
-function maybeSimplifyTable(maybeCategory: TableCategory | undefined): ReadonlyArray<Type.TTable> | undefined {
-    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedTables) : undefined;
+function maybeSimplifyTable(maybeCategory: TableCategory | undefined): ReadonlyArray<Type.TTable> {
+    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedTables) : [];
 }
 
-function maybeSimplifyText(maybeCategory: TextCategory | undefined): ReadonlyArray<Type.TText> | undefined {
-    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.literals) : undefined;
+function maybeSimplifyText(maybeCategory: TextCategory | undefined): ReadonlyArray<Type.TText> {
+    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.literals) : [];
 }
 
-function maybeSimplifyType(maybeCategory: TypeCategory | undefined): ReadonlyArray<Type.PqType> | undefined {
+function maybeSimplifyType(maybeCategory: TypeCategory | undefined): ReadonlyArray<Type.PqType> {
     if (maybeCategory === undefined) {
-        return undefined;
+        return [];
     } else if (maybeCategory.primitives.size) {
         const maybeType: Type.Type | undefined | undefined = firstNullableElseFirst(maybeCategory.primitives);
-        return maybeType ? [maybeType] : undefined;
+        return maybeType ? [maybeType] : [];
     } else {
         return [
             ...maybeCategory.definedListTypes.values(),
@@ -118,13 +118,13 @@ function maybeSimplifyType(maybeCategory: TypeCategory | undefined): ReadonlyArr
 function simplifyExtendedType<T extends Type.PqType, L extends Type.PqType>(
     primitives: ImmutableSet<T>,
     literals: ImmutableSet<L>,
-): ReadonlyArray<T> | ReadonlyArray<L> | undefined {
+): ReadonlyArray<T> | ReadonlyArray<L> {
     if (primitives.size) {
         const maybeType: T | undefined = firstNullableElseFirst(primitives);
-        return maybeType ? [maybeType] : undefined;
+        return maybeType ? [maybeType] : [];
     } else if (literals.size) {
         return [...literals.values()];
     } else {
-        return undefined;
+        return [];
     }
 }
