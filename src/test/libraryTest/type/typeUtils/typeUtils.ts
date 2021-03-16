@@ -360,7 +360,7 @@ describe(`TypeUtils`, () => {
             describe(`${Type.ExtendedTypeKind.AnyUnion}`, () => {
                 it(`primitives`, () => {
                     const type: Type.PqType = TypeUtils.anyUnionFactory([Type.NumberInstance, Type.ListInstance]);
-                    expect(TypeUtils.nameOf(type)).to.equal(`number | list`);
+                    expect(TypeUtils.nameOf(type)).to.equal(`list | number`);
                 });
                 it(`complex`, () => {
                     const type: Type.PqType = TypeUtils.anyUnionFactory([
@@ -369,7 +369,7 @@ describe(`TypeUtils`, () => {
                         TypeUtils.definedTableFactory(false, new Map([["bar", Type.TextInstance]]), true),
                     ]);
                     const actual: string = TypeUtils.nameOf(type);
-                    expect(actual).to.equal(`[foo: number] | {text} | table [bar: text, ...]`);
+                    expect(actual).to.equal(`{test} | [foo: number] | table [bar: text, ...]`);
                 });
             });
 
