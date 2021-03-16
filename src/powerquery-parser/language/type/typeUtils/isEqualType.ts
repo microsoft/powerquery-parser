@@ -5,7 +5,7 @@ import { Type } from "..";
 import { ArrayUtils, Assert, MapUtils } from "../../../common";
 import { isTypeInArray } from "./typeUtils";
 
-export function isEqualType(left: Type.TType, right: Type.TType): boolean {
+export function isEqualType(left: Type.PqType, right: Type.PqType): boolean {
     if (left === right) {
         return true;
     } else if (
@@ -30,8 +30,8 @@ export function isEqualFunctionParameter(left: Type.FunctionParameter, right: Ty
 }
 
 export function isEqualFunctionSignature(
-    left: Type.TType & Type.FunctionSignature,
-    right: Type.TType & Type.FunctionSignature,
+    left: Type.PqType & Type.FunctionSignature,
+    right: Type.PqType & Type.FunctionSignature,
 ): boolean {
     return (
         left === right ||
@@ -42,7 +42,7 @@ export function isEqualFunctionSignature(
 }
 
 // Does not care about ordering.
-function isEqualTypes(leftTypes: ReadonlyArray<Type.TType>, rightTypes: ReadonlyArray<Type.TType>): boolean {
+export function isEqualTypes(leftTypes: ReadonlyArray<Type.PqType>, rightTypes: ReadonlyArray<Type.PqType>): boolean {
     if (leftTypes === rightTypes) {
         return true;
     } else if (leftTypes.length !== rightTypes.length) {
@@ -59,7 +59,7 @@ function isEqualTypes(leftTypes: ReadonlyArray<Type.TType>, rightTypes: Readonly
     return true;
 }
 
-function isEqualExtendedTypes(left: Type.TExtendedType, right: Type.TExtendedType): boolean {
+export function isEqualExtendedTypes(left: Type.TExtendedType, right: Type.TExtendedType): boolean {
     if (left === right) {
         return true;
     } else if (left.maybeExtendedKind !== right.maybeExtendedKind) {
@@ -114,66 +114,72 @@ function isEqualExtendedTypes(left: Type.TExtendedType, right: Type.TExtendedTyp
     }
 }
 
-function isEqualAnyUnion(left: Type.AnyUnion, right: Type.AnyUnion): boolean {
+export function isEqualAnyUnion(left: Type.AnyUnion, right: Type.AnyUnion): boolean {
     return (
         left === right ||
         (left.isNullable === right.isNullable && isEqualTypes(left.unionedTypePairs, right.unionedTypePairs))
     );
 }
 
-function isEqualDefinedFunction(left: Type.DefinedFunction, right: Type.DefinedFunction): boolean {
+export function isEqualDefinedFunction(left: Type.DefinedFunction, right: Type.DefinedFunction): boolean {
     return isEqualFunctionSignature(left, right);
 }
 
-function isEqualDefinedList(left: Type.DefinedList, right: Type.DefinedList): boolean {
+export function isEqualDefinedList(left: Type.DefinedList, right: Type.DefinedList): boolean {
     if (left === right) {
         return true;
     } else if (left.elements.length !== right.elements.length || left.isNullable !== right.isNullable) {
         return false;
     }
 
-    const rightElements: ReadonlyArray<Type.TType> = right.elements;
+    const rightElements: ReadonlyArray<Type.PqType> = right.elements;
     return ArrayUtils.all(
-        left.elements.map((leftType: Type.TType, index: number) => isEqualType(leftType, rightElements[index])),
+        left.elements.map((leftType: Type.PqType, index: number) => isEqualType(leftType, rightElements[index])),
     );
 }
 
-function isEqualDefinedListType(left: Type.DefinedListType, right: Type.DefinedListType): boolean {
+export function isEqualDefinedListType(left: Type.DefinedListType, right: Type.DefinedListType): boolean {
     if (left === right) {
         return true;
     } else if (left.itemTypes.length !== right.itemTypes.length || left.isNullable !== right.isNullable) {
         return false;
     }
 
-    const rightElements: ReadonlyArray<Type.TType> = right.itemTypes;
+    const rightElements: ReadonlyArray<Type.PqType> = right.itemTypes;
     return ArrayUtils.all(
-        left.itemTypes.map((leftType: Type.TType, index: number) => isEqualType(leftType, rightElements[index])),
+        left.itemTypes.map((leftType: Type.PqType, index: number) => isEqualType(leftType, rightElements[index])),
     );
 }
 
-function isEqualDefinedRecord(left: Type.DefinedRecord, right: Type.DefinedRecord): boolean {
+export function isEqualDefinedRecord(left: Type.DefinedRecord, right: Type.DefinedRecord): boolean {
     return (
         left === right ||
         (left.isNullable === right.isNullable &&
-            MapUtils.isEqualMap<string, Type.TType>(left.fields, right.fields, isEqualType))
+            MapUtils.isEqualMap<string, Type.PqType>(left.fields, right.fields, isEqualType))
     );
 }
 
-function isEqualDefinedTable(left: Type.DefinedTable, right: Type.DefinedTable): boolean {
+export function isEqualDefinedTable(left: Type.DefinedTable, right: Type.DefinedTable): boolean {
     return (
         left === right ||
         (left.isNullable === right.isNullable &&
-            MapUtils.isEqualMap<string, Type.TType>(left.fields, right.fields, isEqualType))
+            MapUtils.isEqualMap<string, Type.PqType>(left.fields, right.fields, isEqualType))
     );
 }
 
-function isEqualPrimaryPrimitiveType(left: Type.PrimaryPrimitiveType, right: Type.PrimaryPrimitiveType): boolean {
+export function isEqualPrimaryPrimitiveType(
+    left: Type.PrimaryPrimitiveType,
+    right: Type.PrimaryPrimitiveType,
+): boolean {
     return (
         left === right || (left.isNullable === right.isNullable && isEqualType(left.primitiveType, right.primitiveType))
     );
 }
 
-function isEqualFieldSpecificationList(left: Type.FieldSpecificationList, right: Type.FieldSpecificationList): boolean {
+export function isEqualFieldSpecificationList(
+    left: Type.FieldSpecificationList,
+    right: Type.FieldSpecificationList,
+): boolean {
     if (left === right) {
         return true;
     } else if (left.isOpen !== right.isOpen || left.fields.size !== right.fields.size) {
@@ -181,7 +187,7 @@ function isEqualFieldSpecificationList(left: Type.FieldSpecificationList, right:
     }
 
     for (const [key, leftValue] of left.fields.entries()) {
-        const maybeRightValue: Type.TType | undefined = right.fields.get(key);
+        const maybeRightValue: Type.PqType | undefined = right.fields.get(key);
         if (maybeRightValue === undefined || !isEqualType(leftValue, maybeRightValue)) {
             return false;
         }
@@ -190,7 +196,7 @@ function isEqualFieldSpecificationList(left: Type.FieldSpecificationList, right:
     return true;
 }
 
-function isEqualFunctionParameters(
+export function isEqualFunctionParameters(
     left: ReadonlyArray<Type.FunctionParameter>,
     right: ReadonlyArray<Type.FunctionParameter>,
 ): boolean {
@@ -212,33 +218,37 @@ function isEqualFunctionParameters(
     return true;
 }
 
-function isEqualFunctionType(left: Type.FunctionType, right: Type.FunctionType): boolean {
+export function isEqualFunctionType(left: Type.FunctionType, right: Type.FunctionType): boolean {
     return isEqualFunctionSignature(left, right);
 }
 
-function isEqualListType(left: Type.ListType, right: Type.ListType): boolean {
+export function isEqualListType(left: Type.ListType, right: Type.ListType): boolean {
     return left === right || (left.isNullable === right.isNullable && isEqualType(left.itemType, right.itemType));
 }
 
-function isEqualNumberLiteral(left: Type.NumberLiteral, right: Type.NumberLiteral): boolean {
+export function isEqualNumberLiteral(left: Type.NumberLiteral, right: Type.NumberLiteral): boolean {
     return left === right || (left.isNullable === right.isNullable && left.literal === right.literal);
 }
 
-function isEqualRecordType(left: Type.RecordType, right: Type.RecordType): boolean {
+export function isEqualPrimitiveType(left: Type.TPrimitiveType, right: Type.TPrimitiveType): boolean {
+    return left === right || (left.kind === right.kind && left.isNullable && right.isNullable);
+}
+
+export function isEqualRecordType(left: Type.RecordType, right: Type.RecordType): boolean {
     return left.isNullable === right.isNullable && isEqualFieldSpecificationList(left, right);
 }
 
-function isEqualTableType(left: Type.TableType, right: Type.TableType): boolean {
+export function isEqualTableType(left: Type.TableType, right: Type.TableType): boolean {
     return left.isNullable === right.isNullable && isEqualFieldSpecificationList(left, right);
 }
 
-function isEqualTableTypePrimaryExpression(
+export function isEqualTableTypePrimaryExpression(
     left: Type.TableTypePrimaryExpression,
     right: Type.TableTypePrimaryExpression,
 ): boolean {
     return left === right || isEqualType(left.primaryExpression, right.primaryExpression);
 }
 
-function isEqualTextLiteral(left: Type.TextLiteral, right: Type.TextLiteral): boolean {
+export function isEqualTextLiteral(left: Type.TextLiteral, right: Type.TextLiteral): boolean {
     return left === right || (left.isNullable === right.isNullable && left.literal === right.literal);
 }

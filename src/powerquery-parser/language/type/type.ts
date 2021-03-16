@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export type TType = TPrimitiveType | TExtendedType;
+export type PqType = TPrimitiveType | TExtendedType;
 export type TExtendedType =
     | AnyUnion
     | DefinedFunction
@@ -37,6 +37,15 @@ export type TNumber = Number | NumberLiteral;
 export type TRecord = Record | DefinedRecord;
 export type TTable = Table | DefinedTable;
 export type TText = Text | TextLiteral;
+export type TType =
+    | Type
+    | DefinedListType
+    | FunctionType
+    | ListType
+    | PrimaryPrimitiveType
+    | RecordType
+    | TableType
+    | TableTypePrimaryExpression;
 
 export type Action = IPrimitiveType<TypeKind.Action>;
 export type Any = IPrimitiveType<TypeKind.Any>;
@@ -184,13 +193,13 @@ export interface IPrimitiveLiteral extends IExtendedType {
 // ------------------------------------------
 
 export interface FieldSpecificationList {
-    readonly fields: Map<string, TType>;
+    readonly fields: Map<string, PqType>;
     readonly isOpen: boolean;
 }
 
 export interface FunctionSignature {
     readonly parameters: ReadonlyArray<FunctionParameter>;
-    readonly returnType: TType;
+    readonly returnType: PqType;
 }
 
 export interface IPrimitiveType<T extends TypeKind = TypeKind> extends IType<T> {
@@ -218,7 +227,7 @@ export interface FunctionParameter {
 export interface AnyUnion extends IExtendedType {
     readonly kind: TypeKind.Any;
     readonly maybeExtendedKind: ExtendedTypeKind.AnyUnion;
-    readonly unionedTypePairs: ReadonlyArray<TType>;
+    readonly unionedTypePairs: ReadonlyArray<PqType>;
 }
 
 export type DefinedFunction = IExtendedType &
@@ -231,14 +240,14 @@ export type DefinedFunction = IExtendedType &
 export interface DefinedList extends IExtendedType {
     readonly kind: TypeKind.List;
     readonly maybeExtendedKind: ExtendedTypeKind.DefinedList;
-    readonly elements: ReadonlyArray<TType>;
+    readonly elements: ReadonlyArray<PqType>;
 }
 
 // A ListType for DefinedList
 export interface DefinedListType extends IExtendedType {
     readonly kind: TypeKind.Type;
     readonly maybeExtendedKind: ExtendedTypeKind.DefinedListType;
-    readonly itemTypes: ReadonlyArray<TType>;
+    readonly itemTypes: ReadonlyArray<PqType>;
 }
 
 export type DefinedRecord = IExtendedType &
@@ -262,7 +271,7 @@ export type FunctionType = IExtendedType &
 export interface ListType extends IExtendedType {
     readonly kind: TypeKind.Type;
     readonly maybeExtendedKind: ExtendedTypeKind.ListType;
-    readonly itemType: TType;
+    readonly itemType: PqType;
 }
 
 export interface NumberLiteral extends IPrimitiveLiteral {
@@ -292,7 +301,7 @@ export type TableType = IExtendedType &
 export interface TableTypePrimaryExpression extends IExtendedType {
     readonly kind: TypeKind.Type;
     readonly maybeExtendedKind: ExtendedTypeKind.TableTypePrimaryExpression;
-    readonly primaryExpression: TType;
+    readonly primaryExpression: PqType;
 }
 
 export interface TextLiteral extends IPrimitiveLiteral {

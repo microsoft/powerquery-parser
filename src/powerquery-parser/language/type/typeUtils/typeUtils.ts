@@ -3,34 +3,43 @@
 
 import { Type } from "..";
 import { Ast, AstUtils } from "../..";
-import { Assert } from "../../../common";
+import { ArrayUtils, Assert, CommonError } from "../../../common";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../../parser";
 import { primitiveTypeFactory } from "./factories";
 import { isCompatible } from "./isCompatible";
 import { isEqualType } from "./isEqualType";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";
 
-export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TType> {
+export function simplify(types: ReadonlyArray<Type.PqType>): ReadonlyArray<Type.PqType> {
+    const byKind: TypeCollectionByKind = categorizeByKind(types);
+
+    // If an Any primitive exists then return it. Prioritize nullable any.
+    const maybeAnyPrimitives: ReadonlyArray<Type.PqType> | undefined = byKind.get(Type.TypeKind.Any)?.get(undefined);
+    if (maybeAnyPrimitives !== undefined) {
+        return [resolvePrimitiveIsNullable(maybeAnyPrimitives as ReadonlyArray<Type.Any>)];
+    }
+
+    for (const [kind, kindCollection] of byKind.entries()) {
+        if (kind === Type.TypeKind.Any) {
+            if (kindCollection.)
+        }
+
+        for (const extendedKindCollection of kindCollection.values()) {
+
+        }
+        simplifyByExtendedKind
+    }
+
     const anyUnionTypes: Type.AnyUnion[] = [];
-    const notAnyUnionTypes: Type.TType[] = [];
+    const notAnyUnionTypes: Type.PqType[] = [];
 
-    for (const item of types) {
-        if (item.kind === Type.TypeKind.Any) {
-            switch (item.maybeExtendedKind) {
-                case undefined:
-                    return [Type.AnyInstance];
-
-                case Type.ExtendedTypeKind.AnyUnion:
-                    if (!isTypeInArray(anyUnionTypes, item)) {
-                        anyUnionTypes.push(item);
-                    }
-                    break;
-
-                default:
-                    throw Assert.isNever(item);
+    for (const byExtendedKind of byKind.values()) {
+        for (const [extendedKind, extendedKindTypes] of byExtendedKind.entries()) {
+            if (extendedKind === Type.ExtendedTypeKind.AnyUnion) {
+                anyUnionTypes.push(...(extendedKindTypes as Type.AnyUnion[]));
+            } else {
+                notAnyUnionTypes.push(...extendedKindTypes);
             }
-        } else if (!isTypeInArray(notAnyUnionTypes, item)) {
-            notAnyUnionTypes.push(item);
         }
     }
 
@@ -39,7 +48,7 @@ export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TTy
     }
 
     // Merge the return of dedupeAnyUnions and notAnyUnionTypes.
-    const dedupedAnyUnion: Type.TType = dedupeAnyUnions(anyUnionTypes);
+    const dedupedAnyUnion: Type.PqType = dedupeAnyUnions(anyUnionTypes);
     if (dedupedAnyUnion.kind === Type.TypeKind.Any && dedupedAnyUnion.maybeExtendedKind === undefined) {
         return [Type.AnyInstance];
     }
@@ -48,7 +57,7 @@ export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TTy
     // Since the return will contain an anyUnion we should merge all notAnyUnionTypes into the AnyUnion.
     if (dedupedAnyUnion.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
         let isNullableEncountered: boolean = false;
-        const typesNotInDedupedAnyUnion: Type.TType[] = [];
+        const typesNotInDedupedAnyUnion: Type.PqType[] = [];
 
         for (const item of notAnyUnionTypes) {
             if (!isTypeInArray(dedupedAnyUnion.unionedTypePairs, item)) {
@@ -79,13 +88,84 @@ export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TTy
     }
 }
 
+/*
+export function dedupe(types: ReadonlyArray<Type.PqType>): ReadonlyArray<Type.PqType> {
+    const anyUnionTypes: Type.AnyUnion[] = [];
+    const notAnyUnionTypes: Type.PqType[] = [];
+
+    for (const item of types) {
+        if (item.kind === Type.TypeKind.Any) {
+            switch (item.maybeExtendedKind) {
+                case undefined:
+                    return [Type.AnyInstance];
+
+                case Type.ExtendedTypeKind.AnyUnion:
+                    if (!isTypeInArray(anyUnionTypes, item)) {
+                        anyUnionTypes.push(item);
+                    }
+                    break;
+
+                default:
+                    throw Assert.isNever(item);
+            }
+        } else if (!isTypeInArray(notAnyUnionTypes, item)) {
+            notAnyUnionTypes.push(item);
+        }
+    }
+
+    if (anyUnionTypes.length === 0) {
+        return notAnyUnionTypes;
+    }
+
+    // Merge the return of dedupeAnyUnions and notAnyUnionTypes.
+    const dedupedAnyUnion: Type.PqType = dedupeAnyUnions(anyUnionTypes);
+    if (dedupedAnyUnion.kind === Type.TypeKind.Any && dedupedAnyUnion.maybeExtendedKind === undefined) {
+        return [Type.AnyInstance];
+    }
+
+    // dedupedAnyUnion is an AnyUnion.
+    // Since the return will contain an anyUnion we should merge all notAnyUnionTypes into the AnyUnion.
+    if (dedupedAnyUnion.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
+        let isNullableEncountered: boolean = false;
+        const typesNotInDedupedAnyUnion: Type.PqType[] = [];
+
+        for (const item of notAnyUnionTypes) {
+            if (!isTypeInArray(dedupedAnyUnion.unionedTypePairs, item)) {
+                if (item.isNullable) {
+                    isNullableEncountered = true;
+                }
+                typesNotInDedupedAnyUnion.push(item);
+            }
+        }
+
+        return [
+            {
+                kind: Type.TypeKind.Any,
+                maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+                isNullable: isNullableEncountered,
+                unionedTypePairs: [...dedupedAnyUnion.unionedTypePairs, ...typesNotInDedupedAnyUnion],
+            },
+        ];
+    }
+    // dedupedAnyUnion is not an AnyUnion.
+    // Merge dedupedAnyUnion into notAnyUnionTypes.
+    else {
+        if (!isTypeInArray(notAnyUnionTypes, dedupedAnyUnion)) {
+            notAnyUnionTypes.push(dedupedAnyUnion);
+        }
+
+        return notAnyUnionTypes;
+    }
+}
+*/
+
 // Combines all given AnyUnions into either:
 //  * a single AnyUnion
-//  * a single Type.TType that is not an AnyUnion
+//  * a single Type.PqType that is not an AnyUnion
 // The first case is the most common.
 // The second happens if several AnyUnion consist only of one unique type, then it should be simplified to that type.
-export function dedupeAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): Type.TType {
-    const simplified: Type.TType[] = [];
+export function dedupeAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): Type.PqType {
+    const simplified: Type.PqType[] = [];
     let isNullable: boolean = false;
 
     for (const anyUnion of anyUnions) {
@@ -114,8 +194,8 @@ export function dedupeAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): Type.T
 }
 
 // Recursively flattens out all unionedTypePairs into an array.
-export function flattenAnyUnion(anyUnion: Type.AnyUnion): ReadonlyArray<Type.TType> {
-    let newUnionedTypePairs: Type.TType[] = [];
+export function flattenAnyUnion(anyUnion: Type.AnyUnion): ReadonlyArray<Type.PqType> {
+    let newUnionedTypePairs: Type.PqType[] = [];
 
     for (const item of anyUnion.unionedTypePairs) {
         // If it's an Any primitive then we can do an early return.
@@ -165,9 +245,9 @@ export function typeKindFromLiteralKind(literalKind: Ast.LiteralKind): Type.Type
     }
 }
 
-export function isTypeInArray(collection: ReadonlyArray<Type.TType>, item: Type.TType): boolean {
+export function isTypeInArray(collection: ReadonlyArray<Type.PqType>, item: Type.PqType): boolean {
     // Fast comparison then deep comparison
-    return collection.includes(item) || collection.find((type: Type.TType) => isEqualType(item, type)) !== undefined;
+    return collection.includes(item) || collection.find((type: Type.PqType) => isEqualType(item, type)) !== undefined;
 }
 
 export function isTypeKind(text: string): text is Type.TypeKind {
@@ -199,7 +279,7 @@ export function isTypeKind(text: string): text is Type.TypeKind {
     }
 }
 
-export function isValidInvocation(functionType: Type.DefinedFunction, args: ReadonlyArray<Type.TType>): boolean {
+export function isValidInvocation(functionType: Type.DefinedFunction, args: ReadonlyArray<Type.PqType>): boolean {
     // You can't provide more arguments than are on the function signature.
     if (args.length > functionType.parameters.length) {
         return false;
@@ -210,11 +290,11 @@ export function isValidInvocation(functionType: Type.DefinedFunction, args: Read
 
     for (let index: number = 1; index < numParameters; index += 1) {
         const parameter: Type.FunctionParameter = Assert.asDefined(parameters[index]);
-        const maybeArgType: Type.TType | undefined = args[index];
+        const maybeArgType: Type.PqType | undefined = args[index];
 
         if (maybeArgType !== undefined) {
-            const argType: Type.TType = maybeArgType;
-            const parameterType: Type.TType = primitiveTypeFactory(
+            const argType: Type.PqType = maybeArgType;
+            const parameterType: Type.PqType = primitiveTypeFactory(
                 parameter.isNullable,
                 Assert.asDefined(parameter.maybeType),
             );
@@ -246,6 +326,129 @@ export function inspectParameter(
         default:
             throw Assert.isNever(parameter);
     }
+}
+
+type TypeCollectionByKind = Map<Type.TypeKind, TypeCollectionByExtendedKind>;
+type TypeCollectionByExtendedKind = Map<Type.ExtendedTypeKind | undefined, Type.PqType[]>;
+
+function categorizeByKind(types: ReadonlyArray<Type.PqType>): TypeCollectionByKind {
+    const result: TypeCollectionByKind = new Map();
+
+    for (const type of types) {
+        const maybeExtendedCollection: TypeCollectionByExtendedKind | undefined = result.get(type.kind);
+
+        if (maybeExtendedCollection === undefined) {
+            result.set(type.kind, new Map([[type.maybeExtendedKind, [type]]]));
+        } else {
+            const extendedCollection: TypeCollectionByExtendedKind = maybeExtendedCollection;
+            const maybeCollection: Type.PqType[] | undefined = extendedCollection.get(type.maybeExtendedKind);
+
+            if (maybeCollection === undefined) {
+                extendedCollection.set(type.maybeExtendedKind, [type]);
+            } else if (isTypeInArray(maybeCollection, type)) {
+                maybeCollection.push(type);
+            }
+        }
+    }
+
+    return result;
+}
+
+// If at least one primitive exists then return that,
+// else dedupe the array.
+function simplifyAnyUnion(byExtendedKind: TypeCollectionByExtendedKind): Type.PqType {
+    const allTypes: Type.PqType[] = [];
+
+    for (const [extendedKind, collection] of byExtendedKind.entries()) {
+        switch (extendedKind) {
+            case Type.ExtendedTypeKind.AnyUnion:
+                allTypes.push(...dedupe(collection));
+                break;
+
+            case undefined:
+                return resolvePrimitiveIsNullable(collection as ReadonlyArray<Type.TPrimitiveType>)
+
+            default:
+                throw Assert.isNever(extendedKind)
+        }
+    }
+
+    if (allTypes.length === 1) {
+        return allTypes[0];
+    }
+
+    return {
+        kind: Type.TypeKind.Any,
+        maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+        isNullable: allTypes.find((PqType: Type.PqType) => PqType.isNullable === true) !== undefined,
+        unionedTypePairs: allTypes,
+    };
+}
+
+// If at least one primitive exists then return that,
+// else dedupe the array.
+function simplifyByExtendedKind(byExtendedKind: TypeCollectionByExtendedKind): Type.PqType {
+    const primitives: ReadonlyArray<Type.PqType> | undefined = byExtendedKind.get(undefined);
+    if (primitives !== undefined) {
+        return resolvePrimitiveIsNullable(primitives as ReadonlyArray<Type.TPrimitiveType>);
+    }
+
+    const allTypes: Type.PqType[] = [];
+    for (const collection of byExtendedKind.values()) {
+        allTypes.push(...dedupe(collection));
+    }
+
+    if (allTypes.length === 1) {
+        return allTypes[0];
+    }
+
+    return {
+        kind: Type.TypeKind.Any,
+        maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+        isNullable: allTypes.find((PqType: Type.PqType) => PqType.isNullable === true) !== undefined,
+        unionedTypePairs: allTypes,
+    };
+}
+
+function dedupe(collection: ReadonlyArray<Type.PqType>): ReadonlyArray<Type.PqType> {
+    const result: Type.PqType[] = [];
+
+    for (const type of collection) {
+        if (!isTypeInArray(collection, type)) {
+            result.push(type);
+        }
+    }
+
+    return result;
+}
+
+// function maybeFindAnyPrimitive(byKind: TypeCollectionByKind): Type.PqType | undefined {
+//     const maybeAnyPrimitives: Type.PqType[] | undefined = byKind.get(Type.TypeKind.Any)?.get(undefined);
+//     if (maybeAnyPrimitives === undefined) {
+//         return undefined;
+//     }
+
+//     // At least one Any primitive exists, but we need to resolve if it's an AnyInstance or AnyNonNullInstance.
+//     let nonNullableAnyPrimitive: Type.PqType | undefined;
+
+//     for (const anyPrimitive of maybeAnyPrimitives) {
+//         if (anyPrimitive.isNullable) {
+//             return anyPrimitive;
+//         } else {
+//             nonNullableAnyPrimitive = anyPrimitive;
+//         }
+//     }
+
+//     return Assert.asDefined(
+//         nonNullableAnyPrimitive,
+//         `maybeAnyPrimitives should only be truthy if it has a non-zero length`,
+//     );
+// }
+
+// Prioritize returning isNullable instance, otherwise return first element.
+// Assummes TypeKind is equal for all elements.
+function resolvePrimitiveIsNullable(types: ReadonlyArray<Type.TPrimitiveType>): Type.TPrimitiveType {
+    return types.find(type => type.isNullable) ?? ArrayUtils.assertGet(types, 0, `assumes types has non-zero length`);
 }
 
 function inspectAstParameter(node: Ast.TParameter): Type.FunctionParameter {

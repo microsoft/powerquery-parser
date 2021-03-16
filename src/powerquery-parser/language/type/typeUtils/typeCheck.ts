@@ -156,7 +156,7 @@ function typeCheckRecordOrTable(
     const mismatches: Mismatch<string, Type.TType>[] = [];
     const extraneousFields: string[] = [];
     const missingFields: ReadonlyArray<string> = [...schemaFields.keys()].filter(
-        (key: string) => valueFields.has(key) === false,
+        (key: string) => !valueFields.has(key),
     );
 
     for (const [key, type] of valueFields.entries()) {
