@@ -28,11 +28,11 @@ function assertGetAbridgedTypes(expected: ReadonlyArray<AbridgedType>, actual: R
     expect(actual).deep.equal(expected);
 }
 
-function assertIsAnyUnion(type: Type.TType): asserts type is Type.AnyUnion {
+function assertIsAnyUnion(type: Type.PqType): asserts type is Type.AnyUnion {
     expect(type.maybeExtendedKind).to.equal(Type.ExtendedTypeKind.AnyUnion);
 }
 
-function typeToAbridged(type: Type.TType): AbridgedType {
+function typeToAbridged(type: Type.PqType): AbridgedType {
     return {
         kind: type.kind,
         maybeExtendedKind: type.maybeExtendedKind,
@@ -40,16 +40,16 @@ function typeToAbridged(type: Type.TType): AbridgedType {
     };
 }
 
-function abridgedTypesFactory(types: ReadonlyArray<Type.TType>): ReadonlyArray<AbridgedType> {
+function abridgedTypesFactory(types: ReadonlyArray<Type.PqType>): ReadonlyArray<AbridgedType> {
     return types.map(typeToAbridged);
 }
 
 describe(`TypeUtils`, () => {
-    describe(`dedupe`, () => {
+    describe(`simplify`, () => {
         it(`generic, identical`, () => {
             const expected: AbridgedType = abridgedPrimitiveType(Type.TypeKind.Record, false);
             const actual: ReadonlyArray<AbridgedType> = abridgedTypesFactory(
-                TypeUtils.dedupe([Type.RecordInstance, Type.RecordInstance]),
+                TypeUtils.simplify([Type.RecordInstance, Type.RecordInstance]),
             );
             expect(actual.length).to.equal(1);
             assertGetAbridgedType(expected, actual[0]);
@@ -57,7 +57,7 @@ describe(`TypeUtils`, () => {
 
         it(`generic, mixed`, () => {
             const actual: ReadonlyArray<AbridgedType> = abridgedTypesFactory(
-                TypeUtils.dedupe([Type.RecordInstance, Type.NullableRecordInstance]),
+                TypeUtils.simplify([Type.RecordInstance, Type.NullableRecordInstance]),
             );
             const expected: ReadonlyArray<AbridgedType> = [
                 abridgedPrimitiveType(Type.TypeKind.Record, false),
@@ -68,14 +68,14 @@ describe(`TypeUtils`, () => {
 
         it(`early return with any primitive`, () => {
             const actual: ReadonlyArray<AbridgedType> = abridgedTypesFactory(
-                TypeUtils.dedupe([Type.AnyInstance, Type.NullableRecordInstance]),
+                TypeUtils.simplify([Type.AnyInstance, Type.NullableRecordInstance]),
             );
             const expected: ReadonlyArray<AbridgedType> = [Type.AnyInstance];
             assertGetAbridgedTypes(expected, actual);
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, combine into a single primitive type`, () => {
-            const deduped: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
+            const deduped: ReadonlyArray<Type.PqType> = TypeUtils.simplify([
                 TypeUtils.anyUnionFactory([Type.RecordInstance, Type.RecordInstance]),
                 TypeUtils.anyUnionFactory([Type.RecordInstance, Type.RecordInstance]),
             ]);
@@ -83,18 +83,18 @@ describe(`TypeUtils`, () => {
             expect(deduped.length).to.equal(1);
 
             const actual: AbridgedType = typeToAbridged(deduped[0]);
-            const expected: AbridgedType = TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Record);
+            const expected: AbridgedType = TypeUtils.nonExtendedTypeFactory(false, Type.TypeKind.Record);
             assertGetAbridgedType(expected, actual);
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, combine into a single AnyUnion`, () => {
-            const deduped: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
+            const deduped: ReadonlyArray<Type.PqType> = TypeUtils.simplify([
                 TypeUtils.anyUnionFactory([Type.RecordInstance, Type.NullableTableInstance]),
                 TypeUtils.anyUnionFactory([Type.RecordInstance, Type.NullableTableInstance]),
             ]);
 
             expect(deduped.length).to.equal(1);
-            const ttype: Type.TType = deduped[0];
+            const ttype: Type.PqType = deduped[0];
             assertIsAnyUnion(ttype);
 
             const actual: ReadonlyArray<AbridgedType> = abridgedTypesFactory(ttype.unionedTypePairs);
@@ -106,13 +106,13 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, combine into a single AnyUnion, mixed nullability`, () => {
-            const deduped: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
+            const deduped: ReadonlyArray<Type.PqType> = TypeUtils.simplify([
                 TypeUtils.anyUnionFactory([Type.NullableRecordInstance, Type.NullableTableInstance]),
                 TypeUtils.anyUnionFactory([Type.RecordInstance, Type.TableInstance]),
             ]);
 
             expect(deduped.length).to.equal(1);
-            const ttype: Type.TType = deduped[0];
+            const ttype: Type.PqType = deduped[0];
             assertIsAnyUnion(ttype);
 
             const actual: ReadonlyArray<AbridgedType> = abridgedTypesFactory(ttype.unionedTypePairs);
@@ -126,7 +126,7 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, flatten multi level AnyUnion to single AnyUnion`, () => {
-            const deduped: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
+            const deduped: ReadonlyArray<Type.PqType> = TypeUtils.simplify([
                 TypeUtils.anyUnionFactory([
                     Type.RecordInstance,
                     TypeUtils.anyUnionFactory([Type.RecordInstance, Type.NumberInstance]),
@@ -135,7 +135,7 @@ describe(`TypeUtils`, () => {
             ]);
 
             expect(deduped.length).to.equal(1);
-            const ttype: Type.TType = deduped[0];
+            const ttype: Type.PqType = deduped[0];
             assertIsAnyUnion(ttype);
 
             const actual: ReadonlyArray<AbridgedType> = abridgedTypesFactory(ttype.unionedTypePairs);
@@ -147,7 +147,7 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, flatten multi level AnyUnion to single AnyUnion`, () => {
-            const deduped: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
+            const deduped: ReadonlyArray<Type.PqType> = TypeUtils.simplify([
                 TypeUtils.anyUnionFactory([
                     Type.RecordInstance,
                     TypeUtils.anyUnionFactory([Type.RecordInstance, Type.NumberInstance]),
@@ -156,7 +156,7 @@ describe(`TypeUtils`, () => {
             ]);
 
             expect(deduped.length).to.equal(1);
-            const ttype: Type.TType = deduped[0];
+            const ttype: Type.PqType = deduped[0];
             assertIsAnyUnion(ttype);
 
             const actual: ReadonlyArray<AbridgedType> = abridgedTypesFactory(ttype.unionedTypePairs);
@@ -168,7 +168,7 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, early return with any primitive`, () => {
-            const deduped: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
+            const deduped: ReadonlyArray<Type.PqType> = TypeUtils.simplify([
                 TypeUtils.anyUnionFactory([
                     Type.RecordInstance,
                     TypeUtils.anyUnionFactory([Type.AnyInstance, Type.NumberInstance]),
@@ -177,7 +177,7 @@ describe(`TypeUtils`, () => {
             ]);
 
             expect(deduped.length).to.equal(1);
-            const ttype: Type.TType = deduped[0];
+            const ttype: Type.PqType = deduped[0];
 
             const actual: AbridgedType = typeToAbridged(ttype);
             const expected: AbridgedType = typeToAbridged(Type.AnyInstance);
@@ -359,11 +359,11 @@ describe(`TypeUtils`, () => {
         describe(`extended`, () => {
             describe(`${Type.ExtendedTypeKind.AnyUnion}`, () => {
                 it(`primitives`, () => {
-                    const type: Type.TType = TypeUtils.anyUnionFactory([Type.NumberInstance, Type.ListInstance]);
+                    const type: Type.PqType = TypeUtils.anyUnionFactory([Type.NumberInstance, Type.ListInstance]);
                     expect(TypeUtils.nameOf(type)).to.equal(`number | list`);
                 });
                 it(`complex`, () => {
-                    const type: Type.TType = TypeUtils.anyUnionFactory([
+                    const type: Type.PqType = TypeUtils.anyUnionFactory([
                         TypeUtils.definedRecordFactory(false, new Map([["foo", Type.NumberInstance]]), false),
                         TypeUtils.definedListFactory(false, [Type.TextInstance]),
                         TypeUtils.definedTableFactory(false, new Map([["bar", Type.TextInstance]]), true),
@@ -496,7 +496,7 @@ describe(`TypeUtils`, () => {
                 it(`[foo = number, bar = nullable text]`, () => {
                     const type: Type.DefinedRecord = TypeUtils.definedRecordFactory(
                         false,
-                        new Map<string, Type.TType>([
+                        new Map<string, Type.PqType>([
                             ["foo", Type.NumberInstance],
                             ["bar", Type.NullableTextInstance],
                         ]),
@@ -510,7 +510,7 @@ describe(`TypeUtils`, () => {
                 it(`[foo = number, bar = nullable text, ...]`, () => {
                     const type: Type.DefinedRecord = TypeUtils.definedRecordFactory(
                         false,
-                        new Map<string, Type.TType>([
+                        new Map<string, Type.PqType>([
                             ["foo", Type.NumberInstance],
                             ["bar", Type.NullableTextInstance],
                         ]),
@@ -538,7 +538,7 @@ describe(`TypeUtils`, () => {
                 it(`table [foo = number, bar = nullable text]`, () => {
                     const type: Type.DefinedTable = TypeUtils.definedTableFactory(
                         false,
-                        new Map<string, Type.TType>([
+                        new Map<string, Type.PqType>([
                             ["foo", Type.NumberInstance],
                             ["bar", Type.NullableTextInstance],
                         ]),
@@ -552,7 +552,7 @@ describe(`TypeUtils`, () => {
                 it(`table [foo = number, bar = nullable text, ...]`, () => {
                     const type: Type.DefinedTable = TypeUtils.definedTableFactory(
                         false,
-                        new Map<string, Type.TType>([
+                        new Map<string, Type.PqType>([
                             ["foo", Type.NumberInstance],
                             ["bar", Type.NullableTextInstance],
                         ]),
@@ -649,7 +649,7 @@ describe(`TypeUtils`, () => {
                 it(`type [foo = number, bar = nullable text]`, () => {
                     const type: Type.RecordType = TypeUtils.recordTypeFactory(
                         false,
-                        new Map<string, Type.TType>([
+                        new Map<string, Type.PqType>([
                             ["foo", Type.NumberInstance],
                             ["bar", Type.NullableTextInstance],
                         ]),
@@ -663,7 +663,7 @@ describe(`TypeUtils`, () => {
                 it(`type [foo = number, bar = nullable text, ...]`, () => {
                     const type: Type.RecordType = TypeUtils.recordTypeFactory(
                         false,
-                        new Map<string, Type.TType>([
+                        new Map<string, Type.PqType>([
                             ["foo", Type.NumberInstance],
                             ["bar", Type.NullableTextInstance],
                         ]),
@@ -695,7 +695,7 @@ describe(`TypeUtils`, () => {
                 it(`type table [foo = number, bar = nullable text]`, () => {
                     const type: Type.TableType = TypeUtils.tableTypeFactory(
                         false,
-                        new Map<string, Type.TType>([
+                        new Map<string, Type.PqType>([
                             ["foo", Type.NumberInstance],
                             ["bar", Type.NullableTextInstance],
                         ]),
@@ -709,7 +709,7 @@ describe(`TypeUtils`, () => {
                 it(`type table [foo = number, bar = nullable text, ...]`, () => {
                     const type: Type.TableType = TypeUtils.tableTypeFactory(
                         false,
-                        new Map<string, Type.TType>([
+                        new Map<string, Type.PqType>([
                             ["foo", Type.NumberInstance],
                             ["bar", Type.NullableTextInstance],
                         ]),

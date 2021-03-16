@@ -11,7 +11,7 @@ import { isFieldSpecificationList, isFunctionSignature } from "./isType";
 // `Type.AnyInstance is compatible with Type.TextInstance` -> false
 // `Type.NullInstance is compatible with Type.AnyNonNull` -> false
 // `Type.TextInstance is compatible with Type.AnyUnion([Type.TextInstance, Type.NumberInstance])` -> true
-export function isCompatible(left: Type.TType, right: Type.TType): boolean | undefined {
+export function isCompatible(left: Type.PqType, right: Type.PqType): boolean | undefined {
     if (
         left.kind === Type.TypeKind.NotApplicable ||
         left.kind === Type.TypeKind.Unknown ||
@@ -68,8 +68,8 @@ export function isCompatible(left: Type.TType, right: Type.TType): boolean | und
 }
 
 export function isCompatibleWithFunctionSignature(
-    left: Type.TType,
-    right: Type.TType & Type.FunctionSignature,
+    left: Type.PqType,
+    right: Type.PqType & Type.FunctionSignature,
 ): boolean {
     if (!isCompatibleWithNullable(left, right) || !isFunctionSignature(left)) {
         return false;
@@ -89,7 +89,7 @@ export function isCompatibleWithFunctionParameter(
     );
 }
 
-function isCompatibleWithAny(left: Type.TType, right: Type.TAny): boolean | undefined {
+function isCompatibleWithAny(left: Type.PqType, right: Type.TAny): boolean | undefined {
     switch (right.maybeExtendedKind) {
         case undefined:
             return isCompatibleWithNullable(left, right);
@@ -102,7 +102,7 @@ function isCompatibleWithAny(left: Type.TType, right: Type.TAny): boolean | unde
     }
 }
 
-function isCompatibleWithAnyUnion(left: Type.TType, right: Type.AnyUnion): boolean | undefined {
+function isCompatibleWithAnyUnion(left: Type.PqType, right: Type.AnyUnion): boolean | undefined {
     for (const subtype of right.unionedTypePairs) {
         if (isCompatible(left, subtype)) {
             return true;
@@ -112,7 +112,7 @@ function isCompatibleWithAnyUnion(left: Type.TType, right: Type.AnyUnion): boole
     return false;
 }
 
-function isCompatibleWithDefinedList(left: Type.TType, right: Type.DefinedList): boolean {
+function isCompatibleWithDefinedList(left: Type.PqType, right: Type.DefinedList): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -129,7 +129,7 @@ function isCompatibleWithDefinedList(left: Type.TType, right: Type.DefinedList):
     }
 }
 
-function isCompatibleWithDefinedListType(left: Type.TType, right: Type.DefinedListType): boolean {
+function isCompatibleWithDefinedListType(left: Type.PqType, right: Type.DefinedListType): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -156,7 +156,7 @@ function isCompatibleWithDefinedListType(left: Type.TType, right: Type.DefinedLi
     }
 }
 
-function isCompatibleWithDefinedRecord(left: Type.TType, right: Type.DefinedRecord): boolean {
+function isCompatibleWithDefinedRecord(left: Type.PqType, right: Type.DefinedRecord): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -173,7 +173,7 @@ function isCompatibleWithDefinedRecord(left: Type.TType, right: Type.DefinedReco
     }
 }
 
-function isCompatibleWithDefinedTable(left: Type.TType, right: Type.DefinedTable): boolean {
+function isCompatibleWithDefinedTable(left: Type.PqType, right: Type.DefinedTable): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -193,19 +193,19 @@ function isCompatibleWithDefinedTable(left: Type.TType, right: Type.DefinedTable
 
 // TODO: decide what a compatible FieldSpecificationList should look like
 function isCompatibleWithFieldSpecificationList(
-    left: Type.TType,
-    right: Type.TType & Type.FieldSpecificationList,
+    left: Type.PqType,
+    right: Type.PqType & Type.FieldSpecificationList,
 ): boolean {
     if (!isCompatibleWithNullable(left, right) || !isFieldSpecificationList(left)) {
         return false;
     }
 
-    return MapUtils.isSubsetMap(left.fields, right.fields, (leftValue: Type.TType, rightValue: Type.TType) =>
+    return MapUtils.isSubsetMap(left.fields, right.fields, (leftValue: Type.PqType, rightValue: Type.PqType) =>
         isEqualType(leftValue, rightValue),
     );
 }
 
-function isCompatibleWithFunction(left: Type.TType, right: Type.TFunction): boolean {
+function isCompatibleWithFunction(left: Type.PqType, right: Type.TFunction): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -222,7 +222,7 @@ function isCompatibleWithFunction(left: Type.TType, right: Type.TFunction): bool
     }
 }
 
-function isCompatibleWithList(left: Type.TType, right: Type.TList): boolean {
+function isCompatibleWithList(left: Type.PqType, right: Type.TList): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -239,7 +239,7 @@ function isCompatibleWithList(left: Type.TType, right: Type.TList): boolean {
     }
 }
 
-function isCompatibleWithListType(left: Type.TType, right: Type.ListType): boolean {
+function isCompatibleWithListType(left: Type.PqType, right: Type.ListType): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -266,7 +266,7 @@ function isCompatibleWithListType(left: Type.TType, right: Type.ListType): boole
     }
 }
 
-function isCompatibleWithPrimaryPrimitiveType(left: Type.TType, right: Type.PrimaryPrimitiveType): boolean {
+function isCompatibleWithPrimaryPrimitiveType(left: Type.PqType, right: Type.PrimaryPrimitiveType): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -291,11 +291,11 @@ function isCompatibleWithPrimaryPrimitiveType(left: Type.TType, right: Type.Prim
     }
 }
 
-function isCompatibleWithNullable(left: Type.TType, right: Type.TType): boolean {
+function isCompatibleWithNullable(left: Type.PqType, right: Type.PqType): boolean {
     return right.isNullable === true ? true : left.isNullable === false;
 }
 
-function isCompatibleWithNumber(left: Type.TType, right: Type.TNumber): boolean {
+function isCompatibleWithNumber(left: Type.PqType, right: Type.TNumber): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -312,7 +312,7 @@ function isCompatibleWithNumber(left: Type.TType, right: Type.TNumber): boolean 
     }
 }
 
-function isCompatibleWithNumberLiteral(left: Type.TType, right: Type.NumberLiteral): boolean {
+function isCompatibleWithNumberLiteral(left: Type.PqType, right: Type.NumberLiteral): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -329,7 +329,7 @@ function isCompatibleWithNumberLiteral(left: Type.TType, right: Type.NumberLiter
     }
 }
 
-function isCompatibleWithRecord(left: Type.TType, right: Type.TRecord): boolean {
+function isCompatibleWithRecord(left: Type.PqType, right: Type.TRecord): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -346,7 +346,7 @@ function isCompatibleWithRecord(left: Type.TType, right: Type.TRecord): boolean 
     }
 }
 
-function isCompatibleWithRecordType(left: Type.TType, right: Type.RecordType): boolean {
+function isCompatibleWithRecordType(left: Type.PqType, right: Type.RecordType): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -371,7 +371,7 @@ function isCompatibleWithRecordType(left: Type.TType, right: Type.RecordType): b
     }
 }
 
-function isCompatibleWithTable(left: Type.TType, right: Type.TTable): boolean {
+function isCompatibleWithTable(left: Type.PqType, right: Type.TTable): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -388,7 +388,7 @@ function isCompatibleWithTable(left: Type.TType, right: Type.TTable): boolean {
     }
 }
 
-function isCompatibleWithTableType(left: Type.TType, right: Type.TableType): boolean {
+function isCompatibleWithTableType(left: Type.PqType, right: Type.TableType): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -414,7 +414,7 @@ function isCompatibleWithTableType(left: Type.TType, right: Type.TableType): boo
 }
 
 function isCompatibleWithTableTypePrimaryExpression(
-    left: Type.TType,
+    left: Type.PqType,
     right: Type.TableTypePrimaryExpression,
 ): boolean | undefined {
     if (left.kind !== right.kind) {
@@ -441,7 +441,7 @@ function isCompatibleWithTableTypePrimaryExpression(
     }
 }
 
-function isCompatibleWithText(left: Type.TType, right: Type.TText): boolean {
+function isCompatibleWithText(left: Type.PqType, right: Type.TText): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -458,7 +458,7 @@ function isCompatibleWithText(left: Type.TType, right: Type.TText): boolean {
     }
 }
 
-function isCompatibleWithTextLiteral(left: Type.TType, right: Type.TextLiteral): boolean {
+function isCompatibleWithTextLiteral(left: Type.PqType, right: Type.TextLiteral): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -476,7 +476,7 @@ function isCompatibleWithTextLiteral(left: Type.TType, right: Type.TextLiteral):
 }
 
 function isCompatibleWithType(
-    left: Type.TType,
+    left: Type.PqType,
     right:
         | Type.DefinedListType
         | Type.FunctionType

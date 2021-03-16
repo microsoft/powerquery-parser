@@ -4,9 +4,12 @@
 import { Type } from "..";
 import { Assert, CommonError, StringUtils } from "../../../common";
 import { PrimitiveTypeConstantMap, primitiveTypeMapKey } from "./primitive";
-import { dedupe } from "./typeUtils";
+import { simplify } from "./simplify";
 
-export function primitiveTypeFactory<T extends Type.TypeKind>(isNullable: boolean, typeKind: T): Type.TPrimitiveType {
+export function nonExtendedTypeFactory<T extends Type.TypeKind>(
+    isNullable: boolean,
+    typeKind: T,
+): Type.TPrimitiveType {
     const key: string = primitiveTypeMapKey(isNullable, typeKind);
     return Assert.asDefined(PrimitiveTypeConstantMap.get(key), `unknown key for PrimitiveTypeConstantMap`, {
         typeKind,
@@ -14,8 +17,10 @@ export function primitiveTypeFactory<T extends Type.TypeKind>(isNullable: boolea
     });
 }
 
-export function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>): Type.TType {
-    const simplified: ReadonlyArray<Type.TType> = dedupe(unionedTypePairs);
+// If the given types can be simplified/deduped down to a single type then that is returned instead.
+// Otherwise returns an instance of `Type.AnyUnion`.
+export function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.PqType>): Type.PqType {
+    const simplified: ReadonlyArray<Type.PqType> = simplify(unionedTypePairs);
     if (simplified.length === 1) {
         return simplified[0];
     }
@@ -23,7 +28,7 @@ export function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>): Ty
     return {
         kind: Type.TypeKind.Any,
         maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-        isNullable: unionedTypePairs.find((ttype: Type.TType) => ttype.isNullable === true) !== undefined,
+        isNullable: unionedTypePairs.find((ttype: Type.PqType) => ttype.isNullable === true) !== undefined,
         unionedTypePairs: simplified,
     };
 }
@@ -31,7 +36,7 @@ export function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>): Ty
 export function definedFunctionFactory(
     isNullable: boolean,
     parameters: ReadonlyArray<Type.FunctionParameter>,
-    returnType: Type.TType,
+    returnType: Type.PqType,
 ): Type.DefinedFunction {
     return {
         kind: Type.TypeKind.Function,
@@ -42,7 +47,7 @@ export function definedFunctionFactory(
     };
 }
 
-export function definedListFactory(isNullable: boolean, elements: ReadonlyArray<Type.TType>): Type.DefinedList {
+export function definedListFactory(isNullable: boolean, elements: ReadonlyArray<Type.PqType>): Type.DefinedList {
     return {
         kind: Type.TypeKind.List,
         maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
@@ -53,7 +58,7 @@ export function definedListFactory(isNullable: boolean, elements: ReadonlyArray<
 
 export function definedListTypeFactory(
     isNullable: boolean,
-    itemTypes: ReadonlyArray<Type.TType>,
+    itemTypes: ReadonlyArray<Type.PqType>,
 ): Type.DefinedListType {
     return {
         kind: Type.TypeKind.Type,
@@ -65,7 +70,7 @@ export function definedListTypeFactory(
 
 export function definedRecordFactory(
     isNullable: boolean,
-    fields: Map<string, Type.TType>,
+    fields: Map<string, Type.PqType>,
     isOpen: boolean,
 ): Type.DefinedRecord {
     return {
@@ -79,7 +84,7 @@ export function definedRecordFactory(
 
 export function definedTableFactory(
     isNullable: boolean,
-    fields: Map<string, Type.TType>,
+    fields: Map<string, Type.PqType>,
     isOpen: boolean,
 ): Type.DefinedTable {
     return {
@@ -94,7 +99,7 @@ export function definedTableFactory(
 export function functionTypeFactory(
     isNullable: boolean,
     parameters: ReadonlyArray<Type.FunctionParameter>,
-    returnType: Type.TType,
+    returnType: Type.PqType,
 ): Type.FunctionType {
     return {
         kind: Type.TypeKind.Type,
@@ -115,7 +120,7 @@ export function numberLiteralFactory(isNullable: boolean, literal: string): Type
     };
 }
 
-export function listTypeFactory(isNullable: boolean, itemType: Type.TType): Type.ListType {
+export function listTypeFactory(isNullable: boolean, itemType: Type.PqType): Type.ListType {
     return {
         kind: Type.TypeKind.Type,
         maybeExtendedKind: Type.ExtendedTypeKind.ListType,
@@ -138,7 +143,7 @@ export function primaryPrimitiveTypeFactory(
 
 export function recordTypeFactory(
     isNullable: boolean,
-    fields: Map<string, Type.TType>,
+    fields: Map<string, Type.PqType>,
     isOpen: boolean,
 ): Type.RecordType {
     return {
@@ -152,7 +157,7 @@ export function recordTypeFactory(
 
 export function tableTypeFactory(
     isNullable: boolean,
-    fields: Map<string, Type.TType>,
+    fields: Map<string, Type.PqType>,
     isOpen: boolean,
 ): Type.TableType {
     return {
@@ -179,7 +184,7 @@ export function textLiteralFactory(isNullable: boolean, literal: string): Type.T
 
 export function tableTypePrimaryExpression(
     isNullable: boolean,
-    primaryExpression: Type.TType,
+    primaryExpression: Type.PqType,
 ): Type.TableTypePrimaryExpression {
     return {
         kind: Type.TypeKind.Type,

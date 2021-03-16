@@ -51,7 +51,7 @@ describe(`TypeUtils.isCompatible`, () => {
             const actual: ReadonlyArray<[Language.Type.TypeKind, boolean | undefined]> = typeKinds.map(typeKind => [
                 typeKind,
                 Language.TypeUtils.isCompatible(
-                    Language.TypeUtils.primitiveTypeFactory(false, typeKind),
+                    Language.TypeUtils.nonExtendedTypeFactory(false, typeKind),
                     Language.Type.AnyInstance,
                 ),
             ]);
@@ -60,7 +60,7 @@ describe(`TypeUtils.isCompatible`, () => {
 
         it(`${Language.Type.TypeKind.None} not compatible with any`, () => {
             const actual: boolean | undefined = Language.TypeUtils.isCompatible(
-                Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.None),
+                Language.TypeUtils.nonExtendedTypeFactory(false, Language.Type.TypeKind.None),
                 Language.Type.AnyInstance,
             );
             expect(actual).to.equal(false, undefined);

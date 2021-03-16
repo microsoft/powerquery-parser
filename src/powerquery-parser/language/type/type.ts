@@ -1,6 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+// A representation of a type can be either an extended type, or a non-extended type.
+// Non-extended types are the types you traditionally find in Power Query, eg. `number`, `text`, etc.
+//
+// Extended types are an extension to the Power Query language.
+// For example, you can treat `1` as a subtype of `number`.
 export type PqType = TPrimitiveType | TExtendedType;
 export type TExtendedType =
     | AnyUnion
@@ -27,8 +32,8 @@ export type TExtendedTypeKind =
     | TypeKind.Text
     | TypeKind.Type;
 
-export type TPrimitiveTypeLiteral = NumberLiteral | TextLiteral;
-export type TPrimitiveTypeLiteralExtendedKind = ExtendedTypeKind.NumberLiteral | ExtendedTypeKind.TextLiteral;
+export type TLiteral = NumberLiteral | TextLiteral;
+export type TLiteralKind = ExtendedTypeKind.NumberLiteral | ExtendedTypeKind.TextLiteral;
 
 export type TAny = Any | AnyUnion;
 export type TList = List | DefinedList;

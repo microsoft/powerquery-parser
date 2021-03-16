@@ -5,14 +5,14 @@ import { Type } from "..";
 import { Constant } from "../..";
 import { Assert } from "../../../common";
 
-export function nameOf(type: Type.TType): string {
+export function nameOf(type: Type.PqType): string {
     switch (type.maybeExtendedKind) {
         case Type.ExtendedTypeKind.NumberLiteral:
         case Type.ExtendedTypeKind.TextLiteral:
             return prefixNullableIfRequired(type, `${type.literal}`);
 
         case Type.ExtendedTypeKind.AnyUnion:
-            return type.unionedTypePairs.map((subtype: Type.TType) => nameOf(subtype)).join(" | ");
+            return type.unionedTypePairs.map((subtype: Type.PqType) => nameOf(subtype)).join(" | ");
 
         case Type.ExtendedTypeKind.DefinedFunction:
             return prefixNullableIfRequired(type, nameOfFunctionSignature(type, true));
@@ -101,10 +101,10 @@ function nameOfFieldSpecificationList(type: Type.FieldSpecificationList): string
     return `[${pairs}]`;
 }
 
-function nameOfIterable(collection: ReadonlyArray<Type.TType>): string {
-    return collection.map((item: Type.TType) => nameOf(item)).join(", ");
+function nameOfIterable(collection: ReadonlyArray<Type.PqType>): string {
+    return collection.map((item: Type.PqType) => nameOf(item)).join(", ");
 }
 
-function prefixNullableIfRequired(type: Type.TType, name: string): string {
+function prefixNullableIfRequired(type: Type.PqType, name: string): string {
     return type.isNullable ? `${Constant.LanguageConstantKind.Nullable} ${name}` : name;
 }
