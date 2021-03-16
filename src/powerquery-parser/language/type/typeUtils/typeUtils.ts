@@ -5,7 +5,7 @@ import { Type } from "..";
 import { Ast, AstUtils } from "../..";
 import { Assert } from "../../../common";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../../parser";
-import { nonExtendedTypeFactory } from "./factories";
+import { primitiveTypeFactory } from "./factories";
 import { isCompatible } from "./isCompatible";
 import { isEqualType } from "./isEqualType";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";
@@ -84,7 +84,7 @@ export function isValidInvocation(functionType: Type.DefinedFunction, args: Read
 
         if (maybeArgType !== undefined) {
             const argType: Type.PqType = maybeArgType;
-            const parameterType: Type.PqType = nonExtendedTypeFactory(
+            const parameterType: Type.PqType = primitiveTypeFactory(
                 parameter.isNullable,
                 Assert.asDefined(parameter.maybeType),
             );

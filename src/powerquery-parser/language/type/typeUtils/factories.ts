@@ -6,10 +6,7 @@ import { Assert, CommonError, StringUtils } from "../../../common";
 import { PrimitiveTypeConstantMap, primitiveTypeMapKey } from "./primitive";
 import { simplify } from "./simplify";
 
-export function nonExtendedTypeFactory<T extends Type.TypeKind>(
-    isNullable: boolean,
-    typeKind: T,
-): Type.TPrimitiveType {
+export function primitiveTypeFactory<T extends Type.TypeKind>(isNullable: boolean, typeKind: T): Type.TPrimitiveType {
     const key: string = primitiveTypeMapKey(isNullable, typeKind);
     return Assert.asDefined(PrimitiveTypeConstantMap.get(key), `unknown key for PrimitiveTypeConstantMap`, {
         typeKind,
