@@ -369,7 +369,7 @@ describe(`TypeUtils`, () => {
                         TypeUtils.definedTableFactory(false, new Map([["bar", Type.TextInstance]]), true),
                     ]);
                     const actual: string = TypeUtils.nameOf(type);
-                    expect(actual).to.equal(`{test} | [foo: number] | table [bar: text, ...]`);
+                    expect(actual).to.equal(`{text} | [foo: number] | table [bar: text, ...]`);
                 });
             });
 
