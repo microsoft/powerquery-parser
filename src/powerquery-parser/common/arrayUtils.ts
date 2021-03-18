@@ -84,6 +84,14 @@ export function includesPredicate<T>(collection: ReadonlyArray<T>, predicateFn: 
     return false;
 }
 
+export function includesUnique<T>(
+    collection: ReadonlyArray<T>,
+    testValue: T,
+    equalityFn: (left: T, right: T) => boolean,
+): boolean {
+    return includesPredicate(collection, (collectionItem: T) => equalityFn(testValue, collectionItem));
+}
+
 export function indexOfPredicate<T>(collection: ReadonlyArray<T>, predicateFn: (element: T) => boolean): number {
     const numElements: number = collection.length;
     for (let index: number = 0; index < numElements; index += 1) {

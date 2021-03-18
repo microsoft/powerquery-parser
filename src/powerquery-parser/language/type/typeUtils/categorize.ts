@@ -87,6 +87,8 @@ export type UnknownCategory = ITypeKindCategory<Type.Unknown>;
 
 export interface AnyCategory extends ITypeKindCategory<Type.Any> {
     readonly anyUnions: ImmutableSet<Type.AnyUnion>;
+    // This is a recursive flattening of `AnyUnion.unionedTypePairs`.
+    readonly flattenedAnyUnions: ImmutableSet<Type.PqType>;
 }
 
 export interface FunctionCategory extends ITypeKindCategory<Type.Function> {
@@ -169,6 +171,7 @@ interface ITypeKindCategory<T extends Type.PqType> {
 }
 
 function addToCategory(category: TCategory, type: Type.PqType): TCategory {
+    // We can't group cases which call `addToCategoryForPrimitive` as they each have a different generic type.
     switch (type.kind) {
         case Type.TypeKind.Action:
             return addToCategoryForPrimitive(category, type);
@@ -259,7 +262,11 @@ function addTypeIfUniqueAny(category: AnyCategory, type: Type.TAny): AnyCategory
 
     switch (type.maybeExtendedKind) {
         case Type.ExtendedTypeKind.AnyUnion:
-            return category;
+            return {
+                ...category,
+                anyUnions: category.anyUnions.add(type),
+                flattenedAnyUnions: category.flattenedAnyUnions.addMany(flattenAnyUnion(type)),
+            };
 
         case undefined:
             return addToCategoryForPrimitive(category, type);
@@ -573,6 +580,7 @@ function createCategoryForAny(type: Type.TAny): AnyCategory {
                 kind: Type.TypeKind.Any,
                 primitives: new ImmutableSet<Type.Any>([], isEqualPrimitiveType),
                 anyUnions: new ImmutableSet([type], isEqualAnyUnion),
+                flattenedAnyUnions: new ImmutableSet(flattenAnyUnion(type), isEqualType),
             };
         }
 
@@ -581,6 +589,7 @@ function createCategoryForAny(type: Type.TAny): AnyCategory {
                 kind: Type.TypeKind.Any,
                 primitives: new ImmutableSet([type], isEqualPrimitiveType),
                 anyUnions: new ImmutableSet([], isEqualAnyUnion),
+                flattenedAnyUnions: new ImmutableSet([], isEqualType),
             };
         }
 
@@ -793,4 +802,30 @@ function createCategoryForType(type: Type.TType): TypeCategory {
         tablePrimaryExpressionTypes: new ImmutableSet(tablePrimaryExpressionTypes, isEqualTableTypePrimaryExpression),
         tableTypes: new ImmutableSet(tableTypes, isEqualTableType),
     };
+}
+
+function flattenAnyUnion(anyUnion: Type.AnyUnion): ReadonlyArray<Type.PqType> {
+    let newUnionedTypePairs: Type.PqType[] = [];
+
+    for (const item of anyUnion.unionedTypePairs) {
+        // If it's an Any primitive then we can do an early return.
+        // Else it's an AnyUnion so continue flattening the types.
+        if (item.kind === Type.TypeKind.Any) {
+            switch (item.maybeExtendedKind) {
+                case undefined:
+                    return [item];
+
+                case Type.ExtendedTypeKind.AnyUnion:
+                    newUnionedTypePairs = newUnionedTypePairs.concat(flattenAnyUnion(item));
+                    break;
+
+                default:
+                    throw Assert.isNever(item);
+            }
+        } else {
+            newUnionedTypePairs.push(item);
+        }
+    }
+
+    return newUnionedTypePairs;
 }

@@ -1,53 +1,61 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { ArrayUtils } from ".";
+
+// TODO: this needs to be benchmarked
 export class ImmutableSet<T> {
     public readonly size: number;
-    private readonly internalSet: Set<T>;
+    private internalCollection: ReadonlyArray<T>;
 
     public constructor(
         iterable: Iterable<T> = [],
-        private readonly predicateFn: (left: T, right: T) => boolean = (left: T, right: T) => left === right,
+        private readonly equalityFn: (left: T, right: T) => boolean = (left: T, right: T) => left === right,
     ) {
-        this.internalSet = new Set(iterable);
-        this.size = this.internalSet.size;
+        this.internalCollection = [...iterable];
+        this.size = this.internalCollection.length;
     }
 
     public add(value: T): ImmutableSet<T> {
         if (this.has(value)) {
             return this;
         } else {
-            return new ImmutableSet(new Set([...this.values(), value]), this.predicateFn);
+            return new ImmutableSet(new Set([...this.values(), value]), this.equalityFn);
         }
     }
 
+    public addMany(values: Iterable<T>): ImmutableSet<T> {
+        // tslint:disable-next-line: no-this-assignment
+        let result: ImmutableSet<T> = this;
+
+        for (const value of values) {
+            result = result.add(value);
+        }
+
+        return result;
+    }
+
     public clear(): void {
-        this.internalSet.clear();
+        this.internalCollection = [];
     }
 
     public delete(value: T): ImmutableSet<T> {
-        const values: ReadonlyArray<T> = [...this.internalSet.values()].filter(
-            (item: T) => !this.predicateFn(item, value),
+        const values: ReadonlyArray<T> = [...this.internalCollection.values()].filter(
+            (item: T) => !this.equalityFn(item, value),
         );
 
-        if (values.length === this.internalSet.size) {
+        if (values.length === this.internalCollection.length) {
             return this;
         } else {
-            return new ImmutableSet(new Set(values), this.predicateFn);
+            return new ImmutableSet(new Set(values), this.equalityFn);
         }
     }
 
     public has(value: T): boolean {
-        for (const internalValue of this.values()) {
-            if (this.predicateFn(value, internalValue)) {
-                return true;
-            }
-        }
-
-        return false;
+        return ArrayUtils.includesUnique(this.internalCollection, value, this.equalityFn);
     }
 
     public values(): IterableIterator<T> {
-        return this.internalSet.keys();
+        return this.internalCollection.values();
     }
 }

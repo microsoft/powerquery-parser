@@ -231,7 +231,7 @@ export function isEqualNumberLiteral(left: Type.NumberLiteral, right: Type.Numbe
 }
 
 export function isEqualPrimitiveType(left: Type.TPrimitiveType, right: Type.TPrimitiveType): boolean {
-    return left === right || (left.kind === right.kind && left.isNullable && right.isNullable);
+    return left === right || (left.kind === right.kind && left.isNullable === right.isNullable);
 }
 
 export function isEqualRecordType(left: Type.RecordType, right: Type.RecordType): boolean {
