@@ -62,6 +62,35 @@ describe(`TypeUtils`, () => {
             expect(actual).deep.equal(expected);
         });
 
+        it(`simplify literal and primitive to primitive`, () => {
+            const actual: ReadonlyArray<AbridgedType> = abridgedTypesFactory(
+                TypeUtils.simplify([Type.NumberInstance, TypeUtils.numberLiteralFactory(false, "1")]),
+            );
+            const expected: ReadonlyArray<AbridgedType> = [Type.NumberInstance];
+            expect(actual).deep.equal(expected);
+        });
+
+        it(`retain multiple unique literals`, () => {
+            const actual: ReadonlyArray<AbridgedType> = TypeUtils.simplify([
+                TypeUtils.numberLiteralFactory(false, "1"),
+                TypeUtils.numberLiteralFactory(false, "2"),
+            ]);
+            const expected: ReadonlyArray<AbridgedType> = [
+                TypeUtils.numberLiteralFactory(false, "1"),
+                TypeUtils.numberLiteralFactory(false, "2"),
+            ];
+            expect(actual).deep.equal(expected);
+        });
+
+        it(`dedupe duplicate literals`, () => {
+            const actual: ReadonlyArray<AbridgedType> = TypeUtils.simplify([
+                TypeUtils.numberLiteralFactory(false, "1"),
+                TypeUtils.numberLiteralFactory(false, "1"),
+            ]);
+            const expected: ReadonlyArray<AbridgedType> = [TypeUtils.numberLiteralFactory(false, "1")];
+            expect(actual).deep.equal(expected);
+        });
+
         it(`${Type.ExtendedTypeKind.AnyUnion}, combine into a single primitive type`, () => {
             const simplified: ReadonlyArray<Type.PqType> = TypeUtils.simplify([
                 TypeUtils.anyUnionFactory([Type.RecordInstance, Type.RecordInstance]),
