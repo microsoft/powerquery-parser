@@ -178,17 +178,17 @@ describe(`TypeUtils.nameOf`, () => {
     describe(`extended`, () => {
         describe(`${Type.ExtendedTypeKind.AnyUnion}`, () => {
             it(`primitives`, () => {
-                const type: Type.TType = TypeUtils.anyUnionFactory([Type.NumberInstance, Type.ListInstance]);
-                expect(TypeUtils.nameOf(type)).to.equal(`number | list`);
+                const type: Type.PqType = TypeUtils.anyUnionFactory([Type.NumberInstance, Type.ListInstance]);
+                expect(TypeUtils.nameOf(type)).to.equal(`list | number`);
             });
             it(`complex`, () => {
-                const type: Type.TType = TypeUtils.anyUnionFactory([
+                const type: Type.PqType = TypeUtils.anyUnionFactory([
                     TypeUtils.definedRecordFactory(false, new Map([[`foo`, Type.NumberInstance]]), false),
                     TypeUtils.definedListFactory(false, [Type.TextInstance]),
                     TypeUtils.definedTableFactory(false, new Map([[`bar`, Type.TextInstance]]), true),
                 ]);
                 const actual: string = TypeUtils.nameOf(type);
-                expect(actual).to.equal(`[foo: number] | {text} | table [bar: text, ...]`);
+                expect(actual).to.equal(`{text} | [foo: number] | table [bar: text, ...]`);
             });
         });
 
@@ -340,7 +340,7 @@ describe(`TypeUtils.nameOf`, () => {
             it(`[foo = number, bar = nullable text]`, () => {
                 const type: Type.DefinedRecord = TypeUtils.definedRecordFactory(
                     false,
-                    new Map<string, Type.TType>([
+                    new Map<string, Type.PqType>([
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),
@@ -354,7 +354,7 @@ describe(`TypeUtils.nameOf`, () => {
             it(`[foo = number, bar = nullable text, ...]`, () => {
                 const type: Type.DefinedRecord = TypeUtils.definedRecordFactory(
                     false,
-                    new Map<string, Type.TType>([
+                    new Map<string, Type.PqType>([
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),
@@ -382,7 +382,7 @@ describe(`TypeUtils.nameOf`, () => {
             it(`table [foo = number, bar = nullable text]`, () => {
                 const type: Type.DefinedTable = TypeUtils.definedTableFactory(
                     false,
-                    new Map<string, Type.TType>([
+                    new Map<string, Type.PqType>([
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),
@@ -396,7 +396,7 @@ describe(`TypeUtils.nameOf`, () => {
             it(`table [foo = number, bar = nullable text, ...]`, () => {
                 const type: Type.DefinedTable = TypeUtils.definedTableFactory(
                     false,
-                    new Map<string, Type.TType>([
+                    new Map<string, Type.PqType>([
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),
@@ -410,7 +410,7 @@ describe(`TypeUtils.nameOf`, () => {
             it(`table [#"foo" = number, #"space space"]`, () => {
                 const type: Type.DefinedTable = TypeUtils.definedTableFactory(
                     false,
-                    new Map<string, Type.TType>([
+                    new Map<string, Type.PqType>([
                         [`foo`, Type.NumberInstance],
                         [`#"space space"`, Type.NullableTextInstance],
                     ]),
@@ -505,7 +505,7 @@ describe(`TypeUtils.nameOf`, () => {
             it(`type [foo = number, bar = nullable text]`, () => {
                 const type: Type.RecordType = TypeUtils.recordTypeFactory(
                     false,
-                    new Map<string, Type.TType>([
+                    new Map<string, Type.PqType>([
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),
@@ -519,7 +519,7 @@ describe(`TypeUtils.nameOf`, () => {
             it(`type [foo = number, bar = nullable text, ...]`, () => {
                 const type: Type.RecordType = TypeUtils.recordTypeFactory(
                     false,
-                    new Map<string, Type.TType>([
+                    new Map<string, Type.PqType>([
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),
@@ -551,7 +551,7 @@ describe(`TypeUtils.nameOf`, () => {
             it(`type table [foo = number, bar = nullable text]`, () => {
                 const type: Type.TableType = TypeUtils.tableTypeFactory(
                     false,
-                    new Map<string, Type.TType>([
+                    new Map<string, Type.PqType>([
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),
@@ -565,7 +565,7 @@ describe(`TypeUtils.nameOf`, () => {
             it(`type table [foo = number, bar = nullable text, ...]`, () => {
                 const type: Type.TableType = TypeUtils.tableTypeFactory(
                     false,
-                    new Map<string, Type.TType>([
+                    new Map<string, Type.PqType>([
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),

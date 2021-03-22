@@ -10,136 +10,6 @@ import { isCompatible } from "./isCompatible";
 import { isEqualType } from "./isEqualType";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";
 
-export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TType> {
-    const anyUnionTypes: Type.AnyUnion[] = [];
-    const notAnyUnionTypes: Type.TType[] = [];
-
-    for (const item of types) {
-        if (item.kind === Type.TypeKind.Any) {
-            switch (item.maybeExtendedKind) {
-                case undefined:
-                    return [Type.AnyInstance];
-
-                case Type.ExtendedTypeKind.AnyUnion:
-                    if (!isTypeInArray(anyUnionTypes, item)) {
-                        anyUnionTypes.push(item);
-                    }
-                    break;
-
-                default:
-                    throw Assert.isNever(item);
-            }
-        } else if (!isTypeInArray(notAnyUnionTypes, item)) {
-            notAnyUnionTypes.push(item);
-        }
-    }
-
-    if (anyUnionTypes.length === 0) {
-        return notAnyUnionTypes;
-    }
-
-    // Merge the return of dedupeAnyUnions and notAnyUnionTypes.
-    const dedupedAnyUnion: Type.TType = dedupeAnyUnions(anyUnionTypes);
-    if (dedupedAnyUnion.kind === Type.TypeKind.Any && dedupedAnyUnion.maybeExtendedKind === undefined) {
-        return [Type.AnyInstance];
-    }
-
-    // dedupedAnyUnion is an AnyUnion.
-    // Since the return will contain an anyUnion we should merge all notAnyUnionTypes into the AnyUnion.
-    if (dedupedAnyUnion.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
-        let isNullableEncountered: boolean = false;
-        const typesNotInDedupedAnyUnion: Type.TType[] = [];
-
-        for (const item of notAnyUnionTypes) {
-            if (!isTypeInArray(dedupedAnyUnion.unionedTypePairs, item)) {
-                if (item.isNullable) {
-                    isNullableEncountered = true;
-                }
-                typesNotInDedupedAnyUnion.push(item);
-            }
-        }
-
-        return [
-            {
-                kind: Type.TypeKind.Any,
-                maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-                isNullable: isNullableEncountered,
-                unionedTypePairs: [...dedupedAnyUnion.unionedTypePairs, ...typesNotInDedupedAnyUnion],
-            },
-        ];
-    }
-    // dedupedAnyUnion is not an AnyUnion.
-    // Merge dedupedAnyUnion into notAnyUnionTypes.
-    else {
-        if (!isTypeInArray(notAnyUnionTypes, dedupedAnyUnion)) {
-            notAnyUnionTypes.push(dedupedAnyUnion);
-        }
-
-        return notAnyUnionTypes;
-    }
-}
-
-// Combines all given AnyUnions into either:
-//  * a single AnyUnion
-//  * a single Type.TType that is not an AnyUnion
-// The first case is the most common.
-// The second happens if several AnyUnion consist only of one unique type, then it should be simplified to that type.
-export function dedupeAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): Type.TType {
-    const simplified: Type.TType[] = [];
-    let isNullable: boolean = false;
-
-    for (const anyUnion of anyUnions) {
-        for (const type of flattenAnyUnion(anyUnion)) {
-            if (type.isNullable === true) {
-                isNullable = true;
-            }
-            if (!isTypeInArray(simplified, type)) {
-                simplified.push(type);
-            }
-        }
-    }
-
-    // Second case
-    if (simplified.length === 1) {
-        return simplified[0];
-    }
-
-    // First Case
-    return {
-        kind: Type.TypeKind.Any,
-        maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-        isNullable,
-        unionedTypePairs: simplified,
-    };
-}
-
-// Recursively flattens out all unionedTypePairs into an array.
-export function flattenAnyUnion(anyUnion: Type.AnyUnion): ReadonlyArray<Type.TType> {
-    let newUnionedTypePairs: Type.TType[] = [];
-
-    for (const item of anyUnion.unionedTypePairs) {
-        // If it's an Any primitive then we can do an early return.
-        // Else it's an AnyUnion so continue flattening the types.
-        if (item.kind === Type.TypeKind.Any) {
-            switch (item.maybeExtendedKind) {
-                case undefined:
-                    return [Type.AnyInstance];
-
-                case Type.ExtendedTypeKind.AnyUnion:
-                    newUnionedTypePairs = newUnionedTypePairs.concat(flattenAnyUnion(item));
-                    break;
-
-                default:
-                    throw Assert.isNever(item);
-            }
-        } else {
-            newUnionedTypePairs.push(item);
-        }
-    }
-
-    return newUnionedTypePairs;
-}
-
 export function typeKindFromLiteralKind(literalKind: Ast.LiteralKind): Type.TypeKind {
     switch (literalKind) {
         case Ast.LiteralKind.List:
@@ -165,9 +35,9 @@ export function typeKindFromLiteralKind(literalKind: Ast.LiteralKind): Type.Type
     }
 }
 
-export function isTypeInArray(collection: ReadonlyArray<Type.TType>, item: Type.TType): boolean {
+export function isTypeInArray(collection: ReadonlyArray<Type.PqType>, item: Type.PqType): boolean {
     // Fast comparison then deep comparison
-    return collection.includes(item) || collection.find((type: Type.TType) => isEqualType(item, type)) !== undefined;
+    return collection.includes(item) || collection.find((type: Type.PqType) => isEqualType(item, type)) !== undefined;
 }
 
 export function isTypeKind(text: string): text is Type.TypeKind {
@@ -199,7 +69,7 @@ export function isTypeKind(text: string): text is Type.TypeKind {
     }
 }
 
-export function isValidInvocation(functionType: Type.DefinedFunction, args: ReadonlyArray<Type.TType>): boolean {
+export function isValidInvocation(functionType: Type.DefinedFunction, args: ReadonlyArray<Type.PqType>): boolean {
     // You can't provide more arguments than are on the function signature.
     if (args.length > functionType.parameters.length) {
         return false;
@@ -210,11 +80,11 @@ export function isValidInvocation(functionType: Type.DefinedFunction, args: Read
 
     for (let index: number = 1; index < numParameters; index += 1) {
         const parameter: Type.FunctionParameter = Assert.asDefined(parameters[index]);
-        const maybeArgType: Type.TType | undefined = args[index];
+        const maybeArgType: Type.PqType | undefined = args[index];
 
         if (maybeArgType !== undefined) {
-            const argType: Type.TType = maybeArgType;
-            const parameterType: Type.TType = primitiveTypeFactory(
+            const argType: Type.PqType = maybeArgType;
+            const parameterType: Type.PqType = primitiveTypeFactory(
                 parameter.isNullable,
                 Assert.asDefined(parameter.maybeType),
             );

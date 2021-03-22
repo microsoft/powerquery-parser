@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { TType } from "../type";
+import { PqType } from "../type";
 import { ExternalInvocationTypeRequest, ExternalTypeRequestKind, ExternalValueTypeRequest } from "./externalType";
 
 export function valueTypeRequestFactory(identifierLiteral: string): ExternalValueTypeRequest {
@@ -13,7 +13,7 @@ export function valueTypeRequestFactory(identifierLiteral: string): ExternalValu
 
 export function invocationTypeRequestFactory(
     identifierLiteral: string,
-    args: ReadonlyArray<TType>,
+    args: ReadonlyArray<PqType>,
 ): ExternalInvocationTypeRequest {
     return {
         kind: ExternalTypeRequestKind.Invocation,

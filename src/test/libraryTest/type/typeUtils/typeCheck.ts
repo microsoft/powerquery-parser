@@ -15,7 +15,7 @@ interface AbridgedChecked<K = number | string> {
 function abridgedCheckedFactory(actual: Language.TypeUtils.TChecked): AbridgedChecked {
     const mismatched: ReadonlyArray<Language.TypeUtils.Mismatch<
         string | number,
-        Language.Type.TType | Language.Type.FunctionParameter
+        Language.Type.PqType | Language.Type.FunctionParameter
     >> = actual.invalid;
     return {
         valid: actual.valid,
@@ -397,7 +397,7 @@ describe(`TypeUtils.typeCheck`, () => {
         it(`${Language.Type.ExtendedTypeKind.DefinedRecord}`, () => {
             const valueType: Language.Type.DefinedRecord = Language.TypeUtils.definedRecordFactory(
                 false,
-                new Map<string, Language.Type.TType>([
+                new Map<string, Language.Type.PqType>([
                     ["number", Language.Type.NullableNumberInstance],
                     ["nullableNumber", Language.Type.NullableNumberInstance],
                     ["table", Language.Type.TableInstance],
@@ -406,7 +406,7 @@ describe(`TypeUtils.typeCheck`, () => {
             );
             const schemaType: Language.Type.RecordType = Language.TypeUtils.recordTypeFactory(
                 false,
-                new Map<string, Language.Type.TType>([
+                new Map<string, Language.Type.PqType>([
                     ["number", Language.Type.NumberInstance],
                     ["nullableNumber", Language.Type.NullableNumberInstance],
                     ["text", Language.Type.TextInstance],
@@ -431,7 +431,7 @@ describe(`TypeUtils.typeCheck`, () => {
         it(`${Language.Type.ExtendedTypeKind.DefinedTable}`, () => {
             const valueType: Language.Type.DefinedTable = Language.TypeUtils.definedTableFactory(
                 false,
-                new Map<string, Language.Type.TType>([
+                new Map<string, Language.Type.PqType>([
                     ["number", Language.Type.NullableNumberInstance],
                     ["nullableNumber", Language.Type.NullableNumberInstance],
                     ["table", Language.Type.TableInstance],
@@ -440,7 +440,7 @@ describe(`TypeUtils.typeCheck`, () => {
             );
             const schemaType: Language.Type.TableType = Language.TypeUtils.tableTypeFactory(
                 false,
-                new Map<string, Language.Type.TType>([
+                new Map<string, Language.Type.PqType>([
                     ["number", Language.Type.NumberInstance],
                     ["nullableNumber", Language.Type.NullableNumberInstance],
                     ["text", Language.Type.TextInstance],

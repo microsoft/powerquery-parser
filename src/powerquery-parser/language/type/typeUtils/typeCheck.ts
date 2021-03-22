@@ -12,14 +12,14 @@ export type TChecked =
     | CheckedDefinedTable
     | CheckedFunctionSignature;
 
-export interface IChecked<Key, T extends Type.TType | Type.FunctionParameter> {
+export interface IChecked<Key, T extends Type.PqType | Type.FunctionParameter> {
     readonly valid: ReadonlyArray<Key>;
     readonly invalid: ReadonlyArray<Mismatch<Key, T>>;
     readonly extraneous: ReadonlyArray<Key>;
     readonly missing: ReadonlyArray<Key>;
 }
 
-export type CheckedDefinedList = IChecked<number, Type.TType>;
+export type CheckedDefinedList = IChecked<number, Type.PqType>;
 
 export interface CheckedDefinedFunction extends IChecked<number, Type.FunctionParameter> {
     readonly isReturnTypeCompatible: boolean;
@@ -27,9 +27,9 @@ export interface CheckedDefinedFunction extends IChecked<number, Type.FunctionPa
 
 export type CheckedFunctionSignature = IChecked<number, Type.FunctionParameter>;
 
-export type CheckedDefinedRecord = IChecked<string, Type.TType>;
+export type CheckedDefinedRecord = IChecked<string, Type.PqType>;
 
-export type CheckedDefinedTable = IChecked<string, Type.TType>;
+export type CheckedDefinedTable = IChecked<string, Type.PqType>;
 
 export interface Mismatch<K, T> {
     readonly key: K;
@@ -60,13 +60,13 @@ export function typeCheckFunctionSignature(
 
 export function typeCheckListWithListType(valueType: Type.DefinedList, schemaType: Type.ListType): CheckedDefinedList {
     const valid: number[] = [];
-    const invalid: Mismatch<number, Type.TType>[] = [];
-    const schemaItemType: Type.TType = schemaType.itemType;
+    const invalid: Mismatch<number, Type.PqType>[] = [];
+    const schemaItemType: Type.PqType = schemaType.itemType;
 
-    const valueElements: ReadonlyArray<Type.TType> = valueType.elements;
+    const valueElements: ReadonlyArray<Type.PqType> = valueType.elements;
     const numElements: number = valueElements.length;
     for (let index: number = 0; index < numElements; index += 1) {
-        const element: Type.TType = valueElements[index];
+        const element: Type.PqType = valueElements[index];
         if (isCompatible(element, schemaItemType)) {
             valid.push(index);
         } else {
@@ -101,7 +101,7 @@ export function typeCheckTable(valueType: Type.DefinedTable, schemaType: Type.Ta
     return typeCheckRecordOrTable(valueType.fields, schemaType.fields, schemaType.isOpen);
 }
 
-function typeCheckGenericNumber<T extends Type.TType | Type.FunctionParameter>(
+function typeCheckGenericNumber<T extends Type.PqType | Type.FunctionParameter>(
     valueElements: ReadonlyArray<T>,
     schemaItemTypes: ReadonlyArray<T>,
     valueCmpFn: (left: T, right: T) => boolean | undefined,
@@ -148,21 +148,21 @@ function typeCheckGenericNumber<T extends Type.TType | Type.FunctionParameter>(
 }
 
 function typeCheckRecordOrTable(
-    valueFields: Map<string, Type.TType>,
-    schemaFields: Map<string, Type.TType>,
+    valueFields: Map<string, Type.PqType>,
+    schemaFields: Map<string, Type.PqType>,
     schemaIsOpen: boolean,
-): IChecked<string, Type.TType> {
+): IChecked<string, Type.PqType> {
     const validFields: string[] = [];
-    const mismatches: Mismatch<string, Type.TType>[] = [];
+    const mismatches: Mismatch<string, Type.PqType>[] = [];
     const extraneousFields: string[] = [];
     const missingFields: ReadonlyArray<string> = [...schemaFields.keys()].filter(
-        (key: string) => valueFields.has(key) === false,
+        (key: string) => !valueFields.has(key),
     );
 
     for (const [key, type] of valueFields.entries()) {
-        const maybeSchemaValueType: Type.TType | undefined = schemaFields.get(key);
+        const maybeSchemaValueType: Type.PqType | undefined = schemaFields.get(key);
         if (maybeSchemaValueType !== undefined) {
-            const schemaValueType: Type.TType = maybeSchemaValueType;
+            const schemaValueType: Type.PqType = maybeSchemaValueType;
 
             if (isCompatible(type, schemaValueType)) {
                 validFields.push(key);

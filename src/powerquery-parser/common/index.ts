@@ -11,5 +11,6 @@ export * as Traverse from "./traversal";
 export * as TypeScriptUtils from "./typeScriptTypeUtils";
 
 export * from "./cancellationToken";
+export * from "./immutableSet";
 export * from "./partialResult";
 export * from "./result";
