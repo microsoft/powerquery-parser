@@ -171,7 +171,7 @@ export function assertAsTPrimitiveType(type: Type.PqType): Type.TPrimitiveType {
     return type;
 }
 
-export function assertAsTPrimitiveTypeLiteral(type: Type.PqType): Type.TLiteral {
+export function assertAsTLiteral(type: Type.PqType): Type.TLiteral {
     assertIsLiteral(type);
     return type;
 }
