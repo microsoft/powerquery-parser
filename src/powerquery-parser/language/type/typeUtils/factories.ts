@@ -126,6 +126,34 @@ export function listTypeFactory(isNullable: boolean, itemType: Type.PqType): Typ
     };
 }
 
+export function logicalLiteralFactory(isNullable: boolean, literal: string): Type.LogicalLiteral {
+    let normalizedLiteral: boolean;
+
+    switch (literal) {
+        case "true":
+            normalizedLiteral = true;
+            break;
+
+        case "false":
+            normalizedLiteral = false;
+            break;
+
+        default:
+            throw new CommonError.InvariantError(`the given literal isn't a valid boolean value`, {
+                literal,
+                expected: ["true", "false"],
+            });
+    }
+
+    return {
+        isNullable,
+        kind: Type.TypeKind.Logical,
+        maybeExtendedKind: Type.ExtendedTypeKind.LogicalLiteral,
+        literal,
+        normalizedLiteral,
+    };
+}
+
 export function primaryPrimitiveTypeFactory(
     isNullable: boolean,
     primitiveType: Type.TPrimitiveType,

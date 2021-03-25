@@ -91,8 +91,13 @@ export function assertAsList(type: Type.PqType): Type.TList {
     return type;
 }
 
-export function assertAsLogical(type: Type.PqType): Type.Logical {
+export function assertAsLogical(type: Type.PqType): Type.TLogical {
     assertIsLogical(type);
+    return type;
+}
+
+export function assertAsLogicalLiteral(type: Type.PqType): Type.LogicalLiteral {
+    assertIsLogicalLiteral(type);
     return type;
 }
 
@@ -402,15 +407,27 @@ export function assertIsLiteral(type: Type.PqType): asserts type is Type.TLitera
     }
 }
 
-export function assertIsLogical(type: Type.PqType): asserts type is Type.Logical {
+export function assertIsLogical(type: Type.PqType): asserts type is Type.TLogical {
     if (!isType.isLogical(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
             givenExtendedTypeKind: type.maybeExtendedKind,
             expectedTypeKind: Type.TypeKind.Logical,
-            expectedExtendedTypeKind: undefined,
+            expectedExtendedTypeKind: [undefined, Type.ExtendedTypeKind.LogicalLiteral],
         };
         throw new CommonError.InvariantError(`${assertIsLogical.name} failed`, details);
+    }
+}
+
+export function assertIsLogicalLiteral(type: Type.PqType): asserts type is Type.LogicalLiteral {
+    if (!isType.isLogicalLiteral(type)) {
+        const details: AssertErrorDetails = {
+            givenTypeKind: type.kind,
+            givenExtendedTypeKind: type.maybeExtendedKind,
+            expectedTypeKind: Type.TypeKind.Logical,
+            expectedExtendedTypeKind: [Type.ExtendedTypeKind.LogicalLiteral],
+        };
+        throw new CommonError.InvariantError(`${assertIsLogicalLiteral.name} failed`, details);
     }
 }
 
@@ -643,6 +660,6 @@ export function assertIsUnknown(type: Type.PqType): asserts type is Type.Unknown
 interface AssertErrorDetails {
     givenTypeKind: Type.TypeKind;
     givenExtendedTypeKind: Type.ExtendedTypeKind | undefined;
-    expectedTypeKind: Type.TypeKind | Type.TypeKind[];
-    expectedExtendedTypeKind: undefined | (Type.ExtendedTypeKind | undefined)[];
+    expectedTypeKind: Type.TypeKind | ReadonlyArray<Type.TypeKind>;
+    expectedExtendedTypeKind: undefined | ReadonlyArray<Type.ExtendedTypeKind | undefined>;
 }

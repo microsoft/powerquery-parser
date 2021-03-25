@@ -16,6 +16,7 @@ export type TExtendedType =
     | DefinedTable
     | FunctionType
     | ListType
+    | LogicalLiteral
     | NumberLiteral
     | PrimaryPrimitiveType
     | RecordType
@@ -26,17 +27,22 @@ export type TExtendedTypeKind =
     | TypeKind.Any
     | TypeKind.Function
     | TypeKind.List
+    | TypeKind.Logical
     | TypeKind.Number
     | TypeKind.Record
     | TypeKind.Table
     | TypeKind.Text
     | TypeKind.Type;
 
-export type TLiteral = NumberLiteral | TextLiteral;
-export type TLiteralKind = ExtendedTypeKind.NumberLiteral | ExtendedTypeKind.TextLiteral;
+export type TLiteral = LogicalLiteral | NumberLiteral | TextLiteral;
+export type TLiteralKind =
+    | ExtendedTypeKind.LogicalLiteral
+    | ExtendedTypeKind.NumberLiteral
+    | ExtendedTypeKind.TextLiteral;
 
 export type TAny = Any | AnyUnion;
 export type TList = List | DefinedList;
+export type TLogical = Logical | LogicalLiteral;
 export type TFunction = Function | DefinedFunction;
 export type TNumber = Number | NumberLiteral;
 export type TRecord = Record | DefinedRecord;
@@ -158,6 +164,9 @@ export const enum ExtendedTypeKind {
     // `type list { number }`
     ListType = "ListType",
 
+    // true
+    LogicalLiteral = "LogicalLiteral",
+
     // `1`
     NumberLiteral = "NumberLiteral",
 
@@ -277,6 +286,12 @@ export interface ListType extends IExtendedType {
     readonly kind: TypeKind.Type;
     readonly maybeExtendedKind: ExtendedTypeKind.ListType;
     readonly itemType: PqType;
+}
+
+export interface LogicalLiteral extends IPrimitiveLiteral {
+    readonly kind: TypeKind.Logical;
+    readonly maybeExtendedKind: ExtendedTypeKind.LogicalLiteral;
+    readonly normalizedLiteral: boolean;
 }
 
 export interface NumberLiteral extends IPrimitiveLiteral {

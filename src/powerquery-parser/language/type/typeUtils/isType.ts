@@ -95,8 +95,12 @@ export function isLiteral(type: Type.PqType): type is Type.TLiteral {
     );
 }
 
-export function isLogical(type: Type.PqType): type is Type.Logical {
+export function isLogical(type: Type.PqType): type is Type.TLogical {
     return type.kind === Type.TypeKind.Logical;
+}
+
+export function isLogicalLiteral(type: Type.PqType): type is Type.LogicalLiteral {
+    return type.kind === Type.TypeKind.Logical && type.maybeExtendedKind === Type.ExtendedTypeKind.LogicalLiteral;
 }
 
 export function isNone(type: Type.PqType): type is Type.None {

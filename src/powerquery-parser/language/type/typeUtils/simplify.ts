@@ -9,6 +9,7 @@ import {
     CategorizedPqTypes,
     FunctionCategory,
     ListCategory,
+    LogicalCategory,
     NumberCategory,
     RecordCategory,
     TableCategory,
@@ -34,7 +35,6 @@ export function simplify(types: ReadonlyArray<Type.PqType>): ReadonlyArray<Type.
         ...(categorized.maybeDateTime?.primitives.values() ?? []),
         ...(categorized.maybeDateTimeZone?.primitives.values() ?? []),
         ...(categorized.maybeDuration?.primitives.values() ?? []),
-        ...(categorized.maybeLogical?.primitives.values() ?? []),
         ...(categorized.maybeNone?.primitives.values() ?? []),
         ...(categorized.maybeNotApplicable?.primitives.values() ?? []),
         ...(categorized.maybeNull?.primitives.values() ?? []),
@@ -43,6 +43,7 @@ export function simplify(types: ReadonlyArray<Type.PqType>): ReadonlyArray<Type.
 
         ...simplifyFunctionCategory(categorized.maybeFunction),
         ...simplifyListCategory(categorized.maybeList),
+        ...simplifyLogicalCategory(categorized.maybeLogical),
         ...simplifyNumberCategory(categorized.maybeNumber),
         ...simplifyRecordCategory(categorized.maybeRecord),
         ...simplifyTableCategory(categorized.maybeTable),
@@ -96,6 +97,10 @@ function simplifyFunctionCategory(maybeCategory: FunctionCategory | undefined): 
 
 function simplifyListCategory(maybeCategory: ListCategory | undefined): ReadonlyArray<Type.TList> {
     return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedLists) : [];
+}
+
+function simplifyLogicalCategory(maybeCategory: LogicalCategory | undefined): ReadonlyArray<Type.TLogical> {
+    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.literals) : [];
 }
 
 function simplifyNumberCategory(maybeCategory: NumberCategory | undefined): ReadonlyArray<Type.TNumber> {

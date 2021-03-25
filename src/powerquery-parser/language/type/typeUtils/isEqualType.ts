@@ -91,6 +91,9 @@ export function isEqualExtendedTypes(left: Type.TExtendedType, right: Type.TExte
         case Type.ExtendedTypeKind.ListType:
             return isEqualListType(left, right as Type.ListType);
 
+        case Type.ExtendedTypeKind.LogicalLiteral:
+            return isEqualLogicalLiteral(left, right as Type.LogicalLiteral);
+
         case Type.ExtendedTypeKind.NumberLiteral:
             return isEqualNumberLiteral(left, right as Type.NumberLiteral);
 
@@ -224,6 +227,10 @@ export function isEqualFunctionType(left: Type.FunctionType, right: Type.Functio
 
 export function isEqualListType(left: Type.ListType, right: Type.ListType): boolean {
     return left === right || (left.isNullable === right.isNullable && isEqualType(left.itemType, right.itemType));
+}
+
+export function isEqualLogicalLiteral(left: Type.LogicalLiteral, right: Type.LogicalLiteral): boolean {
+    return left === right || (left.isNullable === right.isNullable && left.literal === right.literal);
 }
 
 export function isEqualNumberLiteral(left: Type.NumberLiteral, right: Type.NumberLiteral): boolean {

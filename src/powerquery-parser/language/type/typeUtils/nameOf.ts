@@ -35,6 +35,9 @@ export function nameOf(type: Type.PqType): string {
         case Type.ExtendedTypeKind.ListType:
             return prefixNullableIfRequired(type, `type {${nameOf(type.itemType)}}`);
 
+        case Type.ExtendedTypeKind.LogicalLiteral:
+            return prefixNullableIfRequired(type, `${type.normalizedLiteral}`);
+
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
             return prefixNullableIfRequired(type, `type ${nameOf(type.primitiveType)}`);
 
