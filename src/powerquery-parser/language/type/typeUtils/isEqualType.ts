@@ -230,11 +230,15 @@ export function isEqualListType(left: Type.ListType, right: Type.ListType): bool
 }
 
 export function isEqualLogicalLiteral(left: Type.LogicalLiteral, right: Type.LogicalLiteral): boolean {
-    return left === right || (left.isNullable === right.isNullable && left.literal === right.literal);
+    return (
+        left === right || (left.isNullable === right.isNullable && left.normalizedLiteral === right.normalizedLiteral)
+    );
 }
 
 export function isEqualNumberLiteral(left: Type.NumberLiteral, right: Type.NumberLiteral): boolean {
-    return left === right || (left.isNullable === right.isNullable && left.literal === right.literal);
+    return (
+        left === right || (left.isNullable === right.isNullable && left.normalizedLiteral === right.normalizedLiteral)
+    );
 }
 
 export function isEqualPrimitiveType(left: Type.TPrimitiveType, right: Type.TPrimitiveType): boolean {
