@@ -100,7 +100,10 @@ export interface ListCategory extends ITypeKindCategory<Type.List> {
 }
 
 export interface LogicalCategory extends ITypeKindCategory<Type.Logical> {
-    readonly literals: ImmutableSet<Type.LogicalLiteral>;
+    readonly hasFalsyNonNullableLiteral: boolean;
+    readonly hasFalsyNullableLiteral: boolean;
+    readonly hasTruthyNonNullableLiteral: boolean;
+    readonly hasTruthyNullableLiteral: boolean;
 }
 
 export interface NumberCategory extends ITypeKindCategory<Type.Number> {
@@ -335,7 +338,14 @@ function addToCategoryForLogical(category: LogicalCategory, type: Type.TLogical)
         case Type.ExtendedTypeKind.LogicalLiteral: {
             return {
                 ...category,
-                literals: category.literals.add(type),
+                hasFalsyNonNullableLiteral:
+                    category.hasFalsyNonNullableLiteral || (!type.normalizedLiteral && !type.isNullable),
+                hasFalsyNullableLiteral:
+                    category.hasFalsyNullableLiteral || (!type.normalizedLiteral && type.isNullable),
+                hasTruthyNonNullableLiteral:
+                    category.hasTruthyNonNullableLiteral || (type.normalizedLiteral && !type.isNullable),
+                hasTruthyNullableLiteral:
+                    category.hasTruthyNullableLiteral || (type.normalizedLiteral && type.isNullable),
             };
         }
 
@@ -679,7 +689,10 @@ function createCategoryForLogical(type: Type.TLogical): LogicalCategory {
             return {
                 kind: Type.TypeKind.Logical,
                 primitives: new ImmutableSet<Type.Logical>([], isEqualPrimitiveType),
-                literals: new ImmutableSet([type], isEqualLogicalLiteral),
+                hasFalsyNonNullableLiteral: !type.normalizedLiteral && !type.isNullable,
+                hasFalsyNullableLiteral: !type.normalizedLiteral && type.isNullable,
+                hasTruthyNonNullableLiteral: type.normalizedLiteral && !type.isNullable,
+                hasTruthyNullableLiteral: type.normalizedLiteral && type.isNullable,
             };
         }
 
@@ -687,7 +700,10 @@ function createCategoryForLogical(type: Type.TLogical): LogicalCategory {
             return {
                 kind: Type.TypeKind.Logical,
                 primitives: new ImmutableSet([type], isEqualPrimitiveType),
-                literals: new ImmutableSet<Type.LogicalLiteral>([], isEqualLogicalLiteral),
+                hasFalsyNonNullableLiteral: false,
+                hasFalsyNullableLiteral: false,
+                hasTruthyNonNullableLiteral: false,
+                hasTruthyNullableLiteral: false,
             };
         }
 
