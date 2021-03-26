@@ -12,7 +12,6 @@ import {
     isEqualDefinedTable,
     isEqualFunctionType,
     isEqualListType,
-    isEqualLogicalLiteral,
     isEqualNumberLiteral,
     isEqualPrimaryPrimitiveType,
     isEqualPrimitiveType,

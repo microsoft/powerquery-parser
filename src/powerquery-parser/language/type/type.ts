@@ -405,6 +405,11 @@ export const NullableUnknownInstance: IPrimitiveType<TypeKind.Unknown> = primiti
 // ---------- Non-primitive singletons ----------
 // ----------------------------------------------
 
+export const FalseInstance: LogicalLiteral = logicalLiteralFactory(false, false);
+export const TrueInstance: LogicalLiteral = logicalLiteralFactory(false, true);
+export const NullableFalseInstance: LogicalLiteral = logicalLiteralFactory(true, false);
+export const NullableTrueInstance: LogicalLiteral = logicalLiteralFactory(true, true);
+
 export const PrimitiveInstance: AnyUnion = {
     kind: TypeKind.Any,
     maybeExtendedKind: ExtendedTypeKind.AnyUnion,
@@ -526,5 +531,15 @@ function primitiveTypeFactory<T extends TypeKind>(typeKind: T, isNullable: boole
         kind: typeKind,
         maybeExtendedKind: undefined,
         isNullable,
+    };
+}
+
+function logicalLiteralFactory(isNullable: boolean, normalizedLiteral: boolean): LogicalLiteral {
+    return {
+        isNullable,
+        kind: TypeKind.Logical,
+        maybeExtendedKind: ExtendedTypeKind.LogicalLiteral,
+        literal: normalizedLiteral ? "true" : "false",
+        normalizedLiteral,
     };
 }
