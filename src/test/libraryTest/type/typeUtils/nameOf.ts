@@ -43,6 +43,10 @@ describe(`TypeUtils.nameOf`, () => {
             it(`${Type.LogicalInstance.kind}`, () => {
                 expect(TypeUtils.nameOf(Type.LogicalInstance)).to.equal("logical");
             });
+            it(`${Type.LogicalInstance.kind} literal`, () => {
+                // tslint:disable-next-line: chai-vague-errors
+                expect(TypeUtils.nameOf(Type.TrueInstance)).to.equal("true");
+            });
             it(`${Type.NoneInstance.kind}`, () => {
                 expect(TypeUtils.nameOf(Type.NoneInstance)).to.equal("none");
             });

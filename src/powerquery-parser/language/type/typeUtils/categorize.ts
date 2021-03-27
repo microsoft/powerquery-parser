@@ -27,6 +27,7 @@ export type TExtendedCategory =
     | AnyCategory
     | FunctionCategory
     | ListCategory
+    | LogicalCategory
     | NumberCategory
     | RecordCategory
     | TableCategory
@@ -40,7 +41,6 @@ export type NonExtendedCategory =
     | DateTimeCategory
     | DateTimeZoneCategory
     | DurationCategory
-    | LogicalCategory
     | NoneCategory
     | NotApplicableCategory
     | NullCategory
@@ -78,7 +78,6 @@ export type DateCategory = ITypeKindCategory<Type.Date>;
 export type DateTimeCategory = ITypeKindCategory<Type.DateTime>;
 export type DateTimeZoneCategory = ITypeKindCategory<Type.DateTimeZone>;
 export type DurationCategory = ITypeKindCategory<Type.Duration>;
-export type LogicalCategory = ITypeKindCategory<Type.Logical>;
 export type NoneCategory = ITypeKindCategory<Type.None>;
 export type NotApplicableCategory = ITypeKindCategory<Type.NotApplicable>;
 export type NullCategory = ITypeKindCategory<Type.Null>;
@@ -97,6 +96,13 @@ export interface FunctionCategory extends ITypeKindCategory<Type.Function> {
 
 export interface ListCategory extends ITypeKindCategory<Type.List> {
     readonly definedLists: ImmutableSet<Type.DefinedList>;
+}
+
+export interface LogicalCategory extends ITypeKindCategory<Type.Logical> {
+    readonly hasFalsyNonNullableLiteral: boolean;
+    readonly hasFalsyNullableLiteral: boolean;
+    readonly hasTruthyNonNullableLiteral: boolean;
+    readonly hasTruthyNullableLiteral: boolean;
 }
 
 export interface NumberCategory extends ITypeKindCategory<Type.Number> {
@@ -209,8 +215,10 @@ function addToCategory(category: TCategory, type: Type.PqType): TCategory {
             return addToCategoryForList(category, type);
         }
 
-        case Type.TypeKind.Logical:
-            return addToCategoryForPrimitive(category, type);
+        case Type.TypeKind.Logical: {
+            assertIsCategoryForType<Type.TLogical, LogicalCategory>(category, type);
+            return addToCategoryForLogical(category, type);
+        }
 
         case Type.TypeKind.None:
             return addToCategoryForPrimitive(category, type);
@@ -307,6 +315,36 @@ function addToCategoryForList(category: ListCategory, type: Type.TList): ListCat
             return {
                 ...category,
                 definedLists: category.definedLists.add(type),
+            };
+        }
+
+        case undefined: {
+            return {
+                ...category,
+                primitives: category.primitives.add(type),
+            };
+        }
+
+        default:
+            throw Assert.isNever(type);
+    }
+}
+
+function addToCategoryForLogical(category: LogicalCategory, type: Type.TLogical): LogicalCategory {
+    assertIsCategoryForType<Type.TLogical, LogicalCategory>(category, type);
+
+    switch (type.maybeExtendedKind) {
+        case Type.ExtendedTypeKind.LogicalLiteral: {
+            return {
+                ...category,
+                hasFalsyNonNullableLiteral:
+                    category.hasFalsyNonNullableLiteral || (!type.normalizedLiteral && !type.isNullable),
+                hasFalsyNullableLiteral:
+                    category.hasFalsyNullableLiteral || (!type.normalizedLiteral && type.isNullable),
+                hasTruthyNonNullableLiteral:
+                    category.hasTruthyNonNullableLiteral || (type.normalizedLiteral && !type.isNullable),
+                hasTruthyNullableLiteral:
+                    category.hasTruthyNullableLiteral || (type.normalizedLiteral && type.isNullable),
             };
         }
 
@@ -536,7 +574,7 @@ function createCategory(type: Type.PqType): TCategory {
             return createCategoryForList(type);
 
         case Type.TypeKind.Logical:
-            return createCategoryForPrimitive(type);
+            return createCategoryForLogical(type);
 
         case Type.TypeKind.None:
             return createCategoryForPrimitive(type);
@@ -636,6 +674,35 @@ function createCategoryForList(type: Type.TList): ListCategory {
                 kind: Type.TypeKind.List,
                 primitives: new ImmutableSet([type], isEqualPrimitiveType),
                 definedLists: new ImmutableSet([], isEqualDefinedList),
+            };
+        }
+
+        default:
+            throw Assert.isNever(type);
+    }
+}
+
+function createCategoryForLogical(type: Type.TLogical): LogicalCategory {
+    switch (type.maybeExtendedKind) {
+        case Type.ExtendedTypeKind.LogicalLiteral: {
+            return {
+                kind: Type.TypeKind.Logical,
+                primitives: new ImmutableSet<Type.Logical>([], isEqualPrimitiveType),
+                hasFalsyNonNullableLiteral: !type.normalizedLiteral && !type.isNullable,
+                hasFalsyNullableLiteral: !type.normalizedLiteral && type.isNullable,
+                hasTruthyNonNullableLiteral: type.normalizedLiteral && !type.isNullable,
+                hasTruthyNullableLiteral: type.normalizedLiteral && type.isNullable,
+            };
+        }
+
+        case undefined: {
+            return {
+                kind: Type.TypeKind.Logical,
+                primitives: new ImmutableSet([type], isEqualPrimitiveType),
+                hasFalsyNonNullableLiteral: false,
+                hasFalsyNullableLiteral: false,
+                hasTruthyNonNullableLiteral: false,
+                hasTruthyNullableLiteral: false,
             };
         }
 

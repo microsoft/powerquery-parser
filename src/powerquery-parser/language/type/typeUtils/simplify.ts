@@ -9,6 +9,7 @@ import {
     CategorizedPqTypes,
     FunctionCategory,
     ListCategory,
+    LogicalCategory,
     NumberCategory,
     RecordCategory,
     TableCategory,
@@ -34,7 +35,6 @@ export function simplify(types: ReadonlyArray<Type.PqType>): ReadonlyArray<Type.
         ...(categorized.maybeDateTime?.primitives.values() ?? []),
         ...(categorized.maybeDateTimeZone?.primitives.values() ?? []),
         ...(categorized.maybeDuration?.primitives.values() ?? []),
-        ...(categorized.maybeLogical?.primitives.values() ?? []),
         ...(categorized.maybeNone?.primitives.values() ?? []),
         ...(categorized.maybeNotApplicable?.primitives.values() ?? []),
         ...(categorized.maybeNull?.primitives.values() ?? []),
@@ -43,6 +43,7 @@ export function simplify(types: ReadonlyArray<Type.PqType>): ReadonlyArray<Type.
 
         ...simplifyFunctionCategory(categorized.maybeFunction),
         ...simplifyListCategory(categorized.maybeList),
+        ...simplifyLogicalCategory(categorized.maybeLogical),
         ...simplifyNumberCategory(categorized.maybeNumber),
         ...simplifyRecordCategory(categorized.maybeRecord),
         ...simplifyTableCategory(categorized.maybeTable),
@@ -91,27 +92,67 @@ function simplifyAnyCategory(maybeCategory: AnyCategory | undefined): ReadonlyAr
 }
 
 function simplifyFunctionCategory(maybeCategory: FunctionCategory | undefined): ReadonlyArray<Type.TFunction> {
-    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedFunctions) : [];
+    if (maybeCategory === undefined) {
+        return [];
+    }
+
+    return simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedFunctions);
 }
 
 function simplifyListCategory(maybeCategory: ListCategory | undefined): ReadonlyArray<Type.TList> {
-    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedLists) : [];
+    if (maybeCategory === undefined) {
+        return [];
+    }
+
+    return simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedLists);
+}
+
+function simplifyLogicalCategory(maybeCategory: LogicalCategory | undefined): ReadonlyArray<Type.TLogical> {
+    if (maybeCategory === undefined) {
+        return [];
+    } else if (
+        (maybeCategory.hasFalsyNullableLiteral || maybeCategory.hasFalsyNonNullableLiteral) &&
+        (maybeCategory.hasTruthyNullableLiteral || maybeCategory.hasTruthyNonNullableLiteral)
+    ) {
+        return maybeCategory.hasFalsyNullableLiteral || maybeCategory.hasTruthyNullableLiteral
+            ? [Type.NullableLogicalInstance]
+            : [Type.LogicalInstance];
+    } else {
+        const maybeType: Type.Logical | undefined = firstNullableElseFirst(maybeCategory.primitives);
+        return maybeType ? [maybeType] : [];
+    }
 }
 
 function simplifyNumberCategory(maybeCategory: NumberCategory | undefined): ReadonlyArray<Type.TNumber> {
-    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.literals) : [];
+    if (maybeCategory === undefined) {
+        return [];
+    }
+
+    return simplifyExtendedType(maybeCategory.primitives, maybeCategory.literals);
 }
 
 function simplifyRecordCategory(maybeCategory: RecordCategory | undefined): ReadonlyArray<Type.TRecord> {
-    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedRecords) : [];
+    if (maybeCategory === undefined) {
+        return [];
+    }
+
+    return simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedRecords);
 }
 
 function simplifyTableCategory(maybeCategory: TableCategory | undefined): ReadonlyArray<Type.TTable> {
-    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedTables) : [];
+    if (maybeCategory === undefined) {
+        return [];
+    }
+
+    return simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedTables);
 }
 
 function simplifyTextCategory(maybeCategory: TextCategory | undefined): ReadonlyArray<Type.TText> {
-    return maybeCategory ? simplifyExtendedType(maybeCategory.primitives, maybeCategory.literals) : [];
+    if (maybeCategory === undefined) {
+        return [];
+    }
+
+    return simplifyExtendedType(maybeCategory.primitives, maybeCategory.literals);
 }
 
 function simplifyTypeCategory(maybeCategory: TypeCategory | undefined): ReadonlyArray<Type.PqType> {

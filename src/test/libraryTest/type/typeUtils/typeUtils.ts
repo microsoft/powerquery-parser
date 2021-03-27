@@ -82,6 +82,23 @@ describe(`TypeUtils`, () => {
             expect(actual).deep.equal(expected);
         });
 
+        it(`simplify true | false to boolean`, () => {
+            const actual: ReadonlyArray<AbridgedType> = TypeUtils.simplify([Type.FalseInstance, Type.TrueInstance]);
+            const expected: ReadonlyArray<AbridgedType> = [Type.LogicalInstance];
+            expect(actual).deep.equal(expected);
+        });
+
+        it(`prefer nullable in boolean simplification`, () => {
+            const actual: ReadonlyArray<AbridgedType> = TypeUtils.simplify([
+                Type.FalseInstance,
+                Type.TrueInstance,
+                Type.NullableFalseInstance,
+                Type.NullableTrueInstance,
+            ]);
+            const expected: ReadonlyArray<AbridgedType> = [Type.NullableLogicalInstance];
+            expect(actual).deep.equal(expected);
+        });
+
         it(`dedupe duplicate literals`, () => {
             const actual: ReadonlyArray<AbridgedType> = TypeUtils.simplify([
                 TypeUtils.numberLiteralFactory(false, "1"),
