@@ -15,7 +15,7 @@ export type TChecked =
 
 export interface IChecked<
     Key,
-    Actual extends Type.PqType | Type.FunctionParameter,
+    Actual extends Type.PqType | Type.FunctionParameter | undefined,
     Expected extends Type.PqType | Type.FunctionParameter
 > {
     readonly valid: ReadonlyArray<Key>;
@@ -36,7 +36,7 @@ export type CheckedDefinedRecord = IChecked<string, Type.PqType, Type.PqType>;
 
 export type CheckedDefinedTable = IChecked<string, Type.PqType, Type.PqType>;
 
-export type CheckedInvocation = IChecked<number, Type.PqType, Type.FunctionParameter>;
+export type CheckedInvocation = IChecked<number, Type.PqType | undefined, Type.FunctionParameter>;
 
 export interface Mismatch<Key, Actual, Expected> {
     readonly key: Key;
@@ -69,11 +69,45 @@ export function typeCheckInvocation(
     args: ReadonlyArray<Type.PqType>,
     definedFunction: Type.DefinedFunction,
 ): CheckedInvocation {
-    return typeCheckGenericNumber<Type.PqType, Type.FunctionParameter>(
-        args,
-        definedFunction.parameters,
-        (left: Type.PqType, right: Type.FunctionParameter) => isCompatibleWithFunctionParameter(left, right),
-    );
+    const parameters: ReadonlyArray<Type.FunctionParameter> = definedFunction.parameters;
+    const numArgs: number = args.length;
+    const numParameters: number = parameters.length;
+
+    const upperBound: number = numParameters;
+
+    const extraneousArgs: ReadonlyArray<number> =
+        numArgs > numParameters ? ArrayUtils.range(numArgs - numParameters, numParameters) : [];
+
+    const missingArgs: ReadonlyArray<number> =
+        numParameters > numArgs
+            ? ArrayUtils.range(numParameters - numArgs, numArgs).filter(
+                  (parameterIndex: number) => !parameters[parameterIndex].isOptional,
+              )
+            : [];
+
+    const validArgs: number[] = [];
+    const invalidArgs: Mismatch<number, Type.PqType | undefined, Type.FunctionParameter>[] = [];
+    for (let index: number = 0; index < upperBound; index += 1) {
+        const maybeArg: Type.PqType | undefined = args[index];
+        const parameter: Type.FunctionParameter = parameters[index];
+
+        if (isCompatibleWithFunctionParameter(maybeArg, parameter)) {
+            validArgs.push(index);
+        } else {
+            invalidArgs.push({
+                key: index,
+                expected: parameter,
+                actual: maybeArg,
+            });
+        }
+    }
+
+    return {
+        valid: validArgs,
+        invalid: invalidArgs,
+        extraneous: extraneousArgs,
+        missing: missingArgs,
+    };
 }
 
 export function typeCheckListWithListType(valueType: Type.DefinedList, schemaType: Type.ListType): CheckedDefinedList {
@@ -120,7 +154,7 @@ export function typeCheckTable(valueType: Type.DefinedTable, schemaType: Type.Ta
 }
 
 function typeCheckGenericNumber<
-    Value extends Type.PqType | Type.FunctionParameter,
+    Value extends Type.PqType | Type.FunctionParameter | undefined,
     Schema extends Type.PqType | Type.FunctionParameter
 >(
     valueElements: ReadonlyArray<Value>,

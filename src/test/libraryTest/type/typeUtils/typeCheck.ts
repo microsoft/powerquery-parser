@@ -56,7 +56,7 @@ describe(`TypeUtils.typeCheck`, () => {
             expect(actual).to.deep.equal(expected);
         });
 
-        it(`missing parameter`, () => {
+        it(`missing required parameter`, () => {
             const args: ReadonlyArray<Language.Type.PqType> = [];
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
                 false,
@@ -79,6 +79,34 @@ describe(`TypeUtils.typeCheck`, () => {
                 invalid: [],
                 extraneous: [],
                 missing: [0],
+            };
+
+            expect(actual).to.deep.equal(expected);
+        });
+
+        it(`missing optional parameter`, () => {
+            const args: ReadonlyArray<Language.Type.PqType> = [];
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
+                false,
+                [
+                    {
+                        isNullable: false,
+                        isOptional: true,
+                        maybeType: Language.Type.TypeKind.Number,
+                        nameLiteral: "foo",
+                    },
+                ],
+                Language.Type.ActionInstance,
+            );
+            const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
+                args,
+                definedFunction,
+            );
+            const expected: Language.TypeUtils.CheckedInvocation = {
+                valid: [0],
+                invalid: [],
+                extraneous: [],
+                missing: [],
             };
 
             expect(actual).to.deep.equal(expected);
