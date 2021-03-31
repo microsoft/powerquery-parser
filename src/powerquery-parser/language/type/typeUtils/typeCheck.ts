@@ -4,6 +4,7 @@
 import { Type } from "..";
 import { ArrayUtils } from "../../../common";
 import { isCompatible, isCompatibleWithFunctionParameter } from "./isCompatible";
+import { isEqualFunctionParameter } from "./isEqualType";
 
 export type TChecked =
     | CheckedDefinedFunction
@@ -35,6 +36,8 @@ export type CheckedDefinedRecord = IChecked<string, Type.PqType, Type.PqType>;
 
 export type CheckedDefinedTable = IChecked<string, Type.PqType, Type.PqType>;
 
+export type CheckedInvocation = IChecked<number, Type.PqType, Type.FunctionParameter>;
+
 export interface Mismatch<Key, Actual, Expected> {
     readonly key: Key;
     readonly expected: Expected;
@@ -58,7 +61,18 @@ export function typeCheckFunctionSignature(
     return typeCheckGenericNumber<Type.FunctionParameter, Type.FunctionParameter>(
         valueType.parameters,
         schemaType.parameters,
-        (left: Type.FunctionParameter, right: Type.FunctionParameter) => isCompatibleWithFunctionParameter(left, right),
+        (left: Type.FunctionParameter, right: Type.FunctionParameter) => isEqualFunctionParameter(left, right),
+    );
+}
+
+export function typeCheckInvocation(
+    args: ReadonlyArray<Type.PqType>,
+    definedFunction: Type.DefinedFunction,
+): CheckedInvocation {
+    return typeCheckGenericNumber<Type.PqType, Type.FunctionParameter>(
+        args,
+        definedFunction.parameters,
+        (left: Type.PqType, right: Type.FunctionParameter) => isCompatibleWithFunctionParameter(left, right),
     );
 }
 
@@ -106,8 +120,8 @@ export function typeCheckTable(valueType: Type.DefinedTable, schemaType: Type.Ta
 }
 
 function typeCheckGenericNumber<
-    Schema extends Type.PqType | Type.FunctionParameter,
-    Value extends Type.PqType | Type.FunctionParameter
+    Value extends Type.PqType | Type.FunctionParameter,
+    Schema extends Type.PqType | Type.FunctionParameter
 >(
     valueElements: ReadonlyArray<Value>,
     schemaItemTypes: ReadonlyArray<Schema>,
