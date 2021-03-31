@@ -15,6 +15,7 @@ interface AbridgedChecked<K = number | string> {
 function abridgedCheckedFactory(actual: Language.TypeUtils.TChecked): AbridgedChecked {
     const mismatched: ReadonlyArray<Language.TypeUtils.Mismatch<
         string | number,
+        Language.Type.PqType | Language.Type.FunctionParameter,
         Language.Type.PqType | Language.Type.FunctionParameter
     >> = actual.invalid;
     return {
