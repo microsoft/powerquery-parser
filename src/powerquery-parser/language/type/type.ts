@@ -202,6 +202,10 @@ export interface IPrimitiveLiteral extends IExtendedType {
     readonly literal: string;
 }
 
+export interface IPrimitiveType<T extends TypeKind = TypeKind> extends IType<T> {
+    readonly maybeExtendedKind: undefined;
+}
+
 // ------------------------------------------
 // ---------- Non-IType Interfaces ----------
 // ------------------------------------------
@@ -214,10 +218,6 @@ export interface FieldSpecificationList {
 export interface FunctionSignature {
     readonly parameters: ReadonlyArray<FunctionParameter>;
     readonly returnType: PqType;
-}
-
-export interface IPrimitiveType<T extends TypeKind = TypeKind> extends IType<T> {
-    readonly maybeExtendedKind: undefined;
 }
 
 export interface SimplifiedNullablePrimitiveType {
