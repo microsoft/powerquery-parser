@@ -5,7 +5,7 @@ export type Result<T, E> = Ok<T> | Err<E>;
 
 export const enum ResultKind {
     Ok = "Ok",
-    Error = "Err",
+    Error = "Error",
 }
 
 export interface Ok<T> {
