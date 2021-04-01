@@ -10,7 +10,7 @@ parseText(`let x = 1 in try x otherwise 2`);
 // @ts-ignore
 function parseText(text: string): void {
     // Try lexing and parsing the argument which returns a Result object.
-    // A Result<T, E> is the union (Ok<T> | Err<E>).
+    // A Result<T, E> is the union (Ok<T> | Error<E>).
     const task: Task.TriedLexParseTask = TaskUtils.tryLexParse(DefaultSettings, text);
 
     // If it was a success then dump the abstract syntax tree (AST) as verbose JSON to console.

@@ -15,12 +15,12 @@ export function assertGetLexParseOk<S extends Parser.IParseState = Parser.IParse
     return triedLexParseTask;
 }
 
-export function assertGetParseErr<S extends Parser.IParseState = Parser.IParseState>(
+export function assertGetParseError<S extends Parser.IParseState = Parser.IParseState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
 ): Parser.ParseError.ParseError<S> {
     const triedParse: Parser.TriedParse<S> = assertGetTriedParse(settings, text);
-    Assert.isErr(triedParse);
+    Assert.isError(triedParse);
 
     if (!Parser.ParseError.isParseError(triedParse.error)) {
         throw new Error(`expected triedParse to return a ParseError.ParseError: ${triedParse.error.message}`);

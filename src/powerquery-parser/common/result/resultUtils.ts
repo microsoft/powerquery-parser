@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError } from "..";
-import { Err as Error, Ok, Result, ResultKind } from "./result";
+import { Error, Ok, Result, ResultKind } from "./result";
 
 export function createOk<T>(value: T): Ok<T> {
     return {

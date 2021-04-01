@@ -7,7 +7,7 @@ import { Assert, DefaultSettings, Parser } from "../../..";
 import { TestAssertUtils } from "../../testUtils";
 
 function assertGetExpectedTokenKindError(text: string): Parser.ParseError.ExpectedTokenKindError {
-    const error: Parser.ParseError.ParseError<Parser.IParseState> = TestAssertUtils.assertGetParseErr(
+    const error: Parser.ParseError.ParseError<Parser.IParseState> = TestAssertUtils.assertGetParseError(
         DefaultSettings,
         text,
     );

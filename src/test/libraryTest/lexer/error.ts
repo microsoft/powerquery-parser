@@ -10,7 +10,7 @@ function assertBadLineNumberKind(lineNumber: number, expectedKind: Lexer.LexErro
     Assert.isOk(triedLex);
 
     const triedUpdate: Lexer.TriedLex = Lexer.tryUpdateLine(triedLex.value, lineNumber, `bar`);
-    Assert.isErr(triedUpdate);
+    Assert.isError(triedUpdate);
 
     const error: Lexer.LexError.LexError = triedUpdate.error;
     if (!(error.innerError instanceof Lexer.LexError.BadLineNumberError)) {
@@ -26,7 +26,7 @@ function assertBadLineNumberKind(lineNumber: number, expectedKind: Lexer.LexErro
 function assertExpectedKind(text: string, expectedKind: Lexer.LexError.ExpectedKind): void {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
     if (ResultUtils.isError(triedLex)) {
-        throw new Error(`AssertFailed: ResultUtils.isErr(triedLex)`);
+        throw new Error(`AssertFailed: ResultUtils.isError(triedLex)`);
     }
     const state: Lexer.State = triedLex.value;
     expect(state.lines.length).to.equal(1);
@@ -50,12 +50,12 @@ function assertExpectedKind(text: string, expectedKind: Lexer.LexError.ExpectedK
 function assertBadRangeKind(range: Lexer.Range, expectedKind: Lexer.LexError.BadRangeKind): void {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, `foo`);
     if (ResultUtils.isError(triedLex)) {
-        throw new Error(`AssertFailed: ResultUtils.isErr(triedLex)`);
+        throw new Error(`AssertFailed: ResultUtils.isError(triedLex)`);
     }
     const state: Lexer.State = triedLex.value;
 
     const TriedLex: Lexer.TriedLex = Lexer.tryUpdateRange(state, range, `bar`);
-    Assert.isErr(TriedLex);
+    Assert.isError(TriedLex);
 
     const error: Lexer.LexError.LexError = TriedLex.error;
     if (!(error.innerError instanceof Lexer.LexError.BadRangeError)) {
@@ -76,7 +76,7 @@ function assertUnterminatedMultilineTokenKind(
     Assert.isOk(triedLex);
     const lexerState: Lexer.State = triedLex.value;
     const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(lexerState);
-    Assert.isErr(triedSnapshot);
+    Assert.isError(triedSnapshot);
 
     const error: Lexer.LexError.TLexError = triedSnapshot.error;
     if (!(error.innerError instanceof Lexer.LexError.UnterminatedMultilineTokenError)) {

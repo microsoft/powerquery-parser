@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export type Result<T, E> = Ok<T> | Err<E>;
+export type Result<T, E> = Ok<T> | Error<E>;
 
 export const enum ResultKind {
     Ok = "Ok",
@@ -13,7 +13,7 @@ export interface Ok<T> {
     readonly value: T;
 }
 
-export interface Err<E> {
+export interface Error<E> {
     readonly kind: ResultKind.Error;
     readonly error: E;
 }

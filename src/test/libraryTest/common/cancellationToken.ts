@@ -15,7 +15,7 @@ import {
 } from "../../..";
 
 function assertGetCancellationError<T, E>(tried: Result<T, E>): CommonError.CancellationError {
-    Assert.isErr(tried);
+    Assert.isError(tried);
     if (!CommonError.isCommonError(tried.error)) {
         throw new Error(`expected error to be a ${CommonError.CommonError.name}`);
     }
