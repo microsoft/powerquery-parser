@@ -8,7 +8,7 @@ export type PartialResult<O, M, E> = PartialOk<O> | PartialMixed<M, E> | Partial
 export const enum PartialResultKind {
     Ok = "Ok",
     Mixed = "Mixed",
-    Error = "Eror",
+    Error = "Error",
 }
 
 export interface PartialOk<O> {
