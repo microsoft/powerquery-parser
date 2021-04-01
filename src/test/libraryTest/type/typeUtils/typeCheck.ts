@@ -15,6 +15,7 @@ interface AbridgedChecked<K = number | string> {
 function abridgedCheckedFactory(actual: Language.TypeUtils.TChecked): AbridgedChecked {
     const mismatched: ReadonlyArray<Language.TypeUtils.Mismatch<
         string | number,
+        Language.Type.PqType | Language.Type.FunctionParameter,
         Language.Type.PqType | Language.Type.FunctionParameter
     >> = actual.invalid;
     return {
@@ -33,6 +34,232 @@ function assertAbridgedEqual(actual: AbridgedChecked, expected: AbridgedChecked)
 }
 
 describe(`TypeUtils.typeCheck`, () => {
+    describe(`typeCheckInvocation`, () => {
+        it(`extraneous parameter`, () => {
+            const args: ReadonlyArray<Language.Type.PqType> = [Language.Type.ActionInstance];
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
+                false,
+                [],
+                Language.Type.ActionInstance,
+            );
+            const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
+                args,
+                definedFunction,
+            );
+            const expected: Language.TypeUtils.CheckedInvocation = {
+                valid: [],
+                invalid: [],
+                extraneous: [0],
+                missing: [],
+            };
+
+            expect(actual).to.deep.equal(expected);
+        });
+
+        it(`WIP missing required parameter`, () => {
+            const args: ReadonlyArray<Language.Type.PqType> = [];
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
+                false,
+                [
+                    {
+                        isNullable: false,
+                        isOptional: false,
+                        maybeType: Language.Type.TypeKind.Number,
+                        nameLiteral: "foo",
+                    },
+                ],
+                Language.Type.ActionInstance,
+            );
+            const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
+                args,
+                definedFunction,
+            );
+            const expected: Language.TypeUtils.CheckedInvocation = {
+                valid: [],
+                invalid: [],
+                extraneous: [],
+                missing: [0],
+            };
+
+            expect(actual).to.deep.equal(expected);
+        });
+
+        it(`missing optional parameter`, () => {
+            const args: ReadonlyArray<Language.Type.PqType> = [];
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
+                false,
+                [
+                    {
+                        isNullable: false,
+                        isOptional: true,
+                        maybeType: Language.Type.TypeKind.Number,
+                        nameLiteral: "foo",
+                    },
+                ],
+                Language.Type.ActionInstance,
+            );
+            const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
+                args,
+                definedFunction,
+            );
+            const expected: Language.TypeUtils.CheckedInvocation = {
+                valid: [0],
+                invalid: [],
+                extraneous: [],
+                missing: [],
+            };
+
+            expect(actual).to.deep.equal(expected);
+        });
+
+        it(`valid parameter`, () => {
+            const args: ReadonlyArray<Language.Type.PqType> = [Language.TypeUtils.numberLiteralFactory(false, "1")];
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
+                false,
+                [
+                    {
+                        isNullable: false,
+                        isOptional: false,
+                        maybeType: Language.Type.TypeKind.Number,
+                        nameLiteral: "foo",
+                    },
+                ],
+                Language.Type.ActionInstance,
+            );
+            const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
+                args,
+                definedFunction,
+            );
+            const expected: Language.TypeUtils.CheckedInvocation = {
+                valid: [0],
+                invalid: [],
+                extraneous: [],
+                missing: [],
+            };
+
+            expect(actual).to.deep.equal(expected);
+        });
+
+        it(`valid multiple parameters`, () => {
+            const args: ReadonlyArray<Language.Type.PqType> = [
+                Language.TypeUtils.numberLiteralFactory(false, "1"),
+                Language.TypeUtils.textLiteralFactory(false, `"cat"`),
+            ];
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
+                false,
+                [
+                    {
+                        isNullable: false,
+                        isOptional: false,
+                        maybeType: Language.Type.TypeKind.Number,
+                        nameLiteral: "foo",
+                    },
+                    {
+                        isNullable: false,
+                        isOptional: false,
+                        maybeType: Language.Type.TypeKind.Text,
+                        nameLiteral: "bar",
+                    },
+                ],
+                Language.Type.ActionInstance,
+            );
+            const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
+                args,
+                definedFunction,
+            );
+            const expected: Language.TypeUtils.CheckedInvocation = {
+                valid: [0, 1],
+                invalid: [],
+                extraneous: [],
+                missing: [],
+            };
+
+            expect(actual).to.deep.equal(expected);
+        });
+
+        it(`invalid parameter`, () => {
+            const args: ReadonlyArray<Language.Type.PqType> = [Language.TypeUtils.textLiteralFactory(false, `""`)];
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
+                false,
+                [
+                    {
+                        isNullable: false,
+                        isOptional: false,
+                        maybeType: Language.Type.TypeKind.Number,
+                        nameLiteral: "foo",
+                    },
+                ],
+                Language.Type.ActionInstance,
+            );
+            const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
+                args,
+                definedFunction,
+            );
+            const expected: Language.TypeUtils.CheckedInvocation = {
+                valid: [],
+                invalid: [
+                    {
+                        key: 0,
+                        actual: args[0],
+                        expected: definedFunction.parameters[0],
+                    },
+                ],
+                extraneous: [],
+                missing: [],
+            };
+
+            expect(actual).to.deep.equal(expected);
+        });
+
+        it(`invalid multiple parameter`, () => {
+            const args: ReadonlyArray<Language.Type.PqType> = [
+                Language.Type.LogicalInstance,
+                Language.Type.FunctionInstance,
+            ];
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
+                false,
+                [
+                    {
+                        isNullable: false,
+                        isOptional: false,
+                        maybeType: Language.Type.TypeKind.Number,
+                        nameLiteral: "foo",
+                    },
+                    {
+                        isNullable: false,
+                        isOptional: false,
+                        maybeType: Language.Type.TypeKind.Text,
+                        nameLiteral: "bar",
+                    },
+                ],
+                Language.Type.ActionInstance,
+            );
+            const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
+                args,
+                definedFunction,
+            );
+            const expected: Language.TypeUtils.CheckedInvocation = {
+                valid: [],
+                invalid: [
+                    {
+                        key: 0,
+                        actual: args[0],
+                        expected: definedFunction.parameters[0],
+                    },
+                    {
+                        key: 1,
+                        actual: args[1],
+                        expected: definedFunction.parameters[1],
+                    },
+                ],
+                extraneous: [],
+                missing: [],
+            };
+
+            expect(actual).to.deep.equal(expected);
+        });
+    });
+
     describe(`Table.RenameColumns`, () => {
         it(`list with two text elements, valid`, () => {
             const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [

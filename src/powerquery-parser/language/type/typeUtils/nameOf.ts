@@ -84,7 +84,7 @@ export function nameOfFunctionSignature(type: Type.FunctionSignature, includeFat
     return `(${parameters})${includeFatArrow ? " =>" : ""} ${nameOf(type.returnType)}`;
 }
 
-function nameOfTypeKind(kind: Type.TypeKind): string {
+export function nameOfTypeKind(kind: Type.TypeKind): string {
     return kind === Type.TypeKind.NotApplicable ? "not applicable" : kind.toLowerCase();
 }
 

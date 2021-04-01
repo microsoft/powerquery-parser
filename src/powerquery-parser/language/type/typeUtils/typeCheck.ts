@@ -4,6 +4,7 @@
 import { Type } from "..";
 import { ArrayUtils } from "../../../common";
 import { isCompatible, isCompatibleWithFunctionParameter } from "./isCompatible";
+import { isEqualFunctionParameter } from "./isEqualType";
 
 export type TChecked =
     | CheckedDefinedFunction
@@ -12,29 +13,35 @@ export type TChecked =
     | CheckedDefinedTable
     | CheckedFunctionSignature;
 
-export interface IChecked<Key, T extends Type.PqType | Type.FunctionParameter> {
+export interface IChecked<
+    Key,
+    Actual extends Type.PqType | Type.FunctionParameter | undefined,
+    Expected extends Type.PqType | Type.FunctionParameter
+> {
     readonly valid: ReadonlyArray<Key>;
-    readonly invalid: ReadonlyArray<Mismatch<Key, T>>;
+    readonly invalid: ReadonlyArray<Mismatch<Key, Actual, Expected>>;
     readonly extraneous: ReadonlyArray<Key>;
     readonly missing: ReadonlyArray<Key>;
 }
 
-export type CheckedDefinedList = IChecked<number, Type.PqType>;
+export type CheckedDefinedList = IChecked<number, Type.PqType, Type.PqType>;
 
-export interface CheckedDefinedFunction extends IChecked<number, Type.FunctionParameter> {
+export interface CheckedDefinedFunction extends IChecked<number, Type.FunctionParameter, Type.FunctionParameter> {
     readonly isReturnTypeCompatible: boolean;
 }
 
-export type CheckedFunctionSignature = IChecked<number, Type.FunctionParameter>;
+export type CheckedFunctionSignature = IChecked<number, Type.FunctionParameter, Type.FunctionParameter>;
 
-export type CheckedDefinedRecord = IChecked<string, Type.PqType>;
+export type CheckedDefinedRecord = IChecked<string, Type.PqType, Type.PqType>;
 
-export type CheckedDefinedTable = IChecked<string, Type.PqType>;
+export type CheckedDefinedTable = IChecked<string, Type.PqType, Type.PqType>;
 
-export interface Mismatch<K, T> {
-    readonly key: K;
-    readonly expected: T;
-    readonly actual: T;
+export type CheckedInvocation = IChecked<number, Type.PqType | undefined, Type.FunctionParameter>;
+
+export interface Mismatch<Key, Actual, Expected> {
+    readonly key: Key;
+    readonly expected: Expected;
+    readonly actual: Actual;
 }
 
 export function typeCheckFunction(
@@ -51,16 +58,55 @@ export function typeCheckFunctionSignature(
     valueType: Type.FunctionSignature,
     schemaType: Type.FunctionSignature,
 ): CheckedFunctionSignature {
-    return typeCheckGenericNumber<Type.FunctionParameter>(
+    return typeCheckGenericNumber<Type.FunctionParameter, Type.FunctionParameter>(
         valueType.parameters,
         schemaType.parameters,
-        (left: Type.FunctionParameter, right: Type.FunctionParameter) => isCompatibleWithFunctionParameter(left, right),
+        (left: Type.FunctionParameter, right: Type.FunctionParameter) => isEqualFunctionParameter(left, right),
     );
+}
+
+export function typeCheckInvocation(
+    args: ReadonlyArray<Type.PqType>,
+    definedFunction: Type.DefinedFunction,
+): CheckedInvocation {
+    const parameters: ReadonlyArray<Type.FunctionParameter> = definedFunction.parameters;
+    const numArgs: number = args.length;
+    const numParameters: number = parameters.length;
+
+    const extraneousArgs: ReadonlyArray<number> =
+        numArgs > numParameters ? ArrayUtils.range(numArgs - numParameters, numParameters) : [];
+
+    const validArgs: number[] = [];
+    const missingArgs: number[] = [];
+    const invalidArgs: Mismatch<number, Type.PqType | undefined, Type.FunctionParameter>[] = [];
+    for (let index: number = 0; index < numParameters; index += 1) {
+        const maybeArg: Type.PqType | undefined = args[index];
+        const parameter: Type.FunctionParameter = parameters[index];
+
+        if (isCompatibleWithFunctionParameter(maybeArg, parameter)) {
+            validArgs.push(index);
+        } else if (maybeArg !== undefined) {
+            invalidArgs.push({
+                key: index,
+                expected: parameter,
+                actual: maybeArg,
+            });
+        } else {
+            missingArgs.push(index);
+        }
+    }
+
+    return {
+        valid: validArgs,
+        invalid: invalidArgs,
+        extraneous: extraneousArgs,
+        missing: missingArgs,
+    };
 }
 
 export function typeCheckListWithListType(valueType: Type.DefinedList, schemaType: Type.ListType): CheckedDefinedList {
     const valid: number[] = [];
-    const invalid: Mismatch<number, Type.PqType>[] = [];
+    const invalid: Mismatch<number, Type.PqType, Type.PqType>[] = [];
     const schemaItemType: Type.PqType = schemaType.itemType;
 
     const valueElements: ReadonlyArray<Type.PqType> = valueType.elements;
@@ -101,11 +147,14 @@ export function typeCheckTable(valueType: Type.DefinedTable, schemaType: Type.Ta
     return typeCheckRecordOrTable(valueType.fields, schemaType.fields, schemaType.isOpen);
 }
 
-function typeCheckGenericNumber<T extends Type.PqType | Type.FunctionParameter>(
-    valueElements: ReadonlyArray<T>,
-    schemaItemTypes: ReadonlyArray<T>,
-    valueCmpFn: (left: T, right: T) => boolean | undefined,
-): IChecked<number, T> {
+function typeCheckGenericNumber<
+    Value extends Type.PqType | Type.FunctionParameter | undefined,
+    Schema extends Type.PqType | Type.FunctionParameter
+>(
+    valueElements: ReadonlyArray<Value>,
+    schemaItemTypes: ReadonlyArray<Schema>,
+    valueCmpFn: (left: Value, right: Schema) => boolean | undefined,
+): IChecked<number, Value, Schema> {
     const numElements: number = valueElements.length;
     const numItemTypes: number = schemaItemTypes.length;
 
@@ -123,10 +172,10 @@ function typeCheckGenericNumber<T extends Type.PqType | Type.FunctionParameter>(
     }
 
     const validIndices: number[] = [];
-    const mismatches: Mismatch<number, T>[] = [];
+    const mismatches: Mismatch<number, Value, Schema>[] = [];
     for (let index: number = 0; index < upperBound; index += 1) {
-        const element: T = valueElements[index];
-        const schemaItemType: T = schemaItemTypes[index];
+        const element: Value = valueElements[index];
+        const schemaItemType: Schema = schemaItemTypes[index];
 
         if (valueCmpFn(element, schemaItemType)) {
             validIndices.push(index);
@@ -151,9 +200,9 @@ function typeCheckRecordOrTable(
     valueFields: Map<string, Type.PqType>,
     schemaFields: Map<string, Type.PqType>,
     schemaIsOpen: boolean,
-): IChecked<string, Type.PqType> {
+): IChecked<string, Type.PqType, Type.PqType> {
     const validFields: string[] = [];
-    const mismatches: Mismatch<string, Type.PqType>[] = [];
+    const mismatches: Mismatch<string, Type.PqType, Type.PqType>[] = [];
     const extraneousFields: string[] = [];
     const missingFields: ReadonlyArray<string> = [...schemaFields.keys()].filter(
         (key: string) => !valueFields.has(key),

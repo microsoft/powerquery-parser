@@ -79,14 +79,18 @@ export function isCompatibleWithFunctionSignature(
 }
 
 export function isCompatibleWithFunctionParameter(
-    left: Type.FunctionParameter,
+    left: Type.PqType | undefined,
     right: Type.FunctionParameter,
 ): boolean {
-    return (
-        left.isNullable === right.isNullable &&
-        left.isOptional === right.isOptional &&
-        (right.maybeType === undefined || left.maybeType === right.maybeType)
-    );
+    if (left === undefined) {
+        return right.isOptional;
+    } else if (left.isNullable && !right.isNullable) {
+        return false;
+    } else if (right.maybeType) {
+        return left.kind === right.maybeType;
+    } else {
+        return true;
+    }
 }
 
 function isCompatibleWithAny(left: Type.PqType, right: Type.TAny): boolean | undefined {
