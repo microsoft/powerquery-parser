@@ -60,7 +60,7 @@ export function isOk<T, E extends Error>(result: Result<T, E>): asserts result i
 }
 
 export function isErr<T, E>(result: Result<T, E>): asserts result is Err<E> {
-    if (!ResultUtils.isErr(result)) {
+    if (!ResultUtils.isError(result)) {
         throw new CommonError.InvariantError(`assert failed, result expected to be an Err`);
     }
 }

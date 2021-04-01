@@ -12,11 +12,11 @@ interface AbridgedChecked<K = number | string> {
     readonly missing: ReadonlyArray<K>;
 }
 
-function abridgedCheckedFactory(actual: Language.TypeUtils.TChecked): AbridgedChecked {
+function createAbridgedChecked(actual: Language.TypeUtils.TChecked): AbridgedChecked {
     const mismatched: ReadonlyArray<Language.TypeUtils.Mismatch<
         string | number,
-        Language.Type.PqType | Language.Type.FunctionParameter,
-        Language.Type.PqType | Language.Type.FunctionParameter
+        Language.Type.PowerQueryType | Language.Type.FunctionParameter,
+        Language.Type.PowerQueryType | Language.Type.FunctionParameter
     >> = actual.invalid;
     return {
         valid: actual.valid,
@@ -36,8 +36,8 @@ function assertAbridgedEqual(actual: AbridgedChecked, expected: AbridgedChecked)
 describe(`TypeUtils.typeCheck`, () => {
     describe(`typeCheckInvocation`, () => {
         it(`extraneous parameter`, () => {
-            const args: ReadonlyArray<Language.Type.PqType> = [Language.Type.ActionInstance];
-            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
+            const args: ReadonlyArray<Language.Type.PowerQueryType> = [Language.Type.ActionInstance];
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [],
                 Language.Type.ActionInstance,
@@ -57,8 +57,8 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`WIP missing required parameter`, () => {
-            const args: ReadonlyArray<Language.Type.PqType> = [];
-            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
+            const args: ReadonlyArray<Language.Type.PowerQueryType> = [];
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
                     {
@@ -85,8 +85,8 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`missing optional parameter`, () => {
-            const args: ReadonlyArray<Language.Type.PqType> = [];
-            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
+            const args: ReadonlyArray<Language.Type.PowerQueryType> = [];
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
                     {
@@ -113,8 +113,10 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`valid parameter`, () => {
-            const args: ReadonlyArray<Language.Type.PqType> = [Language.TypeUtils.numberLiteralFactory(false, "1")];
-            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
+            const args: ReadonlyArray<Language.Type.PowerQueryType> = [
+                Language.TypeUtils.createNumberLiteral(false, "1"),
+            ];
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
                     {
@@ -141,11 +143,11 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`valid multiple parameters`, () => {
-            const args: ReadonlyArray<Language.Type.PqType> = [
-                Language.TypeUtils.numberLiteralFactory(false, "1"),
-                Language.TypeUtils.textLiteralFactory(false, `"cat"`),
+            const args: ReadonlyArray<Language.Type.PowerQueryType> = [
+                Language.TypeUtils.createNumberLiteral(false, "1"),
+                Language.TypeUtils.createTextLiteral(false, `"cat"`),
             ];
-            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
                     {
@@ -178,8 +180,10 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`invalid parameter`, () => {
-            const args: ReadonlyArray<Language.Type.PqType> = [Language.TypeUtils.textLiteralFactory(false, `""`)];
-            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
+            const args: ReadonlyArray<Language.Type.PowerQueryType> = [
+                Language.TypeUtils.createTextLiteral(false, `""`),
+            ];
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
                     {
@@ -212,11 +216,11 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`invalid multiple parameter`, () => {
-            const args: ReadonlyArray<Language.Type.PqType> = [
+            const args: ReadonlyArray<Language.Type.PowerQueryType> = [
                 Language.Type.LogicalInstance,
                 Language.Type.FunctionInstance,
             ];
-            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
                     {
@@ -262,11 +266,11 @@ describe(`TypeUtils.typeCheck`, () => {
 
     describe(`Table.RenameColumns`, () => {
         it(`list with two text elements, valid`, () => {
-            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, [
                 Language.Type.TextInstance,
                 Language.Type.TextInstance,
             ]);
-            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.definedListTypeFactory(false, [
+            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.createDefinedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.TextInstance,
             ]);
@@ -280,16 +284,16 @@ describe(`TypeUtils.typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
         it(`list with two text elements, invalid`, () => {
-            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, [
                 Language.Type.TextInstance,
                 Language.Type.TextInstance,
                 Language.Type.TextInstance,
             ]);
-            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.definedListTypeFactory(false, [
+            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.createDefinedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.TextInstance,
             ]);
@@ -303,16 +307,16 @@ describe(`TypeUtils.typeCheck`, () => {
                 extraneous: [2],
                 missing: [],
             };
-            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
         it(`list of list with two text elements, valid single list`, () => {
-            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
-                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, [
+                Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             ]);
-            const schemaType: Language.Type.ListType = Language.TypeUtils.listTypeFactory(
+            const schemaType: Language.Type.ListType = Language.TypeUtils.createListType(
                 false,
-                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithListType(
                 valueType,
@@ -324,19 +328,19 @@ describe(`TypeUtils.typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
         it(`list of list with two text elements, valid multiple list`, () => {
-            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
-                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
-                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
-                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
-                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, [
+                Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             ]);
-            const schemaType: Language.Type.ListType = Language.TypeUtils.listTypeFactory(
+            const schemaType: Language.Type.ListType = Language.TypeUtils.createListType(
                 false,
-                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithListType(
                 valueType,
@@ -348,14 +352,14 @@ describe(`TypeUtils.typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
         it(`list of list with two text elements, empty list`, () => {
-            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, []);
-            const schemaType: Language.Type.ListType = Language.TypeUtils.listTypeFactory(
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, []);
+            const schemaType: Language.Type.ListType = Language.TypeUtils.createListType(
                 false,
-                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithListType(
                 valueType,
@@ -367,19 +371,16 @@ describe(`TypeUtils.typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
         it(`list of list with two text elements, invalid single list`, () => {
-            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
-                Language.TypeUtils.definedListFactory(false, [
-                    Language.Type.NumberInstance,
-                    Language.Type.TextInstance,
-                ]),
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, [
+                Language.TypeUtils.createDefinedList(false, [Language.Type.NumberInstance, Language.Type.TextInstance]),
             ]);
-            const schemaType: Language.Type.ListType = Language.TypeUtils.listTypeFactory(
+            const schemaType: Language.Type.ListType = Language.TypeUtils.createListType(
                 false,
-                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithListType(
                 valueType,
@@ -391,22 +392,19 @@ describe(`TypeUtils.typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
         it(`list of list with two text elements, invalid multiple list`, () => {
-            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
-                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
-                Language.TypeUtils.definedListFactory(false, [
-                    Language.Type.TextInstance,
-                    Language.Type.NumberInstance,
-                ]),
-                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
-                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, [
+                Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.NumberInstance]),
+                Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             ]);
-            const schemaType: Language.Type.ListType = Language.TypeUtils.listTypeFactory(
+            const schemaType: Language.Type.ListType = Language.TypeUtils.createListType(
                 false,
-                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithListType(
                 valueType,
@@ -418,17 +416,17 @@ describe(`TypeUtils.typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
     });
 
     describe(`${Language.Type.ExtendedTypeKind.DefinedListType}`, () => {
         it(`valid`, () => {
-            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
-            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.definedListTypeFactory(false, [
+            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.createDefinedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
@@ -442,15 +440,15 @@ describe(`TypeUtils.typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
         it(`invalid`, () => {
-            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, [
                 Language.Type.TextInstance,
                 Language.Type.DateInstance,
             ]);
-            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.definedListTypeFactory(false, [
+            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.createDefinedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
@@ -464,15 +462,15 @@ describe(`TypeUtils.typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
         it(`extraneous`, () => {
-            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
-            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.definedListTypeFactory(false, [
+            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.createDefinedListType(false, [
                 Language.Type.TextInstance,
             ]);
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
@@ -485,12 +483,12 @@ describe(`TypeUtils.typeCheck`, () => {
                 extraneous: [1],
                 missing: [],
             };
-            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
         it(`missing`, () => {
-            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, []);
-            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.definedListTypeFactory(false, [
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, []);
+            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.createDefinedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
@@ -504,17 +502,17 @@ describe(`TypeUtils.typeCheck`, () => {
                 extraneous: [],
                 missing: [0, 1],
             };
-            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
     });
 
     describe(`${Language.Type.ExtendedTypeKind.ListType}`, () => {
         it(`valid`, () => {
-            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, [
                 Language.Type.TextInstance,
                 Language.Type.TextInstance,
             ]);
-            const schemaType: Language.Type.ListType = Language.TypeUtils.listTypeFactory(
+            const schemaType: Language.Type.ListType = Language.TypeUtils.createListType(
                 false,
                 Language.Type.TextInstance,
             );
@@ -528,15 +526,15 @@ describe(`TypeUtils.typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
         it(`invalid`, () => {
-            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, [
                 Language.Type.TextInstance,
                 Language.Type.DateInstance,
             ]);
-            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.definedListTypeFactory(false, [
+            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.createDefinedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
@@ -550,15 +548,15 @@ describe(`TypeUtils.typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
         it(`extraneous`, () => {
-            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
-            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.definedListTypeFactory(false, [
+            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.createDefinedListType(false, [
                 Language.Type.TextInstance,
             ]);
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
@@ -571,12 +569,12 @@ describe(`TypeUtils.typeCheck`, () => {
                 extraneous: [1],
                 missing: [],
             };
-            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
         it(`missing`, () => {
-            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, []);
-            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.definedListTypeFactory(false, [
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, []);
+            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.createDefinedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
@@ -590,18 +588,18 @@ describe(`TypeUtils.typeCheck`, () => {
                 extraneous: [],
                 missing: [0, 1],
             };
-            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
     });
 
     describe(`${Language.Type.ExtendedTypeKind.FunctionType}`, () => {
         it(`return type`, () => {
-            const valueType: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
+            const valueType: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [],
                 Language.Type.NullableTextInstance,
             );
-            const schemaType: Language.Type.FunctionType = Language.TypeUtils.functionTypeFactory(
+            const schemaType: Language.Type.FunctionType = Language.TypeUtils.createFunctionType(
                 false,
                 [],
                 Language.Type.NullableTextInstance,
@@ -616,24 +614,24 @@ describe(`TypeUtils.typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
     });
 
     describe(`${Language.Type.ExtendedTypeKind.RecordType}`, () => {
         it(`${Language.Type.ExtendedTypeKind.DefinedRecord}`, () => {
-            const valueType: Language.Type.DefinedRecord = Language.TypeUtils.definedRecordFactory(
+            const valueType: Language.Type.DefinedRecord = Language.TypeUtils.createDefinedRecord(
                 false,
-                new Map<string, Language.Type.PqType>([
+                new Map<string, Language.Type.PowerQueryType>([
                     ["number", Language.Type.NullableNumberInstance],
                     ["nullableNumber", Language.Type.NullableNumberInstance],
                     ["table", Language.Type.TableInstance],
                 ]),
                 false,
             );
-            const schemaType: Language.Type.RecordType = Language.TypeUtils.recordTypeFactory(
+            const schemaType: Language.Type.RecordType = Language.TypeUtils.createRecordType(
                 false,
-                new Map<string, Language.Type.PqType>([
+                new Map<string, Language.Type.PowerQueryType>([
                     ["number", Language.Type.NumberInstance],
                     ["nullableNumber", Language.Type.NullableNumberInstance],
                     ["text", Language.Type.TextInstance],
@@ -650,24 +648,24 @@ describe(`TypeUtils.typeCheck`, () => {
                 extraneous: ["table"],
                 missing: ["text"],
             };
-            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
     });
 
     describe(`${Language.Type.ExtendedTypeKind.TableType}`, () => {
         it(`${Language.Type.ExtendedTypeKind.DefinedTable}`, () => {
-            const valueType: Language.Type.DefinedTable = Language.TypeUtils.definedTableFactory(
+            const valueType: Language.Type.DefinedTable = Language.TypeUtils.createDefinedTable(
                 false,
-                new Map<string, Language.Type.PqType>([
+                new Map<string, Language.Type.PowerQueryType>([
                     ["number", Language.Type.NullableNumberInstance],
                     ["nullableNumber", Language.Type.NullableNumberInstance],
                     ["table", Language.Type.TableInstance],
                 ]),
                 false,
             );
-            const schemaType: Language.Type.TableType = Language.TypeUtils.tableTypeFactory(
+            const schemaType: Language.Type.TableType = Language.TypeUtils.createTableType(
                 false,
-                new Map<string, Language.Type.PqType>([
+                new Map<string, Language.Type.PowerQueryType>([
                     ["number", Language.Type.NumberInstance],
                     ["nullableNumber", Language.Type.NullableNumberInstance],
                     ["text", Language.Type.TextInstance],
@@ -684,7 +682,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 extraneous: ["table"],
                 missing: ["text"],
             };
-            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
     });
 });

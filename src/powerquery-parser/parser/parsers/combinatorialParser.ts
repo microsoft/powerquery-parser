@@ -26,7 +26,7 @@ export const CombinatorialParser: IParser<IParseState> = {
     ...NaiveParseSteps,
     applyState: IParseStateUtils.applyState,
     copyState: IParseStateUtils.copyState,
-    checkpointFactory: IParserUtils.checkpointFactory,
+    createCheckpoint: IParserUtils.createCheckpoint,
     restoreCheckpoint: IParserUtils.restoreCheckpoint,
 
     // 12.2.3.2 Logical expressions

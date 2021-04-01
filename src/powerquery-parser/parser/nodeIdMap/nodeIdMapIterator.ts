@@ -122,7 +122,7 @@ export function iterArrayWrapper(
 
     if (arrayWrapper.kind === XorNodeKind.Ast) {
         return (arrayWrapper.node as Ast.TCsvArray).elements.map((wrapper: Ast.TCsv) =>
-            XorNodeUtils.astFactory(wrapper.node),
+            XorNodeUtils.createAstNode(wrapper.node),
         );
     }
 
@@ -130,7 +130,7 @@ export function iterArrayWrapper(
     for (const csvXorNode of assertIterChildrenXor(nodeIdMapCollection, arrayWrapper.node.id)) {
         switch (csvXorNode.kind) {
             case XorNodeKind.Ast:
-                partial.push(XorNodeUtils.astFactory((csvXorNode.node as Ast.TCsv).node));
+                partial.push(XorNodeUtils.createAstNode((csvXorNode.node as Ast.TCsv).node));
                 break;
 
             case XorNodeKind.Context: {
@@ -254,10 +254,10 @@ export function iterSection(
         return (section.node as Ast.Section).sectionMembers.elements.map((sectionMember: Ast.SectionMember) => {
             const namePairedExpression: Ast.IdentifierPairedExpression = sectionMember.namePairedExpression;
             return {
-                source: XorNodeUtils.astFactory(namePairedExpression),
+                source: XorNodeUtils.createAstNode(namePairedExpression),
                 key: namePairedExpression.key,
                 keyLiteral: namePairedExpression.key.literal,
-                maybeValue: XorNodeUtils.astFactory(namePairedExpression.value),
+                maybeValue: XorNodeUtils.createAstNode(namePairedExpression.value),
                 pairKind: PairKind.SectionMember,
             };
         });

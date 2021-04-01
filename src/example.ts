@@ -45,7 +45,7 @@ function lexText(text: string): void {
     // Note: At this point all errors are isolated to a single line.
     //       Checks for multiline errors, such as an unterminated string, have not been processed.
     let triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
-    if (ResultUtils.isErr(triedLex)) {
+    if (ResultUtils.isError(triedLex)) {
         console.log(`An error occured while lexing: ${triedLex.error.message}`);
         return;
     }
@@ -81,7 +81,7 @@ function lexText(text: string): void {
         lexerState.lines.length - 1,
         "// goodbye world",
     );
-    if (ResultUtils.isErr(triedUpdate)) {
+    if (ResultUtils.isError(triedUpdate)) {
         console.log("Failed to update line");
         return;
     }

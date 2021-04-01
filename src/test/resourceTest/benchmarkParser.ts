@@ -48,7 +48,7 @@ export const BenchmarkParser: Parser.IParser<BenchmarkState> = {
             ),
         };
     },
-    checkpointFactory: (state: Parser.IParseState) => Parser.IParserUtils.checkpointFactory(state),
+    createCheckpoint: (state: Parser.IParseState) => Parser.IParserUtils.createCheckpoint(state),
     restoreCheckpoint: (state: Parser.IParseState, checkpoint: Parser.IParseStateCheckpoint) =>
         Parser.IParserUtils.restoreCheckpoint(state, checkpoint),
 
@@ -314,13 +314,13 @@ export const BenchmarkParser: Parser.IParser<BenchmarkState> = {
         traceFunction(state, parser, state.baseParser.readGeneralizedIdentifierPairedExpression),
 };
 
-export function benchmarkStateFactory<S extends Parser.IParseState = Parser.IParseState>(
+export function createBenchmarkState<S extends Parser.IParseState = Parser.IParseState>(
     parseSettings: ParseSettings<S>,
     lexerSnapshot: Lexer.LexerSnapshot,
     baseParser: Parser.IParser<Parser.IParseState>,
 ): BenchmarkState {
     return {
-        ...Parser.IParseStateUtils.stateFactory(lexerSnapshot, {
+        ...Parser.IParseStateUtils.createState(lexerSnapshot, {
             maybeCancellationToken: parseSettings.maybeCancellationToken,
         }),
         baseParser,

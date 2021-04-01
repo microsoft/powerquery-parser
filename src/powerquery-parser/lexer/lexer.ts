@@ -294,7 +294,7 @@ function ensureCommonOrLexerResult<T>(
     functionToWrap: () => T,
 ): Result<T, CommonError.CommonError | LexError.LexError> {
     try {
-        return ResultUtils.okFactory(functionToWrap());
+        return ResultUtils.createOk(functionToWrap());
     } catch (err) {
         let convertedError: CommonError.CommonError | LexError.LexError;
         if (LexError.isTInnerLexError(err)) {
@@ -302,7 +302,7 @@ function ensureCommonOrLexerResult<T>(
         } else {
             convertedError = CommonError.ensureCommonError(locale, err);
         }
-        return ResultUtils.errFactory(convertedError);
+        return ResultUtils.createError(convertedError);
     }
 }
 
@@ -630,7 +630,7 @@ function tokenize(
     let partialTokenizeResult: PartialResult<TokenizeChanges, TokenizeChanges, LexError.TLexError>;
     if (maybeError) {
         if (newTokens.length) {
-            partialTokenizeResult = PartialResultUtils.mixedFactory(
+            partialTokenizeResult = PartialResultUtils.createMixed(
                 {
                     tokens: newTokens,
                     lineModeEnd: lineMode,
@@ -638,10 +638,10 @@ function tokenize(
                 maybeError,
             );
         } else {
-            partialTokenizeResult = PartialResultUtils.errFactory(maybeError);
+            partialTokenizeResult = PartialResultUtils.createError(maybeError);
         }
     } else {
-        partialTokenizeResult = PartialResultUtils.okFactory({
+        partialTokenizeResult = PartialResultUtils.createOk({
             tokens: newTokens,
             lineModeEnd: lineMode,
         });
@@ -685,7 +685,7 @@ function updateLineState(
             };
         }
 
-        case PartialResultKind.Err:
+        case PartialResultKind.Error:
             return {
                 kind: LineKind.Error,
                 text: line.text,

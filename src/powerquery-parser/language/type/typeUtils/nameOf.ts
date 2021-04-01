@@ -5,14 +5,14 @@ import { Type } from "..";
 import { Constant } from "../..";
 import { Assert } from "../../../common";
 
-export function nameOf(type: Type.PqType): string {
+export function nameOf(type: Type.PowerQueryType): string {
     switch (type.maybeExtendedKind) {
         case Type.ExtendedTypeKind.NumberLiteral:
         case Type.ExtendedTypeKind.TextLiteral:
             return prefixNullableIfRequired(type, `${type.literal}`);
 
         case Type.ExtendedTypeKind.AnyUnion:
-            return type.unionedTypePairs.map((subtype: Type.PqType) => nameOf(subtype)).join(" | ");
+            return type.unionedTypePairs.map((subtype: Type.PowerQueryType) => nameOf(subtype)).join(" | ");
 
         case Type.ExtendedTypeKind.DefinedFunction:
             return prefixNullableIfRequired(type, nameOfFunctionSignature(type, true));
@@ -104,10 +104,10 @@ function nameOfFieldSpecificationList(type: Type.FieldSpecificationList): string
     return `[${pairs}]`;
 }
 
-function nameOfIterable(collection: ReadonlyArray<Type.PqType>): string {
-    return collection.map((item: Type.PqType) => nameOf(item)).join(", ");
+function nameOfIterable(collection: ReadonlyArray<Type.PowerQueryType>): string {
+    return collection.map((item: Type.PowerQueryType) => nameOf(item)).join(", ");
 }
 
-function prefixNullableIfRequired(type: Type.PqType, name: string): string {
+function prefixNullableIfRequired(type: Type.PowerQueryType, name: string): string {
     return type.isNullable ? `${Constant.LanguageConstantKind.Nullable} ${name}` : name;
 }

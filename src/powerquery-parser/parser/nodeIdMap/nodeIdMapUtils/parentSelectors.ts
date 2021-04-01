@@ -79,7 +79,7 @@ export function maybeParentXor(
 ): TXorNode | undefined {
     const maybeAstNode: Ast.TNode | undefined = maybeParentAst(nodeIdMapCollection, childId, maybeAllowedNodeKinds);
     if (maybeAstNode !== undefined) {
-        return XorNodeUtils.astFactory(maybeAstNode);
+        return XorNodeUtils.createAstNode(maybeAstNode);
     }
 
     const maybeContextNode: ParseContext.Node | undefined = maybeParentContext(
@@ -88,7 +88,7 @@ export function maybeParentXor(
         maybeAllowedNodeKinds,
     );
     if (maybeContextNode !== undefined) {
-        return XorNodeUtils.contextFactory(maybeContextNode);
+        return XorNodeUtils.createContextNode(maybeContextNode);
     }
 
     return undefined;

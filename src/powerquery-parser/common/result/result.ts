@@ -5,7 +5,7 @@ export type Result<T, E> = Ok<T> | Err<E>;
 
 export const enum ResultKind {
     Ok = "Ok",
-    Err = "Err",
+    Error = "Err",
 }
 
 export interface Ok<T> {
@@ -14,6 +14,6 @@ export interface Ok<T> {
 }
 
 export interface Err<E> {
-    readonly kind: ResultKind.Err;
+    readonly kind: ResultKind.Error;
     readonly error: E;
 }

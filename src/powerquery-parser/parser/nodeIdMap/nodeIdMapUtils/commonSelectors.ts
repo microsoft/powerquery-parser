@@ -24,12 +24,12 @@ export function assertGetXor(nodeIdMapCollection: Collection, nodeId: number): T
 export function maybeXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
     const maybeAstNode: Ast.TNode | undefined = nodeIdMapCollection.astNodeById.get(nodeId);
     if (maybeAstNode) {
-        return XorNodeUtils.astFactory(maybeAstNode);
+        return XorNodeUtils.createAstNode(maybeAstNode);
     }
 
     const maybeContextNode: ParseContext.Node | undefined = nodeIdMapCollection.contextNodeById.get(nodeId);
     if (maybeContextNode) {
-        return XorNodeUtils.contextFactory(maybeContextNode);
+        return XorNodeUtils.createContextNode(maybeContextNode);
     }
 
     return undefined;

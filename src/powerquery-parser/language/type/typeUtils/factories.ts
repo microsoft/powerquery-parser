@@ -6,7 +6,7 @@ import { Assert, CommonError, StringUtils } from "../../../common";
 import { PrimitiveTypeConstantMap, primitiveTypeMapKey } from "./primitive";
 import { simplify } from "./simplify";
 
-export function primitiveTypeFactory<T extends Type.TypeKind>(isNullable: boolean, typeKind: T): Type.TPrimitiveType {
+export function createPrimitiveType<T extends Type.TypeKind>(isNullable: boolean, typeKind: T): Type.TPrimitiveType {
     const key: string = primitiveTypeMapKey(isNullable, typeKind);
     return Assert.asDefined(PrimitiveTypeConstantMap.get(key), `unknown key for PrimitiveTypeConstantMap`, {
         typeKind,
@@ -16,8 +16,8 @@ export function primitiveTypeFactory<T extends Type.TypeKind>(isNullable: boolea
 
 // If the given types can be simplified/deduped down to a single type then that is returned instead.
 // Otherwise returns an instance of `Type.AnyUnion`.
-export function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.PqType>): Type.PqType {
-    const simplified: ReadonlyArray<Type.PqType> = simplify(unionedTypePairs);
+export function createAnyUnion(unionedTypePairs: ReadonlyArray<Type.PowerQueryType>): Type.PowerQueryType {
+    const simplified: ReadonlyArray<Type.PowerQueryType> = simplify(unionedTypePairs);
     if (simplified.length === 1) {
         return simplified[0];
     }
@@ -25,15 +25,15 @@ export function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.PqType>): T
     return {
         kind: Type.TypeKind.Any,
         maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-        isNullable: unionedTypePairs.find((ttype: Type.PqType) => ttype.isNullable === true) !== undefined,
+        isNullable: unionedTypePairs.find((ttype: Type.PowerQueryType) => ttype.isNullable === true) !== undefined,
         unionedTypePairs: simplified,
     };
 }
 
-export function definedFunctionFactory(
+export function createDefinedFunction(
     isNullable: boolean,
     parameters: ReadonlyArray<Type.FunctionParameter>,
-    returnType: Type.PqType,
+    returnType: Type.PowerQueryType,
 ): Type.DefinedFunction {
     return {
         kind: Type.TypeKind.Function,
@@ -44,7 +44,7 @@ export function definedFunctionFactory(
     };
 }
 
-export function definedListFactory(isNullable: boolean, elements: ReadonlyArray<Type.PqType>): Type.DefinedList {
+export function createDefinedList(isNullable: boolean, elements: ReadonlyArray<Type.PowerQueryType>): Type.DefinedList {
     return {
         kind: Type.TypeKind.List,
         maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
@@ -53,9 +53,9 @@ export function definedListFactory(isNullable: boolean, elements: ReadonlyArray<
     };
 }
 
-export function definedListTypeFactory(
+export function createDefinedListType(
     isNullable: boolean,
-    itemTypes: ReadonlyArray<Type.PqType>,
+    itemTypes: ReadonlyArray<Type.PowerQueryType>,
 ): Type.DefinedListType {
     return {
         kind: Type.TypeKind.Type,
@@ -65,9 +65,9 @@ export function definedListTypeFactory(
     };
 }
 
-export function definedRecordFactory(
+export function createDefinedRecord(
     isNullable: boolean,
-    fields: Map<string, Type.PqType>,
+    fields: Map<string, Type.PowerQueryType>,
     isOpen: boolean,
 ): Type.DefinedRecord {
     return {
@@ -79,9 +79,9 @@ export function definedRecordFactory(
     };
 }
 
-export function definedTableFactory(
+export function createDefinedTable(
     isNullable: boolean,
-    fields: Map<string, Type.PqType>,
+    fields: Map<string, Type.PowerQueryType>,
     isOpen: boolean,
 ): Type.DefinedTable {
     return {
@@ -93,10 +93,10 @@ export function definedTableFactory(
     };
 }
 
-export function functionTypeFactory(
+export function createFunctionType(
     isNullable: boolean,
     parameters: ReadonlyArray<Type.FunctionParameter>,
-    returnType: Type.PqType,
+    returnType: Type.PowerQueryType,
 ): Type.FunctionType {
     return {
         kind: Type.TypeKind.Type,
@@ -107,7 +107,7 @@ export function functionTypeFactory(
     };
 }
 
-export function numberLiteralFactory(isNullable: boolean, literal: string): Type.NumberLiteral {
+export function createNumberLiteral(isNullable: boolean, literal: string): Type.NumberLiteral {
     return {
         isNullable,
         kind: Type.TypeKind.Number,
@@ -117,7 +117,7 @@ export function numberLiteralFactory(isNullable: boolean, literal: string): Type
     };
 }
 
-export function listTypeFactory(isNullable: boolean, itemType: Type.PqType): Type.ListType {
+export function createListType(isNullable: boolean, itemType: Type.PowerQueryType): Type.ListType {
     return {
         kind: Type.TypeKind.Type,
         maybeExtendedKind: Type.ExtendedTypeKind.ListType,
@@ -126,7 +126,7 @@ export function listTypeFactory(isNullable: boolean, itemType: Type.PqType): Typ
     };
 }
 
-export function primaryPrimitiveTypeFactory(
+export function createPrimaryPrimitiveType(
     isNullable: boolean,
     primitiveType: Type.TPrimitiveType,
 ): Type.PrimaryPrimitiveType {
@@ -138,9 +138,9 @@ export function primaryPrimitiveTypeFactory(
     };
 }
 
-export function recordTypeFactory(
+export function createRecordType(
     isNullable: boolean,
-    fields: Map<string, Type.PqType>,
+    fields: Map<string, Type.PowerQueryType>,
     isOpen: boolean,
 ): Type.RecordType {
     return {
@@ -152,9 +152,9 @@ export function recordTypeFactory(
     };
 }
 
-export function tableTypeFactory(
+export function createTableType(
     isNullable: boolean,
-    fields: Map<string, Type.PqType>,
+    fields: Map<string, Type.PowerQueryType>,
     isOpen: boolean,
 ): Type.TableType {
     return {
@@ -166,7 +166,7 @@ export function tableTypeFactory(
     };
 }
 
-export function textLiteralFactory(isNullable: boolean, literal: string): Type.TextLiteral {
+export function createTextLiteral(isNullable: boolean, literal: string): Type.TextLiteral {
     if (literal[0] !== `"` || literal[literal.length - 1] !== `"`) {
         throw new CommonError.InvariantError(`text literal must begin and end with double quote`);
     }
@@ -179,9 +179,9 @@ export function textLiteralFactory(isNullable: boolean, literal: string): Type.T
     };
 }
 
-export function tableTypePrimaryExpression(
+export function createTableTypePrimary(
     isNullable: boolean,
-    primaryExpression: Type.PqType,
+    primaryExpression: Type.PowerQueryType,
 ): Type.TableTypePrimaryExpression {
     return {
         kind: Type.TypeKind.Type,

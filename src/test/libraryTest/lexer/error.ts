@@ -25,7 +25,7 @@ function assertBadLineNumberKind(lineNumber: number, expectedKind: Lexer.LexErro
 
 function assertExpectedKind(text: string, expectedKind: Lexer.LexError.ExpectedKind): void {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
-    if (ResultUtils.isErr(triedLex)) {
+    if (ResultUtils.isError(triedLex)) {
         throw new Error(`AssertFailed: ResultUtils.isErr(triedLex)`);
     }
     const state: Lexer.State = triedLex.value;
@@ -49,7 +49,7 @@ function assertExpectedKind(text: string, expectedKind: Lexer.LexError.ExpectedK
 
 function assertBadRangeKind(range: Lexer.Range, expectedKind: Lexer.LexError.BadRangeKind): void {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, `foo`);
-    if (ResultUtils.isErr(triedLex)) {
+    if (ResultUtils.isError(triedLex)) {
         throw new Error(`AssertFailed: ResultUtils.isErr(triedLex)`);
     }
     const state: Lexer.State = triedLex.value;

@@ -12,7 +12,7 @@ interface ChildIdsByIdEntry {
     readonly kind: Language.Ast.NodeKind;
 }
 
-function actualFactory<S extends Parser.IParseState = Parser.IParseState>(
+function createActual<S extends Parser.IParseState = Parser.IParseState>(
     lexParseOk: Task.ParseTaskOk<S>,
 ): ChildIdsByIdEntry[] {
     const actual: ChildIdsByIdEntry[] = [];
@@ -49,7 +49,7 @@ describe("Parser.Children", () => {
                 kind: Language.Ast.NodeKind.AsNullablePrimitiveType,
             },
         ];
-        const actual: ReadonlyArray<ChildIdsByIdEntry> = actualFactory(
+        const actual: ReadonlyArray<ChildIdsByIdEntry> = createActual(
             TestAssertUtils.assertGetLexParseOk(DefaultSettings, text),
         );
         expect(actual).to.deep.equal(expected);
@@ -69,7 +69,7 @@ describe("Parser.Children", () => {
                 kind: Language.Ast.NodeKind.NullCoalescingExpression,
             },
         ];
-        const actual: ReadonlyArray<ChildIdsByIdEntry> = actualFactory(
+        const actual: ReadonlyArray<ChildIdsByIdEntry> = createActual(
             TestAssertUtils.assertGetLexParseOk(DefaultSettings, text),
         );
         expect(actual).to.deep.equal(expected);

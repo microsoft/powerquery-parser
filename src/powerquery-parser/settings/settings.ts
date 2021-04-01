@@ -5,7 +5,7 @@ import { ICancellationToken } from "../common";
 import { Ast } from "../language";
 import { LexerSnapshot } from "../lexer";
 import { DefaultLocale } from "../localization";
-import { CombinatorialParser, IParser, IParseState, IParseStateUtils, TParseStateFactoryOverrides } from "../parser";
+import { CombinatorialParser, IParser, IParseState, IParseStateUtils, TCreateParseStateOverrides } from "../parser";
 
 export interface CommonSettings {
     readonly maybeCancellationToken: ICancellationToken | undefined;
@@ -16,9 +16,9 @@ export type LexSettings = CommonSettings;
 
 export interface ParseSettings<S extends IParseState = IParseState> extends CommonSettings {
     readonly parser: IParser<S>;
-    readonly parseStateFactory: (
+    readonly createParseState: (
         lexerSnapshot: LexerSnapshot,
-        maybeOverrides: TParseStateFactoryOverrides<S> | undefined,
+        maybeOverrides: TCreateParseStateOverrides<S> | undefined,
     ) => S;
     readonly maybeParserEntryPointFn: ((state: S, parser: IParser<S>) => Ast.TNode) | undefined;
 }
@@ -29,9 +29,9 @@ export const DefaultSettings: Settings<IParseState> = {
     maybeCancellationToken: undefined,
     locale: DefaultLocale,
     parser: CombinatorialParser,
-    parseStateFactory: (
+    createParseState: (
         lexerSnapshot: LexerSnapshot,
-        maybeOverrides: TParseStateFactoryOverrides<IParseState> | undefined,
-    ) => IParseStateUtils.stateFactory(lexerSnapshot, maybeOverrides),
+        maybeOverrides: TCreateParseStateOverrides<IParseState> | undefined,
+    ) => IParseStateUtils.createState(lexerSnapshot, maybeOverrides),
     maybeParserEntryPointFn: undefined,
 };

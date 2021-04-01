@@ -61,7 +61,7 @@ describe(`TypeUtils.nameOf`, () => {
                 expect(TypeUtils.nameOf(Type.NumberInstance)).to.equal("number");
             });
             it(`${Type.NumberInstance.kind} literal`, () => {
-                expect(TypeUtils.nameOf(TypeUtils.numberLiteralFactory(false, "1"))).to.equal("1");
+                expect(TypeUtils.nameOf(TypeUtils.createNumberLiteral(false, "1"))).to.equal("1");
             });
             it(`${Type.RecordInstance.kind}`, () => {
                 expect(TypeUtils.nameOf(Type.RecordInstance)).to.equal("record");
@@ -73,7 +73,7 @@ describe(`TypeUtils.nameOf`, () => {
                 expect(TypeUtils.nameOf(Type.TextInstance)).to.equal("text");
             });
             it(`${Type.TextInstance.kind} literal`, () => {
-                expect(TypeUtils.nameOf(TypeUtils.textLiteralFactory(false, `"foo"`))).to.equal(`"foo"`);
+                expect(TypeUtils.nameOf(TypeUtils.createTextLiteral(false, `"foo"`))).to.equal(`"foo"`);
             });
             it(`${Type.TimeInstance.kind}`, () => {
                 expect(TypeUtils.nameOf(Type.TimeInstance)).to.equal("time");
@@ -145,7 +145,7 @@ describe(`TypeUtils.nameOf`, () => {
                 expect(actual).to.equal("nullable number", undefined);
             });
             it(`${Type.NullableNumberInstance.kind} literal`, () => {
-                const actual: string = TypeUtils.nameOf(TypeUtils.numberLiteralFactory(true, `1`));
+                const actual: string = TypeUtils.nameOf(TypeUtils.createNumberLiteral(true, `1`));
                 expect(actual).to.equal(`nullable 1`, undefined);
             });
             it(`${Type.NullableRecordInstance.kind}`, () => {
@@ -161,7 +161,7 @@ describe(`TypeUtils.nameOf`, () => {
                 expect(actual).to.equal("nullable text", undefined);
             });
             it(`${Type.TextInstance.kind} literal`, () => {
-                const actual: string = TypeUtils.nameOf(TypeUtils.textLiteralFactory(true, `"foo"`));
+                const actual: string = TypeUtils.nameOf(TypeUtils.createTextLiteral(true, `"foo"`));
                 expect(actual).to.equal(`nullable "foo"`, undefined);
             });
             it(`${Type.NullableTimeInstance.kind}`, () => {
@@ -182,14 +182,14 @@ describe(`TypeUtils.nameOf`, () => {
     describe(`extended`, () => {
         describe(`${Type.ExtendedTypeKind.AnyUnion}`, () => {
             it(`primitives`, () => {
-                const type: Type.PqType = TypeUtils.anyUnionFactory([Type.NumberInstance, Type.ListInstance]);
+                const type: Type.PowerQueryType = TypeUtils.createAnyUnion([Type.NumberInstance, Type.ListInstance]);
                 expect(TypeUtils.nameOf(type)).to.equal(`list | number`);
             });
             it(`complex`, () => {
-                const type: Type.PqType = TypeUtils.anyUnionFactory([
-                    TypeUtils.definedRecordFactory(false, new Map([[`foo`, Type.NumberInstance]]), false),
-                    TypeUtils.definedListFactory(false, [Type.TextInstance]),
-                    TypeUtils.definedTableFactory(false, new Map([[`bar`, Type.TextInstance]]), true),
+                const type: Type.PowerQueryType = TypeUtils.createAnyUnion([
+                    TypeUtils.createDefinedRecord(false, new Map([[`foo`, Type.NumberInstance]]), false),
+                    TypeUtils.createDefinedList(false, [Type.TextInstance]),
+                    TypeUtils.createDefinedTable(false, new Map([[`bar`, Type.TextInstance]]), true),
                 ]);
                 const actual: string = TypeUtils.nameOf(type);
                 expect(actual).to.equal(`{text} | [foo: number] | table [bar: text, ...]`);
@@ -198,24 +198,20 @@ describe(`TypeUtils.nameOf`, () => {
 
         describe(`${Type.ExtendedTypeKind.DefinedFunction}`, () => {
             it(`() => any`, () => {
-                const type: Type.DefinedFunction = TypeUtils.definedFunctionFactory(false, [], Type.AnyInstance);
+                const type: Type.DefinedFunction = TypeUtils.createDefinedFunction(false, [], Type.AnyInstance);
                 const actual: string = TypeUtils.nameOf(type);
                 expect(actual).to.equal(`() => any`);
             });
 
             it(`() => nullable any`, () => {
-                const type: Type.DefinedFunction = TypeUtils.definedFunctionFactory(
-                    false,
-                    [],
-                    Type.NullableAnyInstance,
-                );
+                const type: Type.DefinedFunction = TypeUtils.createDefinedFunction(false, [], Type.NullableAnyInstance);
                 const actual: string = TypeUtils.nameOf(type);
 
                 expect(actual).to.equal(`() => nullable any`, undefined);
             });
 
             it(`(x, optional y) => 1`, () => {
-                const type: Type.DefinedFunction = TypeUtils.definedFunctionFactory(
+                const type: Type.DefinedFunction = TypeUtils.createDefinedFunction(
                     false,
                     [
                         {
@@ -231,7 +227,7 @@ describe(`TypeUtils.nameOf`, () => {
                             nameLiteral: "y",
                         },
                     ],
-                    TypeUtils.numberLiteralFactory(false, "1"),
+                    TypeUtils.createNumberLiteral(false, "1"),
                 );
                 const actual: string = TypeUtils.nameOf(type);
 
@@ -239,7 +235,7 @@ describe(`TypeUtils.nameOf`, () => {
             });
 
             it(`(param1 as number, param2 as nullable number, optional param3 as number, optional param4 as nullable number) => any`, () => {
-                const type: Type.DefinedFunction = TypeUtils.definedFunctionFactory(
+                const type: Type.DefinedFunction = TypeUtils.createDefinedFunction(
                     false,
                     [
                         {
@@ -280,20 +276,20 @@ describe(`TypeUtils.nameOf`, () => {
 
         describe(`${Type.ExtendedTypeKind.DefinedList}`, () => {
             it(`{}`, () => {
-                const type: Type.DefinedList = TypeUtils.definedListFactory(false, []);
+                const type: Type.DefinedList = TypeUtils.createDefinedList(false, []);
                 const actual: string = TypeUtils.nameOf(type);
                 expect(actual).to.equal(`{}`);
             });
 
             it(`nullable {}`, () => {
-                const type: Type.DefinedList = TypeUtils.definedListFactory(true, []);
+                const type: Type.DefinedList = TypeUtils.createDefinedList(true, []);
                 const actual: string = TypeUtils.nameOf(type);
 
                 expect(actual).to.equal(`nullable {}`, undefined);
             });
 
             it(`{number, nullable text}`, () => {
-                const type: Type.DefinedList = TypeUtils.definedListFactory(false, [
+                const type: Type.DefinedList = TypeUtils.createDefinedList(false, [
                     Type.NumberInstance,
                     Type.NullableTextInstance,
                 ]);
@@ -305,20 +301,20 @@ describe(`TypeUtils.nameOf`, () => {
 
         describe(`${Type.ExtendedTypeKind.DefinedListType}`, () => {
             it(`type {}`, () => {
-                const type: Type.DefinedListType = TypeUtils.definedListTypeFactory(false, []);
+                const type: Type.DefinedListType = TypeUtils.createDefinedListType(false, []);
                 const actual: string = TypeUtils.nameOf(type);
                 expect(actual).to.equal(`type {}`);
             });
 
             it(`nullable type {}`, () => {
-                const type: Type.DefinedListType = TypeUtils.definedListTypeFactory(true, []);
+                const type: Type.DefinedListType = TypeUtils.createDefinedListType(true, []);
                 const actual: string = TypeUtils.nameOf(type);
 
                 expect(actual).to.equal(`nullable type {}`, undefined);
             });
 
             it(`type {number, nullable text}`, () => {
-                const type: Type.DefinedListType = TypeUtils.definedListTypeFactory(false, [
+                const type: Type.DefinedListType = TypeUtils.createDefinedListType(false, [
                     Type.NumberInstance,
                     Type.NullableTextInstance,
                 ]);
@@ -330,21 +326,21 @@ describe(`TypeUtils.nameOf`, () => {
 
         describe(`${Type.ExtendedTypeKind.DefinedRecord}`, () => {
             it(`[]`, () => {
-                const type: Type.DefinedRecord = TypeUtils.definedRecordFactory(false, new Map(), false);
+                const type: Type.DefinedRecord = TypeUtils.createDefinedRecord(false, new Map(), false);
                 const actual: string = TypeUtils.nameOf(type);
                 expect(actual).to.equal(`[]`);
             });
 
             it(`[...]`, () => {
-                const type: Type.DefinedRecord = TypeUtils.definedRecordFactory(false, new Map(), true);
+                const type: Type.DefinedRecord = TypeUtils.createDefinedRecord(false, new Map(), true);
                 const actual: string = TypeUtils.nameOf(type);
                 expect(actual).to.equal(`[...]`);
             });
 
             it(`[foo = number, bar = nullable text]`, () => {
-                const type: Type.DefinedRecord = TypeUtils.definedRecordFactory(
+                const type: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                     false,
-                    new Map<string, Type.PqType>([
+                    new Map<string, Type.PowerQueryType>([
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),
@@ -356,9 +352,9 @@ describe(`TypeUtils.nameOf`, () => {
             });
 
             it(`[foo = number, bar = nullable text, ...]`, () => {
-                const type: Type.DefinedRecord = TypeUtils.definedRecordFactory(
+                const type: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                     false,
-                    new Map<string, Type.PqType>([
+                    new Map<string, Type.PowerQueryType>([
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),
@@ -372,21 +368,21 @@ describe(`TypeUtils.nameOf`, () => {
 
         describe(`${Type.ExtendedTypeKind.DefinedTable}`, () => {
             it(`table []`, () => {
-                const type: Type.DefinedTable = TypeUtils.definedTableFactory(false, new Map(), false);
+                const type: Type.DefinedTable = TypeUtils.createDefinedTable(false, new Map(), false);
                 const actual: string = TypeUtils.nameOf(type);
                 expect(actual).to.equal(`table []`);
             });
 
             it(`table [...]`, () => {
-                const type: Type.DefinedTable = TypeUtils.definedTableFactory(false, new Map(), true);
+                const type: Type.DefinedTable = TypeUtils.createDefinedTable(false, new Map(), true);
                 const actual: string = TypeUtils.nameOf(type);
                 expect(actual).to.equal(`table [...]`);
             });
 
             it(`table [foo = number, bar = nullable text]`, () => {
-                const type: Type.DefinedTable = TypeUtils.definedTableFactory(
+                const type: Type.DefinedTable = TypeUtils.createDefinedTable(
                     false,
-                    new Map<string, Type.PqType>([
+                    new Map<string, Type.PowerQueryType>([
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),
@@ -398,9 +394,9 @@ describe(`TypeUtils.nameOf`, () => {
             });
 
             it(`table [foo = number, bar = nullable text, ...]`, () => {
-                const type: Type.DefinedTable = TypeUtils.definedTableFactory(
+                const type: Type.DefinedTable = TypeUtils.createDefinedTable(
                     false,
-                    new Map<string, Type.PqType>([
+                    new Map<string, Type.PowerQueryType>([
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),
@@ -412,9 +408,9 @@ describe(`TypeUtils.nameOf`, () => {
             });
 
             it(`table [#"foo" = number, #"space space"]`, () => {
-                const type: Type.DefinedTable = TypeUtils.definedTableFactory(
+                const type: Type.DefinedTable = TypeUtils.createDefinedTable(
                     false,
-                    new Map<string, Type.PqType>([
+                    new Map<string, Type.PowerQueryType>([
                         [`foo`, Type.NumberInstance],
                         [`#"space space"`, Type.NullableTextInstance],
                     ]),
@@ -428,13 +424,13 @@ describe(`TypeUtils.nameOf`, () => {
 
         describe(`${Type.ExtendedTypeKind.FunctionType}`, () => {
             it(`type function () any`, () => {
-                const type: Type.FunctionType = TypeUtils.functionTypeFactory(false, [], Type.AnyInstance);
+                const type: Type.FunctionType = TypeUtils.createFunctionType(false, [], Type.AnyInstance);
                 const actual: string = TypeUtils.nameOf(type);
                 expect(actual).to.equal(`type function () any`);
             });
 
             it(`type function () any`, () => {
-                const type: Type.FunctionType = TypeUtils.functionTypeFactory(
+                const type: Type.FunctionType = TypeUtils.createFunctionType(
                     false,
                     [
                         {
@@ -475,7 +471,7 @@ describe(`TypeUtils.nameOf`, () => {
 
         describe(`${Type.ExtendedTypeKind.ListType}`, () => {
             it(`type {text}`, () => {
-                const type: Type.ListType = TypeUtils.listTypeFactory(false, Type.TextInstance);
+                const type: Type.ListType = TypeUtils.createListType(false, Type.TextInstance);
                 const actual: string = TypeUtils.nameOf(type);
                 expect(actual).to.equal(`type {text}`);
             });
@@ -483,7 +479,7 @@ describe(`TypeUtils.nameOf`, () => {
 
         describe(`${Type.ExtendedTypeKind.PrimaryPrimitiveType}`, () => {
             it(`type text`, () => {
-                const type: Type.PrimaryPrimitiveType = TypeUtils.primaryPrimitiveTypeFactory(false, Type.TextInstance);
+                const type: Type.PrimaryPrimitiveType = TypeUtils.createPrimaryPrimitiveType(false, Type.TextInstance);
                 const actual: string = TypeUtils.nameOf(type);
                 expect(actual).to.equal(`type text`);
             });
@@ -491,7 +487,7 @@ describe(`TypeUtils.nameOf`, () => {
 
         describe(`${Type.ExtendedTypeKind.RecordType}`, () => {
             it(`type [foo = number]`, () => {
-                const type: Type.RecordType = TypeUtils.recordTypeFactory(
+                const type: Type.RecordType = TypeUtils.createRecordType(
                     false,
                     new Map([[`foo`, Type.NumberInstance]]),
                     false,
@@ -501,15 +497,15 @@ describe(`TypeUtils.nameOf`, () => {
             });
 
             it(`type [...]`, () => {
-                const type: Type.RecordType = TypeUtils.recordTypeFactory(false, new Map(), true);
+                const type: Type.RecordType = TypeUtils.createRecordType(false, new Map(), true);
                 const actual: string = TypeUtils.nameOf(type);
                 expect(actual).to.equal(`type [...]`);
             });
 
             it(`type [foo = number, bar = nullable text]`, () => {
-                const type: Type.RecordType = TypeUtils.recordTypeFactory(
+                const type: Type.RecordType = TypeUtils.createRecordType(
                     false,
-                    new Map<string, Type.PqType>([
+                    new Map<string, Type.PowerQueryType>([
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),
@@ -521,9 +517,9 @@ describe(`TypeUtils.nameOf`, () => {
             });
 
             it(`type [foo = number, bar = nullable text, ...]`, () => {
-                const type: Type.RecordType = TypeUtils.recordTypeFactory(
+                const type: Type.RecordType = TypeUtils.createRecordType(
                     false,
-                    new Map<string, Type.PqType>([
+                    new Map<string, Type.PowerQueryType>([
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),
@@ -537,7 +533,7 @@ describe(`TypeUtils.nameOf`, () => {
 
         describe(`${Type.ExtendedTypeKind.TableType}`, () => {
             it(`type table [foo = number]`, () => {
-                const type: Type.TableType = TypeUtils.tableTypeFactory(
+                const type: Type.TableType = TypeUtils.createTableType(
                     false,
                     new Map([[`foo`, Type.NumberInstance]]),
                     false,
@@ -547,15 +543,15 @@ describe(`TypeUtils.nameOf`, () => {
             });
 
             it(`type table [...]`, () => {
-                const type: Type.TableType = TypeUtils.tableTypeFactory(false, new Map(), true);
+                const type: Type.TableType = TypeUtils.createTableType(false, new Map(), true);
                 const actual: string = TypeUtils.nameOf(type);
                 expect(actual).to.equal(`type table [...]`);
             });
 
             it(`type table [foo = number, bar = nullable text]`, () => {
-                const type: Type.TableType = TypeUtils.tableTypeFactory(
+                const type: Type.TableType = TypeUtils.createTableType(
                     false,
-                    new Map<string, Type.PqType>([
+                    new Map<string, Type.PowerQueryType>([
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),
@@ -567,9 +563,9 @@ describe(`TypeUtils.nameOf`, () => {
             });
 
             it(`type table [foo = number, bar = nullable text, ...]`, () => {
-                const type: Type.TableType = TypeUtils.tableTypeFactory(
+                const type: Type.TableType = TypeUtils.createTableType(
                     false,
-                    new Map<string, Type.PqType>([
+                    new Map<string, Type.PowerQueryType>([
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),
@@ -584,7 +580,7 @@ describe(`TypeUtils.nameOf`, () => {
         describe(`${Type.ExtendedTypeKind.TableTypePrimaryExpression}`, () => {
             // Assumes `foo` is text.
             it(`type table foo`, () => {
-                const type: Type.TableTypePrimaryExpression = TypeUtils.tableTypePrimaryExpression(
+                const type: Type.TableTypePrimaryExpression = TypeUtils.createTableTypePrimary(
                     false,
                     Type.TextInstance,
                 );

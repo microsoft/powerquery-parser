@@ -37,7 +37,7 @@ function assertGetLexerStateWithCancellationToken(): Lexer.State {
 }
 
 function settingsWithCancellationToken(): Settings {
-    return SettingsUtils.defaultSettingsFactory(new TimedCancellationToken(0));
+    return SettingsUtils.createDefaultSettings(new TimedCancellationToken(0));
 }
 
 describe("CancellationToken", () => {

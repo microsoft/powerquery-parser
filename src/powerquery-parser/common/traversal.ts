@@ -132,7 +132,7 @@ export function assertGetAllXorChildren<State extends IState<ResultType>, Result
     switch (xorNode.kind) {
         case XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
-            return assertGetAllAstChildren(_state, astNode, nodeIdMapCollection).map(XorNodeUtils.astFactory);
+            return assertGetAllAstChildren(_state, astNode, nodeIdMapCollection).map(XorNodeUtils.createAstNode);
         }
         case XorNodeKind.Context: {
             const result: TXorNode[] = [];

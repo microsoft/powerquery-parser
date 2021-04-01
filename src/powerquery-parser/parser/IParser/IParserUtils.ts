@@ -22,20 +22,20 @@ export function tryParse<S extends IParseState = IParseState>(
         return tryParseDocument<S>(parseSettings, lexerSnapshot) as TriedParse<S>;
     }
 
-    const parseState: S = parseSettings.parseStateFactory(lexerSnapshot, {
+    const parseState: S = parseSettings.createParseState(lexerSnapshot, {
         maybeCancellationToken: parseSettings.maybeCancellationToken,
         locale: parseSettings.locale,
     });
     try {
         const root: Ast.TNode = maybeParserEntryPointFn(parseState, parseSettings.parser);
         IParseStateUtils.assertIsDoneParsing(parseState);
-        return ResultUtils.okFactory({
+        return ResultUtils.createOk({
             lexerSnapshot,
             root,
             state: parseState,
         });
     } catch (error) {
-        return ResultUtils.errFactory(ensureParseError(parseState, error, parseSettings.locale));
+        return ResultUtils.createError(ensureParseError(parseState, error, parseSettings.locale));
     }
 }
 
@@ -45,27 +45,27 @@ export function tryParseDocument<S extends IParseState = IParseState>(
 ): TriedParse {
     let root: Ast.TNode;
 
-    const expressionDocumentState: S = parseSettings.parseStateFactory(lexerSnapshot, {
+    const expressionDocumentState: S = parseSettings.createParseState(lexerSnapshot, {
         maybeCancellationToken: parseSettings.maybeCancellationToken,
         locale: parseSettings.locale,
     });
     try {
         root = parseSettings.parser.readExpression(expressionDocumentState, parseSettings.parser);
         IParseStateUtils.assertIsDoneParsing(expressionDocumentState);
-        return ResultUtils.okFactory({
+        return ResultUtils.createOk({
             lexerSnapshot,
             root,
             state: expressionDocumentState,
         });
     } catch (expressionDocumentError) {
-        const sectionDocumentState: S = parseSettings.parseStateFactory(lexerSnapshot, {
+        const sectionDocumentState: S = parseSettings.createParseState(lexerSnapshot, {
             maybeCancellationToken: parseSettings.maybeCancellationToken,
             locale: parseSettings.locale,
         });
         try {
             root = parseSettings.parser.readSectionDocument(sectionDocumentState, parseSettings.parser);
             IParseStateUtils.assertIsDoneParsing(sectionDocumentState);
-            return ResultUtils.okFactory({
+            return ResultUtils.createOk({
                 lexerSnapshot,
                 root,
                 state: sectionDocumentState,
@@ -82,13 +82,15 @@ export function tryParseDocument<S extends IParseState = IParseState>(
                 betterParsedError = sectionDocumentError;
             }
 
-            return ResultUtils.errFactory(ensureParseError(betterParsedState, betterParsedError, parseSettings.locale));
+            return ResultUtils.createError(
+                ensureParseError(betterParsedState, betterParsedError, parseSettings.locale),
+            );
         }
     }
 }
 
 // If you have a custom parser + parser state,
-// then you'll have to create your own checkpointFactory/restoreCheckpoint functions.
+// then you'll have to create your own (create|restore)Checkpoint functions.
 // See `benchmark.ts` for an example.
 //
 // Due to performance reasons the backup no longer can include a naive deep copy of the context state.
@@ -97,7 +99,7 @@ export function tryParseDocument<S extends IParseState = IParseState>(
 // Therefore we only care about the delta between before and after the try/catch block.
 // Thanks to the invariants above and the fact the ids for nodes are an auto-incrementing integer
 // we can easily just drop all delete all context nodes past the id of when the backup was created.
-export function checkpointFactory(state: IParseState): IParseStateCheckpoint {
+export function createCheckpoint(state: IParseState): IParseStateCheckpoint {
     return {
         tokenIndex: state.tokenIndex,
         contextStateIdCounter: state.contextState.idCounter,
@@ -106,10 +108,10 @@ export function checkpointFactory(state: IParseState): IParseStateCheckpoint {
 }
 
 // If you have a custom parser + parser state,
-// then you'll have to create your own checkpointFactory/restoreCheckpoint functions.
+// then you'll have to create your own (create|restore)Checkpoint functions.
 // See `benchmark.ts` for an example.
 //
-// See stateCheckpointFactory above for more information.
+// See createCheckpoint above for more information.
 export function restoreCheckpoint(state: IParseState, checkpoint: IParseStateCheckpoint): void {
     state.tokenIndex = checkpoint.tokenIndex;
     state.maybeCurrentToken = state.lexerSnapshot.tokens[state.tokenIndex];

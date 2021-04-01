@@ -24,7 +24,7 @@ export function assertIsError<S extends IParseState = IParseState>(
 ): asserts task is LexTaskError | ParseTaskCommonError | ParseTaskParseError<S> {
     if (!isError(task)) {
         throw new CommonError.InvariantError(`assert failed, expected a different task result kind`, {
-            expectedResultKind: ResultKind.Err,
+            expectedResultKind: ResultKind.Error,
             actualResultKind: task.resultKind,
         });
     }
@@ -55,7 +55,7 @@ export function assertIsLexStageError<S extends IParseState = IParseState>(
 ): asserts task is LexTaskError {
     if (!isLexStageError(task)) {
         throw new CommonError.InvariantError(`assert failed, expected a different task result kind`, {
-            expectedResultKind: ResultKind.Err,
+            expectedResultKind: ResultKind.Error,
             expectedTaskStage: TaskStage.Lex,
             actualResultKind: task.resultKind,
             acutalTaskStage: task.stage,
@@ -103,7 +103,7 @@ export function assertIsParseStageError<S extends IParseState = IParseState>(
 ): asserts task is ParseTaskParseError<S> | ParseTaskCommonError {
     if (!isParseStageError(task)) {
         throw new CommonError.InvariantError(`assert failed, expected a different task result kind`, {
-            expectedResultKind: ResultKind.Err,
+            expectedResultKind: ResultKind.Error,
             expectedTaskStage: TaskStage.Parse,
             actualResultKind: task.resultKind,
             acutalTaskStage: task.stage,
@@ -116,7 +116,7 @@ export function assertIsParseStageCommonError<S extends IParseState = IParseStat
 ): asserts task is ParseTaskCommonError {
     if (!isParseStageCommonError(task)) {
         throw new CommonError.InvariantError(`assert failed, expected a different task result kind`, {
-            expectedResultKind: ResultKind.Err,
+            expectedResultKind: ResultKind.Error,
             expectedTaskStage: TaskStage.Parse,
             expectedIsCommonError: true,
             actualResultKind: task.resultKind,
@@ -131,7 +131,7 @@ export function assertIsParseStageParseError<S extends IParseState = IParseState
 ): asserts task is ParseTaskParseError<S> {
     if (!isParseStageParseError(task)) {
         throw new CommonError.InvariantError(`assert failed, expected a different task result kind`, {
-            expectedResultKind: ResultKind.Err,
+            expectedResultKind: ResultKind.Error,
             expectedTaskStage: TaskStage.Parse,
             expectedIsCommonError: true,
             actualResultKind: task.resultKind,
@@ -144,7 +144,7 @@ export function assertIsParseStageParseError<S extends IParseState = IParseState
 export function isError<S extends IParseState = IParseState>(
     task: TTask<S>,
 ): task is LexTaskError | ParseTaskCommonError | ParseTaskParseError<S> {
-    return task.resultKind === ResultKind.Err;
+    return task.resultKind === ResultKind.Error;
 }
 
 export function isLexStage<S extends IParseState = IParseState>(task: TTask<S>): task is TriedLexTask {
@@ -156,7 +156,7 @@ export function isLexStageOk<S extends IParseState = IParseState>(task: TTask<S>
 }
 
 export function isLexStageError<S extends IParseState = IParseState>(task: TTask<S>): task is LexTaskError {
-    return isLexStage(task) && task.resultKind === ResultKind.Err;
+    return isLexStage(task) && task.resultKind === ResultKind.Error;
 }
 
 export function isOk<S extends IParseState = IParseState>(task: TTask<S>): task is LexTaskOk | ParseTaskOk<S> {
@@ -174,7 +174,7 @@ export function isParseStageOk<S extends IParseState = IParseState>(task: TTask<
 export function isParseStageError<S extends IParseState = IParseState>(
     task: TTask<S>,
 ): task is ParseTaskCommonError | ParseTaskParseError<S> {
-    return isParseStage(task) && task.resultKind === ResultKind.Err;
+    return isParseStage(task) && task.resultKind === ResultKind.Error;
 }
 
 export function isParseStageCommonError<S extends IParseState = IParseState>(
@@ -191,7 +191,7 @@ export function isParseStageParseError<S extends IParseState = IParseState>(
 
 export function tryLex(settings: LexSettings, text: string): TriedLexTask {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(settings, text);
-    if (ResultUtils.isErr(triedLex)) {
+    if (ResultUtils.isError(triedLex)) {
         return createLexTaskError(triedLex.error);
     }
     const state: Lexer.State = triedLex.value;
@@ -234,7 +234,7 @@ export function tryLexParse<S extends IParseState = IParseState>(
     text: string,
 ): TriedLexParseTask<S> {
     const triedLexTask: TriedLexTask = tryLex(settings, text);
-    if (triedLexTask.resultKind === ResultKind.Err) {
+    if (triedLexTask.resultKind === ResultKind.Error) {
         return triedLexTask;
     }
     const lexerSnapshot: Lexer.LexerSnapshot = triedLexTask.lexerSnapshot;
@@ -253,7 +253,7 @@ function createLexTaskOk(lexerSnapshot: Lexer.LexerSnapshot): LexTaskOk {
 function createLexTaskError(error: Lexer.LexError.TLexError): LexTaskError {
     return {
         stage: TaskStage.Lex,
-        resultKind: ResultKind.Err,
+        resultKind: ResultKind.Error,
         error,
     };
 }
@@ -280,7 +280,7 @@ function createParseTaskCommonError(
 ): ParseTaskCommonError {
     return {
         stage: TaskStage.Parse,
-        resultKind: ResultKind.Err,
+        resultKind: ResultKind.Error,
         isCommonError: true,
         error,
         lexerSnapshot,
@@ -296,7 +296,7 @@ function createParseTaskParseError<S extends IParseState = IParseState>(
 
     return {
         stage: TaskStage.Parse,
-        resultKind: ResultKind.Err,
+        resultKind: ResultKind.Error,
         isCommonError: false,
         error,
         lexerSnapshot,

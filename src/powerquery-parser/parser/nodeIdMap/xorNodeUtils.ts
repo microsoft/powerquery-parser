@@ -6,14 +6,14 @@ import { ArrayUtils, Assert } from "../../common";
 import { Ast } from "../../language";
 import { AstXorNode, ContextXorNode, TXorNode, XorNodeKind } from "./xorNode";
 
-export function astFactory(node: Ast.TNode): TXorNode {
+export function createAstNode(node: Ast.TNode): TXorNode {
     return {
         kind: XorNodeKind.Ast,
         node,
     };
 }
 
-export function contextFactory(node: ParseContext.Node): TXorNode {
+export function createContextNode(node: ParseContext.Node): TXorNode {
     return {
         kind: XorNodeKind.Context,
         node,

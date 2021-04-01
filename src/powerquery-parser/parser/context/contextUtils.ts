@@ -7,7 +7,7 @@ import { Ast, Token } from "../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
 import { Node, State } from "./context";
 
-export function stateFactory(): State {
+export function createState(): State {
     return {
         nodeIdMapCollection: {
             astNodeById: new Map(),

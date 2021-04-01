@@ -63,7 +63,7 @@ export class LexerSnapshot {
 
 export function trySnapshot(state: Lexer.State): TriedLexerSnapshot {
     try {
-        return ResultUtils.okFactory(snapshotFactory(state));
+        return ResultUtils.createOk(createSnapshot(state));
     } catch (e) {
         let error: LexError.TLexError;
         if (LexError.isTInnerLexError(e)) {
@@ -71,11 +71,11 @@ export function trySnapshot(state: Lexer.State): TriedLexerSnapshot {
         } else {
             error = CommonError.ensureCommonError(state.locale, e);
         }
-        return ResultUtils.errFactory(error);
+        return ResultUtils.createError(error);
     }
 }
 
-function snapshotFactory(state: Lexer.State): LexerSnapshot {
+function createSnapshot(state: Lexer.State): LexerSnapshot {
     // class properties
     const tokens: Token.Token[] = [];
     const comments: Comment.TComment[] = [];
