@@ -73,32 +73,26 @@ export function typeCheckInvocation(
     const numArgs: number = args.length;
     const numParameters: number = parameters.length;
 
-    const upperBound: number = numParameters;
-
     const extraneousArgs: ReadonlyArray<number> =
         numArgs > numParameters ? ArrayUtils.range(numArgs - numParameters, numParameters) : [];
 
-    const missingArgs: ReadonlyArray<number> =
-        numParameters > numArgs
-            ? ArrayUtils.range(numParameters - numArgs, numArgs).filter(
-                  (parameterIndex: number) => !parameters[parameterIndex].isOptional,
-              )
-            : [];
-
     const validArgs: number[] = [];
+    const missingArgs: number[] = [];
     const invalidArgs: Mismatch<number, Type.PqType | undefined, Type.FunctionParameter>[] = [];
-    for (let index: number = 0; index < upperBound; index += 1) {
+    for (let index: number = 0; index < numParameters; index += 1) {
         const maybeArg: Type.PqType | undefined = args[index];
         const parameter: Type.FunctionParameter = parameters[index];
 
         if (isCompatibleWithFunctionParameter(maybeArg, parameter)) {
             validArgs.push(index);
-        } else {
+        } else if (maybeArg !== undefined) {
             invalidArgs.push({
                 key: index,
                 expected: parameter,
                 actual: maybeArg,
             });
+        } else {
+            missingArgs.push(index);
         }
     }
 

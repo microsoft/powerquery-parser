@@ -56,7 +56,7 @@ describe(`TypeUtils.typeCheck`, () => {
             expect(actual).to.deep.equal(expected);
         });
 
-        it(`missing required parameter`, () => {
+        it(`WIP missing required parameter`, () => {
             const args: ReadonlyArray<Language.Type.PqType> = [];
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
                 false,
