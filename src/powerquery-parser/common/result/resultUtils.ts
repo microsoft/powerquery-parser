@@ -2,27 +2,27 @@
 // Licensed under the MIT license.
 
 import { CommonError } from "..";
-import { Error, Ok, Result, ResultKind } from "./result";
+import { ErrorResult, OkResult, Result, ResultKind } from "./result";
 
-export function createOk<T>(value: T): Ok<T> {
+export function createOk<T>(value: T): OkResult<T> {
     return {
         kind: ResultKind.Ok,
         value,
     };
 }
 
-export function createError<E>(error: E): Error<E> {
+export function createError<E>(error: E): ErrorResult<E> {
     return {
         kind: ResultKind.Error,
         error,
     };
 }
 
-export function isOk<T, E>(result: Result<T, E>): result is Ok<T> {
+export function isOk<T, E>(result: Result<T, E>): result is OkResult<T> {
     return result.kind === ResultKind.Ok;
 }
 
-export function isError<T, E>(result: Result<T, E>): result is Error<E> {
+export function isError<T, E>(result: Result<T, E>): result is ErrorResult<E> {
     return result.kind === ResultKind.Error;
 }
 
