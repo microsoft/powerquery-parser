@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError } from ".";
-import { Err, Ok, Result, ResultUtils } from "./result";
+import { ErrorResult, OkResult, Result, ResultUtils } from "./result";
 
 export function asDefined<T>(maybeValue: T | undefined, maybeMessage?: string, maybeDetails?: {}): NonNullable<T> {
     isDefined(maybeValue, maybeMessage, maybeDetails);
@@ -51,27 +51,27 @@ export function isUndefined<T>(
     }
 }
 
-export function isOk<T, E extends Error>(result: Result<T, E>): asserts result is Ok<T> {
+export function isOk<T, E>(result: Result<T, E>): asserts result is OkResult<T> {
     if (!ResultUtils.isOk(result)) {
         throw new CommonError.InvariantError(`assert failed, result expected to be an Ok`, {
-            error: result.error.toString(),
+            error: result.error,
         });
     }
 }
 
-export function isErr<T, E>(result: Result<T, E>): asserts result is Err<E> {
-    if (!ResultUtils.isErr(result)) {
+export function isError<T, E>(result: Result<T, E>): asserts result is ErrorResult<E> {
+    if (!ResultUtils.isError(result)) {
         throw new CommonError.InvariantError(`assert failed, result expected to be an Err`);
     }
 }
 
-export function unwrapOk<T, E extends Error>(result: Result<T, E>): T {
+export function unwrapOk<T, E>(result: Result<T, E>): T {
     isOk(result);
     return result.value;
 }
 
-export function unwrapErr<T, E extends Error>(result: Result<T, E>): E {
-    isErr(result);
+export function unwrapError<T, E>(result: Result<T, E>): E {
+    isError(result);
     return result.error;
 }
 

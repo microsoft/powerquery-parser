@@ -6,7 +6,7 @@ import { ArrayUtils, ImmutableSet } from "../../../common";
 import {
     AnyCategory,
     categorize,
-    CategorizedPqTypes,
+    CategorizedPowerQueryTypes,
     FunctionCategory,
     ListCategory,
     LogicalCategory,
@@ -18,8 +18,8 @@ import {
 } from "./categorize";
 import { isEqualType } from "./isEqualType";
 
-export function simplify(types: ReadonlyArray<Type.PqType>): ReadonlyArray<Type.PqType> {
-    const categorized: CategorizedPqTypes = categorize(types);
+export function simplify(types: ReadonlyArray<Type.PowerQueryType>): ReadonlyArray<Type.PowerQueryType> {
+    const categorized: CategorizedPowerQueryTypes = categorize(types);
 
     // If an `any` exists then that's as simplified as we can make it.
     const maybeAny: Type.Any | undefined = maybeFindAnyPrimitive(categorized);
@@ -27,7 +27,7 @@ export function simplify(types: ReadonlyArray<Type.PqType>): ReadonlyArray<Type.
         return [maybeAny];
     }
 
-    const partial: Type.PqType[] = [
+    const partial: Type.PowerQueryType[] = [
         ...(categorized.maybeAction?.primitives.values() ?? []),
         ...(categorized.maybeAnyNonNull?.primitives.values() ?? []),
         ...(categorized.maybeBinary?.primitives.values() ?? []),
@@ -62,7 +62,7 @@ export function simplify(types: ReadonlyArray<Type.PqType>): ReadonlyArray<Type.
 
 // Returns the first nullable instance if one exists,
 // otherwise returns the first element in the collection.
-function firstNullableElseFirst<T extends Type.PqType>(immutableSet: ImmutableSet<T>): T | undefined {
+function firstNullableElseFirst<T extends Type.PowerQueryType>(immutableSet: ImmutableSet<T>): T | undefined {
     const setValues: ReadonlyArray<T> = [...immutableSet.values()];
 
     for (const item of setValues) {
@@ -74,7 +74,7 @@ function firstNullableElseFirst<T extends Type.PqType>(immutableSet: ImmutableSe
     return setValues[0];
 }
 
-function maybeFindAnyPrimitive(categorized: CategorizedPqTypes): Type.Any | undefined {
+function maybeFindAnyPrimitive(categorized: CategorizedPowerQueryTypes): Type.Any | undefined {
     const maybeAnySet: ImmutableSet<Type.Any> | undefined = categorized.maybeAny?.primitives;
     if (maybeAnySet === undefined) {
         return undefined;
@@ -83,7 +83,7 @@ function maybeFindAnyPrimitive(categorized: CategorizedPqTypes): Type.Any | unde
     return firstNullableElseFirst(maybeAnySet);
 }
 
-function simplifyAnyCategory(maybeCategory: AnyCategory | undefined): ReadonlyArray<Type.PqType> {
+function simplifyAnyCategory(maybeCategory: AnyCategory | undefined): ReadonlyArray<Type.PowerQueryType> {
     if (!maybeCategory?.flattenedAnyUnions) {
         return [];
     } else {
@@ -155,7 +155,7 @@ function simplifyTextCategory(maybeCategory: TextCategory | undefined): Readonly
     return simplifyExtendedType(maybeCategory.primitives, maybeCategory.literals);
 }
 
-function simplifyTypeCategory(maybeCategory: TypeCategory | undefined): ReadonlyArray<Type.PqType> {
+function simplifyTypeCategory(maybeCategory: TypeCategory | undefined): ReadonlyArray<Type.PowerQueryType> {
     if (maybeCategory === undefined) {
         return [];
     } else if (maybeCategory.primitives.size) {
@@ -174,7 +174,7 @@ function simplifyTypeCategory(maybeCategory: TypeCategory | undefined): Readonly
     }
 }
 
-function simplifyExtendedType<T extends Type.PqType, L extends Type.PqType>(
+function simplifyExtendedType<T extends Type.PowerQueryType, L extends Type.PowerQueryType>(
     primitives: ImmutableSet<T>,
     literals: ImmutableSet<L>,
 ): ReadonlyArray<T> | ReadonlyArray<L> {

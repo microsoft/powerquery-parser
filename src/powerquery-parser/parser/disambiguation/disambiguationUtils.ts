@@ -36,12 +36,12 @@ export function readAmbiguous<T extends Ast.TNode, S extends IParseState = IPars
 
         try {
             maybeNode = parseFn(variantState, parser);
-            variantResult = ResultUtils.okFactory(maybeNode);
+            variantResult = ResultUtils.createOk(maybeNode);
         } catch (err) {
             if (!ParseError.isTInnerParseError(err)) {
                 throw err;
             }
-            variantResult = ResultUtils.errFactory(new ParseError.ParseError<S>(err, variantState));
+            variantResult = ResultUtils.createError(new ParseError.ParseError<S>(err, variantState));
         }
 
         const candiate: AmbiguousParse<T, S> = {
@@ -160,7 +160,7 @@ export function maybeDisambiguateParenthesis<S extends IParseState = IParseState
             // '(x as number) as number' could either be either case,
             // so we need to consume test if the trailing 'as number' is followed by a FatArrow.
             if (IParseStateUtils.isTokenKind(state, Token.TokenKind.KeywordAs, offsetTokenIndex + 1)) {
-                const checkpoint: IParseStateCheckpoint = parser.checkpointFactory(state);
+                const checkpoint: IParseStateCheckpoint = parser.createCheckpoint(state);
                 unsafeMoveTo(state, offsetTokenIndex + 2);
 
                 try {
@@ -353,7 +353,7 @@ function bestAmbiguousParseMatch<T extends Ast.TNode, S extends IParseState = IP
         return candidate;
     } else if (
         maybeBest.parseState.tokenIndex === candidate.parseState.tokenIndex &&
-        ResultUtils.isErr(maybeBest.result) &&
+        ResultUtils.isError(maybeBest.result) &&
         ResultUtils.isOk(candidate.result)
     ) {
         return candidate;

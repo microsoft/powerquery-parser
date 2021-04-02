@@ -8,18 +8,18 @@ import { LexerSnapshot } from "../../lexer";
 import { DefaultLocale } from "../../localization";
 import { Disambiguation } from "../disambiguation";
 import { SequenceKind } from "../error";
-import { IParseState, TParseStateFactoryOverrides } from "./IParseState";
+import { IParseState, TCreateParseStateOverrides } from "./IParseState";
 
-export function stateFactory<S extends IParseState = IParseState>(
+export function createState<S extends IParseState = IParseState>(
     lexerSnapshot: LexerSnapshot,
-    maybeOverrides: TParseStateFactoryOverrides<S> | undefined,
+    maybeOverrides: TCreateParseStateOverrides<S> | undefined,
 ): IParseState {
     maybeOverrides = maybeOverrides !== undefined ? maybeOverrides : {};
 
     const tokenIndex: number = maybeOverrides?.tokenIndex ?? 0;
     const maybeCurrentToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
     const maybeCurrentTokenKind: Token.TokenKind | undefined = maybeCurrentToken?.kind;
-    const contextState: ParseContext.State = maybeOverrides?.contextState ?? ParseContextUtils.stateFactory();
+    const contextState: ParseContext.State = maybeOverrides?.contextState ?? ParseContextUtils.createState();
 
     const maybeCurrentContextNodeId: number | undefined =
         contextState.nodeIdMapCollection.contextNodeById.size > 0
@@ -41,7 +41,7 @@ export function stateFactory<S extends IParseState = IParseState>(
         tokenIndex,
         maybeCurrentToken,
         maybeCurrentTokenKind,
-        contextState: maybeOverrides?.contextState ?? ParseContextUtils.stateFactory(),
+        contextState: maybeOverrides?.contextState ?? ParseContextUtils.createState(),
         maybeCurrentContextNode,
     };
 }

@@ -15,7 +15,7 @@ import {
 } from "../../..";
 
 function assertGetCancellationError<T, E>(tried: Result<T, E>): CommonError.CancellationError {
-    Assert.isErr(tried);
+    Assert.isError(tried);
     if (!CommonError.isCommonError(tried.error)) {
         throw new Error(`expected error to be a ${CommonError.CommonError.name}`);
     }
@@ -37,7 +37,7 @@ function assertGetLexerStateWithCancellationToken(): Lexer.State {
 }
 
 function settingsWithCancellationToken(): Settings {
-    return SettingsUtils.defaultSettingsFactory(new TimedCancellationToken(0));
+    return SettingsUtils.createDefaultSettings(new TimedCancellationToken(0));
 }
 
 describe("CancellationToken", () => {

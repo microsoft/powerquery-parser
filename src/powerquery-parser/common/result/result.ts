@@ -1,19 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export type Result<T, E> = Ok<T> | Err<E>;
+export type Result<T, E> = OkResult<T> | ErrorResult<E>;
 
 export const enum ResultKind {
     Ok = "Ok",
-    Err = "Err",
+    Error = "Error",
 }
 
-export interface Ok<T> {
+export interface OkResult<T> {
     readonly kind: ResultKind.Ok;
     readonly value: T;
 }
 
-export interface Err<E> {
-    readonly kind: ResultKind.Err;
+export interface ErrorResult<E> {
+    readonly kind: ResultKind.Error;
     readonly error: E;
 }

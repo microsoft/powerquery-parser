@@ -166,12 +166,12 @@ export function readDocument<S extends IParseState = IParseState>(state: S, pars
     } catch (expressionError) {
         // Fast backup deletes context state, but we want to preserve it for the case
         // where both parsing an expression and section document error out.
-        const expressionCheckpoint: IParseStateCheckpoint = parser.checkpointFactory(state);
+        const expressionCheckpoint: IParseStateCheckpoint = parser.createCheckpoint(state);
         const expressionErrorContextState: ParseContext.State = state.contextState;
 
         // Reset the parser's state.
         state.tokenIndex = 0;
-        state.contextState = ParseContextUtils.stateFactory();
+        state.contextState = ParseContextUtils.createState();
         state.maybeCurrentContextNode = undefined;
 
         if (state.lexerSnapshot.tokens.length) {
@@ -1613,20 +1613,20 @@ function tryReadPrimaryType<S extends IParseState = IParseState>(state: S, parse
         IParseStateUtils.isNextTokenKind(state, Token.TokenKind.LeftParenthesis);
 
     if (IParseStateUtils.isOnTokenKind(state, Token.TokenKind.LeftBracket)) {
-        return ResultUtils.okFactory(parser.readRecordType(state, parser));
+        return ResultUtils.createOk(parser.readRecordType(state, parser));
     } else if (IParseStateUtils.isOnTokenKind(state, Token.TokenKind.LeftBrace)) {
-        return ResultUtils.okFactory(parser.readListType(state, parser));
+        return ResultUtils.createOk(parser.readListType(state, parser));
     } else if (isTableTypeNext) {
-        return ResultUtils.okFactory(parser.readTableType(state, parser));
+        return ResultUtils.createOk(parser.readTableType(state, parser));
     } else if (isFunctionTypeNext) {
-        return ResultUtils.okFactory(parser.readFunctionType(state, parser));
+        return ResultUtils.createOk(parser.readFunctionType(state, parser));
     } else if (IParseStateUtils.isOnConstantKind(state, Constant.LanguageConstantKind.Nullable)) {
-        return ResultUtils.okFactory(parser.readNullableType(state, parser));
+        return ResultUtils.createOk(parser.readNullableType(state, parser));
     } else {
-        const checkpoint: IParseStateCheckpoint = parser.checkpointFactory(state);
+        const checkpoint: IParseStateCheckpoint = parser.createCheckpoint(state);
         const triedReadPrimitiveType: TriedReadPrimaryType = tryReadPrimitiveType(state, parser);
 
-        if (ResultUtils.isErr(triedReadPrimitiveType)) {
+        if (ResultUtils.isError(triedReadPrimitiveType)) {
             parser.restoreCheckpoint(state, checkpoint);
         }
         return triedReadPrimitiveType;
@@ -1836,7 +1836,7 @@ function tryReadPrimitiveType<S extends IParseState = IParseState>(
     const nodeKind: Ast.NodeKind.PrimitiveType = Ast.NodeKind.PrimitiveType;
     IParseStateUtils.startContext(state, nodeKind);
 
-    const checkpoint: IParseStateCheckpoint = parser.checkpointFactory(state);
+    const checkpoint: IParseStateCheckpoint = parser.createCheckpoint(state);
     const expectedTokenKinds: ReadonlyArray<Token.TokenKind> = [
         Token.TokenKind.Identifier,
         Token.TokenKind.KeywordType,
@@ -1848,7 +1848,7 @@ function tryReadPrimitiveType<S extends IParseState = IParseState>(
     );
     if (maybeErr) {
         const error: ParseError.ExpectedAnyTokenKindError = maybeErr;
-        return ResultUtils.errFactory(error);
+        return ResultUtils.createError(error);
     }
 
     let primitiveTypeKind: Constant.PrimitiveTypeConstantKind;
@@ -1880,7 +1880,7 @@ function tryReadPrimitiveType<S extends IParseState = IParseState>(
             default:
                 const token: Token.Token = IParseStateUtils.assertGetTokenAt(state, state.tokenIndex);
                 parser.restoreCheckpoint(state, checkpoint);
-                return ResultUtils.errFactory(
+                return ResultUtils.createError(
                     new ParseError.InvalidPrimitiveTypeError(
                         state.locale,
                         token,
@@ -1897,7 +1897,7 @@ function tryReadPrimitiveType<S extends IParseState = IParseState>(
     } else {
         const details: {} = { tokenKind: state.maybeCurrentTokenKind };
         parser.restoreCheckpoint(state, checkpoint);
-        return ResultUtils.errFactory(
+        return ResultUtils.createError(
             new CommonError.InvariantError(`unknown currentTokenKind, not found in [${expectedTokenKinds}]`, details),
         );
     }
@@ -1909,7 +1909,7 @@ function tryReadPrimitiveType<S extends IParseState = IParseState>(
         primitiveTypeKind,
     };
     IParseStateUtils.endContext(state, astNode);
-    return ResultUtils.okFactory(astNode);
+    return ResultUtils.createOk(astNode);
 }
 
 // -------------------------------------

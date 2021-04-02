@@ -2,34 +2,34 @@
 // Licensed under the MIT license.
 
 import { CommonError } from "..";
-import { Err, Ok, Result, ResultKind } from "./result";
+import { ErrorResult, OkResult, Result, ResultKind } from "./result";
 
-export function okFactory<T>(value: T): Ok<T> {
+export function createOk<T>(value: T): OkResult<T> {
     return {
         kind: ResultKind.Ok,
         value,
     };
 }
 
-export function errFactory<E>(error: E): Err<E> {
+export function createError<E>(error: E): ErrorResult<E> {
     return {
-        kind: ResultKind.Err,
+        kind: ResultKind.Error,
         error,
     };
 }
 
-export function isOk<T, E>(result: Result<T, E>): result is Ok<T> {
+export function isOk<T, E>(result: Result<T, E>): result is OkResult<T> {
     return result.kind === ResultKind.Ok;
 }
 
-export function isErr<T, E>(result: Result<T, E>): result is Err<E> {
-    return result.kind === ResultKind.Err;
+export function isError<T, E>(result: Result<T, E>): result is ErrorResult<E> {
+    return result.kind === ResultKind.Error;
 }
 
 export function ensureResult<T>(locale: string, callbackFn: () => T): Result<T, CommonError.CommonError> {
     try {
-        return okFactory(callbackFn());
+        return createOk(callbackFn());
     } catch (err) {
-        return errFactory(CommonError.ensureCommonError(locale, err));
+        return createError(CommonError.ensureCommonError(locale, err));
     }
 }

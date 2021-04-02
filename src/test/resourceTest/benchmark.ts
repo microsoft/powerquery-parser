@@ -24,8 +24,8 @@ interface FileSummary {
 }
 
 const Parsers: ReadonlyArray<[ParseSettings<BenchmarkState>, string]> = [
-    [benchmarkParseSettingsFactory(Parser.CombinatorialParser), "CombinatorialParser"],
-    [benchmarkParseSettingsFactory(Parser.RecursiveDescentParser), "RecursiveDescentParser"],
+    [createBenchmarkParseSettings(Parser.CombinatorialParser), "CombinatorialParser"],
+    [createBenchmarkParseSettings(Parser.RecursiveDescentParser), "RecursiveDescentParser"],
 ];
 
 const NumberOfRunsPerFile: number = 100;
@@ -39,28 +39,28 @@ for (const [parseSettings, parserName] of Parsers) {
 
 writeReport(ResourceDirectory, allSummaries);
 
-function benchmarkStateFactory(
+function createBenchmarkState(
     lexerSnapshot: Lexer.LexerSnapshot,
-    maybeOverrides: Parser.TParseStateFactoryOverrides | undefined,
+    maybeOverrides: Parser.TCreateParseStateOverrides | undefined,
     baseParser: Parser.IParser<Parser.IParseState>,
 ): BenchmarkState {
     return {
-        ...Parser.IParseStateUtils.stateFactory(lexerSnapshot, maybeOverrides),
+        ...Parser.IParseStateUtils.createState(lexerSnapshot, maybeOverrides),
         baseParser,
         functionTimestamps: new Map(),
         functionTimestampCounter: 0,
     };
 }
 
-function benchmarkParseSettingsFactory(baseParser: Parser.IParser<Parser.IParseState>): ParseSettings<BenchmarkState> {
+function createBenchmarkParseSettings(baseParser: Parser.IParser<Parser.IParseState>): ParseSettings<BenchmarkState> {
     return {
         maybeCancellationToken: undefined,
         locale: DefaultLocale,
         parser: BenchmarkParser,
-        parseStateFactory: (
+        createParseState: (
             lexerSnapshot: Lexer.LexerSnapshot,
-            maybeOverrides: Parser.TParseStateFactoryOverrides | undefined,
-        ) => benchmarkStateFactory(lexerSnapshot, maybeOverrides, baseParser),
+            maybeOverrides: Parser.TCreateParseStateOverrides | undefined,
+        ) => createBenchmarkState(lexerSnapshot, maybeOverrides, baseParser),
         maybeParserEntryPointFn: undefined,
     };
 }

@@ -15,8 +15,8 @@ export type TChecked =
 
 export interface IChecked<
     Key,
-    Actual extends Type.PqType | Type.FunctionParameter | undefined,
-    Expected extends Type.PqType | Type.FunctionParameter
+    Actual extends Type.PowerQueryType | Type.FunctionParameter | undefined,
+    Expected extends Type.PowerQueryType | Type.FunctionParameter
 > {
     readonly valid: ReadonlyArray<Key>;
     readonly invalid: ReadonlyArray<Mismatch<Key, Actual, Expected>>;
@@ -24,7 +24,7 @@ export interface IChecked<
     readonly missing: ReadonlyArray<Key>;
 }
 
-export type CheckedDefinedList = IChecked<number, Type.PqType, Type.PqType>;
+export type CheckedDefinedList = IChecked<number, Type.PowerQueryType, Type.PowerQueryType>;
 
 export interface CheckedDefinedFunction extends IChecked<number, Type.FunctionParameter, Type.FunctionParameter> {
     readonly isReturnTypeCompatible: boolean;
@@ -32,11 +32,11 @@ export interface CheckedDefinedFunction extends IChecked<number, Type.FunctionPa
 
 export type CheckedFunctionSignature = IChecked<number, Type.FunctionParameter, Type.FunctionParameter>;
 
-export type CheckedDefinedRecord = IChecked<string, Type.PqType, Type.PqType>;
+export type CheckedDefinedRecord = IChecked<string, Type.PowerQueryType, Type.PowerQueryType>;
 
-export type CheckedDefinedTable = IChecked<string, Type.PqType, Type.PqType>;
+export type CheckedDefinedTable = IChecked<string, Type.PowerQueryType, Type.PowerQueryType>;
 
-export type CheckedInvocation = IChecked<number, Type.PqType | undefined, Type.FunctionParameter>;
+export type CheckedInvocation = IChecked<number, Type.PowerQueryType | undefined, Type.FunctionParameter>;
 
 export interface Mismatch<Key, Actual, Expected> {
     readonly key: Key;
@@ -66,7 +66,7 @@ export function typeCheckFunctionSignature(
 }
 
 export function typeCheckInvocation(
-    args: ReadonlyArray<Type.PqType>,
+    args: ReadonlyArray<Type.PowerQueryType>,
     definedFunction: Type.DefinedFunction,
 ): CheckedInvocation {
     const parameters: ReadonlyArray<Type.FunctionParameter> = definedFunction.parameters;
@@ -78,9 +78,9 @@ export function typeCheckInvocation(
 
     const validArgs: number[] = [];
     const missingArgs: number[] = [];
-    const invalidArgs: Mismatch<number, Type.PqType | undefined, Type.FunctionParameter>[] = [];
+    const invalidArgs: Mismatch<number, Type.PowerQueryType | undefined, Type.FunctionParameter>[] = [];
     for (let index: number = 0; index < numParameters; index += 1) {
-        const maybeArg: Type.PqType | undefined = args[index];
+        const maybeArg: Type.PowerQueryType | undefined = args[index];
         const parameter: Type.FunctionParameter = parameters[index];
 
         if (isCompatibleWithFunctionParameter(maybeArg, parameter)) {
@@ -106,13 +106,13 @@ export function typeCheckInvocation(
 
 export function typeCheckListWithListType(valueType: Type.DefinedList, schemaType: Type.ListType): CheckedDefinedList {
     const valid: number[] = [];
-    const invalid: Mismatch<number, Type.PqType, Type.PqType>[] = [];
-    const schemaItemType: Type.PqType = schemaType.itemType;
+    const invalid: Mismatch<number, Type.PowerQueryType, Type.PowerQueryType>[] = [];
+    const schemaItemType: Type.PowerQueryType = schemaType.itemType;
 
-    const valueElements: ReadonlyArray<Type.PqType> = valueType.elements;
+    const valueElements: ReadonlyArray<Type.PowerQueryType> = valueType.elements;
     const numElements: number = valueElements.length;
     for (let index: number = 0; index < numElements; index += 1) {
-        const element: Type.PqType = valueElements[index];
+        const element: Type.PowerQueryType = valueElements[index];
         if (isCompatible(element, schemaItemType)) {
             valid.push(index);
         } else {
@@ -148,8 +148,8 @@ export function typeCheckTable(valueType: Type.DefinedTable, schemaType: Type.Ta
 }
 
 function typeCheckGenericNumber<
-    Value extends Type.PqType | Type.FunctionParameter | undefined,
-    Schema extends Type.PqType | Type.FunctionParameter
+    Value extends Type.PowerQueryType | Type.FunctionParameter | undefined,
+    Schema extends Type.PowerQueryType | Type.FunctionParameter
 >(
     valueElements: ReadonlyArray<Value>,
     schemaItemTypes: ReadonlyArray<Schema>,
@@ -197,21 +197,21 @@ function typeCheckGenericNumber<
 }
 
 function typeCheckRecordOrTable(
-    valueFields: Map<string, Type.PqType>,
-    schemaFields: Map<string, Type.PqType>,
+    valueFields: Map<string, Type.PowerQueryType>,
+    schemaFields: Map<string, Type.PowerQueryType>,
     schemaIsOpen: boolean,
-): IChecked<string, Type.PqType, Type.PqType> {
+): IChecked<string, Type.PowerQueryType, Type.PowerQueryType> {
     const validFields: string[] = [];
-    const mismatches: Mismatch<string, Type.PqType, Type.PqType>[] = [];
+    const mismatches: Mismatch<string, Type.PowerQueryType, Type.PowerQueryType>[] = [];
     const extraneousFields: string[] = [];
     const missingFields: ReadonlyArray<string> = [...schemaFields.keys()].filter(
         (key: string) => !valueFields.has(key),
     );
 
     for (const [key, type] of valueFields.entries()) {
-        const maybeSchemaValueType: Type.PqType | undefined = schemaFields.get(key);
+        const maybeSchemaValueType: Type.PowerQueryType | undefined = schemaFields.get(key);
         if (maybeSchemaValueType !== undefined) {
-            const schemaValueType: Type.PqType = maybeSchemaValueType;
+            const schemaValueType: Type.PowerQueryType = maybeSchemaValueType;
 
             if (isCompatible(type, schemaValueType)) {
                 validFields.push(key);

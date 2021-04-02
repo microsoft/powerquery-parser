@@ -9,6 +9,6 @@ export let RecursiveDescentParser: IParser<IParseState> = {
     ...NaiveParseSteps,
     applyState: IParseStateUtils.applyState,
     copyState: IParseStateUtils.copyState,
-    checkpointFactory: IParserUtils.checkpointFactory,
+    createCheckpoint: IParserUtils.createCheckpoint,
     restoreCheckpoint: IParserUtils.restoreCheckpoint,
 };

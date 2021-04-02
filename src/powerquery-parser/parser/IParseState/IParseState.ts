@@ -7,7 +7,7 @@ import { Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { Disambiguation } from "../disambiguation";
 
-export type TParseStateFactoryOverrides<S extends IParseState = IParseState> = Partial<NarrowedProperties<S>>;
+export type TCreateParseStateOverrides<S extends IParseState = IParseState> = Partial<NarrowedProperties<S>>;
 
 export interface IParseState {
     readonly lexerSnapshot: LexerSnapshot;

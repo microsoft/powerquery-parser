@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { PartialErr, PartialMixed, PartialOk, PartialResult, PartialResultKind } from "./partialResult";
+import { PartialError, PartialMixed, PartialOk, PartialResult, PartialResultKind } from "./partialResult";
 
-export function okFactory<O>(value: O): PartialOk<O> {
+export function createOk<O>(value: O): PartialOk<O> {
     return {
         kind: PartialResultKind.Ok,
         value,
     };
 }
 
-export function mixedFactory<M, E>(value: M, error: E): PartialMixed<M, E> {
+export function createMixed<M, E>(value: M, error: E): PartialMixed<M, E> {
     return {
         kind: PartialResultKind.Mixed,
         value,
@@ -18,9 +18,9 @@ export function mixedFactory<M, E>(value: M, error: E): PartialMixed<M, E> {
     };
 }
 
-export function errFactory<E>(error: E): PartialErr<E> {
+export function createError<E>(error: E): PartialError<E> {
     return {
-        kind: PartialResultKind.Err,
+        kind: PartialResultKind.Error,
         error,
     };
 }
@@ -33,6 +33,6 @@ export function isMixed<O, M, E>(result: PartialResult<O, M, E>): result is Part
     return result.kind === PartialResultKind.Mixed;
 }
 
-export function isErr<O, M, E>(result: PartialResult<O, M, E>): result is PartialErr<E> {
-    return result.kind === PartialResultKind.Err;
+export function isError<O, M, E>(result: PartialResult<O, M, E>): result is PartialError<E> {
+    return result.kind === PartialResultKind.Error;
 }

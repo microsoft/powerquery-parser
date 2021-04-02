@@ -10,7 +10,7 @@ parseText(`let x = 1 in try x otherwise 2`);
 // @ts-ignore
 function parseText(text: string): void {
     // Try lexing and parsing the argument which returns a Result object.
-    // A Result<T, E> is the union (Ok<T> | Err<E>).
+    // A Result<T, E> is the union (Ok<T> | Error<E>).
     const task: Task.TriedLexParseTask = TaskUtils.tryLexParse(DefaultSettings, text);
 
     // If it was a success then dump the abstract syntax tree (AST) as verbose JSON to console.
@@ -45,7 +45,7 @@ function lexText(text: string): void {
     // Note: At this point all errors are isolated to a single line.
     //       Checks for multiline errors, such as an unterminated string, have not been processed.
     let triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
-    if (ResultUtils.isErr(triedLex)) {
+    if (ResultUtils.isError(triedLex)) {
         console.log(`An error occured while lexing: ${triedLex.error.message}`);
         return;
     }
@@ -81,7 +81,7 @@ function lexText(text: string): void {
         lexerState.lines.length - 1,
         "// goodbye world",
     );
-    if (ResultUtils.isErr(triedUpdate)) {
+    if (ResultUtils.isError(triedUpdate)) {
         console.log("Failed to update line");
         return;
     }

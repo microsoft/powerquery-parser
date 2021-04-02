@@ -5,7 +5,7 @@ import { Type } from "..";
 import { Ast, AstUtils } from "../..";
 import { Assert } from "../../../common";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../../parser";
-import { primitiveTypeFactory } from "./factories";
+import { createPrimitiveType } from "./factories";
 import { isCompatible } from "./isCompatible";
 import { isEqualType } from "./isEqualType";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";
@@ -35,9 +35,12 @@ export function typeKindFromLiteralKind(literalKind: Ast.LiteralKind): Type.Type
     }
 }
 
-export function isTypeInArray(collection: ReadonlyArray<Type.PqType>, item: Type.PqType): boolean {
+export function isTypeInArray(collection: ReadonlyArray<Type.PowerQueryType>, item: Type.PowerQueryType): boolean {
     // Fast comparison then deep comparison
-    return collection.includes(item) || collection.find((type: Type.PqType) => isEqualType(item, type)) !== undefined;
+    return (
+        collection.includes(item) ||
+        collection.find((type: Type.PowerQueryType) => isEqualType(item, type)) !== undefined
+    );
 }
 
 export function isTypeKind(text: string): text is Type.TypeKind {
@@ -69,7 +72,10 @@ export function isTypeKind(text: string): text is Type.TypeKind {
     }
 }
 
-export function isValidInvocation(functionType: Type.DefinedFunction, args: ReadonlyArray<Type.PqType>): boolean {
+export function isValidInvocation(
+    functionType: Type.DefinedFunction,
+    args: ReadonlyArray<Type.PowerQueryType>,
+): boolean {
     // You can't provide more arguments than are on the function signature.
     if (args.length > functionType.parameters.length) {
         return false;
@@ -80,11 +86,11 @@ export function isValidInvocation(functionType: Type.DefinedFunction, args: Read
 
     for (let index: number = 1; index < numParameters; index += 1) {
         const parameter: Type.FunctionParameter = Assert.asDefined(parameters[index]);
-        const maybeArgType: Type.PqType | undefined = args[index];
+        const maybeArgType: Type.PowerQueryType | undefined = args[index];
 
         if (maybeArgType !== undefined) {
-            const argType: Type.PqType = maybeArgType;
-            const parameterType: Type.PqType = primitiveTypeFactory(
+            const argType: Type.PowerQueryType = maybeArgType;
+            const parameterType: Type.PowerQueryType = createPrimitiveType(
                 parameter.isNullable,
                 Assert.asDefined(parameter.maybeType),
             );

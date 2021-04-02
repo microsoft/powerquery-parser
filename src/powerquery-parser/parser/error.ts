@@ -166,23 +166,23 @@ export function isTInnerParseError(x: any): x is TInnerParseError {
     );
 }
 
-export function maybeTokenFrom(err: TInnerParseError): Token.Token | undefined {
+export function maybeTokenFrom(error: TInnerParseError): Token.Token | undefined {
     if (
-        (err instanceof ExpectedAnyTokenKindError ||
-            err instanceof ExpectedCsvContinuationError ||
-            err instanceof ExpectedGeneralizedIdentifierError ||
-            err instanceof ExpectedTokenKindError) &&
-        err.maybeFoundToken
+        (error instanceof ExpectedAnyTokenKindError ||
+            error instanceof ExpectedCsvContinuationError ||
+            error instanceof ExpectedGeneralizedIdentifierError ||
+            error instanceof ExpectedTokenKindError) &&
+        error.maybeFoundToken
     ) {
-        return err.maybeFoundToken.token;
-    } else if (err instanceof InvalidPrimitiveTypeError) {
-        return err.token;
-    } else if (err instanceof RequiredParameterAfterOptionalParameterError) {
-        return err.missingOptionalToken;
-    } else if (err instanceof UnterminatedSequence) {
-        return err.startToken;
-    } else if (err instanceof UnusedTokensRemainError) {
-        return err.firstUnusedToken;
+        return error.maybeFoundToken.token;
+    } else if (error instanceof InvalidPrimitiveTypeError) {
+        return error.token;
+    } else if (error instanceof RequiredParameterAfterOptionalParameterError) {
+        return error.missingOptionalToken;
+    } else if (error instanceof UnterminatedSequence) {
+        return error.startToken;
+    } else if (error instanceof UnusedTokensRemainError) {
+        return error.firstUnusedToken;
     } else {
         return undefined;
     }

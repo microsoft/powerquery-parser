@@ -37,7 +37,7 @@ export interface LexTaskOk extends ILexTask {
 }
 
 export interface LexTaskError extends ILexTask {
-    readonly resultKind: ResultKind.Err;
+    readonly resultKind: ResultKind.Error;
     readonly error: Lexer.LexError.TLexError;
 }
 
@@ -57,19 +57,19 @@ export interface ParseTaskOk<S extends IParseState = IParseState> extends IParse
 }
 
 export interface IParseTaskError<T> extends IParseTask {
-    readonly resultKind: ResultKind.Err;
+    readonly resultKind: ResultKind.Error;
     readonly error: T;
     readonly isCommonError: boolean;
 }
 
 export interface ParseTaskCommonError extends IParseTaskError<CommonError.CommonError> {
-    readonly resultKind: ResultKind.Err;
+    readonly resultKind: ResultKind.Error;
     readonly isCommonError: true;
 }
 
 export interface ParseTaskParseError<S extends IParseState = IParseState>
     extends IParseTaskError<Parser.ParseError.ParseError> {
-    readonly resultKind: ResultKind.Err;
+    readonly resultKind: ResultKind.Error;
     readonly isCommonError: false;
     readonly parseState: S;
     // Indirection to parseState.contextState.nodeIdMapCollection

@@ -30,7 +30,7 @@ export interface IParser<S extends IParseState = IParseState, C extends IParseSt
     //  You can restore checkpoint 2 and then checkpoint 1,
     //  but restoring checkpoint 1 and then checkpoint 2 will result in undefined behavior.
     // Initial state ------- checkpoint 1 -- checkpoint 2 --- current.
-    readonly checkpointFactory: (state: S) => C;
+    readonly createCheckpoint: (state: S) => C;
     readonly restoreCheckpoint: (state: S, checkpoint: C) => void;
 
     // 12.1.6 Identifiers
