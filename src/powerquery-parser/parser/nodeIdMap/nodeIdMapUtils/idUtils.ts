@@ -55,7 +55,7 @@ export function updateNodeIds(nodeIdMapCollection: Collection, newNodeIdByOldNod
         ...newNodeIdByOldNodeId.keys(),
     ]);
 
-    // Storage for the change delta before modifying nodeIdMapCollection.
+    // Storage for the change delta which is used to mutate nodeIdMapCollection.
     const partialDelta: CollectionDelta = createDelta(nodeIdMapCollection, newNodeIdByOldNodeId, xorNodes);
     applyDelta(nodeIdMapCollection, newNodeIdByOldNodeId, xorNodes, partialDelta);
 }
@@ -162,9 +162,9 @@ function applyDelta(
 
         if (nodeIdMapCollection.leafNodeIds.has(oldId)) {
             nodeIdMapCollection.leafNodeIds.add(newId);
-            if (!newNodeIds.has(oldId)) {
-                nodeIdMapCollection.leafNodeIds.delete(oldId);
-            }
+        }
+        if (!newNodeIds.has(oldId)) {
+            nodeIdMapCollection.leafNodeIds.delete(oldId);
         }
 
         const nodeIdsForNodeKind: Set<number> = MapUtils.assertGet(
