@@ -67,7 +67,6 @@ function createDelta(
     newNodeIdByOldNodeId: Map<number, number>,
     xorNodes: ReadonlyArray<TXorNode>,
 ): CollectionDelta {
-    // Storage for the change delta before modifying nodeIdMapCollection.
     const partialCollection: CollectionDelta = {
         astNodeById: new Map(),
         contextNodeById: new Map(),
