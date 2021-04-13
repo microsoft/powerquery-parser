@@ -29,7 +29,7 @@ export interface State {
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     maybeRoot: Node | undefined;
     idCounter: number;
-    leafNodeIds: number[];
+    leafNodeIds: Set<number>;
 }
 
 export interface Node {

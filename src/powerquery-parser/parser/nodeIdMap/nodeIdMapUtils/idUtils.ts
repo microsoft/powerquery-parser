@@ -56,11 +56,23 @@ export function updateNodeIds(nodeIdMapCollection: Collection, newNodeIdByOldNod
     ]);
 
     // Storage for the change delta before modifying nodeIdMapCollection.
-    const partialCollection: Collection = {
+    const partialDelta: CollectionDelta = createDelta(nodeIdMapCollection, newNodeIdByOldNodeId, xorNodes);
+    applyDelta(nodeIdMapCollection, newNodeIdByOldNodeId, xorNodes, partialDelta);
+}
+
+type CollectionDelta = Omit<Collection, "leafNodeIds" | "maybeRightMostLeaf" | "nodeIdsByNodeKind">;
+
+function createDelta(
+    nodeIdMapCollection: Collection,
+    newNodeIdByOldNodeId: Map<number, number>,
+    xorNodes: ReadonlyArray<TXorNode>,
+): CollectionDelta {
+    // Storage for the change delta before modifying nodeIdMapCollection.
+    const partialCollection: CollectionDelta = {
         astNodeById: new Map(),
-        childIdsById: new Map(),
         contextNodeById: new Map(),
-        maybeRightMostLeaf: undefined,
+
+        childIdsById: new Map(),
         parentIdById: new Map(),
     };
 
@@ -107,45 +119,71 @@ export function updateNodeIds(nodeIdMapCollection: Collection, newNodeIdByOldNod
         }
     }
 
-    // Apply the change delta
+    return partialCollection;
+}
+
+function applyDelta(
+    nodeIdMapCollection: Collection,
+    newNodeIdByOldNodeId: Map<number, number>,
+    xorNodes: ReadonlyArray<TXorNode>,
+    delta: CollectionDelta,
+): void {
+    const newNodeIds: ReadonlySet<number> = new Set(newNodeIdByOldNodeId.values());
+
     for (const xorNode of xorNodes) {
         const oldId: number = xorNode.node.id;
-        const newId: number = newNodeIdByOldNodeId.get(oldId)!;
+        const newId: number = MapUtils.assertGet(newNodeIdByOldNodeId, oldId);
 
         if (xorNode.kind === XorNodeKind.Ast) {
             const mutableNode: TypeScriptUtils.StripReadonly<Ast.TNode> = xorNode.node;
             mutableNode.id = newId;
             nodeIdMapCollection.astNodeById.set(newId, mutableNode);
-            if (!partialCollection.astNodeById.has(oldId)) {
+            if (!delta.astNodeById.has(oldId)) {
                 nodeIdMapCollection.astNodeById.delete(oldId);
             }
         } else {
             const mutableNode: TypeScriptUtils.StripReadonly<ParseContext.Node> = xorNode.node;
             mutableNode.id = newId;
             nodeIdMapCollection.contextNodeById.set(newId, mutableNode);
-            if (!partialCollection.contextNodeById.has(oldId)) {
+            if (!delta.contextNodeById.has(oldId)) {
                 nodeIdMapCollection.contextNodeById.delete(oldId);
             }
         }
 
-        const maybeParentId: number | undefined = partialCollection.parentIdById.get(newId);
-        if (maybeParentId !== undefined) {
-            nodeIdMapCollection.parentIdById.set(newId, maybeParentId);
-            if (!partialCollection.parentIdById.has(oldId)) {
-                MapUtils.assertDelete(nodeIdMapCollection.parentIdById, oldId);
-            }
-        } else {
-            nodeIdMapCollection.parentIdById.delete(newId);
-        }
-
-        const maybeChildIds: ReadonlyArray<number> | undefined = partialCollection.childIdsById.get(newId);
+        const maybeChildIds: ReadonlyArray<number> | undefined = delta.childIdsById.get(newId);
         if (maybeChildIds !== undefined) {
             nodeIdMapCollection.childIdsById.set(newId, maybeChildIds);
-            if (!partialCollection.parentIdById.has(oldId)) {
+            if (!delta.parentIdById.has(oldId)) {
                 MapUtils.assertDelete(nodeIdMapCollection.childIdsById, oldId);
             }
         } else {
             nodeIdMapCollection.childIdsById.delete(newId);
+        }
+
+        if (nodeIdMapCollection.leafNodeIds.has(oldId)) {
+            nodeIdMapCollection.leafNodeIds.add(newId);
+            if (!newNodeIds.has(oldId)) {
+                nodeIdMapCollection.leafNodeIds.delete(oldId);
+            }
+        }
+
+        const nodeIdsForNodeKind: Set<number> = MapUtils.assertGet(
+            nodeIdMapCollection.nodeIdsByNodeKind,
+            xorNode.node.kind,
+        );
+        nodeIdsForNodeKind.add(newId);
+        if (!newNodeIds.has(oldId)) {
+            nodeIdsForNodeKind.delete(oldId);
+        }
+
+        const maybeParentId: number | undefined = delta.parentIdById.get(newId);
+        if (maybeParentId !== undefined) {
+            nodeIdMapCollection.parentIdById.set(newId, maybeParentId);
+            if (!delta.parentIdById.has(oldId)) {
+                MapUtils.assertDelete(nodeIdMapCollection.parentIdById, oldId);
+            }
+        } else {
+            nodeIdMapCollection.parentIdById.delete(newId);
         }
     }
 }

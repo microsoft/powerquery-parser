@@ -728,14 +728,6 @@ export function readRecursivePrimaryExpression<S extends IParseState = IParseSta
         ),
     );
     NodeIdMapUtils.updateNodeIds(nodeIdMapCollection, newNodeIdByOldNodeId);
-    // And be sure to update the leafNodeIds.
-    state.contextState.leafNodeIds = state.contextState.leafNodeIds.reduce(
-        (previousValue: number[], currentValue: number) => {
-            previousValue.push(newNodeIdByOldNodeId.get(currentValue) ?? currentValue);
-            return previousValue;
-        },
-        [],
-    );
 
     // Begin normal parsing.
     const recursiveArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;

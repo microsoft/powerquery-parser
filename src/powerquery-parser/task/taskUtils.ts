@@ -270,7 +270,6 @@ function createParseTaskOk<S extends IParseState = IParseState>(
         ast,
         parseState,
         nodeIdMapCollection: parseState.contextState.nodeIdMapCollection,
-        leafNodeIds: parseState.contextState.leafNodeIds,
     };
 }
 
@@ -302,6 +301,5 @@ function createParseTaskParseError<S extends IParseState = IParseState>(
         lexerSnapshot,
         parseState,
         nodeIdMapCollection: contextState.nodeIdMapCollection,
-        leafNodeIds: contextState.leafNodeIds,
     };
 }

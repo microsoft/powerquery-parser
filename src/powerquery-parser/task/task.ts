@@ -52,8 +52,6 @@ export interface ParseTaskOk<S extends IParseState = IParseState> extends IParse
     readonly parseState: S;
     // Indirection to parseState.contextState.nodeIdMapCollection
     readonly nodeIdMapCollection: NodeIdMap.Collection;
-    // Indirection to parseState.contextState.leafNodeIds
-    readonly leafNodeIds: ReadonlyArray<number>;
 }
 
 export interface IParseTaskError<T> extends IParseTask {
@@ -74,6 +72,4 @@ export interface ParseTaskParseError<S extends IParseState = IParseState>
     readonly parseState: S;
     // Indirection to parseState.contextState.nodeIdMapCollection
     readonly nodeIdMapCollection: NodeIdMap.Collection;
-    // Indirection to parseState.contextState.leafNodeIds
-    readonly leafNodeIds: ReadonlyArray<number>;
 }
