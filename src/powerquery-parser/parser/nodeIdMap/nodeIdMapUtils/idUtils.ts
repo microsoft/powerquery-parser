@@ -45,26 +45,26 @@ export function recalculateIds(nodeIdMapCollection: NodeIdMap.Collection, nodeSt
 
 // Given a mapping of (existingId) => (newId) this mutates the NodeIdMap.Collection and the TXorNodes it holds.
 // Assumes the given arguments are valid as this function does no validation.
-export function updateNodeIds(nodeIdMapCollection: Collection, newNodeIdByOldNodeId: Map<number, number>): void {
-    if (newNodeIdByOldNodeId.size === 0) {
+export function updateNodeIds(nodeIdMapCollection: Collection, newIdByOldId: Map<number, number>): void {
+    if (newIdByOldId.size === 0) {
         return;
     }
 
     // We'll be iterating over them twice, so grab them once.
     const xorNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterXor(nodeIdMapCollection, [
-        ...newNodeIdByOldNodeId.keys(),
+        ...newIdByOldId.keys(),
     ]);
 
     // Storage for the change delta which is used to mutate nodeIdMapCollection.
-    const partialDelta: CollectionDelta = createDelta(nodeIdMapCollection, newNodeIdByOldNodeId, xorNodes);
-    applyDelta(nodeIdMapCollection, newNodeIdByOldNodeId, xorNodes, partialDelta);
+    const partialDelta: CollectionDelta = createDelta(nodeIdMapCollection, newIdByOldId, xorNodes);
+    applyDelta(nodeIdMapCollection, newIdByOldId, xorNodes, partialDelta);
 }
 
-type CollectionDelta = Omit<Collection, "leafNodeIds" | "maybeRightMostLeaf" | "nodeIdsByNodeKind">;
+type CollectionDelta = Omit<Collection, "leafIds" | "maybeRightMostLeaf" | "idsByNodeKind">;
 
 function createDelta(
     nodeIdMapCollection: Collection,
-    newNodeIdByOldNodeId: Map<number, number>,
+    newIdByOldId: Map<number, number>,
     xorNodes: ReadonlyArray<TXorNode>,
 ): CollectionDelta {
     const partialCollection: CollectionDelta = {
@@ -78,7 +78,7 @@ function createDelta(
     // Build up the change delta.
     for (const xorNode of xorNodes) {
         const oldId: number = xorNode.node.id;
-        const newId: number = newNodeIdByOldNodeId.get(oldId)!;
+        const newId: number = newIdByOldId.get(oldId)!;
 
         if (xorNode.kind === XorNodeKind.Ast) {
             partialCollection.astNodeById.set(newId, xorNode.node);
@@ -91,7 +91,7 @@ function createDelta(
         const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(oldId);
         if (maybeChildIds !== undefined && !partialCollection.childIdsById.has(newId)) {
             const newChildIds: ReadonlyArray<number> = maybeChildIds.map(
-                (childId: number) => newNodeIdByOldNodeId.get(childId) ?? childId,
+                (childId: number) => newIdByOldId.get(childId) ?? childId,
             );
             partialCollection.childIdsById.set(newId, newChildIds);
         }
@@ -100,7 +100,7 @@ function createDelta(
         // then calculate the updated parent for the change delta.
         const maybeOldParentId: number | undefined = nodeIdMapCollection.parentIdById.get(oldId);
         if (maybeOldParentId !== undefined) {
-            const newParentId: number = newNodeIdByOldNodeId.get(maybeOldParentId) ?? maybeOldParentId;
+            const newParentId: number = newIdByOldId.get(maybeOldParentId) ?? maybeOldParentId;
             partialCollection.parentIdById.set(newId, newParentId);
 
             // If the parent has children and the change delta hasn't been calculated for the parent's children,
@@ -111,7 +111,7 @@ function createDelta(
                     maybeOldParentId,
                 );
                 const newChildIdsOfParent: ReadonlyArray<number> = oldChildIdsOfParent.map(
-                    (childId: number) => newNodeIdByOldNodeId.get(childId) ?? childId,
+                    (childId: number) => newIdByOldId.get(childId) ?? childId,
                 );
                 partialCollection.childIdsById.set(newParentId, newChildIdsOfParent);
             }
@@ -123,16 +123,18 @@ function createDelta(
 
 function applyDelta(
     nodeIdMapCollection: Collection,
-    newNodeIdByOldNodeId: Map<number, number>,
+    newIdByOldId: Map<number, number>,
     xorNodes: ReadonlyArray<TXorNode>,
     delta: CollectionDelta,
 ): void {
-    const newNodeIds: ReadonlySet<number> = new Set(newNodeIdByOldNodeId.values());
+    const newIds: ReadonlySet<number> = new Set(newIdByOldId.values());
 
     for (const xorNode of xorNodes) {
         const oldId: number = xorNode.node.id;
-        const newId: number = MapUtils.assertGet(newNodeIdByOldNodeId, oldId);
+        const newId: number = MapUtils.assertGet(newIdByOldId, oldId);
 
+        // Update nodeIds for either Ast.TNode or ParseContext.Node,
+        // both in the NodeIdMap.Collection and on the node itself.
         if (xorNode.kind === XorNodeKind.Ast) {
             const mutableNode: TypeScriptUtils.StripReadonly<Ast.TNode> = xorNode.node;
             mutableNode.id = newId;
@@ -149,6 +151,7 @@ function applyDelta(
             }
         }
 
+        // If the nodeId had any children then update the links.
         const maybeChildIds: ReadonlyArray<number> | undefined = delta.childIdsById.get(newId);
         if (maybeChildIds !== undefined) {
             nodeIdMapCollection.childIdsById.set(newId, maybeChildIds);
@@ -159,20 +162,28 @@ function applyDelta(
             nodeIdMapCollection.childIdsById.delete(newId);
         }
 
-        if (nodeIdMapCollection.leafNodeIds.has(oldId)) {
-            nodeIdMapCollection.leafNodeIds.add(newId);
+        // If the old nodeId was a leaf node,
+        if (nodeIdMapCollection.leafIds.has(oldId)) {
+            // then mark the new nodeId as a leaf node.
+            nodeIdMapCollection.leafIds.add(newId);
+            // If oldId won't be doing an update,
+            if (!newIds.has(oldId)) {
+                // then we need to remove the old nodeId during this iteration since it's our only chance.
+                nodeIdMapCollection.leafIds.delete(oldId);
+            }
         }
-        if (!newNodeIds.has(oldId)) {
-            nodeIdMapCollection.leafNodeIds.delete(oldId);
+        // else it doesn't belong in leafIds.
+        else {
+            nodeIdMapCollection.leafIds.delete(oldId);
         }
 
-        const nodeIdsForNodeKind: Set<number> = MapUtils.assertGet(
-            nodeIdMapCollection.nodeIdsByNodeKind,
+        const idsForSpecificNodeKind: Set<number> = MapUtils.assertGet(
+            nodeIdMapCollection.idsByNodeKind,
             xorNode.node.kind,
         );
-        nodeIdsForNodeKind.add(newId);
-        if (!newNodeIds.has(oldId)) {
-            nodeIdsForNodeKind.delete(oldId);
+        idsForSpecificNodeKind.add(newId);
+        if (!newIds.has(oldId)) {
+            idsForSpecificNodeKind.delete(oldId);
         }
 
         const maybeParentId: number | undefined = delta.parentIdById.get(newId);

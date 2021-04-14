@@ -7,7 +7,7 @@ import { Ast } from "../../language";
 export type AstNodeById = NumberMap<Ast.TNode>;
 export type ChildIdsById = NumberMap<ReadonlyArray<number>>;
 export type ContextNodeById = NumberMap<ParseContext.Node>;
-export type NodeIdsByNodeKind = Map<Ast.NodeKind, Set<number>>;
+export type IdsByNodeKind = Map<Ast.NodeKind, Set<number>>;
 export type ParentIdById = NumberMap<number>;
 
 export interface Collection {
@@ -19,9 +19,9 @@ export interface Collection {
     // Mapping of a node to its children. Unlike the other maps this cannot be a Set.
     // It must be a Readonly array which maintains the order that the node's children were parsed.
     readonly childIdsById: ChildIdsById;
-    // A set of all leaf node ids.
-    readonly leafNodeIds: Set<number>;
-    readonly nodeIdsByNodeKind: NodeIdsByNodeKind;
+    readonly idsByNodeKind: IdsByNodeKind;
+    // A set of all leaf node ids..
+    readonly leafIds: Set<number>;
     // Mappings from a node to its parent.
     readonly parentIdById: ParentIdById;
 

@@ -29,7 +29,7 @@ function parseText(text: string): void {
         );
 
         if (!task.isCommonError) {
-            console.log(`parsed ${task.nodeIdMapCollection.leafNodeIds.size} leaf nodes`);
+            console.log(`parsed ${task.nodeIdMapCollection.leafIds.size} leaf nodes`);
         }
     }
 }

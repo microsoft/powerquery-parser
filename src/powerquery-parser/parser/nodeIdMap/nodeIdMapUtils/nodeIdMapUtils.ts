@@ -4,7 +4,7 @@
 import { Assert } from "../../../common";
 import { Ast, Token } from "../../../language";
 import { ParseContext } from "../../context";
-import { Collection, NodeIdsByNodeKind } from "../nodeIdMap";
+import { Collection, IdsByNodeKind } from "../nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "../xorNode";
 import { maybeRightMostLeaf } from "./leafSelectors";
 
@@ -15,9 +15,9 @@ export function copy(nodeIdMapCollection: Collection): Collection {
         }),
     );
 
-    const nodeIdsByNodeKind: NodeIdsByNodeKind = new Map();
-    for (const [nodeKind, nodeIds] of nodeIdMapCollection.nodeIdsByNodeKind.entries()) {
-        nodeIdsByNodeKind.set(nodeKind, new Set(nodeIds));
+    const idsByNodeKind: IdsByNodeKind = new Map();
+    for (const [nodeKind, nodeIds] of nodeIdMapCollection.idsByNodeKind.entries()) {
+        idsByNodeKind.set(nodeKind, new Set(nodeIds));
     }
 
     return {
@@ -25,9 +25,9 @@ export function copy(nodeIdMapCollection: Collection): Collection {
         contextNodeById,
 
         childIdsById: new Map(nodeIdMapCollection.childIdsById),
-        leafNodeIds: new Set(nodeIdMapCollection.leafNodeIds),
+        idsByNodeKind,
+        leafIds: new Set(nodeIdMapCollection.leafIds),
         maybeRightMostLeaf: nodeIdMapCollection.maybeRightMostLeaf,
-        nodeIdsByNodeKind,
         parentIdById: new Map(nodeIdMapCollection.parentIdById),
     };
 }

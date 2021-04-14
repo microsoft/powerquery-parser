@@ -13,9 +13,9 @@ export function createState(): State {
             astNodeById: new Map(),
             childIdsById: new Map(),
             contextNodeById: new Map(),
-            leafNodeIds: new Set(),
+            leafIds: new Set(),
             maybeRightMostLeaf: undefined,
-            nodeIdsByNodeKind: new Map(),
+            idsByNodeKind: new Map(),
             parentIdById: new Map(),
         },
         maybeRoot: undefined,
@@ -89,12 +89,12 @@ export function startContext(
         state.maybeRoot = contextNode;
     }
 
-    const nodeIdsByNodeKind: NodeIdMap.NodeIdsByNodeKind = nodeIdMapCollection.nodeIdsByNodeKind;
-    const maybeNodeIdsForKind: Set<number> | undefined = nodeIdsByNodeKind.get(nodeKind);
-    if (maybeNodeIdsForKind) {
-        maybeNodeIdsForKind.add(nodeId);
+    const idsByNodeKind: NodeIdMap.IdsByNodeKind = nodeIdMapCollection.idsByNodeKind;
+    const maybeIdsForSpecificNodeKind: Set<number> | undefined = idsByNodeKind.get(nodeKind);
+    if (maybeIdsForSpecificNodeKind) {
+        maybeIdsForSpecificNodeKind.add(nodeId);
     } else {
-        nodeIdsByNodeKind.set(nodeKind, new Set([nodeId]));
+        idsByNodeKind.set(nodeKind, new Set([nodeId]));
     }
 
     return contextNode;
@@ -116,7 +116,7 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
 
     if (astNode.isLeaf) {
         SetUtils.assertAddUnique(
-            state.nodeIdMapCollection.leafNodeIds,
+            state.nodeIdMapCollection.leafIds,
             contextNode.id,
             `failed to endContext on a leaf node as it shares a nodeId with an already existing leaf node`,
             { nodeId: contextNode.id },
@@ -167,7 +167,7 @@ export function deleteAst(state: State, nodeId: number, parentWillBeDeleted: boo
     // If Node was a leaf node, remove it from the list of leaf nodes.
     if (astNode.isLeaf) {
         SetUtils.assertDelete(
-            nodeIdMapCollection.leafNodeIds,
+            nodeIdMapCollection.leafIds,
             nodeId,
             "failed to deleteAst as the node is a leaf node, but it wasn't present in leafNodeIds",
             { nodeId },
@@ -216,7 +216,7 @@ export function deleteContext(state: State, nodeId: number): Node | undefined {
 
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
     const contextNodeById: NodeIdMap.ContextNodeById = nodeIdMapCollection.contextNodeById;
-    const leafNodeIds: Set<number> = nodeIdMapCollection.leafNodeIds;
+    const leafIds: Set<number> = nodeIdMapCollection.leafIds;
     const parentIdById: NodeIdMap.ParentIdById = nodeIdMapCollection.parentIdById;
 
     const maybeContextNode: Node | undefined = contextNodeById.get(nodeId);
@@ -272,20 +272,20 @@ export function deleteContext(state: State, nodeId: number): Node | undefined {
     contextNodeById.delete(nodeId);
     childIdsById.delete(nodeId);
     parentIdById.delete(nodeId);
-    leafNodeIds.delete(nodeId);
+    leafIds.delete(nodeId);
 
     // Return the node's parent if it exits
     return maybeParentId !== undefined ? NodeIdMapUtils.assertGetContext(contextNodeById, maybeParentId) : undefined;
 }
 
 function deleteFromKindMap(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): void {
-    const nodeIdsByNodeKind: NodeIdMap.NodeIdsByNodeKind = nodeIdMapCollection.nodeIdsByNodeKind;
+    const idsByNodeKind: NodeIdMap.IdsByNodeKind = nodeIdMapCollection.idsByNodeKind;
 
     const nodeKind: Ast.NodeKind = NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId).node.kind;
     const nodeIds: Set<number> = MapUtils.assertGet(
-        nodeIdsByNodeKind,
+        idsByNodeKind,
         nodeKind,
-        `failed to deleteFromKindMap as the node kind for the given nodeId isn't present in nodeIdsByNodeKind`,
+        `failed to deleteFromKindMap as the node kind for the given nodeId isn't present in idsByNodeKind`,
         {
             nodeId,
             nodeKind,
@@ -294,7 +294,7 @@ function deleteFromKindMap(nodeIdMapCollection: NodeIdMap.Collection, nodeId: nu
     SetUtils.assertDelete(nodeIds, nodeId);
 
     if (!nodeIds.size) {
-        nodeIdsByNodeKind.delete(nodeKind);
+        idsByNodeKind.delete(nodeKind);
     }
 }
 
