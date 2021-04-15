@@ -2,19 +2,11 @@
 // Licensed under the MIT license.
 
 import { Ast } from "..";
-import { ArrayUtils, Assert, CommonError } from "../../../common";
+import { ArrayUtils, CommonError } from "../../../common";
 import * as TypeGuards from "./typeGuards";
 
-export function assertIsNodeKind(node: Ast.TNode, expectedNodeKind: Ast.NodeKind): void {
-    Assert.isTrue(node.kind === expectedNodeKind, `node.kind === expectedNodeKind`, {
-        expectedNodeKind,
-        actualNodeKind: node.kind,
-        actualNodeId: node.id,
-    });
-}
-
 export function assertIsAnyNodeKind(node: Ast.TNode, allowedNodeKinds: ReadonlyArray<Ast.NodeKind>): void {
-    ArrayUtils.assertIn(allowedNodeKinds, node.kind, undefined, {
+    ArrayUtils.assertIn(allowedNodeKinds, node.kind, "assert failed, given nodeKind wasn't in allowedNodeKinds", {
         allowedNodeKinds,
         actualNodeKind: node.kind,
         actualNodeId: node.id,
