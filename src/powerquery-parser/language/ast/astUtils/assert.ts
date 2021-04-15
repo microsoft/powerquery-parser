@@ -5,14 +5,6 @@ import { Ast } from "..";
 import { ArrayUtils, CommonError } from "../../../common";
 import * as TypeGuards from "./typeGuards";
 
-export function assertIsAnyNodeKind(node: Ast.TNode, allowedNodeKinds: ReadonlyArray<Ast.NodeKind>): void {
-    ArrayUtils.assertIn(allowedNodeKinds, node.kind, "assert failed, given nodeKind wasn't in allowedNodeKinds", {
-        allowedNodeKinds,
-        actualNodeKind: node.kind,
-        actualNodeId: node.id,
-    });
-}
-
 export function assertAsArithmeticExpression(node: Ast.TNode): Ast.ArithmeticExpression {
     return assertAs(TypeGuards.isArithmeticExpression, node, [Ast.NodeKind.ArithmeticExpression]);
 }
@@ -264,6 +256,14 @@ export function assertAsTypePrimaryType(node: Ast.TNode): Ast.TypePrimaryType {
 
 export function assertAsUnaryExpression(node: Ast.TNode): Ast.UnaryExpression {
     return assertAs(TypeGuards.isUnaryExpression, node, [Ast.NodeKind.UnaryExpression]);
+}
+
+export function assertIsAnyNodeKind(node: Ast.TNode, allowedNodeKinds: ReadonlyArray<Ast.NodeKind>): void {
+    ArrayUtils.assertIn(allowedNodeKinds, node.kind, "assert failed, given nodeKind wasn't in allowedNodeKinds", {
+        allowedNodeKinds,
+        actualNodeKind: node.kind,
+        actualNodeId: node.id,
+    });
 }
 
 export function assertIsArithmeticExpression(node: Ast.TNode): asserts node is Ast.ArithmeticExpression {
