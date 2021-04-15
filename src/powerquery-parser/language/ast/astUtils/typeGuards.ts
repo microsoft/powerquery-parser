@@ -218,6 +218,7 @@ export function isTBinOpExpressionKind(nodeKind: Ast.NodeKind): nodeKind is Ast.
         case Ast.NodeKind.EqualityExpression:
         case Ast.NodeKind.IsExpression:
         case Ast.NodeKind.LogicalExpression:
+        case Ast.NodeKind.NullCoalescingExpression:
         case Ast.NodeKind.MetadataExpression:
         case Ast.NodeKind.RelationalExpression:
             return true;

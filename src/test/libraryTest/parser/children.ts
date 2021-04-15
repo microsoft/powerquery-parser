@@ -55,7 +55,7 @@ describe("Parser.Children", () => {
         expect(actual).to.deep.equal(expected);
     });
 
-    it(`WIP null ?? 1 ?? 2`, () => {
+    it(`null ?? 1 ?? 2`, () => {
         const text: string = `null ?? 1 ?? 2`;
         const expected: ReadonlyArray<ChildIdsByIdEntry> = [
             {
