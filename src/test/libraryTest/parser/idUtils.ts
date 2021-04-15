@@ -113,10 +113,6 @@ function expectLinksMatch(triedLexParse: Task.TriedLexParseTask, expected: Abrid
 }
 
 function traverseVisitNode(state: TraverseState, xorNode: TXorNode): void {
-    if (!XorNodeUtils.isAst(xorNode)) {
-        return;
-    }
-
     if (xorNode.node.isLeaf) {
         state.leafIds.add(xorNode.node.id);
     }
@@ -164,6 +160,28 @@ describe("idUtils", () => {
                 [4, 3],
                 [5, 4],
                 [6, 3],
+            ],
+        };
+        const triedLexParse: Task.TriedLexParseTask = TaskUtils.tryLexParse(DefaultSettings, text);
+        expectLinksMatch(triedLexParse, expected);
+    });
+
+    it(`WIP 1 + 2`, () => {
+        const text: string = `1 + 2`;
+        const expected: AbridgedNodeIdMapCollection = {
+            astIds: [3, 4, 5, 6],
+            childIdsById: [[6, [3, 4, 5]]],
+            contextIds: [],
+            idsByNodeKind: [
+                [Language.Ast.NodeKind.ArithmeticExpression, [6]],
+                [Language.Ast.NodeKind.Constant, [4]],
+                [Language.Ast.NodeKind.LiteralExpression, [3, 5]],
+            ],
+            leafIds: [3, 4, 5],
+            parentIdById: [
+                [4, 6],
+                [5, 6],
+                [6, 6],
             ],
         };
         const triedLexParse: Task.TriedLexParseTask = TaskUtils.tryLexParse(DefaultSettings, text);
