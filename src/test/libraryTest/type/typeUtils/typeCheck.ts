@@ -56,7 +56,7 @@ describe(`TypeUtils.typeCheck`, () => {
             expect(actual).to.deep.equal(expected);
         });
 
-        it(`WIP missing required parameter`, () => {
+        it(`missing required parameter`, () => {
             const args: ReadonlyArray<Language.Type.PowerQueryType> = [];
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
