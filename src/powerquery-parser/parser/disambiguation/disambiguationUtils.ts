@@ -320,7 +320,7 @@ function readParenthesizedExpressionOrBinOpExpression<S extends IParseState>(
         node.id,
     );
 
-    AstUtils.assertNodeKind(leftMostNode, Ast.NodeKind.Constant);
+    AstUtils.assertAsTConstant(leftMostNode);
     Assert.isTrue(
         leftMostNode.kind === Ast.NodeKind.Constant &&
             leftMostNode.constantKind === Constant.WrapperConstantKind.LeftParenthesis,
