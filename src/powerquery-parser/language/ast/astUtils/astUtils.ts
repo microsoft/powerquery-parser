@@ -1,10 +1,7 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-
-import { Ast } from ".";
-import { ArrayUtils, Assert, CommonError } from "../../common";
-import { Constant } from "../constant";
-import { TokenKind } from "../token";
+import { Ast } from "..";
+import { Assert, CommonError } from "../../../common";
+import { Constant } from "../../constant";
+import { TokenKind } from "../../token";
 
 export interface SimplifiedType {
     readonly isNullable: boolean;
@@ -127,53 +124,4 @@ export function primitiveTypeConstantKindFrom(
         default:
             throw Assert.isNever(node);
     }
-}
-
-export function isTBinOpExpression(node: Ast.TNode): node is Ast.TBinOpExpression {
-    switch (node.kind) {
-        case Ast.NodeKind.ArithmeticExpression:
-        case Ast.NodeKind.AsExpression:
-        case Ast.NodeKind.EqualityExpression:
-        case Ast.NodeKind.IsExpression:
-        case Ast.NodeKind.LogicalExpression:
-        case Ast.NodeKind.NullCoalescingExpression:
-        case Ast.NodeKind.MetadataExpression:
-        case Ast.NodeKind.RelationalExpression:
-            return true;
-
-        default:
-            return false;
-    }
-}
-
-export function isTBinOpExpressionKind(nodeKind: Ast.NodeKind): nodeKind is Ast.TBinOpExpressionNodeKind {
-    switch (nodeKind) {
-        case Ast.NodeKind.ArithmeticExpression:
-        case Ast.NodeKind.AsExpression:
-        case Ast.NodeKind.EqualityExpression:
-        case Ast.NodeKind.IsExpression:
-        case Ast.NodeKind.LogicalExpression:
-        case Ast.NodeKind.MetadataExpression:
-        case Ast.NodeKind.RelationalExpression:
-            return true;
-
-        default:
-            return false;
-    }
-}
-
-export function assertNodeKind(node: Ast.TNode, expectedNodeKind: Ast.NodeKind): void {
-    Assert.isTrue(node.kind === expectedNodeKind, `node.kind === expectedNodeKind`, {
-        expectedNodeKind,
-        actualNodeKind: node.kind,
-        actualNodeId: node.id,
-    });
-}
-
-export function assertAnyNodeKind(node: Ast.TNode, allowedNodeKinds: ReadonlyArray<Ast.NodeKind>): void {
-    ArrayUtils.assertIn(allowedNodeKinds, node.kind, undefined, {
-        allowedNodeKinds,
-        actualNodeKind: node.kind,
-        actualNodeId: node.id,
-    });
 }
