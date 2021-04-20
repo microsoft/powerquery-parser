@@ -4,7 +4,7 @@
 import { Assert } from "../../../common";
 import { Ast, Token } from "../../../language";
 import { ParseContext } from "../../context";
-import { Collection } from "../nodeIdMap";
+import { Collection, IdsByNodeKind } from "../nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "../xorNode";
 import { maybeRightMostLeaf } from "./leafSelectors";
 
@@ -15,12 +15,20 @@ export function copy(nodeIdMapCollection: Collection): Collection {
         }),
     );
 
+    const idsByNodeKind: IdsByNodeKind = new Map();
+    for (const [nodeKind, nodeIds] of nodeIdMapCollection.idsByNodeKind.entries()) {
+        idsByNodeKind.set(nodeKind, new Set(nodeIds));
+    }
+
     return {
         astNodeById: new Map(nodeIdMapCollection.astNodeById),
         contextNodeById,
-        parentIdById: new Map(nodeIdMapCollection.parentIdById),
+
         childIdsById: new Map(nodeIdMapCollection.childIdsById),
+        idsByNodeKind,
+        leafIds: new Set(nodeIdMapCollection.leafIds),
         maybeRightMostLeaf: nodeIdMapCollection.maybeRightMostLeaf,
+        parentIdById: new Map(nodeIdMapCollection.parentIdById),
     };
 }
 

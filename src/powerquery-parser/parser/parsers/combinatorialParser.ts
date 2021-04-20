@@ -180,6 +180,15 @@ function readBinOpExpression<S extends IParseState = IParseState>(
         nodeIdMapCollection.childIdsById.set(newBinOpExpressionId, [left.id, operatorConstant.id, right.id]);
         nodeIdMapCollection.astNodeById.set(newBinOpExpressionId, newBinOpExpression);
 
+        const maybeIdsForSpecificNodeKind: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
+            newBinOpExpression.kind,
+        );
+        if (maybeIdsForSpecificNodeKind) {
+            maybeIdsForSpecificNodeKind.add(newBinOpExpression.id);
+        } else {
+            nodeIdMapCollection.idsByNodeKind.set(newBinOpExpression.kind, new Set([newBinOpExpression.id]));
+        }
+
         // All TUnaryExpression and operatorConstants start by being placed under the context node.
         // They need to be removed for deleteContext(placeholderContextId) to succeed.
         placeholderContextChildren = ArrayUtils.removeFirstInstance(placeholderContextChildren, operatorConstant.id);
