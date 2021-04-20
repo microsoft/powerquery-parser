@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMap, NodeIdMapIterator } from "..";
+import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils } from "..";
 import { MapUtils, TypeScriptUtils } from "../../../common";
 import { Ast } from "../../../language";
 import { ParseContext } from "../../context";
@@ -128,6 +128,7 @@ function applyDelta(
     delta: CollectionDelta,
 ): void {
     const newIds: ReadonlySet<number> = new Set(newIdByOldId.values());
+    const oldLeafIds: ReadonlySet<number> = new Set(nodeIdMapCollection.leafIds.values());
 
     for (const xorNode of xorNodes) {
         const oldId: number = xorNode.node.id;
@@ -162,18 +163,14 @@ function applyDelta(
             nodeIdMapCollection.childIdsById.delete(newId);
         }
 
-        // If the old nodeId was a leaf node,
-        if (nodeIdMapCollection.leafIds.has(oldId)) {
-            // then mark the new nodeId as a leaf node.
+        if (oldLeafIds.has(oldId)) {
             nodeIdMapCollection.leafIds.add(newId);
-            // If oldId won't be doing an update,
-            if (!newIds.has(oldId)) {
-                // then we need to remove the old nodeId during this iteration since it's our only chance.
-                nodeIdMapCollection.leafIds.delete(oldId);
-            }
         }
-        // else it doesn't belong in leafIds.
-        else {
+
+        // Delete oldId if:
+        //  * another iteration doesn't update its id to oldId
+        //  * OR oldId wasn't a leafId to begin with.
+        if (!newIds.has(oldId) || oldLeafIds.has(oldId)) {
             nodeIdMapCollection.leafIds.delete(oldId);
         }
 
@@ -181,8 +178,18 @@ function applyDelta(
             nodeIdMapCollection.idsByNodeKind,
             xorNode.node.kind,
         );
+        // We need the NodeKind to check if we should do a deletion.
+        // It must either be something in the delta, or something untouched in the nodeIdMapCollection.
+        const oldKind: Ast.NodeKind =
+            delta.astNodeById.get(oldId)?.kind ||
+            delta.contextNodeById.get(oldId)?.kind ||
+            NodeIdMapUtils.assertGetXor(nodeIdMapCollection, oldId).node.kind;
+
         idsForSpecificNodeKind.add(newId);
-        if (!newIds.has(oldId)) {
+        // Delete oldId if:
+        //  * another iteration doesn't update its id to oldId
+        //  * OR the old node's kind doesn't match this iterations kind
+        if (!newIds.has(oldId) || xorNode.node.kind !== oldKind) {
             idsForSpecificNodeKind.delete(oldId);
         }
 

@@ -7,9 +7,9 @@ import { DefaultSettings, Task } from "../../..";
 import { Assert, Language, TaskUtils, Traverse } from "../../../powerquery-parser";
 import { NodeIdMap, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
 import { ChildIdsById, IdsByNodeKind, ParentIdById } from "../../../powerquery-parser/parser/nodeIdMap/nodeIdMap";
-import { TestAssertUtils } from "../../testUtils";
 
-type TraverseState = Traverse.IState<undefined> & Pick<NodeIdMap.Collection, "leafIds" | "idsByNodeKind">;
+type TraverseState = Traverse.IState<undefined> &
+    Pick<NodeIdMap.Collection, "leafIds" | "idsByNodeKind"> & { astIds: number[]; contextIds: number[] };
 
 interface AbridgedNodeIdMapCollection {
     readonly astIds: ReadonlyArray<number>;
@@ -19,6 +19,10 @@ interface AbridgedNodeIdMapCollection {
     readonly leafIds: ReadonlyArray<number>;
     readonly childIdsById: ReadonlyArray<[number, ReadonlyArray<number>]>;
     readonly parentIdById: ReadonlyArray<[number, number]>;
+}
+
+function createSimplifiedMapKeys<K, V>(collection: Map<K, V>): ReadonlyArray<K> {
+    return [...collection.keys()].sort();
 }
 
 function createSimplifiedChildIdsById(childIdsById: ChildIdsById): ReadonlyArray<[number, ReadonlyArray<number>]> {
@@ -58,9 +62,20 @@ function expectLinksMatch(triedLexParse: Task.TriedLexParseTask, expected: Abrid
         throw new Error(`expected TriedLexParse to be Ok`);
     }
 
+    expected = {
+        astIds: [...expected.astIds.values()].sort(),
+        childIdsById: [...expected.childIdsById.values()].sort(),
+        contextIds: [...expected.contextIds.values()].sort(),
+        idsByNodeKind: [...expected.idsByNodeKind.values()].sort(),
+        leafIds: [...expected.leafIds.values()].sort(),
+        parentIdById: [...expected.parentIdById.values()].sort(),
+    };
+
     const traverseState: TraverseState = {
         locale: DefaultSettings.locale,
         result: undefined,
+        astIds: [],
+        contextIds: [],
         leafIds: new Set<number>(),
         idsByNodeKind: new Map(),
     };
@@ -75,46 +90,104 @@ function expectLinksMatch(triedLexParse: Task.TriedLexParseTask, expected: Abrid
         undefined,
     );
     Assert.isOk(triedTraverse);
+    assertTraverseMatchesState(traverseState, nodeIdMapCollection);
 
-    // First, assert that the leafIds and idsByNodeKind are the same from both
-    // TriedLexParseTask and from an Ast traversal.
-    expect(createSimplifiedLeafIds(nodeIdMapCollection.leafIds)).to.deep.equal(
-        createSimplifiedLeafIds(traverseState.leafIds),
-        "mismatch between nodeIdMapCollection and traversal results for leafIds",
+    const astIds: ReadonlyArray<number> = [...nodeIdMapCollection.astNodeById.keys()];
+    const contextIds: ReadonlyArray<number> = [...nodeIdMapCollection.contextNodeById.keys()];
+    const nodeIds: ReadonlyArray<number> = [...astIds, ...contextIds].sort();
+
+    const parentIds: ReadonlyArray<number> = [...nodeIdMapCollection.parentIdById.keys()].sort();
+    const childIds: ReadonlyArray<number> = [...nodeIdMapCollection.childIdsById.values()]
+        .reduce(
+            (partial: number[], currentValue: ReadonlyArray<number>) => partial.concat([...currentValue.values()]),
+            [],
+        )
+        .sort();
+    const idsFromKindMap: ReadonlyArray<number> = [...nodeIdMapCollection.idsByNodeKind.values()]
+        .reduce((partial: number[], currentValue: Set<number>) => partial.concat([...currentValue.values()]), [])
+        .sort();
+
+    expect(idsFromKindMap).to.deep.equal(
+        nodeIds,
+        "expected idsFromKindMap to equal nodeIds, since they're supposed to be different shapes for the same data",
     );
-    expect(createSimplifiedIdsByNodeKind(nodeIdMapCollection.idsByNodeKind)).to.deep.equal(
-        createSimplifiedIdsByNodeKind(traverseState.idsByNodeKind),
-        "mismatch between nodeIdMapCollection and traversal results for idsByNodeKind",
+    expect(parentIds.length).to.equal(
+        childIds.length,
+        "expected parentIds.length to be equal childIds.length, since every child must have a parent",
+    );
+    expect(childIds.length).to.equal(
+        nodeIds.length - 1,
+        "expected childIds.length to equal n - 1 (where n is number of nodes), since every node must be a child except for the root",
     );
 
     // Now compare the expected values to TriedLexParseTask
-    expect([...nodeIdMapCollection.astNodeById.keys()].sort()).to.deep.equal(
-        expected.astIds,
-        "mismatch between expected and actual for astIds",
-    );
-    expect([...nodeIdMapCollection.contextNodeById.keys()].sort()).to.deep.equal(
-        expected.contextIds,
-        "mismatch between expected and actual for contextIds",
-    );
+    const actualAstIds: ReadonlyArray<number> = [...nodeIdMapCollection.astNodeById.keys()].sort();
+    expect(actualAstIds).to.deep.equal(expected.astIds, "mismatch between expected and actual for astIds");
 
-    expect(createSimplifiedChildIdsById(nodeIdMapCollection.childIdsById)).to.deep.equal(
+    const actualContextIds: ReadonlyArray<number> = [...nodeIdMapCollection.contextNodeById.keys()].sort();
+    expect(actualContextIds).to.deep.equal(expected.contextIds, "mismatch between expected and actual for contextIds");
+
+    const actualChildIdsById: ReadonlyArray<[number, ReadonlyArray<number>]> = createSimplifiedChildIdsById(
+        nodeIdMapCollection.childIdsById,
+    );
+    expect(actualChildIdsById).to.deep.equal(
         expected.childIdsById,
         "mismatch between expected and actual for childIdsById",
     );
-    expect(createSimplifiedIdsByNodeKind(nodeIdMapCollection.idsByNodeKind)).to.deep.equal(
+
+    const actualIdsByNodeKind: ReadonlyArray<[
+        Language.Ast.NodeKind,
+        ReadonlyArray<number>,
+    ]> = createSimplifiedIdsByNodeKind(nodeIdMapCollection.idsByNodeKind);
+    expect(actualIdsByNodeKind).to.deep.equal(
         expected.idsByNodeKind,
         "mismatch between expected and actual for idsByNodeKind",
     );
-    expect(createSimplifiedLeafIds(nodeIdMapCollection.leafIds)).to.deep.equal(expected.leafIds, "mismatch on leafIds");
-    expect(createSimplifiedParentIdById(nodeIdMapCollection.parentIdById)).to.deep.equal(
+
+    const actualLeafIds: ReadonlyArray<number> = createSimplifiedLeafIds(nodeIdMapCollection.leafIds);
+    expect(actualLeafIds).to.deep.equal(expected.leafIds, "mismatch on leafIds");
+
+    const actualParentIdById: ReadonlyArray<[number, number]> = createSimplifiedParentIdById(
+        nodeIdMapCollection.parentIdById,
+    );
+    expect(actualParentIdById).to.deep.equal(
         expected.parentIdById,
         "mismatch between expected and actual for parentIdById",
     );
 }
 
+// Compares the results from an Ast traversal to the state stored in NodeIdMap.Collection.
+function assertTraverseMatchesState(traverseState: TraverseState, nodeIdMapCollection: NodeIdMap.Collection): void {
+    expect(createSimplifiedMapKeys(nodeIdMapCollection.astNodeById)).to.deep.equal(
+        traverseState.astIds.sort(),
+        "mismatch between nodeIdMapCollection and traversal results for astIds",
+    );
+
+    expect(createSimplifiedMapKeys(nodeIdMapCollection.contextNodeById)).to.deep.equal(
+        traverseState.contextIds.sort(),
+        "mismatch between nodeIdMapCollection and traversal results for contextIds",
+    );
+
+    expect(createSimplifiedLeafIds(nodeIdMapCollection.leafIds)).to.deep.equal(
+        createSimplifiedLeafIds(traverseState.leafIds),
+        "mismatch between nodeIdMapCollection and traversal results for leafIds",
+    );
+
+    expect(createSimplifiedIdsByNodeKind(nodeIdMapCollection.idsByNodeKind)).to.deep.equal(
+        createSimplifiedIdsByNodeKind(traverseState.idsByNodeKind),
+        "mismatch between nodeIdMapCollection and traversal results for idsByNodeKind",
+    );
+}
+
 function traverseVisitNode(state: TraverseState, xorNode: TXorNode): void {
-    if (xorNode.node.isLeaf) {
-        state.leafIds.add(xorNode.node.id);
+    if (XorNodeUtils.isAst(xorNode)) {
+        state.astIds.push(xorNode.node.id);
+
+        if (xorNode.node.isLeaf) {
+            state.leafIds.add(xorNode.node.id);
+        }
+    } else {
+        state.contextIds.push(xorNode.node.id);
     }
 
     const maybeNodeIdsByNodeKind: Set<number> | undefined = state.idsByNodeKind.get(xorNode.node.kind);
@@ -166,7 +239,7 @@ describe("idUtils", () => {
         expectLinksMatch(triedLexParse, expected);
     });
 
-    it(`WIP 1 + 2`, () => {
+    it(`1 + 2`, () => {
         const text: string = `1 + 2`;
         const expected: AbridgedNodeIdMapCollection = {
             astIds: [3, 4, 5, 6],
@@ -179,20 +252,46 @@ describe("idUtils", () => {
             ],
             leafIds: [3, 4, 5],
             parentIdById: [
+                [3, 6],
                 [4, 6],
                 [5, 6],
-                [6, 6],
             ],
         };
         const triedLexParse: Task.TriedLexParseTask = TaskUtils.tryLexParse(DefaultSettings, text);
         expectLinksMatch(triedLexParse, expected);
     });
 
-    xit(`let x = foo(){0} in x`, () => {
-        const text: string = `let x = foo(){0} in x`;
-        const expected: ReadonlyArray<number> = [2, 6, 7, 12, 15, 17, 19, 22, 23, 24, 28];
-        const lexParseOk: Task.ParseTaskOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
-        const actual: Set<number> = lexParseOk.nodeIdMapCollection.leafIds;
-        expect([...actual.values()]).to.have.members(expected);
+    it(`foo()`, () => {
+        const text: string = `foo()`;
+        const expected: AbridgedNodeIdMapCollection = {
+            astIds: [3, 4, 5, 6, 7, 8, 9, 10],
+            childIdsById: [
+                [3, [4, 6]],
+                [4, [5]],
+                [6, [7]],
+                [7, [8, 9, 10]],
+            ],
+            contextIds: [],
+            idsByNodeKind: [
+                [Language.Ast.NodeKind.ArrayWrapper, [6, 9]],
+                [Language.Ast.NodeKind.Constant, [8, 10]],
+                [Language.Ast.NodeKind.Identifier, [5]],
+                [Language.Ast.NodeKind.IdentifierExpression, [4]],
+                [Language.Ast.NodeKind.InvokeExpression, [7]],
+                [Language.Ast.NodeKind.RecursivePrimaryExpression, [3]],
+            ],
+            leafIds: [5, 8, 10],
+            parentIdById: [
+                [4, 3],
+                [5, 4],
+                [6, 3],
+                [7, 6],
+                [8, 7],
+                [9, 7],
+                [10, 7],
+            ],
+        };
+        const triedLexParse: Task.TriedLexParseTask = TaskUtils.tryLexParse(DefaultSettings, text);
+        expectLinksMatch(triedLexParse, expected);
     });
 });

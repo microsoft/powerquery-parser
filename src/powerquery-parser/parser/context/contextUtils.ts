@@ -20,7 +20,7 @@ export function createState(): State {
         },
         maybeRoot: undefined,
         idCounter: 0,
-        leafNodeIds: new Set(),
+        leafIds: new Set(),
     };
 }
 
@@ -169,7 +169,7 @@ export function deleteAst(state: State, nodeId: number, parentWillBeDeleted: boo
         SetUtils.assertDelete(
             nodeIdMapCollection.leafIds,
             nodeId,
-            "failed to deleteAst as the node is a leaf node, but it wasn't present in leafNodeIds",
+            "failed to deleteAst as the node is a leaf node, but it wasn't present in leafIds",
             { nodeId },
         );
     }
