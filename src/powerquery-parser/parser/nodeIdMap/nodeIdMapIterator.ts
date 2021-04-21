@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
-import { Assert, MapUtils } from "../../common";
+import { Assert, MapUtils, StringUtils } from "../../common";
 import { Ast } from "../../language";
 
 export interface KeyValuePair<T extends Ast.GeneralizedIdentifier | Ast.Identifier> {
@@ -10,6 +10,7 @@ export interface KeyValuePair<T extends Ast.GeneralizedIdentifier | Ast.Identifi
     readonly key: T;
     readonly pairKind: PairKind;
     readonly keyLiteral: string;
+    readonly normalizedKeyLiteral: string;
     readonly maybeValue: TXorNode | undefined;
 }
 
@@ -253,10 +254,13 @@ export function iterSection(
     if (section.kind === XorNodeKind.Ast) {
         return (section.node as Ast.Section).sectionMembers.elements.map((sectionMember: Ast.SectionMember) => {
             const namePairedExpression: Ast.IdentifierPairedExpression = sectionMember.namePairedExpression;
+            const keyLiteral: string = namePairedExpression.key.literal;
+
             return {
                 source: XorNodeUtils.createAstNode(namePairedExpression),
                 key: namePairedExpression.key,
-                keyLiteral: namePairedExpression.key.literal,
+                keyLiteral,
+                normalizedKeyLiteral: StringUtils.normalizeIdentifier(keyLiteral),
                 maybeValue: XorNodeUtils.createAstNode(namePairedExpression.value),
                 pairKind: PairKind.SectionMember,
             };
@@ -296,11 +300,13 @@ export function iterSection(
             continue;
         }
         const key: Ast.Identifier = maybeKey;
+        const keyLiteral: string = key.literal;
 
         partial.push({
             source: keyValuePair,
             key,
-            keyLiteral: key.literal,
+            keyLiteral,
+            normalizedKeyLiteral: StringUtils.normalizeIdentifier(keyLiteral),
             maybeValue: NodeIdMapUtils.maybeChildXorByAttributeIndex(
                 nodeIdMapCollection,
                 keyValuePairNodeId,
@@ -331,11 +337,13 @@ function iterKeyValuePairs<T extends Ast.GeneralizedIdentifier | Ast.Identifier>
             break;
         }
         const key: T = maybeKey as T & (Ast.GeneralizedIdentifier | Ast.Identifier);
+        const keyLiteral: string = key.literal;
 
         partial.push({
             source: keyValuePair,
             key,
-            keyLiteral: key.literal,
+            keyLiteral,
+            normalizedKeyLiteral: StringUtils.normalizeIdentifier(keyLiteral),
             maybeValue: NodeIdMapUtils.maybeChildXorByAttributeIndex(
                 nodeIdMapCollection,
                 keyValuePair.node.id,
