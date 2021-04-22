@@ -66,7 +66,7 @@ export interface ParseTaskCommonError extends IParseTaskError<CommonError.Common
 }
 
 export interface ParseTaskParseError<S extends IParseState = IParseState>
-    extends IParseTaskError<Parser.ParseError.ParseError> {
+    extends IParseTaskError<Parser.ParseError.ParseError<S>> {
     readonly resultKind: ResultKind.Error;
     readonly isCommonError: false;
     readonly parseState: S;
