@@ -2,15 +2,30 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
-import { Assert, MapUtils } from "../../common";
+import { Assert, MapUtils, StringUtils } from "../../common";
 import { Ast } from "../../language";
 
-export interface KeyValuePair<T extends Ast.GeneralizedIdentifier | Ast.Identifier> {
+export type TKeyValuePair = LetKeyValuePair | RecordKeyValuePair | SectionKeyValuePair;
+
+export interface IKeyValuePair<Key extends Ast.GeneralizedIdentifier | Ast.Identifier> {
     readonly source: TXorNode;
-    readonly key: T;
+    readonly key: Key;
     readonly pairKind: PairKind;
     readonly keyLiteral: string;
+    readonly normalizedKeyLiteral: string;
     readonly maybeValue: TXorNode | undefined;
+}
+
+export interface LetKeyValuePair extends IKeyValuePair<Ast.Identifier> {
+    readonly pairKind: PairKind.LetExpression;
+}
+
+export interface RecordKeyValuePair extends IKeyValuePair<Ast.GeneralizedIdentifier> {
+    readonly pairKind: PairKind.Record;
+}
+
+export interface SectionKeyValuePair extends IKeyValuePair<Ast.Identifier> {
+    readonly pairKind: PairKind.SectionMember;
 }
 
 export const enum PairKind {
@@ -207,7 +222,7 @@ export function iterInvokeExpression(
 export function iterLetExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     letExpression: TXorNode,
-): ReadonlyArray<KeyValuePair<Ast.Identifier>> {
+): ReadonlyArray<LetKeyValuePair> {
     XorNodeUtils.assertAstNodeKind(letExpression, Ast.NodeKind.LetExpression);
 
     const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
@@ -216,9 +231,15 @@ export function iterLetExpression(
         1,
         [Ast.NodeKind.ArrayWrapper],
     );
-    return maybeArrayWrapper === undefined
-        ? []
-        : iterKeyValuePairs(nodeIdMapCollection, maybeArrayWrapper, PairKind.LetExpression);
+    if (maybeArrayWrapper === undefined) {
+        return [];
+    }
+
+    return iterKeyValuePairs<Ast.Identifier, LetKeyValuePair>(
+        nodeIdMapCollection,
+        maybeArrayWrapper,
+        PairKind.LetExpression,
+    );
 }
 
 // Return all ListItem children under the given ListExpression/ListLiteral.
@@ -231,32 +252,41 @@ export function iterListItems(nodeIdMapCollection: NodeIdMap.Collection, list: T
 export function iterRecord(
     nodeIdMapCollection: NodeIdMap.Collection,
     record: TXorNode,
-): ReadonlyArray<KeyValuePair<Ast.GeneralizedIdentifier>> {
+): ReadonlyArray<RecordKeyValuePair> {
     XorNodeUtils.assertIsRecord(record);
 
     const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeArrayWrapperContent(
         nodeIdMapCollection,
         record,
     );
-    return maybeArrayWrapper === undefined
-        ? []
-        : iterKeyValuePairs(nodeIdMapCollection, maybeArrayWrapper, PairKind.Record);
+    if (maybeArrayWrapper === undefined) {
+        return [];
+    }
+
+    return iterKeyValuePairs<Ast.GeneralizedIdentifier, RecordKeyValuePair>(
+        nodeIdMapCollection,
+        maybeArrayWrapper,
+        PairKind.Record,
+    );
 }
 
 // Return all key-value-pair children under the given Section.
 export function iterSection(
     nodeIdMapCollection: NodeIdMap.Collection,
     section: TXorNode,
-): ReadonlyArray<KeyValuePair<Ast.Identifier>> {
+): ReadonlyArray<SectionKeyValuePair> {
     XorNodeUtils.assertAstNodeKind(section, Ast.NodeKind.Section);
 
     if (section.kind === XorNodeKind.Ast) {
         return (section.node as Ast.Section).sectionMembers.elements.map((sectionMember: Ast.SectionMember) => {
             const namePairedExpression: Ast.IdentifierPairedExpression = sectionMember.namePairedExpression;
+            const keyLiteral: string = namePairedExpression.key.literal;
+
             return {
                 source: XorNodeUtils.createAstNode(namePairedExpression),
                 key: namePairedExpression.key,
-                keyLiteral: namePairedExpression.key.literal,
+                keyLiteral,
+                normalizedKeyLiteral: StringUtils.normalizeIdentifier(keyLiteral),
                 maybeValue: XorNodeUtils.createAstNode(namePairedExpression.value),
                 pairKind: PairKind.SectionMember,
             };
@@ -273,7 +303,7 @@ export function iterSection(
     }
     const sectionMemberArrayWrapper: TXorNode = maybeSectionMemberArrayWrapper;
 
-    const partial: KeyValuePair<Ast.Identifier>[] = [];
+    const partial: SectionKeyValuePair[] = [];
     for (const sectionMember of assertIterChildrenXor(nodeIdMapCollection, sectionMemberArrayWrapper.node.id)) {
         const maybeKeyValuePair:
             | undefined
@@ -296,11 +326,13 @@ export function iterSection(
             continue;
         }
         const key: Ast.Identifier = maybeKey;
+        const keyLiteral: string = key.literal;
 
         partial.push({
             source: keyValuePair,
             key,
-            keyLiteral: key.literal,
+            keyLiteral,
+            normalizedKeyLiteral: StringUtils.normalizeIdentifier(keyLiteral),
             maybeValue: NodeIdMapUtils.maybeChildXorByAttributeIndex(
                 nodeIdMapCollection,
                 keyValuePairNodeId,
@@ -314,12 +346,11 @@ export function iterSection(
     return partial;
 }
 
-function iterKeyValuePairs<T extends Ast.GeneralizedIdentifier | Ast.Identifier>(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    arrayWrapper: TXorNode,
-    pairKind: PairKind,
-): ReadonlyArray<KeyValuePair<T>> {
-    const partial: KeyValuePair<T>[] = [];
+function iterKeyValuePairs<
+    Key extends Ast.GeneralizedIdentifier | Ast.Identifier,
+    KVP extends TKeyValuePair & IKeyValuePair<Key>
+>(nodeIdMapCollection: NodeIdMap.Collection, arrayWrapper: TXorNode, pairKind: KVP["pairKind"]): ReadonlyArray<KVP> {
+    const partial: KVP[] = [];
     for (const keyValuePair of iterArrayWrapper(nodeIdMapCollection, arrayWrapper)) {
         const maybeKey: Ast.TNode | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(
             nodeIdMapCollection,
@@ -330,12 +361,14 @@ function iterKeyValuePairs<T extends Ast.GeneralizedIdentifier | Ast.Identifier>
         if (maybeKey === undefined) {
             break;
         }
-        const key: T = maybeKey as T & (Ast.GeneralizedIdentifier | Ast.Identifier);
+        const key: Key = maybeKey as Key;
+        const keyLiteral: string = key.literal;
 
         partial.push({
             source: keyValuePair,
             key,
-            keyLiteral: key.literal,
+            keyLiteral,
+            normalizedKeyLiteral: StringUtils.normalizeIdentifier(keyLiteral),
             maybeValue: NodeIdMapUtils.maybeChildXorByAttributeIndex(
                 nodeIdMapCollection,
                 keyValuePair.node.id,
@@ -343,7 +376,7 @@ function iterKeyValuePairs<T extends Ast.GeneralizedIdentifier | Ast.Identifier>
                 undefined,
             ),
             pairKind,
-        });
+        } as KVP);
     }
 
     return partial;
