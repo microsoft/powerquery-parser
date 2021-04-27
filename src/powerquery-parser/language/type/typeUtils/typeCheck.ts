@@ -44,8 +44,8 @@ export type TMismatch =
     | InvocationMismatch;
 
 export interface IMismatch<Actual, Expected> {
-    readonly expected: Expected;
     readonly actual: Actual;
+    readonly expected: Expected;
 }
 
 export type DefinedFunctionMismatch = IMismatch<Type.FunctionParameter, Type.FunctionParameter>;
