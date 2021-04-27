@@ -20,7 +20,7 @@ function abridgedPrimitiveType(kind: Type.TypeKind, isNullable: boolean): Abridg
     };
 }
 
-function typeToAbridged(type: Type.PowerQueryType): AbridgedType {
+function typeToAbridged(type: Type.TPowerQueryType): AbridgedType {
     return {
         kind: type.kind,
         maybeExtendedKind: type.maybeExtendedKind,
@@ -28,7 +28,7 @@ function typeToAbridged(type: Type.PowerQueryType): AbridgedType {
     };
 }
 
-function createAbridgedTypes(types: ReadonlyArray<Type.PowerQueryType>): ReadonlyArray<AbridgedType> {
+function createAbridgedTypes(types: ReadonlyArray<Type.TPowerQueryType>): ReadonlyArray<AbridgedType> {
     return types.map(typeToAbridged);
 }
 
@@ -109,7 +109,7 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, combine into a single primitive type`, () => {
-            const simplified: ReadonlyArray<Type.PowerQueryType> = TypeUtils.simplify([
+            const simplified: ReadonlyArray<Type.TPowerQueryType> = TypeUtils.simplify([
                 TypeUtils.createAnyUnion([Type.RecordInstance, Type.RecordInstance]),
                 TypeUtils.createAnyUnion([Type.RecordInstance, Type.RecordInstance]),
             ]);
@@ -121,7 +121,7 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, dedupe primitive types across AnyUnion`, () => {
-            const simplified: ReadonlyArray<Type.PowerQueryType> = TypeUtils.simplify([
+            const simplified: ReadonlyArray<Type.TPowerQueryType> = TypeUtils.simplify([
                 TypeUtils.createAnyUnion([Type.RecordInstance, Type.NullableTableInstance]),
                 TypeUtils.createAnyUnion([Type.RecordInstance, Type.NullableTableInstance]),
             ]);
@@ -136,7 +136,7 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, mixed nullability`, () => {
-            const simplified: ReadonlyArray<Type.PowerQueryType> = TypeUtils.simplify([
+            const simplified: ReadonlyArray<Type.TPowerQueryType> = TypeUtils.simplify([
                 TypeUtils.createAnyUnion([Type.NullableRecordInstance, Type.NullableTableInstance]),
                 TypeUtils.createAnyUnion([Type.RecordInstance, Type.TableInstance]),
             ]);
@@ -153,7 +153,7 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, dedupe across multi level AnyUnion`, () => {
-            const simplified: ReadonlyArray<Type.PowerQueryType> = TypeUtils.simplify([
+            const simplified: ReadonlyArray<Type.TPowerQueryType> = TypeUtils.simplify([
                 TypeUtils.createAnyUnion([
                     Type.RecordInstance,
                     TypeUtils.createAnyUnion([Type.RecordInstance, Type.NumberInstance]),
@@ -171,7 +171,7 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, short circuit with Any primitive in AnyUnion`, () => {
-            const simplified: ReadonlyArray<Type.PowerQueryType> = TypeUtils.simplify([
+            const simplified: ReadonlyArray<Type.TPowerQueryType> = TypeUtils.simplify([
                 TypeUtils.createAnyUnion([
                     Type.RecordInstance,
                     TypeUtils.createAnyUnion([Type.AnyInstance, Type.NumberInstance]),
@@ -360,14 +360,14 @@ describe(`TypeUtils`, () => {
         describe(`extended`, () => {
             describe(`${Type.ExtendedTypeKind.AnyUnion}`, () => {
                 it(`primitives`, () => {
-                    const type: Type.PowerQueryType = TypeUtils.createAnyUnion([
+                    const type: Type.TPowerQueryType = TypeUtils.createAnyUnion([
                         Type.NumberInstance,
                         Type.ListInstance,
                     ]);
                     expect(TypeUtils.nameOf(type)).to.equal(`list | number`);
                 });
                 it(`complex`, () => {
-                    const type: Type.PowerQueryType = TypeUtils.createAnyUnion([
+                    const type: Type.TPowerQueryType = TypeUtils.createAnyUnion([
                         TypeUtils.createDefinedRecord(false, new Map([["foo", Type.NumberInstance]]), false),
                         TypeUtils.createDefinedList(false, [Type.TextInstance]),
                         TypeUtils.createDefinedTable(false, new Map([["bar", Type.TextInstance]]), true),
@@ -500,7 +500,7 @@ describe(`TypeUtils`, () => {
                 it(`[foo = number, bar = nullable text]`, () => {
                     const type: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                         false,
-                        new Map<string, Type.PowerQueryType>([
+                        new Map<string, Type.TPowerQueryType>([
                             ["foo", Type.NumberInstance],
                             ["bar", Type.NullableTextInstance],
                         ]),
@@ -514,7 +514,7 @@ describe(`TypeUtils`, () => {
                 it(`[foo = number, bar = nullable text, ...]`, () => {
                     const type: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                         false,
-                        new Map<string, Type.PowerQueryType>([
+                        new Map<string, Type.TPowerQueryType>([
                             ["foo", Type.NumberInstance],
                             ["bar", Type.NullableTextInstance],
                         ]),
@@ -542,7 +542,7 @@ describe(`TypeUtils`, () => {
                 it(`table [foo = number, bar = nullable text]`, () => {
                     const type: Type.DefinedTable = TypeUtils.createDefinedTable(
                         false,
-                        new Map<string, Type.PowerQueryType>([
+                        new Map<string, Type.TPowerQueryType>([
                             ["foo", Type.NumberInstance],
                             ["bar", Type.NullableTextInstance],
                         ]),
@@ -556,7 +556,7 @@ describe(`TypeUtils`, () => {
                 it(`table [foo = number, bar = nullable text, ...]`, () => {
                     const type: Type.DefinedTable = TypeUtils.createDefinedTable(
                         false,
-                        new Map<string, Type.PowerQueryType>([
+                        new Map<string, Type.TPowerQueryType>([
                             ["foo", Type.NumberInstance],
                             ["bar", Type.NullableTextInstance],
                         ]),
@@ -653,7 +653,7 @@ describe(`TypeUtils`, () => {
                 it(`type [foo = number, bar = nullable text]`, () => {
                     const type: Type.RecordType = TypeUtils.createRecordType(
                         false,
-                        new Map<string, Type.PowerQueryType>([
+                        new Map<string, Type.TPowerQueryType>([
                             ["foo", Type.NumberInstance],
                             ["bar", Type.NullableTextInstance],
                         ]),
@@ -667,7 +667,7 @@ describe(`TypeUtils`, () => {
                 it(`type [foo = number, bar = nullable text, ...]`, () => {
                     const type: Type.RecordType = TypeUtils.createRecordType(
                         false,
-                        new Map<string, Type.PowerQueryType>([
+                        new Map<string, Type.TPowerQueryType>([
                             ["foo", Type.NumberInstance],
                             ["bar", Type.NullableTextInstance],
                         ]),
@@ -699,7 +699,7 @@ describe(`TypeUtils`, () => {
                 it(`type table [foo = number, bar = nullable text]`, () => {
                     const type: Type.TableType = TypeUtils.createTableType(
                         false,
-                        new Map<string, Type.PowerQueryType>([
+                        new Map<string, Type.TPowerQueryType>([
                             ["foo", Type.NumberInstance],
                             ["bar", Type.NullableTextInstance],
                         ]),
@@ -713,7 +713,7 @@ describe(`TypeUtils`, () => {
                 it(`type table [foo = number, bar = nullable text, ...]`, () => {
                     const type: Type.TableType = TypeUtils.createTableType(
                         false,
-                        new Map<string, Type.PowerQueryType>([
+                        new Map<string, Type.TPowerQueryType>([
                             ["foo", Type.NumberInstance],
                             ["bar", Type.NullableTextInstance],
                         ]),

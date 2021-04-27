@@ -35,11 +35,11 @@ export function typeKindFromLiteralKind(literalKind: Ast.LiteralKind): Type.Type
     }
 }
 
-export function isTypeInArray(collection: ReadonlyArray<Type.PowerQueryType>, item: Type.PowerQueryType): boolean {
+export function isTypeInArray(collection: ReadonlyArray<Type.TPowerQueryType>, item: Type.TPowerQueryType): boolean {
     // Fast comparison then deep comparison
     return (
         collection.includes(item) ||
-        collection.find((type: Type.PowerQueryType) => isEqualType(item, type)) !== undefined
+        collection.find((type: Type.TPowerQueryType) => isEqualType(item, type)) !== undefined
     );
 }
 
@@ -74,7 +74,7 @@ export function isTypeKind(text: string): text is Type.TypeKind {
 
 export function isValidInvocation(
     functionType: Type.DefinedFunction,
-    args: ReadonlyArray<Type.PowerQueryType>,
+    args: ReadonlyArray<Type.TPowerQueryType>,
 ): boolean {
     // You can't provide more arguments than are on the function signature.
     if (args.length > functionType.parameters.length) {
@@ -86,11 +86,11 @@ export function isValidInvocation(
 
     for (let index: number = 1; index < numParameters; index += 1) {
         const parameter: Type.FunctionParameter = Assert.asDefined(parameters[index]);
-        const maybeArgType: Type.PowerQueryType | undefined = args[index];
+        const maybeArgType: Type.TPowerQueryType | undefined = args[index];
 
         if (maybeArgType !== undefined) {
-            const argType: Type.PowerQueryType = maybeArgType;
-            const parameterType: Type.PowerQueryType = createPrimitiveType(
+            const argType: Type.TPowerQueryType = maybeArgType;
+            const parameterType: Type.TPowerQueryType = createPrimitiveType(
                 parameter.isNullable,
                 Assert.asDefined(parameter.maybeType),
             );

@@ -6,7 +6,7 @@
 //
 // Extended types are an extension to the Power Query language.
 // For example, you can treat `1` as a subtype of `number`.
-export type PowerQueryType = TPrimitiveType | TExtendedType;
+export type TPowerQueryType = TPrimitiveType | TExtendedType;
 export type TExtendedType =
     | AnyUnion
     | DefinedFunction
@@ -211,13 +211,13 @@ export interface IPrimitiveType<T extends TypeKind = TypeKind> extends IType<T> 
 // ------------------------------------------
 
 export interface FieldSpecificationList {
-    readonly fields: Map<string, PowerQueryType>;
+    readonly fields: Map<string, TPowerQueryType>;
     readonly isOpen: boolean;
 }
 
 export interface FunctionSignature {
     readonly parameters: ReadonlyArray<FunctionParameter>;
-    readonly returnType: PowerQueryType;
+    readonly returnType: TPowerQueryType;
 }
 
 export interface SimplifiedNullablePrimitiveType {
@@ -241,7 +241,7 @@ export interface FunctionParameter {
 export interface AnyUnion extends IExtendedType {
     readonly kind: TypeKind.Any;
     readonly maybeExtendedKind: ExtendedTypeKind.AnyUnion;
-    readonly unionedTypePairs: ReadonlyArray<PowerQueryType>;
+    readonly unionedTypePairs: ReadonlyArray<TPowerQueryType>;
 }
 
 export type DefinedFunction = IExtendedType &
@@ -254,14 +254,14 @@ export type DefinedFunction = IExtendedType &
 export interface DefinedList extends IExtendedType {
     readonly kind: TypeKind.List;
     readonly maybeExtendedKind: ExtendedTypeKind.DefinedList;
-    readonly elements: ReadonlyArray<PowerQueryType>;
+    readonly elements: ReadonlyArray<TPowerQueryType>;
 }
 
 // A ListType for DefinedList
 export interface DefinedListType extends IExtendedType {
     readonly kind: TypeKind.Type;
     readonly maybeExtendedKind: ExtendedTypeKind.DefinedListType;
-    readonly itemTypes: ReadonlyArray<PowerQueryType>;
+    readonly itemTypes: ReadonlyArray<TPowerQueryType>;
 }
 
 export type DefinedRecord = IExtendedType &
@@ -285,7 +285,7 @@ export type FunctionType = IExtendedType &
 export interface ListType extends IExtendedType {
     readonly kind: TypeKind.Type;
     readonly maybeExtendedKind: ExtendedTypeKind.ListType;
-    readonly itemType: PowerQueryType;
+    readonly itemType: TPowerQueryType;
 }
 
 export interface LogicalLiteral extends IPrimitiveLiteral {
@@ -321,7 +321,7 @@ export type TableType = IExtendedType &
 export interface TableTypePrimaryExpression extends IExtendedType {
     readonly kind: TypeKind.Type;
     readonly maybeExtendedKind: ExtendedTypeKind.TableTypePrimaryExpression;
-    readonly primaryExpression: PowerQueryType;
+    readonly primaryExpression: TPowerQueryType;
 }
 
 export interface TextLiteral extends IPrimitiveLiteral {

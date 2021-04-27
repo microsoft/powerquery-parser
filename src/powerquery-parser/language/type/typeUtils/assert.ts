@@ -6,192 +6,192 @@ import * as isType from "./isType";
 import { Type } from "..";
 import { CommonError } from "../../../common";
 
-export function assertAsAction(type: Type.PowerQueryType): Type.Action {
+export function assertAsAction(type: Type.TPowerQueryType): Type.Action {
     assertIsAction(type);
     return type;
 }
 
-export function assertAsAny(type: Type.PowerQueryType): Type.TAny {
+export function assertAsAny(type: Type.TPowerQueryType): Type.TAny {
     assertIsAny(type);
     return type;
 }
 
-export function assertAsAnyUnion(type: Type.PowerQueryType): Type.AnyUnion {
+export function assertAsAnyUnion(type: Type.TPowerQueryType): Type.AnyUnion {
     assertIsAnyUnion(type);
     return type;
 }
 
-export function assertAsAnyNonNull(type: Type.PowerQueryType): Type.AnyNonNull {
+export function assertAsAnyNonNull(type: Type.TPowerQueryType): Type.AnyNonNull {
     assertIsAnyNonNull(type);
     return type;
 }
 
-export function assertAsBinary(type: Type.PowerQueryType): Type.Binary {
+export function assertAsBinary(type: Type.TPowerQueryType): Type.Binary {
     assertIsBinary(type);
     return type;
 }
 
-export function assertAsDate(type: Type.PowerQueryType): Type.Date {
+export function assertAsDate(type: Type.TPowerQueryType): Type.Date {
     assertIsDate(type);
     return type;
 }
 
-export function assertAsDateTime(type: Type.PowerQueryType): Type.DateTime {
+export function assertAsDateTime(type: Type.TPowerQueryType): Type.DateTime {
     assertIsDateTime(type);
     return type;
 }
 
-export function assertAsDateTimeZone(type: Type.PowerQueryType): Type.DateTimeZone {
+export function assertAsDateTimeZone(type: Type.TPowerQueryType): Type.DateTimeZone {
     assertIsDateTimeZone(type);
     return type;
 }
 
-export function assertAsDefinedFunction(type: Type.PowerQueryType): Type.DefinedFunction {
+export function assertAsDefinedFunction(type: Type.TPowerQueryType): Type.DefinedFunction {
     assertIsDefinedFunction(type);
     return type;
 }
 
-export function assertAsDefinedList(type: Type.PowerQueryType): Type.DefinedList {
+export function assertAsDefinedList(type: Type.TPowerQueryType): Type.DefinedList {
     assertIsDefinedList(type);
     return type;
 }
 
-export function assertAsDefinedListType(type: Type.PowerQueryType): Type.DefinedListType {
+export function assertAsDefinedListType(type: Type.TPowerQueryType): Type.DefinedListType {
     assertIsDefinedListType(type);
     return type;
 }
 
-export function assertAsDefinedRecord(type: Type.PowerQueryType): Type.DefinedRecord {
+export function assertAsDefinedRecord(type: Type.TPowerQueryType): Type.DefinedRecord {
     assertIsDefinedRecord(type);
     return type;
 }
 
-export function assertAsDefinedTable(type: Type.PowerQueryType): Type.DefinedTable {
+export function assertAsDefinedTable(type: Type.TPowerQueryType): Type.DefinedTable {
     assertIsDefinedTable(type);
     return type;
 }
 
-export function assertAsDuration(type: Type.PowerQueryType): Type.Duration {
+export function assertAsDuration(type: Type.TPowerQueryType): Type.Duration {
     assertIsDuration(type);
     return type;
 }
 
-export function assertAsFunction(type: Type.PowerQueryType): Type.TFunction {
+export function assertAsFunction(type: Type.TPowerQueryType): Type.TFunction {
     assertIsFunction(type);
     return type;
 }
 
-export function assertAsFunctionType(type: Type.PowerQueryType): Type.FunctionType {
+export function assertAsFunctionType(type: Type.TPowerQueryType): Type.FunctionType {
     assertIsFunctionType(type);
     return type;
 }
 
-export function assertAsList(type: Type.PowerQueryType): Type.TList {
+export function assertAsList(type: Type.TPowerQueryType): Type.TList {
     assertIsList(type);
     return type;
 }
 
-export function assertAsLogical(type: Type.PowerQueryType): Type.TLogical {
+export function assertAsLogical(type: Type.TPowerQueryType): Type.TLogical {
     assertIsLogical(type);
     return type;
 }
 
-export function assertAsLogicalLiteral(type: Type.PowerQueryType): Type.LogicalLiteral {
+export function assertAsLogicalLiteral(type: Type.TPowerQueryType): Type.LogicalLiteral {
     assertIsLogicalLiteral(type);
     return type;
 }
 
-export function assertAsNone(type: Type.PowerQueryType): Type.None {
+export function assertAsNone(type: Type.TPowerQueryType): Type.None {
     assertIsNone(type);
     return type;
 }
 
-export function assertAsNotApplicable(type: Type.PowerQueryType): Type.NotApplicable {
+export function assertAsNotApplicable(type: Type.TPowerQueryType): Type.NotApplicable {
     assertIsNotApplicable(type);
     return type;
 }
 
-export function assertAsNull(type: Type.PowerQueryType): Type.Null {
+export function assertAsNull(type: Type.TPowerQueryType): Type.Null {
     assertIsNull(type);
     return type;
 }
 
-export function assertAsNumber(type: Type.PowerQueryType): Type.TNumber {
+export function assertAsNumber(type: Type.TPowerQueryType): Type.TNumber {
     assertIsNumber(type);
     return type;
 }
 
-export function assertAsNumberLiteral(type: Type.PowerQueryType): Type.NumberLiteral {
+export function assertAsNumberLiteral(type: Type.TPowerQueryType): Type.NumberLiteral {
     assertIsNumberLiteral(type);
     return type;
 }
 
-export function assertAsPrimaryPrimitiveType(type: Type.PowerQueryType): Type.PrimaryPrimitiveType {
+export function assertAsPrimaryPrimitiveType(type: Type.TPowerQueryType): Type.PrimaryPrimitiveType {
     assertIsPrimaryPrimitiveType(type);
     return type;
 }
 
-export function assertAsRecord(type: Type.PowerQueryType): Type.TRecord {
+export function assertAsRecord(type: Type.TPowerQueryType): Type.TRecord {
     assertIsRecord(type);
     return type;
 }
 
-export function assertAsRecordType(type: Type.PowerQueryType): Type.RecordType {
+export function assertAsRecordType(type: Type.TPowerQueryType): Type.RecordType {
     assertIsRecordType(type);
     return type;
 }
 
-export function assertAsTable(type: Type.PowerQueryType): Type.TTable {
+export function assertAsTable(type: Type.TPowerQueryType): Type.TTable {
     assertIsTable(type);
     return type;
 }
 
-export function assertAsTableType(type: Type.PowerQueryType): Type.TableType {
+export function assertAsTableType(type: Type.TPowerQueryType): Type.TableType {
     assertIsTableType(type);
     return type;
 }
 
-export function assertAsTableTypePrimaryExpression(type: Type.PowerQueryType): Type.TableTypePrimaryExpression {
+export function assertAsTableTypePrimaryExpression(type: Type.TPowerQueryType): Type.TableTypePrimaryExpression {
     assertIsTableTypePrimaryExpression(type);
     return type;
 }
 
-export function assertAsText(type: Type.PowerQueryType): Type.TText {
+export function assertAsText(type: Type.TPowerQueryType): Type.TText {
     assertIsText(type);
     return type;
 }
 
-export function assertAsTextLiteral(type: Type.PowerQueryType): Type.TextLiteral {
+export function assertAsTextLiteral(type: Type.TPowerQueryType): Type.TextLiteral {
     assertIsTextLiteral(type);
     return type;
 }
 
-export function assertAsTime(type: Type.PowerQueryType): Type.Time {
+export function assertAsTime(type: Type.TPowerQueryType): Type.Time {
     assertIsTime(type);
     return type;
 }
 
-export function assertAsTPrimitiveType(type: Type.PowerQueryType): Type.TPrimitiveType {
+export function assertAsTPrimitiveType(type: Type.TPowerQueryType): Type.TPrimitiveType {
     assertIsTPrimitiveType(type);
     return type;
 }
 
-export function assertAsTLiteral(type: Type.PowerQueryType): Type.TLiteral {
+export function assertAsTLiteral(type: Type.TPowerQueryType): Type.TLiteral {
     assertIsLiteral(type);
     return type;
 }
 
-export function assertAsType(type: Type.PowerQueryType): Type.Type {
+export function assertAsType(type: Type.TPowerQueryType): Type.Type {
     assertIsType(type);
     return type;
 }
 
-export function assertAsUnknown(type: Type.PowerQueryType): Type.Unknown {
+export function assertAsUnknown(type: Type.TPowerQueryType): Type.Unknown {
     assertIsUnknown(type);
     return type;
 }
 
-export function assertIsAction(type: Type.PowerQueryType): asserts type is Type.Action {
+export function assertIsAction(type: Type.TPowerQueryType): asserts type is Type.Action {
     if (!isType.isAction(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -203,7 +203,7 @@ export function assertIsAction(type: Type.PowerQueryType): asserts type is Type.
     }
 }
 
-export function assertIsAny(type: Type.PowerQueryType): asserts type is Type.Any | Type.AnyUnion {
+export function assertIsAny(type: Type.TPowerQueryType): asserts type is Type.Any | Type.AnyUnion {
     if (!isType.isAny(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -215,7 +215,7 @@ export function assertIsAny(type: Type.PowerQueryType): asserts type is Type.Any
     }
 }
 
-export function assertIsAnyUnion(type: Type.PowerQueryType): asserts type is Type.AnyUnion {
+export function assertIsAnyUnion(type: Type.TPowerQueryType): asserts type is Type.AnyUnion {
     if (!isType.isAnyUnion(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -227,7 +227,7 @@ export function assertIsAnyUnion(type: Type.PowerQueryType): asserts type is Typ
     }
 }
 
-export function assertIsAnyNonNull(type: Type.PowerQueryType): asserts type is Type.AnyNonNull {
+export function assertIsAnyNonNull(type: Type.TPowerQueryType): asserts type is Type.AnyNonNull {
     if (!isType.isAnyNonNull(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -239,7 +239,7 @@ export function assertIsAnyNonNull(type: Type.PowerQueryType): asserts type is T
     }
 }
 
-export function assertIsBinary(type: Type.PowerQueryType): asserts type is Type.Binary {
+export function assertIsBinary(type: Type.TPowerQueryType): asserts type is Type.Binary {
     if (!isType.isBinary(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -251,7 +251,7 @@ export function assertIsBinary(type: Type.PowerQueryType): asserts type is Type.
     }
 }
 
-export function assertIsDate(type: Type.PowerQueryType): asserts type is Type.Date {
+export function assertIsDate(type: Type.TPowerQueryType): asserts type is Type.Date {
     if (!isType.isDate(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -263,7 +263,7 @@ export function assertIsDate(type: Type.PowerQueryType): asserts type is Type.Da
     }
 }
 
-export function assertIsDateTime(type: Type.PowerQueryType): asserts type is Type.DateTime {
+export function assertIsDateTime(type: Type.TPowerQueryType): asserts type is Type.DateTime {
     if (!isType.isDateTime(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -275,7 +275,7 @@ export function assertIsDateTime(type: Type.PowerQueryType): asserts type is Typ
     }
 }
 
-export function assertIsDateTimeZone(type: Type.PowerQueryType): asserts type is Type.DateTimeZone {
+export function assertIsDateTimeZone(type: Type.TPowerQueryType): asserts type is Type.DateTimeZone {
     if (!isType.isDateTimeZone(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -287,7 +287,7 @@ export function assertIsDateTimeZone(type: Type.PowerQueryType): asserts type is
     }
 }
 
-export function assertIsDefinedFunction(type: Type.PowerQueryType): asserts type is Type.DefinedFunction {
+export function assertIsDefinedFunction(type: Type.TPowerQueryType): asserts type is Type.DefinedFunction {
     if (!isType.isDefinedFunction(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -299,7 +299,7 @@ export function assertIsDefinedFunction(type: Type.PowerQueryType): asserts type
     }
 }
 
-export function assertIsDefinedList(type: Type.PowerQueryType): asserts type is Type.DefinedList {
+export function assertIsDefinedList(type: Type.TPowerQueryType): asserts type is Type.DefinedList {
     if (!isType.isDefinedList(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -311,7 +311,7 @@ export function assertIsDefinedList(type: Type.PowerQueryType): asserts type is 
     }
 }
 
-export function assertIsDefinedListType(type: Type.PowerQueryType): asserts type is Type.DefinedListType {
+export function assertIsDefinedListType(type: Type.TPowerQueryType): asserts type is Type.DefinedListType {
     if (!isType.isDefinedListType(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -323,7 +323,7 @@ export function assertIsDefinedListType(type: Type.PowerQueryType): asserts type
     }
 }
 
-export function assertIsDefinedRecord(type: Type.PowerQueryType): asserts type is Type.DefinedRecord {
+export function assertIsDefinedRecord(type: Type.TPowerQueryType): asserts type is Type.DefinedRecord {
     if (!isType.isDefinedRecord(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -335,7 +335,7 @@ export function assertIsDefinedRecord(type: Type.PowerQueryType): asserts type i
     }
 }
 
-export function assertIsDefinedTable(type: Type.PowerQueryType): asserts type is Type.DefinedTable {
+export function assertIsDefinedTable(type: Type.TPowerQueryType): asserts type is Type.DefinedTable {
     if (!isType.isDefinedTable(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -347,7 +347,7 @@ export function assertIsDefinedTable(type: Type.PowerQueryType): asserts type is
     }
 }
 
-export function assertIsDuration(type: Type.PowerQueryType): asserts type is Type.Duration {
+export function assertIsDuration(type: Type.TPowerQueryType): asserts type is Type.Duration {
     if (!isType.isDuration(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -359,7 +359,7 @@ export function assertIsDuration(type: Type.PowerQueryType): asserts type is Typ
     }
 }
 
-export function assertIsFunction(type: Type.PowerQueryType): asserts type is Type.TFunction {
+export function assertIsFunction(type: Type.TPowerQueryType): asserts type is Type.TFunction {
     if (!isType.isFunction(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -371,7 +371,7 @@ export function assertIsFunction(type: Type.PowerQueryType): asserts type is Typ
     }
 }
 
-export function assertIsFunctionType(type: Type.PowerQueryType): asserts type is Type.FunctionType {
+export function assertIsFunctionType(type: Type.TPowerQueryType): asserts type is Type.FunctionType {
     if (!isType.isFunctionType(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -383,7 +383,7 @@ export function assertIsFunctionType(type: Type.PowerQueryType): asserts type is
     }
 }
 
-export function assertIsList(type: Type.PowerQueryType): asserts type is Type.TList {
+export function assertIsList(type: Type.TPowerQueryType): asserts type is Type.TList {
     if (!isType.isList(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -395,7 +395,7 @@ export function assertIsList(type: Type.PowerQueryType): asserts type is Type.TL
     }
 }
 
-export function assertIsLiteral(type: Type.PowerQueryType): asserts type is Type.TLiteral {
+export function assertIsLiteral(type: Type.TPowerQueryType): asserts type is Type.TLiteral {
     if (!isType.isLiteral(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -407,7 +407,7 @@ export function assertIsLiteral(type: Type.PowerQueryType): asserts type is Type
     }
 }
 
-export function assertIsLogical(type: Type.PowerQueryType): asserts type is Type.TLogical {
+export function assertIsLogical(type: Type.TPowerQueryType): asserts type is Type.TLogical {
     if (!isType.isLogical(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -419,7 +419,7 @@ export function assertIsLogical(type: Type.PowerQueryType): asserts type is Type
     }
 }
 
-export function assertIsLogicalLiteral(type: Type.PowerQueryType): asserts type is Type.LogicalLiteral {
+export function assertIsLogicalLiteral(type: Type.TPowerQueryType): asserts type is Type.LogicalLiteral {
     if (!isType.isLogicalLiteral(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -431,7 +431,7 @@ export function assertIsLogicalLiteral(type: Type.PowerQueryType): asserts type 
     }
 }
 
-export function assertIsNone(type: Type.PowerQueryType): asserts type is Type.None {
+export function assertIsNone(type: Type.TPowerQueryType): asserts type is Type.None {
     if (!isType.isNone(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -443,7 +443,7 @@ export function assertIsNone(type: Type.PowerQueryType): asserts type is Type.No
     }
 }
 
-export function assertIsNotApplicable(type: Type.PowerQueryType): asserts type is Type.NotApplicable {
+export function assertIsNotApplicable(type: Type.TPowerQueryType): asserts type is Type.NotApplicable {
     if (!isType.isNotApplicable(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -455,7 +455,7 @@ export function assertIsNotApplicable(type: Type.PowerQueryType): asserts type i
     }
 }
 
-export function assertIsNull(type: Type.PowerQueryType): asserts type is Type.Null {
+export function assertIsNull(type: Type.TPowerQueryType): asserts type is Type.Null {
     if (!isType.isNull(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -467,7 +467,7 @@ export function assertIsNull(type: Type.PowerQueryType): asserts type is Type.Nu
     }
 }
 
-export function assertIsNumber(type: Type.PowerQueryType): asserts type is Type.TNumber {
+export function assertIsNumber(type: Type.TPowerQueryType): asserts type is Type.TNumber {
     if (!isType.isNumber(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -479,7 +479,7 @@ export function assertIsNumber(type: Type.PowerQueryType): asserts type is Type.
     }
 }
 
-export function assertIsNumberLiteral(type: Type.PowerQueryType): asserts type is Type.NumberLiteral {
+export function assertIsNumberLiteral(type: Type.TPowerQueryType): asserts type is Type.NumberLiteral {
     if (!isType.isNumber(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -491,7 +491,7 @@ export function assertIsNumberLiteral(type: Type.PowerQueryType): asserts type i
     }
 }
 
-export function assertIsPrimaryPrimitiveType(type: Type.PowerQueryType): asserts type is Type.PrimaryPrimitiveType {
+export function assertIsPrimaryPrimitiveType(type: Type.TPowerQueryType): asserts type is Type.PrimaryPrimitiveType {
     if (!isType.isPrimaryPrimitiveType(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -503,7 +503,7 @@ export function assertIsPrimaryPrimitiveType(type: Type.PowerQueryType): asserts
     }
 }
 
-export function assertIsTPrimitiveType(type: Type.PowerQueryType): asserts type is Type.TPrimitiveType {
+export function assertIsTPrimitiveType(type: Type.TPowerQueryType): asserts type is Type.TPrimitiveType {
     if (!isType.isTPrimitiveType(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -537,7 +537,7 @@ export function assertIsTPrimitiveType(type: Type.PowerQueryType): asserts type 
     }
 }
 
-export function assertIsRecord(type: Type.PowerQueryType): asserts type is Type.TRecord {
+export function assertIsRecord(type: Type.TPowerQueryType): asserts type is Type.TRecord {
     if (!isType.isRecord(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -549,7 +549,7 @@ export function assertIsRecord(type: Type.PowerQueryType): asserts type is Type.
     }
 }
 
-export function assertIsRecordType(type: Type.PowerQueryType): asserts type is Type.RecordType {
+export function assertIsRecordType(type: Type.TPowerQueryType): asserts type is Type.RecordType {
     if (!isType.isRecordType(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -561,7 +561,7 @@ export function assertIsRecordType(type: Type.PowerQueryType): asserts type is T
     }
 }
 
-export function assertIsTable(type: Type.PowerQueryType): asserts type is Type.TTable {
+export function assertIsTable(type: Type.TPowerQueryType): asserts type is Type.TTable {
     if (!isType.isTable(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -573,7 +573,7 @@ export function assertIsTable(type: Type.PowerQueryType): asserts type is Type.T
     }
 }
 
-export function assertIsTableType(type: Type.PowerQueryType): asserts type is Type.TableType {
+export function assertIsTableType(type: Type.TPowerQueryType): asserts type is Type.TableType {
     if (!isType.isTableType(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -586,7 +586,7 @@ export function assertIsTableType(type: Type.PowerQueryType): asserts type is Ty
 }
 
 export function assertIsTableTypePrimaryExpression(
-    type: Type.PowerQueryType,
+    type: Type.TPowerQueryType,
 ): asserts type is Type.TableTypePrimaryExpression {
     if (!isType.isTableTypePrimaryExpression(type)) {
         const details: AssertErrorDetails = {
@@ -599,7 +599,7 @@ export function assertIsTableTypePrimaryExpression(
     }
 }
 
-export function assertIsText(type: Type.PowerQueryType): asserts type is Type.TText {
+export function assertIsText(type: Type.TPowerQueryType): asserts type is Type.TText {
     if (!isType.isText(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -611,7 +611,7 @@ export function assertIsText(type: Type.PowerQueryType): asserts type is Type.TT
     }
 }
 
-export function assertIsTextLiteral(type: Type.PowerQueryType): asserts type is Type.TextLiteral {
+export function assertIsTextLiteral(type: Type.TPowerQueryType): asserts type is Type.TextLiteral {
     if (!isType.isText(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -623,7 +623,7 @@ export function assertIsTextLiteral(type: Type.PowerQueryType): asserts type is 
     }
 }
 
-export function assertIsTime(type: Type.PowerQueryType): asserts type is Type.Time {
+export function assertIsTime(type: Type.TPowerQueryType): asserts type is Type.Time {
     if (!isType.isTime(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -635,7 +635,7 @@ export function assertIsTime(type: Type.PowerQueryType): asserts type is Type.Ti
     }
 }
 
-export function assertIsType(type: Type.PowerQueryType): asserts type is Type.Type {
+export function assertIsType(type: Type.TPowerQueryType): asserts type is Type.Type {
     if (!isType.isType(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -647,7 +647,7 @@ export function assertIsType(type: Type.PowerQueryType): asserts type is Type.Ty
     }
 }
 
-export function assertIsUnknown(type: Type.PowerQueryType): asserts type is Type.Unknown {
+export function assertIsUnknown(type: Type.TPowerQueryType): asserts type is Type.Unknown {
     if (!isType.isUnknown(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,

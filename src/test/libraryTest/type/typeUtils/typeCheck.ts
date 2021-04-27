@@ -13,14 +13,9 @@ interface AbridgedChecked<K = number | string> {
 }
 
 function createAbridgedChecked(actual: Language.TypeUtils.TChecked): AbridgedChecked {
-    const mismatched: ReadonlyArray<Language.TypeUtils.Mismatch<
-        string | number,
-        Language.Type.PowerQueryType | Language.Type.FunctionParameter,
-        Language.Type.PowerQueryType | Language.Type.FunctionParameter
-    >> = actual.invalid;
     return {
         valid: actual.valid,
-        invalid: mismatched.map(mismatch => mismatch.key),
+        invalid: [...actual.invalid.keys()],
         extraneous: actual.extraneous,
         missing: actual.missing,
     };
@@ -36,7 +31,7 @@ function assertAbridgedEqual(actual: AbridgedChecked, expected: AbridgedChecked)
 describe(`TypeUtils.typeCheck`, () => {
     describe(`typeCheckInvocation`, () => {
         it(`extraneous parameter`, () => {
-            const args: ReadonlyArray<Language.Type.PowerQueryType> = [Language.Type.ActionInstance];
+            const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.ActionInstance];
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [],
@@ -48,7 +43,7 @@ describe(`TypeUtils.typeCheck`, () => {
             );
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [],
-                invalid: [],
+                invalid: new Map(),
                 extraneous: [0],
                 missing: [],
             };
@@ -57,7 +52,7 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`missing required parameter`, () => {
-            const args: ReadonlyArray<Language.Type.PowerQueryType> = [];
+            const args: ReadonlyArray<Language.Type.TPowerQueryType> = [];
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
@@ -76,7 +71,7 @@ describe(`TypeUtils.typeCheck`, () => {
             );
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [],
-                invalid: [],
+                invalid: new Map(),
                 extraneous: [],
                 missing: [0],
             };
@@ -85,7 +80,7 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`missing optional parameter`, () => {
-            const args: ReadonlyArray<Language.Type.PowerQueryType> = [];
+            const args: ReadonlyArray<Language.Type.TPowerQueryType> = [];
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
@@ -104,7 +99,7 @@ describe(`TypeUtils.typeCheck`, () => {
             );
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [0],
-                invalid: [],
+                invalid: new Map(),
                 extraneous: [],
                 missing: [],
             };
@@ -113,7 +108,7 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`valid parameter`, () => {
-            const args: ReadonlyArray<Language.Type.PowerQueryType> = [
+            const args: ReadonlyArray<Language.Type.TPowerQueryType> = [
                 Language.TypeUtils.createNumberLiteral(false, "1"),
             ];
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
@@ -134,7 +129,7 @@ describe(`TypeUtils.typeCheck`, () => {
             );
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [0],
-                invalid: [],
+                invalid: new Map(),
                 extraneous: [],
                 missing: [],
             };
@@ -143,7 +138,7 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`valid multiple parameters`, () => {
-            const args: ReadonlyArray<Language.Type.PowerQueryType> = [
+            const args: ReadonlyArray<Language.Type.TPowerQueryType> = [
                 Language.TypeUtils.createNumberLiteral(false, "1"),
                 Language.TypeUtils.createTextLiteral(false, `"cat"`),
             ];
@@ -171,7 +166,7 @@ describe(`TypeUtils.typeCheck`, () => {
             );
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [0, 1],
-                invalid: [],
+                invalid: new Map(),
                 extraneous: [],
                 missing: [],
             };
@@ -180,7 +175,7 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`invalid parameter`, () => {
-            const args: ReadonlyArray<Language.Type.PowerQueryType> = [
+            const args: ReadonlyArray<Language.Type.TPowerQueryType> = [
                 Language.TypeUtils.createTextLiteral(false, `""`),
             ];
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
@@ -201,13 +196,15 @@ describe(`TypeUtils.typeCheck`, () => {
             );
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [],
-                invalid: [
-                    {
-                        key: 0,
-                        actual: args[0],
-                        expected: definedFunction.parameters[0],
-                    },
-                ],
+                invalid: new Map([
+                    [
+                        0,
+                        {
+                            actual: args[0],
+                            expected: definedFunction.parameters[0],
+                        },
+                    ],
+                ]),
                 extraneous: [],
                 missing: [],
             };
@@ -216,7 +213,7 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`invalid multiple parameter`, () => {
-            const args: ReadonlyArray<Language.Type.PowerQueryType> = [
+            const args: ReadonlyArray<Language.Type.TPowerQueryType> = [
                 Language.Type.LogicalInstance,
                 Language.Type.FunctionInstance,
             ];
@@ -244,18 +241,22 @@ describe(`TypeUtils.typeCheck`, () => {
             );
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [],
-                invalid: [
-                    {
-                        key: 0,
-                        actual: args[0],
-                        expected: definedFunction.parameters[0],
-                    },
-                    {
-                        key: 1,
-                        actual: args[1],
-                        expected: definedFunction.parameters[1],
-                    },
-                ],
+                invalid: new Map([
+                    [
+                        0,
+                        {
+                            actual: args[0],
+                            expected: definedFunction.parameters[0],
+                        },
+                    ],
+                    [
+                        1,
+                        {
+                            actual: args[1],
+                            expected: definedFunction.parameters[1],
+                        },
+                    ],
+                ]),
                 extraneous: [],
                 missing: [],
             };
@@ -622,7 +623,7 @@ describe(`TypeUtils.typeCheck`, () => {
         it(`${Language.Type.ExtendedTypeKind.DefinedRecord}`, () => {
             const valueType: Language.Type.DefinedRecord = Language.TypeUtils.createDefinedRecord(
                 false,
-                new Map<string, Language.Type.PowerQueryType>([
+                new Map<string, Language.Type.TPowerQueryType>([
                     ["number", Language.Type.NullableNumberInstance],
                     ["nullableNumber", Language.Type.NullableNumberInstance],
                     ["table", Language.Type.TableInstance],
@@ -631,7 +632,7 @@ describe(`TypeUtils.typeCheck`, () => {
             );
             const schemaType: Language.Type.RecordType = Language.TypeUtils.createRecordType(
                 false,
-                new Map<string, Language.Type.PowerQueryType>([
+                new Map<string, Language.Type.TPowerQueryType>([
                     ["number", Language.Type.NumberInstance],
                     ["nullableNumber", Language.Type.NullableNumberInstance],
                     ["text", Language.Type.TextInstance],
@@ -656,7 +657,7 @@ describe(`TypeUtils.typeCheck`, () => {
         it(`${Language.Type.ExtendedTypeKind.DefinedTable}`, () => {
             const valueType: Language.Type.DefinedTable = Language.TypeUtils.createDefinedTable(
                 false,
-                new Map<string, Language.Type.PowerQueryType>([
+                new Map<string, Language.Type.TPowerQueryType>([
                     ["number", Language.Type.NullableNumberInstance],
                     ["nullableNumber", Language.Type.NullableNumberInstance],
                     ["table", Language.Type.TableInstance],
@@ -665,7 +666,7 @@ describe(`TypeUtils.typeCheck`, () => {
             );
             const schemaType: Language.Type.TableType = Language.TypeUtils.createTableType(
                 false,
-                new Map<string, Language.Type.PowerQueryType>([
+                new Map<string, Language.Type.TPowerQueryType>([
                     ["number", Language.Type.NumberInstance],
                     ["nullableNumber", Language.Type.NullableNumberInstance],
                     ["text", Language.Type.TextInstance],
