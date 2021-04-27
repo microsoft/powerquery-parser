@@ -87,7 +87,7 @@ export type UnknownCategory = ITypeKindCategory<Type.Unknown>;
 export interface AnyCategory extends ITypeKindCategory<Type.Any> {
     readonly anyUnions: ImmutableSet<Type.AnyUnion>;
     // This is a recursive flattening of `AnyUnion.unionedTypePairs`.
-    readonly flattenedAnyUnions: ImmutableSet<Type.PowerQueryType>;
+    readonly flattenedAnyUnions: ImmutableSet<Type.TPowerQueryType>;
 }
 
 export interface FunctionCategory extends ITypeKindCategory<Type.Function> {
@@ -133,7 +133,7 @@ export interface TypeCategory extends ITypeKindCategory<Type.Type> {
 
 // Takes a collection of PowerQueryType and breaks them down into buckets based on their TypeKind,
 // then again on their ExtendedTypeKind.
-export function categorize(types: ReadonlyArray<Type.PowerQueryType>): CategorizedPowerQueryTypes {
+export function categorize(types: ReadonlyArray<Type.TPowerQueryType>): CategorizedPowerQueryTypes {
     const categoryByKind: Map<Type.TypeKind, TCategory> = new Map();
 
     for (const type of types) {
@@ -171,12 +171,12 @@ export function categorize(types: ReadonlyArray<Type.PowerQueryType>): Categoriz
     };
 }
 
-interface ITypeKindCategory<T extends Type.PowerQueryType> {
+interface ITypeKindCategory<T extends Type.TPowerQueryType> {
     readonly kind: T["kind"];
     readonly primitives: ImmutableSet<T>;
 }
 
-function addToCategory(category: TCategory, type: Type.PowerQueryType): TCategory {
+function addToCategory(category: TCategory, type: Type.TPowerQueryType): TCategory {
     // We can't group cases which call `addToCategoryForPrimitive` as they each have a different generic type.
     switch (type.kind) {
         case Type.TypeKind.Action:
@@ -383,7 +383,7 @@ function addToCategoryForNumber(category: NumberCategory, type: Type.TNumber): N
     }
 }
 
-function addToCategoryForPrimitive<T extends Type.PowerQueryType, C extends ITypeKindCategory<T> & TCategory>(
+function addToCategoryForPrimitive<T extends Type.TPowerQueryType, C extends ITypeKindCategory<T> & TCategory>(
     category: TCategory,
     type: T,
 ): ITypeKindCategory<T> & TCategory {
@@ -529,7 +529,7 @@ function addTypeIfUniqueType(category: TypeCategory, type: Type.TType): TypeCate
     }
 }
 
-function assertIsCategoryForType<PowerQueryType extends Type.PowerQueryType, Category extends TCategory>(
+function assertIsCategoryForType<PowerQueryType extends Type.TPowerQueryType, Category extends TCategory>(
     category: TCategory,
     type: PowerQueryType,
 ): asserts category is Category {
@@ -541,7 +541,7 @@ function assertIsCategoryForType<PowerQueryType extends Type.PowerQueryType, Cat
     }
 }
 
-function createCategory(type: Type.PowerQueryType): TCategory {
+function createCategory(type: Type.TPowerQueryType): TCategory {
     switch (type.kind) {
         case Type.TypeKind.Action:
             return createCategoryForPrimitive(type);
@@ -734,7 +734,7 @@ function createCategoryForNumber(type: Type.TNumber): NumberCategory {
     }
 }
 
-function createCategoryForPrimitive<T extends Type.PowerQueryType>(type: T): ITypeKindCategory<T> {
+function createCategoryForPrimitive<T extends Type.TPowerQueryType>(type: T): ITypeKindCategory<T> {
     return {
         kind: type.kind,
         primitives: new ImmutableSet<T>([type], isEqualType),
@@ -871,8 +871,8 @@ function createCategoryForType(type: Type.TType): TypeCategory {
     };
 }
 
-function flattenAnyUnion(anyUnion: Type.AnyUnion): ReadonlyArray<Type.PowerQueryType> {
-    let newUnionedTypePairs: Type.PowerQueryType[] = [];
+function flattenAnyUnion(anyUnion: Type.AnyUnion): ReadonlyArray<Type.TPowerQueryType> {
+    let newUnionedTypePairs: Type.TPowerQueryType[] = [];
 
     for (const item of anyUnion.unionedTypePairs) {
         // If it's an Any primitive then we can do an early return.

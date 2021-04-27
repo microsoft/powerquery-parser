@@ -5,7 +5,7 @@ import { Type } from "..";
 import { ArrayUtils, Assert, MapUtils } from "../../../common";
 import { isTypeInArray } from "./typeUtils";
 
-export function isEqualType(left: Type.PowerQueryType, right: Type.PowerQueryType): boolean {
+export function isEqualType(left: Type.TPowerQueryType, right: Type.TPowerQueryType): boolean {
     if (left === right) {
         return true;
     } else if (
@@ -30,8 +30,8 @@ export function isEqualFunctionParameter(left: Type.FunctionParameter, right: Ty
 }
 
 export function isEqualFunctionSignature(
-    left: Type.PowerQueryType & Type.FunctionSignature,
-    right: Type.PowerQueryType & Type.FunctionSignature,
+    left: Type.TPowerQueryType & Type.FunctionSignature,
+    right: Type.TPowerQueryType & Type.FunctionSignature,
 ): boolean {
     return (
         left === right ||
@@ -43,8 +43,8 @@ export function isEqualFunctionSignature(
 
 // Does not care about ordering.
 export function isEqualTypes(
-    leftTypes: ReadonlyArray<Type.PowerQueryType>,
-    rightTypes: ReadonlyArray<Type.PowerQueryType>,
+    leftTypes: ReadonlyArray<Type.TPowerQueryType>,
+    rightTypes: ReadonlyArray<Type.TPowerQueryType>,
 ): boolean {
     if (leftTypes === rightTypes) {
         return true;
@@ -138,9 +138,9 @@ export function isEqualDefinedList(left: Type.DefinedList, right: Type.DefinedLi
         return false;
     }
 
-    const rightElements: ReadonlyArray<Type.PowerQueryType> = right.elements;
+    const rightElements: ReadonlyArray<Type.TPowerQueryType> = right.elements;
     return ArrayUtils.all(
-        left.elements.map((leftType: Type.PowerQueryType, index: number) =>
+        left.elements.map((leftType: Type.TPowerQueryType, index: number) =>
             isEqualType(leftType, rightElements[index]),
         ),
     );
@@ -153,9 +153,9 @@ export function isEqualDefinedListType(left: Type.DefinedListType, right: Type.D
         return false;
     }
 
-    const rightElements: ReadonlyArray<Type.PowerQueryType> = right.itemTypes;
+    const rightElements: ReadonlyArray<Type.TPowerQueryType> = right.itemTypes;
     return ArrayUtils.all(
-        left.itemTypes.map((leftType: Type.PowerQueryType, index: number) =>
+        left.itemTypes.map((leftType: Type.TPowerQueryType, index: number) =>
             isEqualType(leftType, rightElements[index]),
         ),
     );
@@ -165,7 +165,7 @@ export function isEqualDefinedRecord(left: Type.DefinedRecord, right: Type.Defin
     return (
         left === right ||
         (left.isNullable === right.isNullable &&
-            MapUtils.isEqualMap<string, Type.PowerQueryType>(left.fields, right.fields, isEqualType))
+            MapUtils.isEqualMap<string, Type.TPowerQueryType>(left.fields, right.fields, isEqualType))
     );
 }
 
@@ -173,7 +173,7 @@ export function isEqualDefinedTable(left: Type.DefinedTable, right: Type.Defined
     return (
         left === right ||
         (left.isNullable === right.isNullable &&
-            MapUtils.isEqualMap<string, Type.PowerQueryType>(left.fields, right.fields, isEqualType))
+            MapUtils.isEqualMap<string, Type.TPowerQueryType>(left.fields, right.fields, isEqualType))
     );
 }
 
@@ -197,7 +197,7 @@ export function isEqualFieldSpecificationList(
     }
 
     for (const [key, leftValue] of left.fields.entries()) {
-        const maybeRightValue: Type.PowerQueryType | undefined = right.fields.get(key);
+        const maybeRightValue: Type.TPowerQueryType | undefined = right.fields.get(key);
         if (maybeRightValue === undefined || !isEqualType(leftValue, maybeRightValue)) {
             return false;
         }

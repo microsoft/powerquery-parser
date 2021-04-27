@@ -11,7 +11,7 @@ import { isFieldSpecificationList, isFunctionSignature } from "./isType";
 // `Type.AnyInstance is compatible with Type.TextInstance` -> false
 // `Type.NullInstance is compatible with Type.AnyNonNull` -> false
 // `Type.TextInstance is compatible with Type.AnyUnion([Type.TextInstance, Type.NumberInstance])` -> true
-export function isCompatible(left: Type.PowerQueryType, right: Type.PowerQueryType): boolean | undefined {
+export function isCompatible(left: Type.TPowerQueryType, right: Type.TPowerQueryType): boolean | undefined {
     if (
         left.kind === Type.TypeKind.NotApplicable ||
         left.kind === Type.TypeKind.Unknown ||
@@ -68,8 +68,8 @@ export function isCompatible(left: Type.PowerQueryType, right: Type.PowerQueryTy
 }
 
 export function isCompatibleWithFunctionSignature(
-    left: Type.PowerQueryType,
-    right: Type.PowerQueryType & Type.FunctionSignature,
+    left: Type.TPowerQueryType,
+    right: Type.TPowerQueryType & Type.FunctionSignature,
 ): boolean {
     if (!isCompatibleWithNullable(left, right) || !isFunctionSignature(left)) {
         return false;
@@ -79,7 +79,7 @@ export function isCompatibleWithFunctionSignature(
 }
 
 export function isCompatibleWithFunctionParameter(
-    left: Type.PowerQueryType | undefined,
+    left: Type.TPowerQueryType | undefined,
     right: Type.FunctionParameter,
 ): boolean {
     if (left === undefined) {
@@ -93,7 +93,7 @@ export function isCompatibleWithFunctionParameter(
     }
 }
 
-function isCompatibleWithAny(left: Type.PowerQueryType, right: Type.TAny): boolean | undefined {
+function isCompatibleWithAny(left: Type.TPowerQueryType, right: Type.TAny): boolean | undefined {
     switch (right.maybeExtendedKind) {
         case undefined:
             return isCompatibleWithNullable(left, right);
@@ -106,7 +106,7 @@ function isCompatibleWithAny(left: Type.PowerQueryType, right: Type.TAny): boole
     }
 }
 
-function isCompatibleWithAnyUnion(left: Type.PowerQueryType, right: Type.AnyUnion): boolean | undefined {
+function isCompatibleWithAnyUnion(left: Type.TPowerQueryType, right: Type.AnyUnion): boolean | undefined {
     for (const subtype of right.unionedTypePairs) {
         if (isCompatible(left, subtype)) {
             return true;
@@ -116,7 +116,7 @@ function isCompatibleWithAnyUnion(left: Type.PowerQueryType, right: Type.AnyUnio
     return false;
 }
 
-function isCompatibleWithDefinedList(left: Type.PowerQueryType, right: Type.DefinedList): boolean {
+function isCompatibleWithDefinedList(left: Type.TPowerQueryType, right: Type.DefinedList): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -133,7 +133,7 @@ function isCompatibleWithDefinedList(left: Type.PowerQueryType, right: Type.Defi
     }
 }
 
-function isCompatibleWithDefinedListType(left: Type.PowerQueryType, right: Type.DefinedListType): boolean {
+function isCompatibleWithDefinedListType(left: Type.TPowerQueryType, right: Type.DefinedListType): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -160,7 +160,7 @@ function isCompatibleWithDefinedListType(left: Type.PowerQueryType, right: Type.
     }
 }
 
-function isCompatibleWithDefinedRecord(left: Type.PowerQueryType, right: Type.DefinedRecord): boolean {
+function isCompatibleWithDefinedRecord(left: Type.TPowerQueryType, right: Type.DefinedRecord): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -177,7 +177,7 @@ function isCompatibleWithDefinedRecord(left: Type.PowerQueryType, right: Type.De
     }
 }
 
-function isCompatibleWithDefinedTable(left: Type.PowerQueryType, right: Type.DefinedTable): boolean {
+function isCompatibleWithDefinedTable(left: Type.TPowerQueryType, right: Type.DefinedTable): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -197,8 +197,8 @@ function isCompatibleWithDefinedTable(left: Type.PowerQueryType, right: Type.Def
 
 // TODO: decide what a compatible FieldSpecificationList should look like
 function isCompatibleWithFieldSpecificationList(
-    left: Type.PowerQueryType,
-    right: Type.PowerQueryType & Type.FieldSpecificationList,
+    left: Type.TPowerQueryType,
+    right: Type.TPowerQueryType & Type.FieldSpecificationList,
 ): boolean {
     if (!isCompatibleWithNullable(left, right) || !isFieldSpecificationList(left)) {
         return false;
@@ -207,11 +207,11 @@ function isCompatibleWithFieldSpecificationList(
     return MapUtils.isSubsetMap(
         left.fields,
         right.fields,
-        (leftValue: Type.PowerQueryType, rightValue: Type.PowerQueryType) => isEqualType(leftValue, rightValue),
+        (leftValue: Type.TPowerQueryType, rightValue: Type.TPowerQueryType) => isEqualType(leftValue, rightValue),
     );
 }
 
-function isCompatibleWithFunction(left: Type.PowerQueryType, right: Type.TFunction): boolean {
+function isCompatibleWithFunction(left: Type.TPowerQueryType, right: Type.TFunction): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -228,7 +228,7 @@ function isCompatibleWithFunction(left: Type.PowerQueryType, right: Type.TFuncti
     }
 }
 
-function isCompatibleWithList(left: Type.PowerQueryType, right: Type.TList): boolean {
+function isCompatibleWithList(left: Type.TPowerQueryType, right: Type.TList): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -245,7 +245,7 @@ function isCompatibleWithList(left: Type.PowerQueryType, right: Type.TList): boo
     }
 }
 
-function isCompatibleWithListType(left: Type.PowerQueryType, right: Type.ListType): boolean {
+function isCompatibleWithListType(left: Type.TPowerQueryType, right: Type.ListType): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -272,7 +272,7 @@ function isCompatibleWithListType(left: Type.PowerQueryType, right: Type.ListTyp
     }
 }
 
-function isCompatibleWithPrimaryPrimitiveType(left: Type.PowerQueryType, right: Type.PrimaryPrimitiveType): boolean {
+function isCompatibleWithPrimaryPrimitiveType(left: Type.TPowerQueryType, right: Type.PrimaryPrimitiveType): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -297,11 +297,11 @@ function isCompatibleWithPrimaryPrimitiveType(left: Type.PowerQueryType, right: 
     }
 }
 
-function isCompatibleWithNullable(left: Type.PowerQueryType, right: Type.PowerQueryType): boolean {
+function isCompatibleWithNullable(left: Type.TPowerQueryType, right: Type.TPowerQueryType): boolean {
     return right.isNullable === true ? true : left.isNullable === false;
 }
 
-function isCompatibleWithNumber(left: Type.PowerQueryType, right: Type.TNumber): boolean {
+function isCompatibleWithNumber(left: Type.TPowerQueryType, right: Type.TNumber): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -318,7 +318,7 @@ function isCompatibleWithNumber(left: Type.PowerQueryType, right: Type.TNumber):
     }
 }
 
-function isCompatibleWithNumberLiteral(left: Type.PowerQueryType, right: Type.NumberLiteral): boolean {
+function isCompatibleWithNumberLiteral(left: Type.TPowerQueryType, right: Type.NumberLiteral): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -335,7 +335,7 @@ function isCompatibleWithNumberLiteral(left: Type.PowerQueryType, right: Type.Nu
     }
 }
 
-function isCompatibleWithRecord(left: Type.PowerQueryType, right: Type.TRecord): boolean {
+function isCompatibleWithRecord(left: Type.TPowerQueryType, right: Type.TRecord): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -352,7 +352,7 @@ function isCompatibleWithRecord(left: Type.PowerQueryType, right: Type.TRecord):
     }
 }
 
-function isCompatibleWithRecordType(left: Type.PowerQueryType, right: Type.RecordType): boolean {
+function isCompatibleWithRecordType(left: Type.TPowerQueryType, right: Type.RecordType): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -377,7 +377,7 @@ function isCompatibleWithRecordType(left: Type.PowerQueryType, right: Type.Recor
     }
 }
 
-function isCompatibleWithTable(left: Type.PowerQueryType, right: Type.TTable): boolean {
+function isCompatibleWithTable(left: Type.TPowerQueryType, right: Type.TTable): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -394,7 +394,7 @@ function isCompatibleWithTable(left: Type.PowerQueryType, right: Type.TTable): b
     }
 }
 
-function isCompatibleWithTableType(left: Type.PowerQueryType, right: Type.TableType): boolean {
+function isCompatibleWithTableType(left: Type.TPowerQueryType, right: Type.TableType): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -420,7 +420,7 @@ function isCompatibleWithTableType(left: Type.PowerQueryType, right: Type.TableT
 }
 
 function isCompatibleWithTableTypePrimaryExpression(
-    left: Type.PowerQueryType,
+    left: Type.TPowerQueryType,
     right: Type.TableTypePrimaryExpression,
 ): boolean | undefined {
     if (left.kind !== right.kind) {
@@ -447,7 +447,7 @@ function isCompatibleWithTableTypePrimaryExpression(
     }
 }
 
-function isCompatibleWithText(left: Type.PowerQueryType, right: Type.TText): boolean {
+function isCompatibleWithText(left: Type.TPowerQueryType, right: Type.TText): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -464,7 +464,7 @@ function isCompatibleWithText(left: Type.PowerQueryType, right: Type.TText): boo
     }
 }
 
-function isCompatibleWithTextLiteral(left: Type.PowerQueryType, right: Type.TextLiteral): boolean {
+function isCompatibleWithTextLiteral(left: Type.TPowerQueryType, right: Type.TextLiteral): boolean {
     if (left.kind !== right.kind) {
         return false;
     }
@@ -482,7 +482,7 @@ function isCompatibleWithTextLiteral(left: Type.PowerQueryType, right: Type.Text
 }
 
 function isCompatibleWithType(
-    left: Type.PowerQueryType,
+    left: Type.TPowerQueryType,
     right:
         | Type.DefinedListType
         | Type.FunctionType

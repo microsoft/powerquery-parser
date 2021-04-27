@@ -16,8 +16,8 @@ export function createPrimitiveType<T extends Type.TypeKind>(isNullable: boolean
 
 // If the given types can be simplified/deduped down to a single type then that is returned instead.
 // Otherwise returns an instance of `Type.AnyUnion`.
-export function createAnyUnion(unionedTypePairs: ReadonlyArray<Type.PowerQueryType>): Type.PowerQueryType {
-    const simplified: ReadonlyArray<Type.PowerQueryType> = simplify(unionedTypePairs);
+export function createAnyUnion(unionedTypePairs: ReadonlyArray<Type.TPowerQueryType>): Type.TPowerQueryType {
+    const simplified: ReadonlyArray<Type.TPowerQueryType> = simplify(unionedTypePairs);
     if (simplified.length === 1) {
         return simplified[0];
     }
@@ -25,7 +25,7 @@ export function createAnyUnion(unionedTypePairs: ReadonlyArray<Type.PowerQueryTy
     return {
         kind: Type.TypeKind.Any,
         maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-        isNullable: unionedTypePairs.find((ttype: Type.PowerQueryType) => ttype.isNullable === true) !== undefined,
+        isNullable: unionedTypePairs.find((ttype: Type.TPowerQueryType) => ttype.isNullable === true) !== undefined,
         unionedTypePairs: simplified,
     };
 }
@@ -33,7 +33,7 @@ export function createAnyUnion(unionedTypePairs: ReadonlyArray<Type.PowerQueryTy
 export function createDefinedFunction(
     isNullable: boolean,
     parameters: ReadonlyArray<Type.FunctionParameter>,
-    returnType: Type.PowerQueryType,
+    returnType: Type.TPowerQueryType,
 ): Type.DefinedFunction {
     return {
         kind: Type.TypeKind.Function,
@@ -44,7 +44,7 @@ export function createDefinedFunction(
     };
 }
 
-export function createDefinedList(isNullable: boolean, elements: ReadonlyArray<Type.PowerQueryType>): Type.DefinedList {
+export function createDefinedList(isNullable: boolean, elements: ReadonlyArray<Type.TPowerQueryType>): Type.DefinedList {
     return {
         kind: Type.TypeKind.List,
         maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
@@ -55,7 +55,7 @@ export function createDefinedList(isNullable: boolean, elements: ReadonlyArray<T
 
 export function createDefinedListType(
     isNullable: boolean,
-    itemTypes: ReadonlyArray<Type.PowerQueryType>,
+    itemTypes: ReadonlyArray<Type.TPowerQueryType>,
 ): Type.DefinedListType {
     return {
         kind: Type.TypeKind.Type,
@@ -67,7 +67,7 @@ export function createDefinedListType(
 
 export function createDefinedRecord(
     isNullable: boolean,
-    fields: Map<string, Type.PowerQueryType>,
+    fields: Map<string, Type.TPowerQueryType>,
     isOpen: boolean,
 ): Type.DefinedRecord {
     return {
@@ -81,7 +81,7 @@ export function createDefinedRecord(
 
 export function createDefinedTable(
     isNullable: boolean,
-    fields: Map<string, Type.PowerQueryType>,
+    fields: Map<string, Type.TPowerQueryType>,
     isOpen: boolean,
 ): Type.DefinedTable {
     return {
@@ -96,7 +96,7 @@ export function createDefinedTable(
 export function createFunctionType(
     isNullable: boolean,
     parameters: ReadonlyArray<Type.FunctionParameter>,
-    returnType: Type.PowerQueryType,
+    returnType: Type.TPowerQueryType,
 ): Type.FunctionType {
     return {
         kind: Type.TypeKind.Type,
@@ -117,7 +117,7 @@ export function createNumberLiteral(isNullable: boolean, literal: string): Type.
     };
 }
 
-export function createListType(isNullable: boolean, itemType: Type.PowerQueryType): Type.ListType {
+export function createListType(isNullable: boolean, itemType: Type.TPowerQueryType): Type.ListType {
     return {
         kind: Type.TypeKind.Type,
         maybeExtendedKind: Type.ExtendedTypeKind.ListType,
@@ -140,7 +140,7 @@ export function createPrimaryPrimitiveType(
 
 export function createRecordType(
     isNullable: boolean,
-    fields: Map<string, Type.PowerQueryType>,
+    fields: Map<string, Type.TPowerQueryType>,
     isOpen: boolean,
 ): Type.RecordType {
     return {
@@ -154,7 +154,7 @@ export function createRecordType(
 
 export function createTableType(
     isNullable: boolean,
-    fields: Map<string, Type.PowerQueryType>,
+    fields: Map<string, Type.TPowerQueryType>,
     isOpen: boolean,
 ): Type.TableType {
     return {
@@ -181,7 +181,7 @@ export function createTextLiteral(isNullable: boolean, literal: string): Type.Te
 
 export function createTableTypePrimary(
     isNullable: boolean,
-    primaryExpression: Type.PowerQueryType,
+    primaryExpression: Type.TPowerQueryType,
 ): Type.TableTypePrimaryExpression {
     return {
         kind: Type.TypeKind.Type,
