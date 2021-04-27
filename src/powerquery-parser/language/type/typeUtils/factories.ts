@@ -44,7 +44,10 @@ export function createDefinedFunction(
     };
 }
 
-export function createDefinedList(isNullable: boolean, elements: ReadonlyArray<Type.TPowerQueryType>): Type.DefinedList {
+export function createDefinedList(
+    isNullable: boolean,
+    elements: ReadonlyArray<Type.TPowerQueryType>,
+): Type.DefinedList {
     return {
         kind: Type.TypeKind.List,
         maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
