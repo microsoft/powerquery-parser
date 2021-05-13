@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "pravá hranatá závorka <']'>",
   "tokenKind_rightParenthesis": "pravá okrouhlá závorka <')'>",
   "tokenKind_semicolon": "středník <';'>",
-  "tokenKind_textLiteral": "text"
+  "tokenKind_textLiteral": "text",
+  "test_please_delete": "ignore this"
 }

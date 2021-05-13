@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "eskuineko kortxetea (<']'>)",
   "tokenKind_rightParenthesis": "eskuineko parentesia (<')'>)",
   "tokenKind_semicolon": "Puntu eta koma (<';'>)",
-  "tokenKind_textLiteral": "testua"
+  "tokenKind_textLiteral": "testua",
+  "test_please_delete": "ignore this"
 }

@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "höger hakparentes <']'>",
   "tokenKind_rightParenthesis": "höger parentes <')'>",
   "tokenKind_semicolon": "semikolon <';'>",
-  "tokenKind_textLiteral": "text"
+  "tokenKind_textLiteral": "text",
+  "test_please_delete": "ignore this"
 }

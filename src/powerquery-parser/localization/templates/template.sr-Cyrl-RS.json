@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "десна угласта заграда <']'>",
   "tokenKind_rightParenthesis": "десна заграда <')'>",
   "tokenKind_semicolon": "тачка и зарез <';'>",
-  "tokenKind_textLiteral": "текст"
+  "tokenKind_textLiteral": "текст",
+  "test_please_delete": "ignore this"
 }

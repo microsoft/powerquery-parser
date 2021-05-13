@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "дясна квадратна скоба <']'>",
   "tokenKind_rightParenthesis": "дясна кръгла скоба <')'>",
   "tokenKind_semicolon": "точка и запетая <';'>",
-  "tokenKind_textLiteral": "текст"
+  "tokenKind_textLiteral": "текст",
+  "test_please_delete": "ignore this"
 }

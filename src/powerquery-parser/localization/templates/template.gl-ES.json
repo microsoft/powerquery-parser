@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "corchete de peche <']'>",
   "tokenKind_rightParenthesis": "paréntese de peche <')'>",
   "tokenKind_semicolon": "punto e coma <';'>",
-  "tokenKind_textLiteral": "texto"
+  "tokenKind_textLiteral": "texto",
+  "test_please_delete": "ignore this"
 }

@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "dešinysis laužtinis skliaustas <']'>",
   "tokenKind_rightParenthesis": "dešinysis skliaustas <')'>",
   "tokenKind_semicolon": "kabliataškis <';'>",
-  "tokenKind_textLiteral": "tekstas"
+  "tokenKind_textLiteral": "tekstas",
+  "test_please_delete": "ignore this"
 }
