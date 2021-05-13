@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "दायाँ कोष्ठक <']'>",
   "tokenKind_rightParenthesis": "दायाँ लघुकोष्ठक <')'>",
   "tokenKind_semicolon": "अर्द्धविराम <';'>",
-  "tokenKind_textLiteral": "पाठ"
+  "tokenKind_textLiteral": "पाठ",
+  "test_please_delete": "ignore this"
 }

@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "colchete direito <']'>",
   "tokenKind_rightParenthesis": "parêntese direito <')'>",
   "tokenKind_semicolon": "ponto e vírgula <';'>",
-  "tokenKind_textLiteral": "texto"
+  "tokenKind_textLiteral": "texto",
+  "test_please_delete": "ignore this"
 }

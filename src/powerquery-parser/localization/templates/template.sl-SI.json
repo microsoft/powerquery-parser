@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "desni oglati oklepaj <']'>",
   "tokenKind_rightParenthesis": "desni okrogli oklepaj <')'>",
   "tokenKind_semicolon": "podpičje <';'>",
-  "tokenKind_textLiteral": "besedilo"
+  "tokenKind_textLiteral": "besedilo",
+  "test_please_delete": "ignore this"
 }

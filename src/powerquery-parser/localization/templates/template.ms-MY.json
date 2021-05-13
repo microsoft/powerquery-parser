@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "tanda kurung kanan <']'>",
   "tokenKind_rightParenthesis": "tanda kurung kanan <')'>",
   "tokenKind_semicolon": "Koma bertitik <';'>",
-  "tokenKind_textLiteral": "teks"
+  "tokenKind_textLiteral": "teks",
+  "test_please_delete": "ignore this"
 }

@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "oikea hakasulje <']'>",
   "tokenKind_rightParenthesis": "oikea sulje <')'>",
   "tokenKind_semicolon": "puolipiste <';'>",
-  "tokenKind_textLiteral": "teksti"
+  "tokenKind_textLiteral": "teksti",
+  "test_please_delete": "ignore this"
 }

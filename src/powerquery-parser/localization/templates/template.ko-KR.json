@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "오른쪽 대괄호 <']'>",
   "tokenKind_rightParenthesis": "오른쪽 괄호 <')'>",
   "tokenKind_semicolon": "세미콜론 <';'>",
-  "tokenKind_textLiteral": "텍스트"
+  "tokenKind_textLiteral": "텍스트",
+  "test_please_delete": "ignore this"
 }

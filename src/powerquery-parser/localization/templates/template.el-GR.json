@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "δεξιά αγκύλη <']'>",
   "tokenKind_rightParenthesis": "δεξιά παρένθεση <')'>",
   "tokenKind_semicolon": "ελληνικό ερωτηματικό <';'>",
-  "tokenKind_textLiteral": "κείμενο"
+  "tokenKind_textLiteral": "κείμενο",
+  "test_please_delete": "ignore this"
 }
