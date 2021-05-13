@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "右角かっこ <']'>",
   "tokenKind_rightParenthesis": "右かっこ <')'>",
   "tokenKind_semicolon": "セミコロン <';'>",
-  "tokenKind_textLiteral": "テキスト"
+  "tokenKind_textLiteral": "テキスト",
+  "test_please_delete": "ignore this"
 }

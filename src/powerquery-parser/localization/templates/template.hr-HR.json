@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "desna uglata zagrada <']'>",
   "tokenKind_rightParenthesis": "desna zagrada <')'>",
   "tokenKind_semicolon": "točka sa zarezom <';'>",
-  "tokenKind_textLiteral": "tekst"
+  "tokenKind_textLiteral": "tekst",
+  "test_please_delete": "ignore this"
 }

@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "parentesi quadra chiusa <']'>",
   "tokenKind_rightParenthesis": "parentesi chiusa <')'>",
   "tokenKind_semicolon": "punto e virgola <';'>",
-  "tokenKind_textLiteral": "testo"
+  "tokenKind_textLiteral": "testo",
+  "test_please_delete": "ignore this"
 }

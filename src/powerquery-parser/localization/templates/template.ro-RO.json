@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "paranteză dreaptă dreapta <']'>",
   "tokenKind_rightParenthesis": "paranteză dreapta <')'>",
   "tokenKind_semicolon": "punct și virgulă <';'>",
-  "tokenKind_textLiteral": "text"
+  "tokenKind_textLiteral": "text",
+  "test_please_delete": "ignore this"
 }

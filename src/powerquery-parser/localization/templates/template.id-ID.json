@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "kurung siku kanan <']'>",
   "tokenKind_rightParenthesis": "kurung kanan <')'>",
   "tokenKind_semicolon": "titik koma <';'>",
-  "tokenKind_textLiteral": "teks"
+  "tokenKind_textLiteral": "teks",
+  "test_please_delete": "ignore this"
 }

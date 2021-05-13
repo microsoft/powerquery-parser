@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "rechte eckige Klammer <']'>",
   "tokenKind_rightParenthesis": "rechte runde Klammer <')'>",
   "tokenKind_semicolon": "Semikolon <';'>",
-  "tokenKind_textLiteral": "Text"
+  "tokenKind_textLiteral": "Text",
+  "test_please_delete": "ignore this"
 }

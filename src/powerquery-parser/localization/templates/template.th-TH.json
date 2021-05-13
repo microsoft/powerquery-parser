@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "วงเล็บเหลี่ยมขวา <']'>",
   "tokenKind_rightParenthesis": "วงเล็บขวา <')'>",
   "tokenKind_semicolon": "เครื่องหมายอัฒภาค <';'>",
-  "tokenKind_textLiteral": "ข้อความ"
+  "tokenKind_textLiteral": "ข้อความ",
+  "test_please_delete": "ignore this"
 }

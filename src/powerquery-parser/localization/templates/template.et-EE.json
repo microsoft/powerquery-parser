@@ -97,5 +97,6 @@
   "tokenKind_rightBracket": "paremnurksulg <']'>",
   "tokenKind_rightParenthesis": "paremsulg <')'>",
   "tokenKind_semicolon": "semikoolon <';'>",
-  "tokenKind_textLiteral": "tekst"
+  "tokenKind_textLiteral": "tekst",
+  "test_please_delete": "ignore this"
 }
