@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, NodeIdMapIterator } from ".";
-import { Assert } from "../../common";
+import { Assert, CommonError } from "../../common";
 import { Ast } from "../../language";
 import { TXorNode } from "./xorNode";
 
@@ -67,11 +67,22 @@ export function assertGetNthXor(
     ancestryIndex: number,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode {
-    return Assert.asDefined(
-        maybeNthXor(ancestry, ancestryIndex, maybeAllowedNodeKinds),
-        "either node was not found at the given index, or it doesn't match one of the allowed node kinds",
-        { ancestryIndex, maybeAllowedNodeKinds },
-    );
+    const maybeXorNode: TXorNode | undefined = maybeNthXor(ancestry, ancestryIndex, undefined);
+    if (maybeXorNode === undefined) {
+        throw new CommonError.InvariantError(`the given ancestryIndex is out of bounds`, { ancestryIndex });
+    } else if (maybeAllowedNodeKinds !== undefined && !maybeAllowedNodeKinds.includes(maybeXorNode.node.kind)) {
+        throw new CommonError.InvariantError(
+            `a XorNode was found at the given ancestryIndex but it was the wrong NodeKind`,
+            {
+                ancestryIndex,
+                nodeId: maybeXorNode.node.id,
+                nodeKind: maybeXorNode.node.kind,
+                allowedNodeKinds: maybeAllowedNodeKinds,
+            },
+        );
+    } else {
+        return maybeXorNode;
+    }
 }
 
 export function maybeNthXor(
