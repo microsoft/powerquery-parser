@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMap, NodeIdMapIterator, XorNodeUtils } from ".";
-import { Assert } from "../../common";
+import { NodeIdMap, NodeIdMapIterator } from ".";
+import { Assert, CommonError } from "../../common";
 import { Ast } from "../../language";
 import { TXorNode } from "./xorNode";
 
@@ -33,37 +33,7 @@ export function assertGetNextXor(
     ancestryIndex: number,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode {
-    return assertGetNthNextXor(ancestry, ancestryIndex, 1, maybeAllowedNodeKinds);
-}
-
-export function assertGetNthNextXor(
-    ancestry: ReadonlyArray<TXorNode>,
-    ancestryIndex: number,
-    n: number = 1,
-    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
-): TXorNode {
-    return Assert.asDefined(maybeNthNextXor(ancestry, ancestryIndex, n, maybeAllowedNodeKinds), `no next node`, {
-        ancestryIndex,
-        n,
-    });
-}
-
-export function assertGetNthPreviousXor(
-    ancestry: ReadonlyArray<TXorNode>,
-    ancestryIndex: number,
-    n: number = 1,
-    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
-): TXorNode {
-    const xorNode: TXorNode = Assert.asDefined(maybeNthPreviousXor(ancestry, ancestryIndex, n), `no previous node`, {
-        ancestryIndex,
-        n,
-    });
-
-    if (maybeAllowedNodeKinds !== undefined) {
-        XorNodeUtils.assertAnyAstNodeKind(xorNode, maybeAllowedNodeKinds);
-    }
-
-    return xorNode;
+    return assertGetNthXor(ancestry, ancestryIndex + 1, maybeAllowedNodeKinds);
 }
 
 export function assertGetPreviousXor(
@@ -71,16 +41,56 @@ export function assertGetPreviousXor(
     ancestryIndex: number,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode {
-    return assertGetNthPreviousXor(ancestry, ancestryIndex, 1, maybeAllowedNodeKinds);
+    return assertGetNthXor(ancestry, ancestryIndex - 1, maybeAllowedNodeKinds);
 }
 
-export function maybeNthPreviousXor(
+export function assertGetNthNextXor(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
-    n: number = 1,
+    offset: number = 1,
+    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
+): TXorNode {
+    return assertGetNthXor(ancestry, ancestryIndex + offset, maybeAllowedNodeKinds);
+}
+
+export function assertGetNthPreviousXor(
+    ancestry: ReadonlyArray<TXorNode>,
+    ancestryIndex: number,
+    offset: number = 1,
+    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
+): TXorNode {
+    return assertGetNthXor(ancestry, ancestryIndex - offset, maybeAllowedNodeKinds);
+}
+
+export function assertGetNthXor(
+    ancestry: ReadonlyArray<TXorNode>,
+    ancestryIndex: number,
+    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
+): TXorNode {
+    const maybeXorNode: TXorNode | undefined = maybeNthXor(ancestry, ancestryIndex, undefined);
+    if (maybeXorNode === undefined) {
+        throw new CommonError.InvariantError(`the given ancestryIndex is out of bounds`, { ancestryIndex });
+    } else if (maybeAllowedNodeKinds !== undefined && !maybeAllowedNodeKinds.includes(maybeXorNode.node.kind)) {
+        throw new CommonError.InvariantError(
+            `a XorNode was found at the given ancestryIndex but it was the wrong NodeKind`,
+            {
+                ancestryIndex,
+                nodeId: maybeXorNode.node.id,
+                nodeKind: maybeXorNode.node.kind,
+                allowedNodeKinds: maybeAllowedNodeKinds,
+            },
+        );
+    } else {
+        return maybeXorNode;
+    }
+}
+
+export function maybeNthXor(
+    ancestry: ReadonlyArray<TXorNode>,
+    ancestryIndex: number,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode | undefined {
-    const maybeXorNode: TXorNode | undefined = ancestry[ancestryIndex - n];
+    const maybeXorNode: TXorNode | undefined = ancestry[ancestryIndex];
     if (maybeXorNode !== undefined && maybeAllowedNodeKinds !== undefined) {
         return maybeAllowedNodeKinds.includes(maybeXorNode.node.kind) ? maybeXorNode : undefined;
     }
@@ -93,21 +103,7 @@ export function maybeNextXor(
     ancestryIndex: number,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode | undefined {
-    return maybeNthNextXor(ancestry, ancestryIndex, 1, maybeAllowedNodeKinds);
-}
-
-export function maybeNthNextXor(
-    ancestry: ReadonlyArray<TXorNode>,
-    ancestryIndex: number,
-    n: number = 1,
-    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
-): TXorNode | undefined {
-    const maybeXorNode: TXorNode | undefined = ancestry[ancestryIndex + n];
-    if (maybeXorNode !== undefined && maybeAllowedNodeKinds !== undefined) {
-        return maybeAllowedNodeKinds.includes(maybeXorNode.node.kind) ? maybeXorNode : undefined;
-    }
-
-    return maybeXorNode;
+    return maybeNthXor(ancestry, ancestryIndex + 1, maybeAllowedNodeKinds);
 }
 
 export function maybePreviousXor(
@@ -115,7 +111,25 @@ export function maybePreviousXor(
     ancestryIndex: number,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode | undefined {
-    return maybeNthPreviousXor(ancestry, ancestryIndex, 1, maybeAllowedNodeKinds);
+    return maybeNthXor(ancestry, ancestryIndex - 1, maybeAllowedNodeKinds);
+}
+
+export function maybeNthNextXor(
+    ancestry: ReadonlyArray<TXorNode>,
+    ancestryIndex: number,
+    offset: number = 1,
+    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
+): TXorNode | undefined {
+    return maybeNthXor(ancestry, ancestryIndex + offset, maybeAllowedNodeKinds);
+}
+
+export function maybeNthPreviousXor(
+    ancestry: ReadonlyArray<TXorNode>,
+    ancestryIndex: number,
+    offset: number = 1,
+    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
+): TXorNode | undefined {
+    return maybeNthXor(ancestry, ancestryIndex - offset, maybeAllowedNodeKinds);
 }
 
 export function maybeFirstXorWhere(
