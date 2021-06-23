@@ -11,18 +11,15 @@ import { IParseState, IParseStateUtils } from "../IParseState";
 import { NodeIdMap, NodeIdMapUtils } from "../nodeIdMap";
 import { IParser, IParseStateCheckpoint, TriedParse } from "./IParser";
 
-export function tryParse<S extends IParseState = IParseState>(
-    parseSettings: ParseSettings<S>,
-    lexerSnapshot: LexerSnapshot,
-): TriedParse<S> {
-    const maybeParserEntryPointFn: ((state: S, parser: IParser<S>) => Ast.TNode) | undefined =
+export function tryParse(parseSettings: ParseSettings, lexerSnapshot: LexerSnapshot): TriedParse {
+    const maybeParserEntryPointFn: ((state: IParseState, parser: IParser) => Ast.TNode) | undefined =
         parseSettings?.maybeParserEntryPointFn;
 
     if (maybeParserEntryPointFn === undefined) {
-        return tryParseDocument<S>(parseSettings, lexerSnapshot) as TriedParse<S>;
+        return tryParseDocument(parseSettings, lexerSnapshot) as TriedParse;
     }
 
-    const parseState: S = parseSettings.createParseState(lexerSnapshot, {
+    const parseState: IParseState = parseSettings.createParseState(lexerSnapshot, {
         maybeCancellationToken: parseSettings.maybeCancellationToken,
         locale: parseSettings.locale,
     });
@@ -39,13 +36,10 @@ export function tryParse<S extends IParseState = IParseState>(
     }
 }
 
-export function tryParseDocument<S extends IParseState = IParseState>(
-    parseSettings: ParseSettings<S>,
-    lexerSnapshot: LexerSnapshot,
-): TriedParse {
+export function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: LexerSnapshot): TriedParse {
     let root: Ast.TNode;
 
-    const expressionDocumentState: S = parseSettings.createParseState(lexerSnapshot, {
+    const expressionDocumentState: IParseState = parseSettings.createParseState(lexerSnapshot, {
         maybeCancellationToken: parseSettings.maybeCancellationToken,
         locale: parseSettings.locale,
     });
@@ -58,7 +52,7 @@ export function tryParseDocument<S extends IParseState = IParseState>(
             state: expressionDocumentState,
         });
     } catch (expressionDocumentError) {
-        const sectionDocumentState: S = parseSettings.createParseState(lexerSnapshot, {
+        const sectionDocumentState: IParseState = parseSettings.createParseState(lexerSnapshot, {
             maybeCancellationToken: parseSettings.maybeCancellationToken,
             locale: parseSettings.locale,
         });
@@ -71,7 +65,7 @@ export function tryParseDocument<S extends IParseState = IParseState>(
                 state: sectionDocumentState,
             });
         } catch (sectionDocumentError) {
-            let betterParsedState: S;
+            let betterParsedState: IParseState;
             let betterParsedError: Error;
 
             if (expressionDocumentState.tokenIndex >= sectionDocumentState.tokenIndex) {
@@ -155,11 +149,7 @@ export function restoreCheckpoint(state: IParseState, checkpoint: IParseStateChe
     }
 }
 
-function ensureParseError<S extends IParseState = IParseState>(
-    state: S,
-    error: Error,
-    locale: string,
-): ParseError.TParseError<S> {
+function ensureParseError(state: IParseState, error: Error, locale: string): ParseError.TParseError {
     if (error instanceof ParseError.ParseError) {
         return error;
     } else if (ParseError.isTInnerParseError(error)) {

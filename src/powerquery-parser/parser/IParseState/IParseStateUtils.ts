@@ -8,14 +8,12 @@ import { LexerSnapshot } from "../../lexer";
 import { DefaultLocale } from "../../localization";
 import { Disambiguation } from "../disambiguation";
 import { SequenceKind } from "../error";
-import { IParseState, TCreateParseStateOverrides } from "./IParseState";
+import { IParseState } from "./IParseState";
 
-export function createState<S extends IParseState = IParseState>(
+export function createState(
     lexerSnapshot: LexerSnapshot,
-    maybeOverrides: TCreateParseStateOverrides<S> | undefined,
+    maybeOverrides: Partial<IParseState> | undefined,
 ): IParseState {
-    maybeOverrides = maybeOverrides !== undefined ? maybeOverrides : {};
-
     const tokenIndex: number = maybeOverrides?.tokenIndex ?? 0;
     const maybeCurrentToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
     const maybeCurrentTokenKind: Token.TokenKind | undefined = maybeCurrentToken?.kind;

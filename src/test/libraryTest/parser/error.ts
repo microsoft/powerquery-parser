@@ -8,10 +8,7 @@ import { TestAssertUtils } from "../../testUtils";
 
 const DefaultSettingsWithStrict: Settings = {
     ...DefaultSettings,
-    createParseState: (
-        lexerSnapshot: Lexer.LexerSnapshot,
-        maybeOverrides: Parser.TCreateParseStateOverrides<Parser.IParseState> | undefined,
-    ) => {
+    createParseState: (lexerSnapshot: Lexer.LexerSnapshot, maybeOverrides: Partial<Parser.IParseState> | undefined) => {
         maybeOverrides = maybeOverrides ?? {};
         return Parser.IParseStateUtils.createState(lexerSnapshot, {
             ...maybeOverrides,

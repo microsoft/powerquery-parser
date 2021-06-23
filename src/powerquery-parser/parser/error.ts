@@ -6,7 +6,7 @@ import { Token } from "../language";
 import { Localization, LocalizationUtils } from "../localization";
 import { IParseState } from "./IParseState";
 
-export type TParseError<S extends IParseState = IParseState> = CommonError.CommonError | ParseError<S>;
+export type TParseError = CommonError.CommonError | ParseError;
 
 export type TInnerParseError =
     | ExpectedAnyTokenKindError
@@ -28,8 +28,8 @@ export const enum SequenceKind {
     Parenthesis = "Parenthesis",
 }
 
-export class ParseError<S extends IParseState = IParseState> extends Error {
-    constructor(readonly innerError: TInnerParseError, readonly state: S) {
+export class ParseError extends Error {
+    constructor(readonly innerError: TInnerParseError, readonly state: IParseState) {
         super(innerError.message);
         Object.setPrototypeOf(this, ParseError.prototype);
     }
@@ -140,16 +140,16 @@ export interface TokenWithColumnNumber {
     readonly columnNumber: number;
 }
 
-export function assertIsParseError<S extends IParseState = IParseState>(error: any): error is ParseError<S> {
+export function assertIsParseError(error: any): error is ParseError {
     Assert.isTrue(isParseError(error), "isParseError(error)");
     return true;
 }
 
-export function isParseError<S extends IParseState = IParseState>(error: any): error is ParseError<S> {
+export function isParseError(error: any): error is ParseError {
     return error instanceof ParseError;
 }
 
-export function isTParseError<S extends IParseState = IParseState>(error: any): error is TParseError<S> {
+export function isTParseError(error: any): error is TParseError {
     return isParseError(error) || CommonError.isCommonError(error);
 }
 

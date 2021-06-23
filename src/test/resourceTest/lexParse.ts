@@ -24,7 +24,7 @@ function testNameFromFilePath(filePath: string): string {
     return filePath.replace(path.dirname(__filename), ".");
 }
 
-function parseAllFiles<S extends Parser.IParseState>(settings: Settings<S>, parserName: string): void {
+function parseAllFiles(settings: Settings, parserName: string): void {
     describe(`Run ${parserName} on lexParseResources directory`, () => {
         const fileDirectory: string = path.join(path.dirname(__filename), "lexParseResources");
 
@@ -32,7 +32,7 @@ function parseAllFiles<S extends Parser.IParseState>(settings: Settings<S>, pars
             const testName: string = testNameFromFilePath(filePath);
 
             it(testName, () => {
-                const triedLexParseTask: Task.TriedLexParseTask<S> = TestFileUtils.tryLexParse(settings, filePath);
+                const triedLexParseTask: Task.TriedLexParseTask = TestFileUtils.tryLexParse(settings, filePath);
                 TaskUtils.assertIsParseStageOk(triedLexParseTask);
             });
         }

@@ -26,7 +26,7 @@ export const enum ParenthesisDisambiguation {
     ParenthesizedExpression = "ParenthesizedExpression",
 }
 
-export interface AmbiguousParse<T extends Ast.TNode, S extends IParseState = IParseState> {
-    readonly parseState: S;
-    readonly result: Result<T, ParseError.ParseError<S>>;
+export interface AmbiguousParse<T extends Ast.TNode> {
+    readonly parseState: IParseState;
+    readonly result: Result<T, ParseError.ParseError>;
 }

@@ -5,7 +5,7 @@ import { ICancellationToken } from "../common";
 import { Ast } from "../language";
 import { LexerSnapshot } from "../lexer";
 import { DefaultLocale } from "../localization";
-import { CombinatorialParser, IParser, IParseState, IParseStateUtils, TCreateParseStateOverrides } from "../parser";
+import { CombinatorialParser, IParser, IParseState, IParseStateUtils } from "../parser";
 
 export interface CommonSettings {
     readonly maybeCancellationToken: ICancellationToken | undefined;
@@ -14,24 +14,22 @@ export interface CommonSettings {
 
 export type LexSettings = CommonSettings;
 
-export interface ParseSettings<S extends IParseState = IParseState> extends CommonSettings {
-    readonly parser: IParser<S>;
+export interface ParseSettings extends CommonSettings {
+    readonly parser: IParser;
     readonly createParseState: (
         lexerSnapshot: LexerSnapshot,
-        maybeOverrides: TCreateParseStateOverrides<S> | undefined,
-    ) => S;
-    readonly maybeParserEntryPointFn: ((state: S, parser: IParser<S>) => Ast.TNode) | undefined;
+        maybeOverrides: Partial<IParseState> | undefined,
+    ) => IParseState;
+    readonly maybeParserEntryPointFn: ((state: IParseState, parser: IParser) => Ast.TNode) | undefined;
 }
 
-export type Settings<S extends IParseState = IParseState> = LexSettings & ParseSettings<S>;
+export type Settings = LexSettings & ParseSettings;
 
-export const DefaultSettings: Settings<IParseState> = {
+export const DefaultSettings: Settings = {
     maybeCancellationToken: undefined,
     locale: DefaultLocale,
     parser: CombinatorialParser,
-    createParseState: (
-        lexerSnapshot: LexerSnapshot,
-        maybeOverrides: TCreateParseStateOverrides<IParseState> | undefined,
-    ) => IParseStateUtils.createState(lexerSnapshot, maybeOverrides),
+    createParseState: (lexerSnapshot: LexerSnapshot, maybeOverrides: Partial<IParseState> | undefined) =>
+        IParseStateUtils.createState(lexerSnapshot, maybeOverrides),
     maybeParserEntryPointFn: undefined,
 };

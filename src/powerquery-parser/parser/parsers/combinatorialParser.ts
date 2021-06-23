@@ -22,7 +22,7 @@ import { IParseState, IParseStateUtils } from "../IParseState";
 //
 // 2)
 // readUnaryExpression uses limited look ahead to eliminate several function calls on the call stack.
-export const CombinatorialParser: IParser<IParseState> = {
+export const CombinatorialParser: IParser = {
     ...NaiveParseSteps,
     applyState: IParseStateUtils.applyState,
     copyState: IParseStateUtils.copyState,
@@ -30,40 +30,40 @@ export const CombinatorialParser: IParser<IParseState> = {
     restoreCheckpoint: IParserUtils.restoreCheckpoint,
 
     // 12.2.3.2 Logical expressions
-    readLogicalExpression: (state: IParseState, parser: IParser<IParseState>) =>
+    readLogicalExpression: (state: IParseState, parser: IParser) =>
         (readBinOpExpression(state, parser, Ast.NodeKind.LogicalExpression) as unknown) as Ast.LogicalExpression,
 
     // 12.2.3.3 Is expression
-    readIsExpression: (state: IParseState, parser: IParser<IParseState>) =>
+    readIsExpression: (state: IParseState, parser: IParser) =>
         (readBinOpExpression(state, parser, Ast.NodeKind.IsExpression) as unknown) as Ast.IsExpression,
 
     // 12.2.3.4 As expression
-    readAsExpression: (state: IParseState, parser: IParser<IParseState>) =>
+    readAsExpression: (state: IParseState, parser: IParser) =>
         (readBinOpExpression(state, parser, Ast.NodeKind.AsExpression) as unknown) as Ast.AsExpression,
 
     // 12.2.3.5 Equality expression
-    readEqualityExpression: (state: IParseState, parser: IParser<IParseState>) =>
+    readEqualityExpression: (state: IParseState, parser: IParser) =>
         (readBinOpExpression(state, parser, Ast.NodeKind.EqualityExpression) as unknown) as Ast.EqualityExpression,
 
     // 12.2.3.6 Relational expression
-    readRelationalExpression: (state: IParseState, parser: IParser<IParseState>) =>
+    readRelationalExpression: (state: IParseState, parser: IParser) =>
         (readBinOpExpression(state, parser, Ast.NodeKind.RelationalExpression) as unknown) as Ast.RelationalExpression,
 
     // 12.2.3.7 Arithmetic expressions
-    readArithmeticExpression: (state: IParseState, parser: IParser<IParseState>) =>
+    readArithmeticExpression: (state: IParseState, parser: IParser) =>
         (readBinOpExpression(state, parser, Ast.NodeKind.ArithmeticExpression) as unknown) as Ast.ArithmeticExpression,
 
     // 12.2.3.8 Metadata expression
-    readMetadataExpression: (state: IParseState, parser: IParser<IParseState>) =>
+    readMetadataExpression: (state: IParseState, parser: IParser) =>
         (readBinOpExpression(state, parser, Ast.NodeKind.MetadataExpression) as unknown) as Ast.MetadataExpression,
 
     // 12.2.3.9 Unary expression
     readUnaryExpression,
 };
 
-function readBinOpExpression<S extends IParseState = IParseState>(
-    state: S,
-    parser: IParser<S>,
+function readBinOpExpression(
+    state: IParseState,
+    parser: IParser,
     nodeKind: Ast.NodeKind,
 ): Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType {
     state.maybeCancellationToken?.throwIfCancelled();
@@ -85,7 +85,7 @@ function readBinOpExpression<S extends IParseState = IParseState>(
         const operator: Constant.TBinOpExpressionOperator = maybeOperator;
         operators.push(operator);
         operatorConstants.push(
-            NaiveParseSteps.readTokenKindAsConstant<S, Constant.TBinOpExpressionOperator>(
+            NaiveParseSteps.readTokenKindAsConstant<Constant.TBinOpExpressionOperator>(
                 state,
                 state.maybeCurrentTokenKind!,
                 maybeOperator,
@@ -253,7 +253,7 @@ function binOpExpressionNodeKindFrom(operator: Constant.TBinOpExpressionOperator
     }
 }
 
-function readUnaryExpression(state: IParseState, parser: IParser<IParseState>): Ast.TUnaryExpression {
+function readUnaryExpression(state: IParseState, parser: IParser): Ast.TUnaryExpression {
     state.maybeCancellationToken?.throwIfCancelled();
 
     let maybePrimaryExpression: Ast.TPrimaryExpression | undefined;

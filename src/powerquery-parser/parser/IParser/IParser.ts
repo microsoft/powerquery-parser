@@ -5,7 +5,7 @@ import { IParseState, ParseError } from "..";
 import { Result } from "../../common";
 import { Ast } from "../../language";
 
-export type TriedParse<S extends IParseState = IParseState> = Result<ParseOk<S>, ParseError.TParseError<S>>;
+export type TriedParse = Result<ParseOk, ParseError.TParseError>;
 
 export interface IParseStateCheckpoint {
     readonly tokenIndex: number;
@@ -13,16 +13,16 @@ export interface IParseStateCheckpoint {
     readonly maybeContextNodeId: number | undefined;
 }
 
-export interface ParseOk<S extends IParseState = IParseState> {
+export interface ParseOk {
     readonly root: Ast.TNode;
-    readonly state: S;
+    readonly state: IParseState;
 }
 
-export interface IParser<S extends IParseState = IParseState, C extends IParseStateCheckpoint = IParseStateCheckpoint> {
+export interface IParser {
     // Update `state` to match the the `update`.
-    readonly applyState: (state: S, update: S) => void;
+    readonly applyState: (state: IParseState, update: IParseState) => void;
     // Create a deep copy of S.
-    readonly copyState: (state: S) => S;
+    readonly copyState: (state: IParseState) => IParseState;
 
     // Checkpoints are a snapshot for a particular state,
     // and should enable reverting the state to its earlier version. They do not work on later states.
@@ -30,156 +30,156 @@ export interface IParser<S extends IParseState = IParseState, C extends IParseSt
     //  You can restore checkpoint 2 and then checkpoint 1,
     //  but restoring checkpoint 1 and then checkpoint 2 will result in undefined behavior.
     // Initial state ------- checkpoint 1 -- checkpoint 2 --- current.
-    readonly createCheckpoint: (state: S) => C;
-    readonly restoreCheckpoint: (state: S, checkpoint: C) => void;
+    readonly createCheckpoint: (state: IParseState) => IParseStateCheckpoint;
+    readonly restoreCheckpoint: (state: IParseState, checkpoint: IParseStateCheckpoint) => void;
 
     // 12.1.6 Identifiers
-    readonly readIdentifier: (state: S, parser: IParser<S>) => Ast.Identifier;
-    readonly readGeneralizedIdentifier: (state: S, parser: IParser<S>) => Ast.GeneralizedIdentifier;
-    readonly readKeyword: (state: S, parser: IParser<S>) => Ast.IdentifierExpression;
+    readonly readIdentifier: (state: IParseState, parser: IParser) => Ast.Identifier;
+    readonly readGeneralizedIdentifier: (state: IParseState, parser: IParser) => Ast.GeneralizedIdentifier;
+    readonly readKeyword: (state: IParseState, parser: IParser) => Ast.IdentifierExpression;
 
     // 12.2.1 Documents
-    readonly readDocument: (state: S, parser: IParser<S>) => Ast.TDocument;
+    readonly readDocument: (state: IParseState, parser: IParser) => Ast.TDocument;
 
     // 12.2.2 Section Documents
-    readonly readSectionDocument: (state: S, parser: IParser<S>) => Ast.Section;
-    readonly readSectionMembers: (state: S, parser: IParser<S>) => Ast.IArrayWrapper<Ast.SectionMember>;
-    readonly readSectionMember: (state: S, parser: IParser<S>) => Ast.SectionMember;
+    readonly readSectionDocument: (state: IParseState, parser: IParser) => Ast.Section;
+    readonly readSectionMembers: (state: IParseState, parser: IParser) => Ast.IArrayWrapper<Ast.SectionMember>;
+    readonly readSectionMember: (state: IParseState, parser: IParser) => Ast.SectionMember;
 
     // 12.2.3.1 Expressions
-    readonly readNullCoalescingExpression: (state: S, Parser: IParser<S>) => Ast.TExpression;
-    readonly readExpression: (state: S, parser: IParser<S>) => Ast.TExpression;
+    readonly readNullCoalescingExpression: (state: IParseState, Parser: IParser) => Ast.TExpression;
+    readonly readExpression: (state: IParseState, parser: IParser) => Ast.TExpression;
 
     // 12.2.3.2 Logical expressions
-    readonly readLogicalExpression: (state: S, parser: IParser<S>) => Ast.TLogicalExpression;
+    readonly readLogicalExpression: (state: IParseState, parser: IParser) => Ast.TLogicalExpression;
 
     // 12.2.3.3 Is expression
-    readonly readIsExpression: (state: S, parser: IParser<S>) => Ast.TIsExpression;
-    readonly readNullablePrimitiveType: (state: S, parser: IParser<S>) => Ast.TNullablePrimitiveType;
+    readonly readIsExpression: (state: IParseState, parser: IParser) => Ast.TIsExpression;
+    readonly readNullablePrimitiveType: (state: IParseState, parser: IParser) => Ast.TNullablePrimitiveType;
 
     // 12.2.3.4 As expression
-    readonly readAsExpression: (state: S, parser: IParser<S>) => Ast.TAsExpression;
+    readonly readAsExpression: (state: IParseState, parser: IParser) => Ast.TAsExpression;
 
     // 12.2.3.5 Equality expression
-    readonly readEqualityExpression: (state: S, parser: IParser<S>) => Ast.TEqualityExpression;
+    readonly readEqualityExpression: (state: IParseState, parser: IParser) => Ast.TEqualityExpression;
 
     // 12.2.3.6 Relational expression
-    readonly readRelationalExpression: (state: S, parser: IParser<S>) => Ast.TRelationalExpression;
+    readonly readRelationalExpression: (state: IParseState, parser: IParser) => Ast.TRelationalExpression;
 
     // 12.2.3.7 Arithmetic expressions
-    readonly readArithmeticExpression: (state: S, parser: IParser<S>) => Ast.TArithmeticExpression;
+    readonly readArithmeticExpression: (state: IParseState, parser: IParser) => Ast.TArithmeticExpression;
 
     // 12.2.3.8 Metadata expression
-    readonly readMetadataExpression: (state: S, parser: IParser<S>) => Ast.TMetadataExpression;
+    readonly readMetadataExpression: (state: IParseState, parser: IParser) => Ast.TMetadataExpression;
 
     // 12.2.3.9 Unary expression
-    readonly readUnaryExpression: (state: S, parser: IParser<S>) => Ast.TUnaryExpression;
+    readonly readUnaryExpression: (state: IParseState, parser: IParser) => Ast.TUnaryExpression;
 
     // 12.2.3.10 Primary expression
-    readonly readPrimaryExpression: (state: S, parser: IParser<S>) => Ast.TPrimaryExpression;
+    readonly readPrimaryExpression: (state: IParseState, parser: IParser) => Ast.TPrimaryExpression;
     readonly readRecursivePrimaryExpression: (
-        state: S,
-        parser: IParser<S>,
+        state: IParseState,
+        parser: IParser,
         head: Ast.TPrimaryExpression,
     ) => Ast.RecursivePrimaryExpression;
 
     // 12.2.3.11 Literal expression
-    readonly readLiteralExpression: (state: S, parser: IParser<S>) => Ast.LiteralExpression;
+    readonly readLiteralExpression: (state: IParseState, parser: IParser) => Ast.LiteralExpression;
 
     // 12.2.3.12 Identifier expression
-    readonly readIdentifierExpression: (state: S, parser: IParser<S>) => Ast.IdentifierExpression;
+    readonly readIdentifierExpression: (state: IParseState, parser: IParser) => Ast.IdentifierExpression;
 
     // 12.2.3.14 Parenthesized expression
-    readonly readParenthesizedExpression: (state: S, parser: IParser<S>) => Ast.ParenthesizedExpression;
+    readonly readParenthesizedExpression: (state: IParseState, parser: IParser) => Ast.ParenthesizedExpression;
 
     // 12.2.3.15 Not-implemented expression
-    readonly readNotImplementedExpression: (state: S, parser: IParser<S>) => Ast.NotImplementedExpression;
+    readonly readNotImplementedExpression: (state: IParseState, parser: IParser) => Ast.NotImplementedExpression;
 
     // 12.2.3.16 Invoke expression
-    readonly readInvokeExpression: (state: S, parser: IParser<S>) => Ast.InvokeExpression;
+    readonly readInvokeExpression: (state: IParseState, parser: IParser) => Ast.InvokeExpression;
 
     // 12.2.3.17 List expression
-    readonly readListExpression: (state: S, parser: IParser<S>) => Ast.ListExpression;
-    readonly readListItem: (state: S, parser: IParser<S>) => Ast.TListItem;
+    readonly readListExpression: (state: IParseState, parser: IParser) => Ast.ListExpression;
+    readonly readListItem: (state: IParseState, parser: IParser) => Ast.TListItem;
 
     // 12.2.3.18 Record expression
-    readonly readRecordExpression: (state: S, parser: IParser<S>) => Ast.RecordExpression;
+    readonly readRecordExpression: (state: IParseState, parser: IParser) => Ast.RecordExpression;
 
     // 12.2.3.19 Item access expression
-    readonly readItemAccessExpression: (state: S, parser: IParser<S>) => Ast.ItemAccessExpression;
+    readonly readItemAccessExpression: (state: IParseState, parser: IParser) => Ast.ItemAccessExpression;
 
     // 12.2.3.20 Field access expression
-    readonly readFieldSelection: (state: S, parser: IParser<S>) => Ast.FieldSelector;
-    readonly readFieldProjection: (state: S, parser: IParser<S>) => Ast.FieldProjection;
-    readonly readFieldSelector: (state: S, parser: IParser<S>, allowOptional: boolean) => Ast.FieldSelector;
+    readonly readFieldSelection: (state: IParseState, parser: IParser) => Ast.FieldSelector;
+    readonly readFieldProjection: (state: IParseState, parser: IParser) => Ast.FieldProjection;
+    readonly readFieldSelector: (state: IParseState, parser: IParser, allowOptional: boolean) => Ast.FieldSelector;
 
     // 12.2.3.21 Function expression
-    readonly readFunctionExpression: (state: S, parser: IParser<S>) => Ast.FunctionExpression;
+    readonly readFunctionExpression: (state: IParseState, parser: IParser) => Ast.FunctionExpression;
     readonly readParameterList: (
-        state: S,
-        parser: IParser<S>,
+        state: IParseState,
+        parser: IParser,
     ) => Ast.IParameterList<Ast.AsNullablePrimitiveType | undefined>;
-    readonly readAsType: (state: S, parser: IParser<S>) => Ast.AsType;
+    readonly readAsType: (state: IParseState, parser: IParser) => Ast.AsType;
 
     // 12.2.3.22 Each expression
-    readonly readEachExpression: (state: S, parser: IParser<S>) => Ast.EachExpression;
+    readonly readEachExpression: (state: IParseState, parser: IParser) => Ast.EachExpression;
 
     // 12.2.3.23 Let expression
-    readonly readLetExpression: (state: S, parser: IParser<S>) => Ast.LetExpression;
+    readonly readLetExpression: (state: IParseState, parser: IParser) => Ast.LetExpression;
 
     // 12.2.3.24 If expression
-    readonly readIfExpression: (state: S, parser: IParser<S>) => Ast.IfExpression;
+    readonly readIfExpression: (state: IParseState, parser: IParser) => Ast.IfExpression;
 
     // 12.2.3.25 Type expression
-    readonly readTypeExpression: (state: S, parser: IParser<S>) => Ast.TTypeExpression;
-    readonly readType: (state: S, parser: IParser<S>) => Ast.TType;
-    readonly readPrimaryType: (state: S, parser: IParser<S>) => Ast.TPrimaryType;
-    readonly readRecordType: (state: S, parser: IParser<S>) => Ast.RecordType;
-    readonly readTableType: (state: S, parser: IParser<S>) => Ast.TableType;
+    readonly readTypeExpression: (state: IParseState, parser: IParser) => Ast.TTypeExpression;
+    readonly readType: (state: IParseState, parser: IParser) => Ast.TType;
+    readonly readPrimaryType: (state: IParseState, parser: IParser) => Ast.TPrimaryType;
+    readonly readRecordType: (state: IParseState, parser: IParser) => Ast.RecordType;
+    readonly readTableType: (state: IParseState, parser: IParser) => Ast.TableType;
     readonly readFieldSpecificationList: (
-        state: S,
-        parser: IParser<S>,
+        state: IParseState,
+        parser: IParser,
         allowOpenMarker: boolean,
         testPostCommaError: (state: IParseState) => ParseError.TInnerParseError | undefined,
     ) => Ast.FieldSpecificationList;
-    readonly readListType: (state: S, parser: IParser<S>) => Ast.ListType;
-    readonly readFunctionType: (state: S, parser: IParser<S>) => Ast.FunctionType;
-    readonly readParameterSpecificationList: (state: S, parser: IParser<S>) => Ast.IParameterList<Ast.AsType>;
-    readonly readNullableType: (state: S, parser: IParser<S>) => Ast.NullableType;
+    readonly readListType: (state: IParseState, parser: IParser) => Ast.ListType;
+    readonly readFunctionType: (state: IParseState, parser: IParser) => Ast.FunctionType;
+    readonly readParameterSpecificationList: (state: IParseState, parser: IParser) => Ast.IParameterList<Ast.AsType>;
+    readonly readNullableType: (state: IParseState, parser: IParser) => Ast.NullableType;
 
     // 12.2.3.26 Error raising expression
-    readonly readErrorRaisingExpression: (state: S, parser: IParser<S>) => Ast.ErrorRaisingExpression;
+    readonly readErrorRaisingExpression: (state: IParseState, parser: IParser) => Ast.ErrorRaisingExpression;
 
     // 12.2.3.27 Error handling expression
-    readonly readErrorHandlingExpression: (state: S, parser: IParser<S>) => Ast.ErrorHandlingExpression;
+    readonly readErrorHandlingExpression: (state: IParseState, parser: IParser) => Ast.ErrorHandlingExpression;
 
     // 12.2.4 Literal Attributes
-    readonly readRecordLiteral: (state: S, parser: IParser<S>) => Ast.RecordLiteral;
+    readonly readRecordLiteral: (state: IParseState, parser: IParser) => Ast.RecordLiteral;
     readonly readFieldNamePairedAnyLiterals: (
-        state: S,
-        parser: IParser<S>,
+        state: IParseState,
+        parser: IParser,
         onePairRequired: boolean,
         testPostCommaError: (state: IParseState) => ParseError.TInnerParseError | undefined,
     ) => Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>;
-    readonly readListLiteral: (state: S, parser: IParser<S>) => Ast.ListLiteral;
-    readonly readAnyLiteral: (state: S, parser: IParser<S>) => Ast.TAnyLiteral;
-    readonly readPrimitiveType: (state: S, parser: IParser<S>) => Ast.PrimitiveType;
+    readonly readListLiteral: (state: IParseState, parser: IParser) => Ast.ListLiteral;
+    readonly readAnyLiteral: (state: IParseState, parser: IParser) => Ast.TAnyLiteral;
+    readonly readPrimitiveType: (state: IParseState, parser: IParser) => Ast.PrimitiveType;
 
     readonly readIdentifierPairedExpressions: (
-        state: S,
-        parser: IParser<S>,
+        state: IParseState,
+        parser: IParser,
         onePairRequired: boolean,
         testPostCommaError: (state: IParseState) => ParseError.TInnerParseError | undefined,
     ) => Ast.ICsvArray<Ast.IdentifierPairedExpression>;
-    readonly readIdentifierPairedExpression: (state: S, parser: IParser<S>) => Ast.IdentifierPairedExpression;
+    readonly readIdentifierPairedExpression: (state: IParseState, parser: IParser) => Ast.IdentifierPairedExpression;
     readonly readGeneralizedIdentifierPairedExpressions: (
-        state: S,
-        parser: IParser<S>,
+        state: IParseState,
+        parser: IParser,
         onePairRequired: boolean,
         testPostCommaError: (state: IParseState) => ParseError.TInnerParseError | undefined,
     ) => Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression>;
     readonly readGeneralizedIdentifierPairedExpression: (
-        state: S,
-        parser: IParser<S>,
+        state: IParseState,
+        parser: IParser,
     ) => Ast.GeneralizedIdentifierPairedExpression;
 }

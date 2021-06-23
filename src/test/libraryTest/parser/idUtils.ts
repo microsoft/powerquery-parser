@@ -8,7 +8,7 @@ import { Assert, Language, TaskUtils, Traverse } from "../../../powerquery-parse
 import { NodeIdMap, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
 import { ChildIdsById, IdsByNodeKind, ParentIdById } from "../../../powerquery-parser/parser/nodeIdMap/nodeIdMap";
 
-type TraverseState = Traverse.IState<undefined> &
+type TraverseState = Traverse.ITraversalState<undefined> &
     Pick<NodeIdMap.Collection, "leafIds" | "idsByNodeKind"> & { astIds: number[]; contextIds: number[] };
 
 interface AbridgedNodeIdMapCollection {

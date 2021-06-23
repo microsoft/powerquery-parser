@@ -3,9 +3,9 @@
 
 import { NaiveParseSteps } from ".";
 import { IParser, IParserUtils } from "../IParser";
-import { IParseState, IParseStateUtils } from "../IParseState";
+import { IParseStateUtils } from "../IParseState";
 
-export let RecursiveDescentParser: IParser<IParseState> = {
+export let RecursiveDescentParser: IParser = {
     ...NaiveParseSteps,
     applyState: IParseStateUtils.applyState,
     copyState: IParseStateUtils.copyState,
