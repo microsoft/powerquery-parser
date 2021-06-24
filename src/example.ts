@@ -5,6 +5,7 @@
 
 import { Assert, DefaultSettings, Lexer, ResultUtils, Task, TaskUtils } from ".";
 
+
 parseText(`let x = 1 in try x otherwise 2`);
 
 // @ts-ignore
