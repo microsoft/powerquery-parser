@@ -7,9 +7,7 @@ import { Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { Disambiguation } from "../disambiguation";
 
-export type TCreateParseStateOverrides<S extends IParseState = IParseState> = Partial<NarrowedProperties<S>>;
-
-export interface IParseState {
+export interface ParseState {
     readonly lexerSnapshot: LexerSnapshot;
     readonly maybeCancellationToken: ICancellationToken | undefined;
     readonly locale: string;
@@ -20,13 +18,3 @@ export interface IParseState {
     contextState: ParseContext.State;
     maybeCurrentContextNode: ParseContext.Node | undefined;
 }
-
-type DisallowedOverrideKeys =
-    | "lexerSnapshot"
-    | "maybeCurrentToken"
-    | "maybeCurrentTokenKind"
-    | "maybeCurrentContextNode";
-
-type AllowedOverrideProperties<T extends IParseState = IParseState> = Exclude<keyof T, DisallowedOverrideKeys>;
-
-type NarrowedProperties<T extends IParseState = IParseState> = Pick<T, AllowedOverrideProperties>;

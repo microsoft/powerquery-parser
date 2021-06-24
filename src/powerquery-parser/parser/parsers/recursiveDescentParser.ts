@@ -2,13 +2,13 @@
 // Licensed under the MIT license.
 
 import { NaiveParseSteps } from ".";
-import { IParser, IParserUtils } from "../IParser";
-import { IParseState, IParseStateUtils } from "../IParseState";
+import { Parser, ParserUtils } from "../parser";
+import { ParseStateUtils } from "../parseState";
 
-export let RecursiveDescentParser: IParser<IParseState> = {
+export let RecursiveDescentParser: Parser = {
     ...NaiveParseSteps,
-    applyState: IParseStateUtils.applyState,
-    copyState: IParseStateUtils.copyState,
-    createCheckpoint: IParserUtils.createCheckpoint,
-    restoreCheckpoint: IParserUtils.restoreCheckpoint,
+    applyState: ParseStateUtils.applyState,
+    copyState: ParseStateUtils.copyState,
+    createCheckpoint: ParserUtils.createCheckpoint,
+    restoreCheckpoint: ParserUtils.restoreCheckpoint,
 };

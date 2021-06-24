@@ -8,14 +8,9 @@ import { LexerSnapshot } from "../../lexer";
 import { DefaultLocale } from "../../localization";
 import { Disambiguation } from "../disambiguation";
 import { SequenceKind } from "../error";
-import { IParseState, TCreateParseStateOverrides } from "./IParseState";
+import { ParseState } from "./parseState";
 
-export function createState<S extends IParseState = IParseState>(
-    lexerSnapshot: LexerSnapshot,
-    maybeOverrides: TCreateParseStateOverrides<S> | undefined,
-): IParseState {
-    maybeOverrides = maybeOverrides !== undefined ? maybeOverrides : {};
-
+export function createState(lexerSnapshot: LexerSnapshot, maybeOverrides: Partial<ParseState> | undefined): ParseState {
     const tokenIndex: number = maybeOverrides?.tokenIndex ?? 0;
     const maybeCurrentToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
     const maybeCurrentTokenKind: Token.TokenKind | undefined = maybeCurrentToken?.kind;
@@ -48,7 +43,7 @@ export function createState<S extends IParseState = IParseState>(
 
 // If you have a custom parser + parser state, then you'll have to create your own copyState/applyState functions.
 // See `benchmark.ts` for an example.
-export function applyState(state: IParseState, update: IParseState): void {
+export function applyState(state: ParseState, update: ParseState): void {
     state.tokenIndex = update.tokenIndex;
     state.maybeCurrentToken = update.maybeCurrentToken;
     state.maybeCurrentTokenKind = update.maybeCurrentTokenKind;
@@ -58,14 +53,14 @@ export function applyState(state: IParseState, update: IParseState): void {
 
 // If you have a custom parser + parser state, then you'll have to create your own copyState/applyState functions.
 // See `benchmark.ts` for an example.
-export function copyState(state: IParseState): IParseState {
+export function copyState(state: ParseState): ParseState {
     return {
         ...state,
         contextState: ParseContextUtils.copyState(state.contextState),
     };
 }
 
-export function startContext(state: IParseState, nodeKind: Ast.NodeKind): void {
+export function startContext(state: ParseState, nodeKind: Ast.NodeKind): void {
     const newContextNode: ParseContext.Node = ParseContextUtils.startContext(
         state.contextState,
         nodeKind,
@@ -76,7 +71,7 @@ export function startContext(state: IParseState, nodeKind: Ast.NodeKind): void {
     state.maybeCurrentContextNode = newContextNode;
 }
 
-export function endContext(state: IParseState, astNode: Ast.TNode): void {
+export function endContext(state: ParseState, astNode: Ast.TNode): void {
     const contextNode: ParseContext.Node = Assert.asDefined(
         state.maybeCurrentContextNode,
         `can't end a context if one doesn't exist`,
@@ -90,7 +85,7 @@ export function endContext(state: IParseState, astNode: Ast.TNode): void {
     state.maybeCurrentContextNode = maybeParentOfContextNode;
 }
 
-export function deleteContext(state: IParseState, maybeNodeId: number | undefined): void {
+export function deleteContext(state: ParseState, maybeNodeId: number | undefined): void {
     let nodeId: number;
     if (maybeNodeId === undefined) {
         nodeId = Assert.asDefined(state.maybeCurrentContextNode, `can't delete a context if one doesn't exist`).id;
@@ -101,7 +96,7 @@ export function deleteContext(state: IParseState, maybeNodeId: number | undefine
     state.maybeCurrentContextNode = ParseContextUtils.deleteContext(state.contextState, nodeId);
 }
 
-export function incrementAttributeCounter(state: IParseState): void {
+export function incrementAttributeCounter(state: ParseState): void {
     Assert.asDefined(state.maybeCurrentContextNode, `state.maybeCurrentContextNode`).attributeCounter += 1;
 }
 
@@ -109,23 +104,23 @@ export function incrementAttributeCounter(state: IParseState): void {
 // ---------- IsX ----------
 // -------------------------
 
-export function isTokenKind(state: IParseState, tokenKind: Token.TokenKind, tokenIndex: number): boolean {
+export function isTokenKind(state: ParseState, tokenKind: Token.TokenKind, tokenIndex: number): boolean {
     return state.lexerSnapshot.tokens[tokenIndex]?.kind === tokenKind ?? false;
 }
 
-export function isNextTokenKind(state: IParseState, tokenKind: Token.TokenKind): boolean {
+export function isNextTokenKind(state: ParseState, tokenKind: Token.TokenKind): boolean {
     return isTokenKind(state, tokenKind, state.tokenIndex + 1);
 }
 
 export function isOnTokenKind(
-    state: IParseState,
+    state: ParseState,
     tokenKind: Token.TokenKind,
     tokenIndex: number = state.tokenIndex,
 ): boolean {
     return isTokenKind(state, tokenKind, tokenIndex);
 }
 
-export function isOnConstantKind(state: IParseState, constantKind: Constant.TConstantKind): boolean {
+export function isOnConstantKind(state: ParseState, constantKind: Constant.TConstantKind): boolean {
     if (isOnTokenKind(state, Token.TokenKind.Identifier)) {
         const currentToken: Token.Token = state.lexerSnapshot.tokens[state.tokenIndex];
         if (currentToken?.data === undefined) {
@@ -140,7 +135,7 @@ export function isOnConstantKind(state: IParseState, constantKind: Constant.TCon
     }
 }
 
-export function isOnGeneralizedIdentifierStart(state: IParseState, tokenIndex: number = state.tokenIndex): boolean {
+export function isOnGeneralizedIdentifierStart(state: ParseState, tokenIndex: number = state.tokenIndex): boolean {
     const maybeTokenKind: Token.TokenKind | undefined = state.lexerSnapshot.tokens[tokenIndex]?.kind;
     if (maybeTokenKind === undefined) {
         return false;
@@ -188,7 +183,7 @@ export function isOnGeneralizedIdentifierStart(state: IParseState, tokenIndex: n
 
 // Assumes a call to readPrimaryExpression has already happened.
 export function isRecursivePrimaryExpressionNext(
-    state: IParseState,
+    state: ParseState,
     tokenIndexStart: number = state.tokenIndex,
 ): boolean {
     return (
@@ -207,7 +202,7 @@ export function isRecursivePrimaryExpressionNext(
 // ---------- Asserts ----------
 // -----------------------------
 
-export function assertGetContextNodeMetadata(state: IParseState): ContextNodeMetadata {
+export function assertGetContextNodeMetadata(state: ParseState): ContextNodeMetadata {
     const currentContextNode: ParseContext.Node = Assert.asDefined(state.maybeCurrentContextNode);
     const tokenStart: Token.Token = Assert.asDefined(currentContextNode.maybeTokenStart);
 
@@ -229,7 +224,7 @@ export function assertGetContextNodeMetadata(state: IParseState): ContextNodeMet
     };
 }
 
-export function assertGetTokenAt(state: IParseState, tokenIndex: number): Token.Token {
+export function assertGetTokenAt(state: ParseState, tokenIndex: number): Token.Token {
     const lexerSnapshot: LexerSnapshot = state.lexerSnapshot;
     const maybeToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
 
@@ -244,7 +239,7 @@ export function assertGetTokenAt(state: IParseState, tokenIndex: number): Token.
 // Eg. testCsvEndLetExpression assumes you're in a LetExpression context and have just read a `,`.
 
 export function testCsvContinuationLetExpression(
-    state: IParseState,
+    state: ParseState,
 ): ParseError.ExpectedCsvContinuationError | undefined {
     if (state.maybeCurrentTokenKind === Token.TokenKind.KeywordIn) {
         return new ParseError.ExpectedCsvContinuationError(
@@ -258,7 +253,7 @@ export function testCsvContinuationLetExpression(
 }
 
 export function testCsvContinuationDanglingComma(
-    state: IParseState,
+    state: ParseState,
     tokenKind: Token.TokenKind,
 ): ParseError.ExpectedCsvContinuationError | undefined {
     if (state.maybeCurrentTokenKind === tokenKind) {
@@ -277,7 +272,7 @@ export function testCsvContinuationDanglingComma(
 // -------------------------------------
 
 export function testIsOnTokenKind(
-    state: IParseState,
+    state: ParseState,
     expectedTokenKind: Token.TokenKind,
 ): ParseError.ExpectedTokenKindError | undefined {
     if (expectedTokenKind !== state.maybeCurrentTokenKind) {
@@ -289,7 +284,7 @@ export function testIsOnTokenKind(
 }
 
 export function testIsOnAnyTokenKind(
-    state: IParseState,
+    state: ParseState,
     expectedAnyTokenKinds: ReadonlyArray<Token.TokenKind>,
 ): ParseError.ExpectedAnyTokenKindError | undefined {
     const isError: boolean =
@@ -303,7 +298,7 @@ export function testIsOnAnyTokenKind(
     }
 }
 
-export function assertNoMoreTokens(state: IParseState): void {
+export function assertNoMoreTokens(state: ParseState): void {
     if (state.tokenIndex === state.lexerSnapshot.tokens.length) {
         return;
     }
@@ -316,13 +311,13 @@ export function assertNoMoreTokens(state: IParseState): void {
     );
 }
 
-export function assertNoOpenContext(state: IParseState): void {
+export function assertNoOpenContext(state: ParseState): void {
     Assert.isUndefined(state.maybeCurrentContextNode, undefined, {
         contextNodeId: state.maybeCurrentContextNode?.id,
     });
 }
 
-export function assertIsDoneParsing(state: IParseState): void {
+export function assertIsDoneParsing(state: ParseState): void {
     assertNoMoreTokens(state);
     assertNoOpenContext(state);
 }
@@ -331,15 +326,15 @@ export function assertIsDoneParsing(state: IParseState): void {
 // ---------- Error factories ----------
 // -------------------------------------
 
-export function unterminatedBracketError(state: IParseState): ParseError.UnterminatedSequence {
+export function unterminatedBracketError(state: ParseState): ParseError.UnterminatedSequence {
     return unterminatedSequence(state, SequenceKind.Bracket);
 }
 
-export function unterminatedParenthesesError(state: IParseState): ParseError.UnterminatedSequence {
+export function unterminatedParenthesesError(state: ParseState): ParseError.UnterminatedSequence {
     return unterminatedSequence(state, SequenceKind.Parenthesis);
 }
 
-function unterminatedSequence(state: IParseState, sequenceKind: SequenceKind): ParseError.UnterminatedSequence {
+function unterminatedSequence(state: ParseState, sequenceKind: SequenceKind): ParseError.UnterminatedSequence {
     const token: Token.Token = assertGetTokenAt(state, state.tokenIndex);
     return new ParseError.UnterminatedSequence(
         state.locale,
@@ -353,12 +348,12 @@ function unterminatedSequence(state: IParseState, sequenceKind: SequenceKind): P
 // ---------- Column number factories ----------
 // ---------------------------------------------
 
-export function maybeCurrentTokenWithColumnNumber(state: IParseState): ParseError.TokenWithColumnNumber | undefined {
+export function maybeCurrentTokenWithColumnNumber(state: ParseState): ParseError.TokenWithColumnNumber | undefined {
     return maybeTokenWithColumnNumber(state, state.tokenIndex);
 }
 
 export function maybeTokenWithColumnNumber(
-    state: IParseState,
+    state: ParseState,
     tokenIndex: number,
 ): ParseError.TokenWithColumnNumber | undefined {
     const maybeToken: Token.Token | undefined = state.lexerSnapshot.tokens[tokenIndex];

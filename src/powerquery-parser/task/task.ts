@@ -4,18 +4,15 @@
 import { Lexer, Parser } from "..";
 import { CommonError, ResultKind } from "../common";
 import { Ast } from "../language";
-import { IParseState, NodeIdMap } from "../parser";
+import { NodeIdMap, ParseState } from "../parser";
 
-export type TTask<S extends IParseState = IParseState> = TriedLexTask | TriedParseTask<S>;
+export type TTask = TriedLexTask | TriedParseTask;
 
 export type TriedLexTask = LexTaskOk | LexTaskError;
 
-export type TriedParseTask<S extends IParseState = IParseState> =
-    | ParseTaskOk
-    | ParseTaskCommonError
-    | ParseTaskParseError<S>;
+export type TriedParseTask = ParseTaskOk | ParseTaskCommonError | ParseTaskParseError;
 
-export type TriedLexParseTask<S extends IParseState = IParseState> = LexTaskError | TriedParseTask<S>;
+export type TriedLexParseTask = LexTaskError | TriedParseTask;
 
 export const enum TaskStage {
     Lex = "Lex",
@@ -46,10 +43,10 @@ export interface IParseTask extends ITask {
     readonly lexerSnapshot: Lexer.LexerSnapshot;
 }
 
-export interface ParseTaskOk<S extends IParseState = IParseState> extends IParseTask {
+export interface ParseTaskOk extends IParseTask {
     readonly resultKind: ResultKind.Ok;
     readonly ast: Ast.TNode;
-    readonly parseState: S;
+    readonly parseState: ParseState;
     // Indirection to parseState.contextState.nodeIdMapCollection
     readonly nodeIdMapCollection: NodeIdMap.Collection;
 }
@@ -65,11 +62,10 @@ export interface ParseTaskCommonError extends IParseTaskError<CommonError.Common
     readonly isCommonError: true;
 }
 
-export interface ParseTaskParseError<S extends IParseState = IParseState>
-    extends IParseTaskError<Parser.ParseError.ParseError<S>> {
+export interface ParseTaskParseError extends IParseTaskError<Parser.ParseError.ParseError> {
     readonly resultKind: ResultKind.Error;
     readonly isCommonError: false;
-    readonly parseState: S;
+    readonly parseState: ParseState;
     // Indirection to parseState.contextState.nodeIdMapCollection
     readonly nodeIdMapCollection: NodeIdMap.Collection;
 }

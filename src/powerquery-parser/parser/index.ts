@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as ParseError from "./error";
-
-export { ParseError };
+export * as ParseError from "./error";
 export * from "./context";
 export * from "./disambiguation";
-export * from "./IParser";
-export * from "./IParseState";
+export * from "./parser";
+export * from "./parseState";
 export * from "./nodeIdMap";
 export * from "./parsers";

@@ -3,27 +3,25 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Assert, DefaultSettings, Parser } from "../../..";
+import { Assert, DefaultSettings } from "../../..";
+import { ParseError } from "../../../powerquery-parser/parser";
 import { TestAssertUtils } from "../../testUtils";
 
-function assertGetExpectedTokenKindError(text: string): Parser.ParseError.ExpectedTokenKindError {
-    const error: Parser.ParseError.ParseError<Parser.IParseState> = TestAssertUtils.assertGetParseError(
-        DefaultSettings,
-        text,
-    );
-    const innerError: Parser.ParseError.TInnerParseError = error.innerError;
+function assertGetExpectedTokenKindError(text: string): ParseError.ExpectedTokenKindError {
+    const error: ParseError.ParseError = TestAssertUtils.assertGetParseError(DefaultSettings, text);
+    const innerError: ParseError.TInnerParseError = error.innerError;
 
     Assert.isTrue(
-        innerError instanceof Parser.ParseError.ExpectedTokenKindError,
-        "innerError instanceof Parser.ParseError.ExpectedTokenKindError",
+        innerError instanceof ParseError.ExpectedTokenKindError,
+        "innerError instanceof ParseError.ExpectedTokenKindError",
     );
 
-    return innerError as Parser.ParseError.ExpectedTokenKindError;
+    return innerError as ParseError.ExpectedTokenKindError;
 }
 
 function assertErrorAt(text: string, lineNumber: number, columnNumber: number, codeUnit: number): void {
-    const error: Parser.ParseError.ExpectedTokenKindError = assertGetExpectedTokenKindError(text);
-    const foundToken: Parser.ParseError.TokenWithColumnNumber = Assert.asDefined(error.maybeFoundToken);
+    const error: ParseError.ExpectedTokenKindError = assertGetExpectedTokenKindError(text);
+    const foundToken: ParseError.TokenWithColumnNumber = Assert.asDefined(error.maybeFoundToken);
 
     expect(foundToken.token.positionStart.codeUnit).to.equal(codeUnit, "codeUnit");
     expect(foundToken.token.positionStart.lineNumber).to.equal(lineNumber, "lineNumber");

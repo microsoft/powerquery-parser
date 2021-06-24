@@ -12,9 +12,7 @@ interface ChildIdsByIdEntry {
     readonly kind: Language.Ast.NodeKind;
 }
 
-function createActual<S extends Parser.IParseState = Parser.IParseState>(
-    lexParseOk: Task.ParseTaskOk<S>,
-): ChildIdsByIdEntry[] {
+function createActual(lexParseOk: Task.ParseTaskOk): ChildIdsByIdEntry[] {
     const actual: ChildIdsByIdEntry[] = [];
     const astNodeById: Parser.NodeIdMap.AstNodeById = lexParseOk.nodeIdMapCollection.astNodeById;
 
