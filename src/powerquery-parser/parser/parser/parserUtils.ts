@@ -7,25 +7,25 @@ import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { ParseSettings } from "../../settings";
 import { ParseContext, ParseContextUtils } from "../context";
-import { IParseState, IParseStateUtils } from "../IParseState";
 import { NodeIdMap, NodeIdMapUtils } from "../nodeIdMap";
-import { IParser, IParseStateCheckpoint, TriedParse } from "./IParser";
+import { ParseState, ParseStateUtils } from "../parseState";
+import { Parser, ParseStateCheckpoint, TriedParse } from "./parser";
 
 export function tryParse(parseSettings: ParseSettings, lexerSnapshot: LexerSnapshot): TriedParse {
-    const maybeParserEntryPointFn: ((state: IParseState, parser: IParser) => Ast.TNode) | undefined =
+    const maybeParserEntryPointFn: ((state: ParseState, parser: Parser) => Ast.TNode) | undefined =
         parseSettings?.maybeParserEntryPointFn;
 
     if (maybeParserEntryPointFn === undefined) {
         return tryParseDocument(parseSettings, lexerSnapshot) as TriedParse;
     }
 
-    const parseState: IParseState = parseSettings.createParseState(lexerSnapshot, {
+    const parseState: ParseState = parseSettings.createParseState(lexerSnapshot, {
         maybeCancellationToken: parseSettings.maybeCancellationToken,
         locale: parseSettings.locale,
     });
     try {
         const root: Ast.TNode = maybeParserEntryPointFn(parseState, parseSettings.parser);
-        IParseStateUtils.assertIsDoneParsing(parseState);
+        ParseStateUtils.assertIsDoneParsing(parseState);
         return ResultUtils.createOk({
             lexerSnapshot,
             root,
@@ -39,33 +39,33 @@ export function tryParse(parseSettings: ParseSettings, lexerSnapshot: LexerSnaps
 export function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: LexerSnapshot): TriedParse {
     let root: Ast.TNode;
 
-    const expressionDocumentState: IParseState = parseSettings.createParseState(lexerSnapshot, {
+    const expressionDocumentState: ParseState = parseSettings.createParseState(lexerSnapshot, {
         maybeCancellationToken: parseSettings.maybeCancellationToken,
         locale: parseSettings.locale,
     });
     try {
         root = parseSettings.parser.readExpression(expressionDocumentState, parseSettings.parser);
-        IParseStateUtils.assertIsDoneParsing(expressionDocumentState);
+        ParseStateUtils.assertIsDoneParsing(expressionDocumentState);
         return ResultUtils.createOk({
             lexerSnapshot,
             root,
             state: expressionDocumentState,
         });
     } catch (expressionDocumentError) {
-        const sectionDocumentState: IParseState = parseSettings.createParseState(lexerSnapshot, {
+        const sectionDocumentState: ParseState = parseSettings.createParseState(lexerSnapshot, {
             maybeCancellationToken: parseSettings.maybeCancellationToken,
             locale: parseSettings.locale,
         });
         try {
             root = parseSettings.parser.readSectionDocument(sectionDocumentState, parseSettings.parser);
-            IParseStateUtils.assertIsDoneParsing(sectionDocumentState);
+            ParseStateUtils.assertIsDoneParsing(sectionDocumentState);
             return ResultUtils.createOk({
                 lexerSnapshot,
                 root,
                 state: sectionDocumentState,
             });
         } catch (sectionDocumentError) {
-            let betterParsedState: IParseState;
+            let betterParsedState: ParseState;
             let betterParsedError: Error;
 
             if (expressionDocumentState.tokenIndex >= sectionDocumentState.tokenIndex) {
@@ -93,7 +93,7 @@ export function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: Le
 // Therefore we only care about the delta between before and after the try/catch block.
 // Thanks to the invariants above and the fact the ids for nodes are an auto-incrementing integer
 // we can easily just drop all delete all context nodes past the id of when the backup was created.
-export function createCheckpoint(state: IParseState): IParseStateCheckpoint {
+export function createCheckpoint(state: ParseState): ParseStateCheckpoint {
     return {
         tokenIndex: state.tokenIndex,
         contextStateIdCounter: state.contextState.idCounter,
@@ -106,7 +106,7 @@ export function createCheckpoint(state: IParseState): IParseStateCheckpoint {
 // See `benchmark.ts` for an example.
 //
 // See createCheckpoint above for more information.
-export function restoreCheckpoint(state: IParseState, checkpoint: IParseStateCheckpoint): void {
+export function restoreCheckpoint(state: ParseState, checkpoint: ParseStateCheckpoint): void {
     state.tokenIndex = checkpoint.tokenIndex;
     state.maybeCurrentToken = state.lexerSnapshot.tokens[state.tokenIndex];
     state.maybeCurrentTokenKind = state.maybeCurrentToken?.kind;
@@ -149,7 +149,7 @@ export function restoreCheckpoint(state: IParseState, checkpoint: IParseStateChe
     }
 }
 
-function ensureParseError(state: IParseState, error: Error, locale: string): ParseError.TParseError {
+function ensureParseError(state: ParseState, error: Error, locale: string): ParseError.TParseError {
     if (error instanceof ParseError.ParseError) {
         return error;
     } else if (ParseError.isTInnerParseError(error)) {

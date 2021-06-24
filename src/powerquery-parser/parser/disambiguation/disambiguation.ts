@@ -4,7 +4,7 @@
 import { ParseError } from "..";
 import { Result } from "../../common";
 import { Ast } from "../../language";
-import { IParseState } from "../IParseState";
+import { ParseState } from "../parseState";
 
 export type TAmbiguousBracketNode = Ast.FieldProjection | Ast.FieldSelector | Ast.RecordExpression;
 
@@ -27,6 +27,6 @@ export const enum ParenthesisDisambiguation {
 }
 
 export interface AmbiguousParse<T extends Ast.TNode> {
-    readonly parseState: IParseState;
+    readonly parseState: ParseState;
     readonly result: Result<T, ParseError.ParseError>;
 }

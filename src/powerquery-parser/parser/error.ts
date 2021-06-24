@@ -4,7 +4,7 @@
 import { Assert, CommonError, StringUtils } from "../common";
 import { Token } from "../language";
 import { Localization, LocalizationUtils } from "../localization";
-import { IParseState } from "./IParseState";
+import { ParseState } from "./parseState";
 
 export type TParseError = CommonError.CommonError | ParseError;
 
@@ -29,7 +29,7 @@ export const enum SequenceKind {
 }
 
 export class ParseError extends Error {
-    constructor(readonly innerError: TInnerParseError, readonly state: IParseState) {
+    constructor(readonly innerError: TInnerParseError, readonly state: ParseState) {
         super(innerError.message);
         Object.setPrototypeOf(this, ParseError.prototype);
     }

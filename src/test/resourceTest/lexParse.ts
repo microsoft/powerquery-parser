@@ -9,7 +9,7 @@ const parsers: ReadonlyArray<[Settings, string]> = [
     [createSettings(Parser.RecursiveDescentParser), "RecursiveDescentParser"],
 ];
 
-function createSettings(parser: Parser.IParser): Settings {
+function createSettings(parser: Parser.Parser): Settings {
     return {
         ...DefaultSettings,
         parser,

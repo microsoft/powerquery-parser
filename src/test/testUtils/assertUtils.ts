@@ -41,5 +41,5 @@ function assertGetTriedParse(settings: LexSettings & ParseSettings, text: string
     Assert.isOk(triedSnapshot);
     const lexerSnapshot: Lexer.LexerSnapshot = triedSnapshot.value;
 
-    return Parser.IParserUtils.tryParse(settings, lexerSnapshot);
+    return Parser.ParserUtils.tryParse(settings, lexerSnapshot);
 }

@@ -4,7 +4,7 @@
 import { Lexer, Parser } from "..";
 import { CommonError, ResultKind, ResultUtils } from "../common";
 import { Ast } from "../language";
-import { IParserUtils, IParseState } from "../parser";
+import { ParserUtils, ParseState } from "../parser";
 import { LexSettings, ParseSettings } from "../settings/settings";
 import {
     LexTaskError,
@@ -189,7 +189,7 @@ export function tryLex(settings: LexSettings, text: string): TriedLexTask {
 }
 
 export function tryParse(settings: ParseSettings, lexerSnapshot: Lexer.LexerSnapshot): TriedParseTask {
-    const triedParse: Parser.TriedParse = IParserUtils.tryParse(settings, lexerSnapshot);
+    const triedParse: Parser.TriedParse = ParserUtils.tryParse(settings, lexerSnapshot);
 
     if (ResultUtils.isOk(triedParse)) {
         return createParseTaskOk(lexerSnapshot, triedParse.value.root, triedParse.value.state);
@@ -228,7 +228,7 @@ function createLexTaskError(error: Lexer.LexError.TLexError): LexTaskError {
     };
 }
 
-function createParseTaskOk(lexerSnapshot: Lexer.LexerSnapshot, ast: Ast.TNode, parseState: IParseState): ParseTaskOk {
+function createParseTaskOk(lexerSnapshot: Lexer.LexerSnapshot, ast: Ast.TNode, parseState: ParseState): ParseTaskOk {
     return {
         stage: TaskStage.Parse,
         resultKind: ResultKind.Ok,
@@ -256,7 +256,7 @@ function createParseTaskParseError(
     lexerSnapshot: Lexer.LexerSnapshot,
     error: Parser.ParseError.ParseError,
 ): ParseTaskParseError {
-    const parseState: IParseState = error.state;
+    const parseState: ParseState = error.state;
     const contextState: Parser.ParseContext.State = parseState.contextState;
 
     return {

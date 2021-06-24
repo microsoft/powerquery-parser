@@ -7,7 +7,7 @@ import { Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { Disambiguation } from "../disambiguation";
 
-export interface IParseState {
+export interface ParseState {
     readonly lexerSnapshot: LexerSnapshot;
     readonly maybeCancellationToken: ICancellationToken | undefined;
     readonly locale: string;

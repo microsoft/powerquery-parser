@@ -4,7 +4,7 @@
 import { Lexer, Parser } from "..";
 import { CommonError, ResultKind } from "../common";
 import { Ast } from "../language";
-import { IParseState, NodeIdMap } from "../parser";
+import { NodeIdMap, ParseState } from "../parser";
 
 export type TTask = TriedLexTask | TriedParseTask;
 
@@ -46,7 +46,7 @@ export interface IParseTask extends ITask {
 export interface ParseTaskOk extends IParseTask {
     readonly resultKind: ResultKind.Ok;
     readonly ast: Ast.TNode;
-    readonly parseState: IParseState;
+    readonly parseState: ParseState;
     // Indirection to parseState.contextState.nodeIdMapCollection
     readonly nodeIdMapCollection: NodeIdMap.Collection;
 }
@@ -65,7 +65,7 @@ export interface ParseTaskCommonError extends IParseTaskError<CommonError.Common
 export interface ParseTaskParseError extends IParseTaskError<Parser.ParseError.ParseError> {
     readonly resultKind: ResultKind.Error;
     readonly isCommonError: false;
-    readonly parseState: IParseState;
+    readonly parseState: ParseState;
     // Indirection to parseState.contextState.nodeIdMapCollection
     readonly nodeIdMapCollection: NodeIdMap.Collection;
 }

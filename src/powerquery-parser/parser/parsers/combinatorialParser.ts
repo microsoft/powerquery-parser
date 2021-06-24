@@ -6,8 +6,8 @@ import { NodeIdMap, ParseContextUtils } from "..";
 import { ArrayUtils, Assert, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../language";
 import { Disambiguation, DisambiguationUtils } from "../disambiguation";
-import { IParser, IParserUtils } from "../IParser";
-import { IParseState, IParseStateUtils } from "../IParseState";
+import { Parser, ParserUtils } from "../parser";
+import { ParseState, ParseStateUtils } from "../parseState";
 
 // If the Naive parser were to parse the expression '1' it would need to recurse down a dozen or so constructs,
 // which at each step would create a new context node, parse LiteralExpression, then traverse back up while
@@ -22,39 +22,39 @@ import { IParseState, IParseStateUtils } from "../IParseState";
 //
 // 2)
 // readUnaryExpression uses limited look ahead to eliminate several function calls on the call stack.
-export const CombinatorialParser: IParser = {
+export const CombinatorialParser: Parser = {
     ...NaiveParseSteps,
-    applyState: IParseStateUtils.applyState,
-    copyState: IParseStateUtils.copyState,
-    createCheckpoint: IParserUtils.createCheckpoint,
-    restoreCheckpoint: IParserUtils.restoreCheckpoint,
+    applyState: ParseStateUtils.applyState,
+    copyState: ParseStateUtils.copyState,
+    createCheckpoint: ParserUtils.createCheckpoint,
+    restoreCheckpoint: ParserUtils.restoreCheckpoint,
 
     // 12.2.3.2 Logical expressions
-    readLogicalExpression: (state: IParseState, parser: IParser) =>
+    readLogicalExpression: (state: ParseState, parser: Parser) =>
         (readBinOpExpression(state, parser, Ast.NodeKind.LogicalExpression) as unknown) as Ast.LogicalExpression,
 
     // 12.2.3.3 Is expression
-    readIsExpression: (state: IParseState, parser: IParser) =>
+    readIsExpression: (state: ParseState, parser: Parser) =>
         (readBinOpExpression(state, parser, Ast.NodeKind.IsExpression) as unknown) as Ast.IsExpression,
 
     // 12.2.3.4 As expression
-    readAsExpression: (state: IParseState, parser: IParser) =>
+    readAsExpression: (state: ParseState, parser: Parser) =>
         (readBinOpExpression(state, parser, Ast.NodeKind.AsExpression) as unknown) as Ast.AsExpression,
 
     // 12.2.3.5 Equality expression
-    readEqualityExpression: (state: IParseState, parser: IParser) =>
+    readEqualityExpression: (state: ParseState, parser: Parser) =>
         (readBinOpExpression(state, parser, Ast.NodeKind.EqualityExpression) as unknown) as Ast.EqualityExpression,
 
     // 12.2.3.6 Relational expression
-    readRelationalExpression: (state: IParseState, parser: IParser) =>
+    readRelationalExpression: (state: ParseState, parser: Parser) =>
         (readBinOpExpression(state, parser, Ast.NodeKind.RelationalExpression) as unknown) as Ast.RelationalExpression,
 
     // 12.2.3.7 Arithmetic expressions
-    readArithmeticExpression: (state: IParseState, parser: IParser) =>
+    readArithmeticExpression: (state: ParseState, parser: Parser) =>
         (readBinOpExpression(state, parser, Ast.NodeKind.ArithmeticExpression) as unknown) as Ast.ArithmeticExpression,
 
     // 12.2.3.8 Metadata expression
-    readMetadataExpression: (state: IParseState, parser: IParser) =>
+    readMetadataExpression: (state: ParseState, parser: Parser) =>
         (readBinOpExpression(state, parser, Ast.NodeKind.MetadataExpression) as unknown) as Ast.MetadataExpression,
 
     // 12.2.3.9 Unary expression
@@ -62,12 +62,12 @@ export const CombinatorialParser: IParser = {
 };
 
 function readBinOpExpression(
-    state: IParseState,
-    parser: IParser,
+    state: ParseState,
+    parser: Parser,
     nodeKind: Ast.NodeKind,
 ): Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType {
     state.maybeCancellationToken?.throwIfCancelled();
-    IParseStateUtils.startContext(state, nodeKind);
+    ParseStateUtils.startContext(state, nodeKind);
     const placeholderContextId: number = state.maybeCurrentContextNode!.id;
 
     // operators/operatorConstants are of length N
@@ -107,7 +107,7 @@ function readBinOpExpression(
 
     // There was a single TUnaryExpression, not a TBinOpExpression.
     if (expressions.length === 1) {
-        IParseStateUtils.deleteContext(state, placeholderContextId);
+        ParseStateUtils.deleteContext(state, placeholderContextId);
         return expressions[0];
     }
 
@@ -209,7 +209,7 @@ function readBinOpExpression(
     nodeIdMapCollection.childIdsById.set(placeholderContextId, [lastExpression.id]);
     nodeIdMapCollection.parentIdById.set(lastExpression.id, placeholderContextId);
 
-    IParseStateUtils.deleteContext(state, placeholderContextId);
+    ParseStateUtils.deleteContext(state, placeholderContextId);
     return lastExpression;
 }
 
@@ -253,7 +253,7 @@ function binOpExpressionNodeKindFrom(operator: Constant.TBinOpExpressionOperator
     }
 }
 
-function readUnaryExpression(state: IParseState, parser: IParser): Ast.TUnaryExpression {
+function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUnaryExpression {
     state.maybeCancellationToken?.throwIfCancelled();
 
     let maybePrimaryExpression: Ast.TPrimaryExpression | undefined;
@@ -317,7 +317,7 @@ function readUnaryExpression(state: IParseState, parser: IParser): Ast.TUnaryExp
 
     // We should only reach this code block if a primary expression was read.
     const primaryExpression: Ast.TPrimaryExpression = maybePrimaryExpression;
-    if (IParseStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex)) {
+    if (ParseStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex)) {
         return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
     } else {
         return primaryExpression;

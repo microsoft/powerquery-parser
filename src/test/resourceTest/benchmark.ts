@@ -41,25 +41,25 @@ writeReport(ResourceDirectory, allSummaries);
 
 function createBenchmarkState(
     lexerSnapshot: Lexer.LexerSnapshot,
-    maybeOverrides: Partial<Parser.IParseState> | undefined,
-    baseParser: Parser.IParser,
+    maybeOverrides: Partial<Parser.ParseState> | undefined,
+    baseParser: Parser.Parser,
 ): BenchmarkState {
     return {
-        ...Parser.IParseStateUtils.createState(lexerSnapshot, maybeOverrides),
+        ...Parser.ParseStateUtils.createState(lexerSnapshot, maybeOverrides),
         baseParser,
         functionTimestamps: new Map(),
         functionTimestampCounter: 0,
     };
 }
 
-function createBenchmarkParseSettings(baseParser: Parser.IParser): ParseSettings {
+function createBenchmarkParseSettings(baseParser: Parser.Parser): ParseSettings {
     return {
         maybeCancellationToken: undefined,
         locale: DefaultLocale,
         parser: BenchmarkParser,
         createParseState: (
             lexerSnapshot: Lexer.LexerSnapshot,
-            maybeOverrides: Partial<Parser.IParseState> | undefined,
+            maybeOverrides: Partial<Parser.ParseState> | undefined,
         ) => createBenchmarkState(lexerSnapshot, maybeOverrides, baseParser),
         maybeParserEntryPointFn: undefined,
     };
