@@ -6,11 +6,10 @@ A parser for the [Power Query/M](https://docs.microsoft.com/en-us/power-query/) 
 
 ## How to use
 
-The most common way to consume the project is to interact with the helper functions found in [src/task.ts](src/powerquery-parser/task.ts). There are all-in-one functions, such as `tryLexParseInspection`, which does a full pass on a given document. There are also incremental functions, such as `tryLex` and `tryParse`, which perform one step at a time. Minimal code samples can be found in [example.ts](src/powerquery-parser/example.ts).
+The most common way to consume the project is to interact with the helper functions found in [src/task.ts](src/powerquery-parser/task.ts). There are all-in-one functions, such as `tryLexParseInspection`, which does a full pass on a given document. There are also incremental functions, such as `tryLex` and `tryParse`, which perform one step at a time. Minimal code samples can be found in [example.ts](src/example.ts).
 
 ## Related projects
 
-- [powerquery-parser](https://github.com/microsoft/powerquery-parser): A lexer + parser for Power Query. Also contains features such as type validation.
 - [powerquery-formatter](https://github.com/microsoft/powerquery-formatter): Code formatter for Power Query which is bundled in the VSCode extension.
 - [powerquery-language-services](https://github.com/microsoft/powerquery-language-services): A high level library that wraps the parser for external projects, such as the VSCode extension. Includes features such as Intellisense.
 - [vscode-powerquery](https://github.com/microsoft/vscode-powerquery): The VSCode extension for Power Query.
