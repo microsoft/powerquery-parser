@@ -660,8 +660,8 @@ export function assertIsUnknown(type: Type.TPowerQueryType): asserts type is Typ
 }
 
 interface AssertErrorDetails {
-    givenTypeKind: Type.TypeKind;
-    givenExtendedTypeKind: Type.ExtendedTypeKind | undefined;
-    expectedTypeKind: Type.TypeKind | ReadonlyArray<Type.TypeKind>;
-    expectedExtendedTypeKind: undefined | ReadonlyArray<Type.ExtendedTypeKind | undefined>;
+    readonly givenTypeKind: Type.TypeKind;
+    readonly givenExtendedTypeKind: Type.ExtendedTypeKind | undefined;
+    readonly expectedTypeKind: Type.TypeKind | ReadonlyArray<Type.TypeKind>;
+    readonly expectedExtendedTypeKind: undefined | ReadonlyArray<Type.ExtendedTypeKind | undefined>;
 }
