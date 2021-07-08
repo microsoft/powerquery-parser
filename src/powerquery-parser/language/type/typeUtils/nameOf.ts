@@ -88,7 +88,7 @@ export function nameOfTypeKind(kind: Type.TypeKind): string {
     return kind === Type.TypeKind.NotApplicable ? "not applicable" : kind.toLowerCase();
 }
 
-function nameOfFieldSpecificationList(type: Type.FieldSpecificationList): string {
+function nameOfFieldSpecificationList(type: Type.TFieldSpecificationList): string {
     const chunks: string[] = [];
 
     for (const [key, value] of type.fields.entries()) {

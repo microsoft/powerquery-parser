@@ -84,7 +84,7 @@ export function createDefinedRecord(
 
 export function createDefinedTable(
     isNullable: boolean,
-    fields: Map<string, Type.TPowerQueryType>,
+    fields: Type.OrderedFields,
     isOpen: boolean,
 ): Type.DefinedTable {
     return {
