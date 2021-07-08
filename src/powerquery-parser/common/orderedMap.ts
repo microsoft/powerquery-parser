@@ -2,16 +2,15 @@
 // Licensed under the MIT license.
 
 import { ArrayUtils, Assert } from ".";
-import { TPowerQueryType } from "../language/type/type";
 
-export class OrderedMap implements Map<string, TPowerQueryType> {
+export class OrderedMap<K, V> implements Map<K, V> {
     public size: number;
     public [Symbol.toStringTag]: string;
 
-    private readonly map: Map<string, TPowerQueryType>;
-    private order: ReadonlyArray<string>;
+    private readonly map: Map<K, V>;
+    private order: ReadonlyArray<K>;
 
-    constructor(entries?: readonly (readonly [string, TPowerQueryType])[] | null | undefined) {
+    constructor(entries?: readonly (readonly [K, V])[] | null | undefined) {
         if (!entries) {
             this.map = new Map();
             this.order = [];
@@ -22,7 +21,7 @@ export class OrderedMap implements Map<string, TPowerQueryType> {
             this.size = entries.length;
         }
     }
-    public [Symbol.iterator](): IterableIterator<[string, TPowerQueryType]> {
+    public [Symbol.iterator](): IterableIterator<[K, V]> {
         return this.entries();
     }
 
@@ -31,7 +30,7 @@ export class OrderedMap implements Map<string, TPowerQueryType> {
         this.order = [];
     }
 
-    public delete(key: string): boolean {
+    public delete(key: K): boolean {
         if (this.map.delete(key)) {
             this.order = ArrayUtils.removeFirstInstance(this.order, key);
             return true;
@@ -40,31 +39,31 @@ export class OrderedMap implements Map<string, TPowerQueryType> {
         }
     }
 
-    public *entries(): IterableIterator<[string, TPowerQueryType]> {
+    public *entries(): IterableIterator<[K, V]> {
         for (const key of this.order) {
             yield [key, Assert.asDefined(this.map.get(key))];
         }
     }
 
-    public forEach(callbackfn: (value: TPowerQueryType, key: string, map: Map<string, TPowerQueryType>) => void): void {
+    public forEach(callbackfn: (value: V, key: K, map: Map<K, V>) => void): void {
         for (const [key, value] of this.entries()) {
             callbackfn(value, key, this.map);
         }
     }
 
-    public get(key: string): TPowerQueryType | undefined {
+    public get(key: K): V | undefined {
         return this.map.get(key);
     }
 
-    public has(key: string): boolean {
+    public has(key: K): boolean {
         return this.map.has(key);
     }
 
-    public keys(): IterableIterator<string> {
+    public keys(): IterableIterator<K> {
         return this.map.keys();
     }
 
-    public set(key: string, value: TPowerQueryType, maintainIndex?: boolean): this {
+    public set(key: K, value: V, maintainIndex?: boolean): this {
         if (this.has(key)) {
             if (!maintainIndex) {
                 this.order = [...ArrayUtils.removeFirstInstance(this.order, key), key];
@@ -77,7 +76,7 @@ export class OrderedMap implements Map<string, TPowerQueryType> {
         return this;
     }
 
-    public values(): IterableIterator<TPowerQueryType> {
+    public values(): IterableIterator<V> {
         return this.map.values();
     }
 }

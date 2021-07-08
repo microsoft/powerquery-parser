@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { OrderedMap } from "../../common";
+
 // A representation of a type can be either an extended type, or a non-extended type.
 // Non-extended types are the types you traditionally find in Power Query, eg. `number`, `text`, etc.
 //
@@ -102,6 +104,13 @@ export type TPrimitiveType =
     | Time
     | Type
     | Unknown;
+
+// Key value pairs for Records and Tables,
+// where tables have ordered pairs and records have unordered pairs.
+export type TFieldSpecificationList = FieldSpecificationList<TFields>;
+export type TFields = OrderedFields | UnorderedFields;
+export type OrderedFields = OrderedMap<string, TPowerQueryType>;
+export type UnorderedFields = Map<string, TPowerQueryType>;
 
 export const enum TypeKind {
     Any = "Any",
@@ -210,8 +219,8 @@ export interface IPrimitiveType<T extends TypeKind = TypeKind> extends IType<T> 
 // ---------- Non-IType Interfaces ----------
 // ------------------------------------------
 
-export interface FieldSpecificationList {
-    readonly fields: Map<string, TPowerQueryType>;
+export interface FieldSpecificationList<T extends TFields> {
+    readonly fields: T;
     readonly isOpen: boolean;
 }
 
@@ -265,13 +274,13 @@ export interface DefinedListType extends IExtendedType {
 }
 
 export type DefinedRecord = IExtendedType &
-    FieldSpecificationList & {
+    FieldSpecificationList<UnorderedFields> & {
         readonly kind: TypeKind.Record;
         readonly maybeExtendedKind: ExtendedTypeKind.DefinedRecord;
     };
 
 export type DefinedTable = IExtendedType &
-    FieldSpecificationList & {
+    FieldSpecificationList<OrderedFields> & {
         readonly kind: TypeKind.Table;
         readonly maybeExtendedKind: ExtendedTypeKind.DefinedTable;
     };
@@ -307,13 +316,13 @@ export interface PrimaryPrimitiveType extends IExtendedType {
 }
 
 export type RecordType = IExtendedType &
-    FieldSpecificationList & {
+    FieldSpecificationList<UnorderedFields> & {
         readonly kind: TypeKind.Type;
         readonly maybeExtendedKind: ExtendedTypeKind.RecordType;
     };
 
 export type TableType = IExtendedType &
-    FieldSpecificationList & {
+    FieldSpecificationList<UnorderedFields> & {
         readonly kind: TypeKind.Type;
         readonly maybeExtendedKind: ExtendedTypeKind.TableType;
     };

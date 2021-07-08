@@ -187,8 +187,8 @@ export function isEqualPrimaryPrimitiveType(
 }
 
 export function isEqualFieldSpecificationList(
-    left: Type.FieldSpecificationList,
-    right: Type.FieldSpecificationList,
+    left: Type.TFieldSpecificationList,
+    right: Type.TFieldSpecificationList,
 ): boolean {
     if (left === right) {
         return true;
