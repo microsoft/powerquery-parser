@@ -21,6 +21,7 @@ export class OrderedMap<K, V> implements Map<K, V> {
             this.size = entries.length;
         }
     }
+    
     public [Symbol.iterator](): IterableIterator<[K, V]> {
         return this.entries();
     }
