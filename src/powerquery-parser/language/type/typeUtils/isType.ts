@@ -62,7 +62,7 @@ export function isDuration(type: Type.TPowerQueryType): type is Type.Duration {
 
 export function isFieldSpecificationList(
     type: Type.TPowerQueryType,
-): type is Type.TPowerQueryType & Type.FieldSpecificationList {
+): type is Type.TPowerQueryType & Type.TFieldSpecificationList {
     return (
         (type.kind === Type.TypeKind.Record && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedRecord) ||
         (type.kind === Type.TypeKind.Table && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedTable) ||

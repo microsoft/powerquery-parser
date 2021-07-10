@@ -4,6 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Language } from "../../../..";
+import { OrderedMap } from "../../../../powerquery-parser";
 
 interface AbridgedChecked<K = number | string> {
     readonly valid: ReadonlyArray<K>;
@@ -657,7 +658,7 @@ describe(`TypeUtils.typeCheck`, () => {
         it(`${Language.Type.ExtendedTypeKind.DefinedTable}`, () => {
             const valueType: Language.Type.DefinedTable = Language.TypeUtils.createDefinedTable(
                 false,
-                new Map<string, Language.Type.TPowerQueryType>([
+                new OrderedMap<string, Language.Type.TPowerQueryType>([
                     ["number", Language.Type.NullableNumberInstance],
                     ["nullableNumber", Language.Type.NullableNumberInstance],
                     ["table", Language.Type.TableInstance],

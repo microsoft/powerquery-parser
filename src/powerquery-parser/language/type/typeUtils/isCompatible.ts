@@ -198,7 +198,7 @@ function isCompatibleWithDefinedTable(left: Type.TPowerQueryType, right: Type.De
 // TODO: decide what a compatible FieldSpecificationList should look like
 function isCompatibleWithFieldSpecificationList(
     left: Type.TPowerQueryType,
-    right: Type.TPowerQueryType & Type.FieldSpecificationList,
+    right: Type.TPowerQueryType & Type.TFieldSpecificationList,
 ): boolean {
     if (!isCompatibleWithNullable(left, right) || !isFieldSpecificationList(left)) {
         return false;

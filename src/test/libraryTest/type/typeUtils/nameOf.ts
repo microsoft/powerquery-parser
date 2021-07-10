@@ -3,6 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
+import { OrderedMap } from "../../../../powerquery-parser";
 
 import { Type, TypeUtils } from "../../../../powerquery-parser/language";
 
@@ -189,7 +190,7 @@ describe(`TypeUtils.nameOf`, () => {
                 const type: Type.TPowerQueryType = TypeUtils.createAnyUnion([
                     TypeUtils.createDefinedRecord(false, new Map([[`foo`, Type.NumberInstance]]), false),
                     TypeUtils.createDefinedList(false, [Type.TextInstance]),
-                    TypeUtils.createDefinedTable(false, new Map([[`bar`, Type.TextInstance]]), true),
+                    TypeUtils.createDefinedTable(false, new OrderedMap([[`bar`, Type.TextInstance]]), true),
                 ]);
                 const actual: string = TypeUtils.nameOf(type);
                 expect(actual).to.equal(`{text} | [foo: number] | table [bar: text, ...]`);
@@ -368,13 +369,13 @@ describe(`TypeUtils.nameOf`, () => {
 
         describe(`${Type.ExtendedTypeKind.DefinedTable}`, () => {
             it(`table []`, () => {
-                const type: Type.DefinedTable = TypeUtils.createDefinedTable(false, new Map(), false);
+                const type: Type.DefinedTable = TypeUtils.createDefinedTable(false, new OrderedMap(), false);
                 const actual: string = TypeUtils.nameOf(type);
                 expect(actual).to.equal(`table []`);
             });
 
             it(`table [...]`, () => {
-                const type: Type.DefinedTable = TypeUtils.createDefinedTable(false, new Map(), true);
+                const type: Type.DefinedTable = TypeUtils.createDefinedTable(false, new OrderedMap(), true);
                 const actual: string = TypeUtils.nameOf(type);
                 expect(actual).to.equal(`table [...]`);
             });
@@ -382,7 +383,7 @@ describe(`TypeUtils.nameOf`, () => {
             it(`table [foo = number, bar = nullable text]`, () => {
                 const type: Type.DefinedTable = TypeUtils.createDefinedTable(
                     false,
-                    new Map<string, Type.TPowerQueryType>([
+                    new OrderedMap<string, Type.TPowerQueryType>([
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),
@@ -396,7 +397,7 @@ describe(`TypeUtils.nameOf`, () => {
             it(`table [foo = number, bar = nullable text, ...]`, () => {
                 const type: Type.DefinedTable = TypeUtils.createDefinedTable(
                     false,
-                    new Map<string, Type.TPowerQueryType>([
+                    new OrderedMap<string, Type.TPowerQueryType>([
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),
@@ -410,7 +411,7 @@ describe(`TypeUtils.nameOf`, () => {
             it(`table [#"foo" = number, #"space space"]`, () => {
                 const type: Type.DefinedTable = TypeUtils.createDefinedTable(
                     false,
-                    new Map<string, Type.TPowerQueryType>([
+                    new OrderedMap<string, Type.TPowerQueryType>([
                         [`foo`, Type.NumberInstance],
                         [`#"space space"`, Type.NullableTextInstance],
                     ]),
