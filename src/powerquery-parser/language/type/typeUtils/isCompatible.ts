@@ -125,8 +125,20 @@ function isCompatibleWithDefinedList(left: Type.TPowerQueryType, right: Type.Def
         case undefined:
             return false;
 
-        case Type.ExtendedTypeKind.DefinedList:
-            return isEqualType(left, right);
+        case Type.ExtendedTypeKind.DefinedList: {
+            if (left.elements.length !== right.elements.length) {
+                return false;
+            }
+
+            const numElements: number = left.elements.length;
+            for (let index: number = 0; index < numElements; index += 1) {
+                if (!isCompatible(left.elements[index], right.elements[index])) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
 
         default:
             throw Assert.isNever(left);
@@ -298,7 +310,7 @@ function isCompatibleWithPrimaryPrimitiveType(left: Type.TPowerQueryType, right:
 }
 
 function isCompatibleWithNullable(left: Type.TPowerQueryType, right: Type.TPowerQueryType): boolean {
-    return right.isNullable === true ? true : left.isNullable === false;
+    return right.isNullable ? true : !left.isNullable;
 }
 
 function isCompatibleWithNumber(left: Type.TPowerQueryType, right: Type.TNumber): boolean {

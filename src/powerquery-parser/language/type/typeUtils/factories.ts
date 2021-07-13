@@ -110,13 +110,22 @@ export function createFunctionType(
     };
 }
 
-export function createNumberLiteral(isNullable: boolean, literal: string): Type.NumberLiteral {
+export function createLogicalLiteral(isNullable: boolean, literal: string): Type.LogicalLiteral {
+    let normalizedLiteral: boolean;
+    if (literal === "true") {
+        normalizedLiteral = true;
+    } else if (literal === "false") {
+        normalizedLiteral = false;
+    } else {
+        throw new CommonError.InvariantError(`invalid boolean string`);
+    }
+
     return {
         isNullable,
-        kind: Type.TypeKind.Number,
-        maybeExtendedKind: Type.ExtendedTypeKind.NumberLiteral,
+        kind: Type.TypeKind.Logical,
+        maybeExtendedKind: Type.ExtendedTypeKind.LogicalLiteral,
         literal,
-        normalizedLiteral: Number.parseFloat(Assert.asDefined(StringUtils.maybeNormalizeNumber(literal))),
+        normalizedLiteral,
     };
 }
 
@@ -126,6 +135,16 @@ export function createListType(isNullable: boolean, itemType: Type.TPowerQueryTy
         maybeExtendedKind: Type.ExtendedTypeKind.ListType,
         isNullable,
         itemType,
+    };
+}
+
+export function createNumberLiteral(isNullable: boolean, literal: string): Type.NumberLiteral {
+    return {
+        isNullable,
+        kind: Type.TypeKind.Number,
+        maybeExtendedKind: Type.ExtendedTypeKind.NumberLiteral,
+        literal,
+        normalizedLiteral: Number.parseFloat(Assert.asDefined(StringUtils.maybeNormalizeNumber(literal))),
     };
 }
 
