@@ -110,11 +110,21 @@ export function createFunctionType(
     };
 }
 
-export function createLogicalLiteral(isNullable: boolean, literal: string): Type.LogicalLiteral {
+export function createLogicalLiteral(isNullable: boolean, literal: string | boolean): Type.LogicalLiteral {
+    let parsedLiteral: string;
     let normalizedLiteral: boolean;
-    if (literal === "true") {
+
+    if (literal === true) {
+        parsedLiteral = "true";
+        normalizedLiteral = true;
+    } else if (literal === false) {
+        parsedLiteral = "false";
+        normalizedLiteral = false;
+    } else if (literal === "true") {
+        parsedLiteral = literal;
         normalizedLiteral = true;
     } else if (literal === "false") {
+        parsedLiteral = literal;
         normalizedLiteral = false;
     } else {
         throw new CommonError.InvariantError(`invalid boolean string`);
@@ -124,7 +134,7 @@ export function createLogicalLiteral(isNullable: boolean, literal: string): Type
         isNullable,
         kind: Type.TypeKind.Logical,
         maybeExtendedKind: Type.ExtendedTypeKind.LogicalLiteral,
-        literal,
+        literal: parsedLiteral,
         normalizedLiteral,
     };
 }
@@ -138,13 +148,24 @@ export function createListType(isNullable: boolean, itemType: Type.TPowerQueryTy
     };
 }
 
-export function createNumberLiteral(isNullable: boolean, literal: string): Type.NumberLiteral {
+export function createNumberLiteral(isNullable: boolean, literal: string | number): Type.NumberLiteral {
+    let parsedLiteral: string;
+    let normalizedLiteral: number;
+
+    if (typeof literal === "number") {
+        parsedLiteral = literal.toString();
+        normalizedLiteral = literal;
+    } else {
+        parsedLiteral = literal;
+        normalizedLiteral = Number.parseFloat(Assert.asDefined(StringUtils.maybeNormalizeNumber(literal)));
+    }
+
     return {
         isNullable,
         kind: Type.TypeKind.Number,
         maybeExtendedKind: Type.ExtendedTypeKind.NumberLiteral,
-        literal,
-        normalizedLiteral: Number.parseFloat(Assert.asDefined(StringUtils.maybeNormalizeNumber(literal))),
+        literal: parsedLiteral,
+        normalizedLiteral,
     };
 }
 

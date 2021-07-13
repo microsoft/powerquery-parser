@@ -83,7 +83,7 @@ describe(`TypeUtils.isCompatible`, () => {
         describe(`literal element is compatible with parent type`, () => {
             it(`${Type.ExtendedTypeKind.LogicalLiteral}`, () => {
                 const left: Type.DefinedList = TypeUtils.createDefinedList(false, [
-                    TypeUtils.createLogicalLiteral(false, "true"),
+                    TypeUtils.createLogicalLiteral(false, true),
                 ]);
                 const right: Type.DefinedList = TypeUtils.createDefinedList(false, [Type.LogicalInstance]);
 

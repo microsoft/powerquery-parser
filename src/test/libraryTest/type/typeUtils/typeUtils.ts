@@ -65,7 +65,7 @@ describe(`TypeUtils`, () => {
 
         it(`simplify literal and primitive to primitive`, () => {
             const actual: ReadonlyArray<AbridgedType> = createAbridgedTypes(
-                TypeUtils.simplify([Type.NumberInstance, TypeUtils.createNumberLiteral(false, "1")]),
+                TypeUtils.simplify([Type.NumberInstance, TypeUtils.createNumberLiteral(false, 1)]),
             );
             const expected: ReadonlyArray<AbridgedType> = [Type.NumberInstance];
             expect(actual).deep.equal(expected);
@@ -73,12 +73,12 @@ describe(`TypeUtils`, () => {
 
         it(`retain multiple unique literals`, () => {
             const actual: ReadonlyArray<AbridgedType> = TypeUtils.simplify([
-                TypeUtils.createNumberLiteral(false, "1"),
-                TypeUtils.createNumberLiteral(false, "2"),
+                TypeUtils.createNumberLiteral(false, 1),
+                TypeUtils.createNumberLiteral(false, 2),
             ]);
             const expected: ReadonlyArray<AbridgedType> = [
-                TypeUtils.createNumberLiteral(false, "1"),
-                TypeUtils.createNumberLiteral(false, "2"),
+                TypeUtils.createNumberLiteral(false, 1),
+                TypeUtils.createNumberLiteral(false, 2),
             ];
             expect(actual).deep.equal(expected);
         });
@@ -102,10 +102,10 @@ describe(`TypeUtils`, () => {
 
         it(`dedupe duplicate literals`, () => {
             const actual: ReadonlyArray<AbridgedType> = TypeUtils.simplify([
-                TypeUtils.createNumberLiteral(false, "1"),
-                TypeUtils.createNumberLiteral(false, "1"),
+                TypeUtils.createNumberLiteral(false, 1),
+                TypeUtils.createNumberLiteral(false, 1),
             ]);
-            const expected: ReadonlyArray<AbridgedType> = [TypeUtils.createNumberLiteral(false, "1")];
+            const expected: ReadonlyArray<AbridgedType> = [TypeUtils.createNumberLiteral(false, 1)];
             expect(actual).deep.equal(expected);
         });
 

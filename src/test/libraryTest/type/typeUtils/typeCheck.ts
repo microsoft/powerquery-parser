@@ -110,7 +110,7 @@ describe(`TypeUtils.typeCheck`, () => {
 
         it(`valid parameter`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [
-                Language.TypeUtils.createNumberLiteral(false, "1"),
+                Language.TypeUtils.createNumberLiteral(false, 1),
             ];
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
@@ -140,7 +140,7 @@ describe(`TypeUtils.typeCheck`, () => {
 
         it(`valid multiple parameters`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [
-                Language.TypeUtils.createNumberLiteral(false, "1"),
+                Language.TypeUtils.createNumberLiteral(false, 1),
                 Language.TypeUtils.createTextLiteral(false, `"cat"`),
             ];
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
