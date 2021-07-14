@@ -10,18 +10,23 @@ export class OrderedMap<K, V> implements Map<K, V> {
     private readonly map: Map<K, V>;
     private order: ReadonlyArray<K>;
 
-    constructor(entries?: readonly (readonly [K, V])[] | null | undefined) {
+    constructor(entries?: readonly (readonly [K, V])[] | null | undefined | Map<K, V>) {
         if (!entries) {
             this.map = new Map();
             this.order = [];
             this.size = 0;
         } else {
             this.map = new Map(entries);
-            this.order = entries.map(pair => pair[0]);
-            this.size = entries.length;
+            if (entries instanceof Map) {
+                this.order = [...entries.keys()];
+                this.size = entries.size;
+            } else {
+                this.order = entries.map(pair => pair[0]);
+                this.size = entries.length;
+            }
         }
     }
-    
+
     public [Symbol.iterator](): IterableIterator<[K, V]> {
         return this.entries();
     }
