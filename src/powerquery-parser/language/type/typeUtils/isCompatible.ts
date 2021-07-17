@@ -52,10 +52,10 @@ export function isCompatible(left: Type.TPowerQueryType, right: Type.TPowerQuery
             return isCompatibleWithList(left, right);
 
         case Type.TypeKind.Logical:
-            return isCompatibleWithPrimitiveOrLiteralPrimitive(left, right);
+            return isCompatibleWithPrimitiveOrLiteral(left, right);
 
         case Type.TypeKind.Number:
-            return isCompatibleWithPrimitiveOrLiteralPrimitive(left, right);
+            return isCompatibleWithPrimitiveOrLiteral(left, right);
 
         case Type.TypeKind.Null:
             return left.kind === Type.TypeKind.Null;
@@ -67,7 +67,7 @@ export function isCompatible(left: Type.TPowerQueryType, right: Type.TPowerQuery
             return isCompatibleWithTable(left, right);
 
         case Type.TypeKind.Text:
-            return isCompatibleWithPrimitiveOrLiteralPrimitive(left, right);
+            return isCompatibleWithPrimitiveOrLiteral(left, right);
 
         case Type.TypeKind.Type:
             return isCompatibleWithType(left, right);
@@ -431,19 +431,19 @@ function isCompatibleWithTableTypePrimaryExpression(
     }
 }
 
-function isCompatibleWithPrimitiveOrLiteralPrimitive(
-    left: Type.TPowerQueryType,
-    right: Type.TLogical | Type.TText | Type.TNumber,
-): boolean {
-    return left.kind === right.kind && (!right.maybeExtendedKind || isCompatibleWithLiteral(left, right));
-}
-
 function isCompatibleWithLiteral<T extends Type.TLiteral>(left: Type.TPowerQueryType, right: T): boolean {
     if (left.kind !== right.kind || !left.maybeExtendedKind || left.maybeExtendedKind !== right.maybeExtendedKind) {
         return false;
     } else {
         return left.normalizedLiteral === right.normalizedLiteral;
     }
+}
+
+function isCompatibleWithPrimitiveOrLiteral(
+    left: Type.TPowerQueryType,
+    right: Type.TLogical | Type.TText | Type.TNumber,
+): boolean {
+    return left.kind === right.kind && (!right.maybeExtendedKind || isCompatibleWithLiteral(left, right));
 }
 
 function isCompatibleWithType(
