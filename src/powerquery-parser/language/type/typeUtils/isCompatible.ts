@@ -161,15 +161,13 @@ function isCompatibleWithDefinedListType(left: Type.TPowerQueryType, right: Type
     }
 
     switch (left.maybeExtendedKind) {
-        case undefined:
-            return false;
-
         case Type.ExtendedTypeKind.DefinedListType:
             return isEqualType(left, right);
 
         case Type.ExtendedTypeKind.ListType:
             return isDefinedListTypeCompatibleWithListType(right, left);
 
+        case undefined:
         case Type.ExtendedTypeKind.FunctionType:
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
         case Type.ExtendedTypeKind.RecordType:
@@ -273,15 +271,13 @@ function isCompatibleWithListType(left: Type.TPowerQueryType, right: Type.ListTy
     }
 
     switch (left.maybeExtendedKind) {
-        case undefined:
-            return false;
-
         case Type.ExtendedTypeKind.DefinedListType:
             return isDefinedListTypeCompatibleWithListType(left, right);
 
         case Type.ExtendedTypeKind.ListType:
             return isEqualType(left.itemType, right.itemType);
 
+        case undefined:
         case Type.ExtendedTypeKind.FunctionType:
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
         case Type.ExtendedTypeKind.RecordType:
@@ -300,12 +296,10 @@ function isCompatibleWithPrimaryPrimitiveType(left: Type.TPowerQueryType, right:
     }
 
     switch (left.maybeExtendedKind) {
-        case undefined:
-            return false;
-
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
             return left.primitiveType === right.primitiveType;
 
+        case undefined:
         case Type.ExtendedTypeKind.DefinedListType:
         case Type.ExtendedTypeKind.ListType:
         case Type.ExtendedTypeKind.FunctionType:
@@ -342,12 +336,10 @@ function isCompatibleWithRecordType(left: Type.TPowerQueryType, right: Type.Reco
     }
 
     switch (left.maybeExtendedKind) {
-        case undefined:
-            return false;
-
         case Type.ExtendedTypeKind.RecordType:
             return isCompatibleWithFieldSpecificationList(left, right);
 
+        case undefined:
         case Type.ExtendedTypeKind.DefinedListType:
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
         case Type.ExtendedTypeKind.ListType:
