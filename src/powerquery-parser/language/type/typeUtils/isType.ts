@@ -92,6 +92,7 @@ export function isList(type: Type.TPowerQueryType): type is Type.TList {
 
 export function isLiteral(type: Type.TPowerQueryType): type is Type.TLiteral {
     return (
+        type.maybeExtendedKind === Type.ExtendedTypeKind.LogicalLiteral ||
         type.maybeExtendedKind === Type.ExtendedTypeKind.TextLiteral ||
         type.maybeExtendedKind === Type.ExtendedTypeKind.NumberLiteral
     );
