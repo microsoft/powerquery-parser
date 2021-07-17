@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from "..";
-import { Assert, MapUtils } from "../../../common";
+import { Assert, CommonError, MapUtils } from "../../../common";
 import { isEqualFunctionSignature, isEqualType } from "./isEqualType";
 import { isFieldSpecificationList, isFunctionSignature } from "./isType";
 
@@ -136,18 +136,7 @@ function isCompatibleWithDefinedList(left: Type.TPowerQueryType, right: Type.Def
             return false;
 
         case Type.ExtendedTypeKind.DefinedList: {
-            if (left.elements.length !== right.elements.length) {
-                return false;
-            }
-
-            const numElements: number = left.elements.length;
-            for (let index: number = 0; index < numElements; index += 1) {
-                if (!isCompatible(left.elements[index], right.elements[index])) {
-                    return false;
-                }
-            }
-
-            return true;
+            return isCompatibleDefinedListOrDefinedListType(left, right);
         }
 
         default:
@@ -162,7 +151,7 @@ function isCompatibleWithDefinedListType(left: Type.TPowerQueryType, right: Type
 
     switch (left.maybeExtendedKind) {
         case Type.ExtendedTypeKind.DefinedListType:
-            return isEqualType(left, right);
+            return isCompatibleDefinedListOrDefinedListType(left, right);
 
         case Type.ExtendedTypeKind.ListType:
             return isDefinedListTypeCompatibleWithListType(right, left);
@@ -432,6 +421,48 @@ function isCompatibleWithLiteral<T extends Type.TLiteral>(left: Type.TPowerQuery
     } else {
         return left.normalizedLiteral === right.normalizedLiteral;
     }
+}
+
+function isCompatibleDefinedListOrDefinedListType<T extends Type.DefinedList | Type.DefinedListType>(
+    left: T,
+    right: T,
+): boolean {
+    let leftElements: ReadonlyArray<Type.TPowerQueryType>;
+    let rightElements: ReadonlyArray<Type.TPowerQueryType>;
+
+    if (
+        left.maybeExtendedKind === Type.ExtendedTypeKind.DefinedList &&
+        right.maybeExtendedKind === Type.ExtendedTypeKind.DefinedList
+    ) {
+        leftElements = left.elements;
+        rightElements = right.elements;
+    } else if (
+        left.maybeExtendedKind === Type.ExtendedTypeKind.DefinedListType &&
+        right.maybeExtendedKind === Type.ExtendedTypeKind.DefinedListType
+    ) {
+        leftElements = left.itemTypes;
+        rightElements = right.itemTypes;
+    } else {
+        throw new CommonError.InvariantError(`unknown scenario for isCompatibleDefinedListOrDefinedListType`, {
+            leftTypeKind: left.kind,
+            rightTypeKind: right.kind,
+            leftMaybeExtendedTypeKind: left.maybeExtendedKind,
+            rightMaybeExtendedTypeKind: right.maybeExtendedKind,
+        });
+    }
+
+    if (leftElements.length !== rightElements.length) {
+        return false;
+    }
+
+    const numElements: number = leftElements.length;
+    for (let index: number = 0; index < numElements; index += 1) {
+        if (!isCompatible(leftElements[index], rightElements[index])) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 function isCompatibleWithPrimitiveOrLiteral(
