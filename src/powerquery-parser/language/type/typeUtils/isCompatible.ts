@@ -52,10 +52,10 @@ export function isCompatible(left: Type.TPowerQueryType, right: Type.TPowerQuery
             return isCompatibleWithList(left, right);
 
         case Type.TypeKind.Logical:
-            return isCompatibleWitLogical(left, right);
+            return isCompatibleWithPrimitiveOrLiteralPrimitive(left, right);
 
         case Type.TypeKind.Number:
-            return isCompatibleWithNumber(left, right);
+            return isCompatibleWithPrimitiveOrLiteralPrimitive(left, right);
 
         case Type.TypeKind.Null:
             return left.kind === Type.TypeKind.Null;
@@ -67,7 +67,7 @@ export function isCompatible(left: Type.TPowerQueryType, right: Type.TPowerQuery
             return isCompatibleWithTable(left, right);
 
         case Type.TypeKind.Text:
-            return isCompatibleWithText(left, right);
+            return isCompatibleWithPrimitiveOrLiteralPrimitive(left, right);
 
         case Type.TypeKind.Type:
             return isCompatibleWithType(left, right);
@@ -319,74 +319,6 @@ function isCompatibleWithPrimaryPrimitiveType(left: Type.TPowerQueryType, right:
     }
 }
 
-function isCompatibleWitLogical(left: Type.TPowerQueryType, right: Type.TLogical): boolean {
-    if (left.kind !== right.kind) {
-        return false;
-    }
-
-    switch (right.maybeExtendedKind) {
-        case undefined:
-            return true;
-
-        case Type.ExtendedTypeKind.LogicalLiteral:
-            return isCompatibleWithLogicalLiteral(left, right);
-
-        default:
-            throw Assert.isNever(right);
-    }
-}
-
-function isCompatibleWithLogicalLiteral(left: Type.TPowerQueryType, right: Type.LogicalLiteral): boolean {
-    if (left.kind !== right.kind) {
-        return false;
-    }
-
-    switch (left.maybeExtendedKind) {
-        case undefined:
-            return false;
-
-        case Type.ExtendedTypeKind.LogicalLiteral:
-            return isEqualType(left, right);
-
-        default:
-            throw Assert.isNever(left);
-    }
-}
-
-function isCompatibleWithNumber(left: Type.TPowerQueryType, right: Type.TNumber): boolean {
-    if (left.kind !== right.kind) {
-        return false;
-    }
-
-    switch (right.maybeExtendedKind) {
-        case undefined:
-            return true;
-
-        case Type.ExtendedTypeKind.NumberLiteral:
-            return isCompatibleWithNumberLiteral(left, right);
-
-        default:
-            throw Assert.isNever(right);
-    }
-}
-
-function isCompatibleWithNumberLiteral(left: Type.TPowerQueryType, right: Type.NumberLiteral): boolean {
-    if (left.kind !== right.kind) {
-        return false;
-    }
-
-    switch (left.maybeExtendedKind) {
-        case undefined:
-            return false;
-
-        case Type.ExtendedTypeKind.NumberLiteral:
-            return left.normalizedLiteral === right.normalizedLiteral;
-
-        default:
-            throw Assert.isNever(left);
-    }
-}
-
 function isCompatibleWithRecord(left: Type.TPowerQueryType, right: Type.TRecord): boolean {
     if (left.kind !== right.kind) {
         return false;
@@ -499,37 +431,18 @@ function isCompatibleWithTableTypePrimaryExpression(
     }
 }
 
-function isCompatibleWithText(left: Type.TPowerQueryType, right: Type.TText): boolean {
-    if (left.kind !== right.kind) {
-        return false;
-    }
-
-    switch (right.maybeExtendedKind) {
-        case undefined:
-            return true;
-
-        case Type.ExtendedTypeKind.TextLiteral:
-            return isCompatibleWithTextLiteral(left, right);
-
-        default:
-            throw Assert.isNever(right);
-    }
+function isCompatibleWithPrimitiveOrLiteralPrimitive(
+    left: Type.TPowerQueryType,
+    right: Type.TLogical | Type.TText | Type.TNumber,
+): boolean {
+    return left.kind === right.kind && (!right.maybeExtendedKind || isCompatibleWithLiteral(left, right));
 }
 
-function isCompatibleWithTextLiteral(left: Type.TPowerQueryType, right: Type.TextLiteral): boolean {
-    if (left.kind !== right.kind) {
+function isCompatibleWithLiteral<T extends Type.TLiteral>(left: Type.TPowerQueryType, right: T): boolean {
+    if (left.kind !== right.kind || !left.maybeExtendedKind || left.maybeExtendedKind !== right.maybeExtendedKind) {
         return false;
-    }
-
-    switch (left.maybeExtendedKind) {
-        case undefined:
-            return false;
-
-        case Type.ExtendedTypeKind.TextLiteral:
-            return isEqualType(left, right);
-
-        default:
-            throw Assert.isNever(left);
+    } else {
+        return left.normalizedLiteral === right.normalizedLiteral;
     }
 }
 

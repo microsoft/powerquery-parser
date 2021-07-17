@@ -219,6 +219,7 @@ export function createTextLiteral(isNullable: boolean, literal: string): Type.Te
         kind: Type.TypeKind.Text,
         maybeExtendedKind: Type.ExtendedTypeKind.TextLiteral,
         literal,
+        normalizedLiteral: literal,
     };
 }
 
