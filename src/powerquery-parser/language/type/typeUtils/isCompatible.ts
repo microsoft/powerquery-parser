@@ -19,8 +19,14 @@ export function isCompatible(left: Type.TPowerQueryType, right: Type.TPowerQuery
         right.kind === Type.TypeKind.Unknown
     ) {
         return undefined;
-    } else if (left.kind === Type.TypeKind.None || right.kind === Type.TypeKind.None) {
+    } else if (
+        left.kind === Type.TypeKind.None ||
+        right.kind === Type.TypeKind.None ||
+        (left.isNullable && !right.isNullable)
+    ) {
         return false;
+    } else if (left.kind === Type.TypeKind.Null && right.isNullable) {
+        return true;
     }
 
     switch (right.kind) {
@@ -30,10 +36,8 @@ export function isCompatible(left: Type.TPowerQueryType, right: Type.TPowerQuery
         case Type.TypeKind.DateTime:
         case Type.TypeKind.DateTimeZone:
         case Type.TypeKind.Duration:
-        case Type.TypeKind.Logical:
-        case Type.TypeKind.Null:
         case Type.TypeKind.Time:
-            return isCompatibleWithNullable(left, right) || isEqualType(left, right);
+            return isEqualType(left, right);
 
         case Type.TypeKind.Any:
             return isCompatibleWithAny(left, right);
@@ -47,8 +51,14 @@ export function isCompatible(left: Type.TPowerQueryType, right: Type.TPowerQuery
         case Type.TypeKind.List:
             return isCompatibleWithList(left, right);
 
+        case Type.TypeKind.Logical:
+            return isCompatibleWitLogical(left, right);
+
         case Type.TypeKind.Number:
             return isCompatibleWithNumber(left, right);
+
+        case Type.TypeKind.Null:
+            return left.kind === Type.TypeKind.Null;
 
         case Type.TypeKind.Record:
             return isCompatibleWithRecord(left, right);
@@ -71,7 +81,7 @@ export function isCompatibleWithFunctionSignature(
     left: Type.TPowerQueryType,
     right: Type.TPowerQueryType & Type.FunctionSignature,
 ): boolean {
-    if (!isCompatibleWithNullable(left, right) || !isFunctionSignature(left)) {
+    if (!isFunctionSignature(left)) {
         return false;
     }
 
@@ -96,7 +106,7 @@ export function isCompatibleWithFunctionParameter(
 function isCompatibleWithAny(left: Type.TPowerQueryType, right: Type.TAny): boolean | undefined {
     switch (right.maybeExtendedKind) {
         case undefined:
-            return isCompatibleWithNullable(left, right);
+            return true;
 
         case Type.ExtendedTypeKind.AnyUnion:
             return isCompatibleWithAnyUnion(left, right);
@@ -212,7 +222,7 @@ function isCompatibleWithFieldSpecificationList(
     left: Type.TPowerQueryType,
     right: Type.TPowerQueryType & Type.TFieldSpecificationList,
 ): boolean {
-    if (!isCompatibleWithNullable(left, right) || !isFieldSpecificationList(left)) {
+    if (!isFieldSpecificationList(left)) {
         return false;
     }
 
@@ -230,7 +240,7 @@ function isCompatibleWithFunction(left: Type.TPowerQueryType, right: Type.TFunct
 
     switch (right.maybeExtendedKind) {
         case undefined:
-            return isCompatibleWithNullable(left, right);
+            return true;
 
         case Type.ExtendedTypeKind.DefinedFunction:
             return isCompatibleWithFunctionSignature(left, right);
@@ -309,8 +319,38 @@ function isCompatibleWithPrimaryPrimitiveType(left: Type.TPowerQueryType, right:
     }
 }
 
-function isCompatibleWithNullable(left: Type.TPowerQueryType, right: Type.TPowerQueryType): boolean {
-    return right.isNullable ? true : !left.isNullable;
+function isCompatibleWitLogical(left: Type.TPowerQueryType, right: Type.TLogical): boolean {
+    if (left.kind !== right.kind) {
+        return false;
+    }
+
+    switch (right.maybeExtendedKind) {
+        case undefined:
+            return true;
+
+        case Type.ExtendedTypeKind.LogicalLiteral:
+            return isCompatibleWithLogicalLiteral(left, right);
+
+        default:
+            throw Assert.isNever(right);
+    }
+}
+
+function isCompatibleWithLogicalLiteral(left: Type.TPowerQueryType, right: Type.LogicalLiteral): boolean {
+    if (left.kind !== right.kind) {
+        return false;
+    }
+
+    switch (left.maybeExtendedKind) {
+        case undefined:
+            return false;
+
+        case Type.ExtendedTypeKind.LogicalLiteral:
+            return isEqualType(left, right);
+
+        default:
+            throw Assert.isNever(left);
+    }
 }
 
 function isCompatibleWithNumber(left: Type.TPowerQueryType, right: Type.TNumber): boolean {
@@ -320,7 +360,7 @@ function isCompatibleWithNumber(left: Type.TPowerQueryType, right: Type.TNumber)
 
     switch (right.maybeExtendedKind) {
         case undefined:
-            return isCompatibleWithNullable(left, right);
+            return true;
 
         case Type.ExtendedTypeKind.NumberLiteral:
             return isCompatibleWithNumberLiteral(left, right);
@@ -340,7 +380,7 @@ function isCompatibleWithNumberLiteral(left: Type.TPowerQueryType, right: Type.N
             return false;
 
         case Type.ExtendedTypeKind.NumberLiteral:
-            return isEqualType(left, right);
+            return left.normalizedLiteral === right.normalizedLiteral;
 
         default:
             throw Assert.isNever(left);
@@ -354,7 +394,7 @@ function isCompatibleWithRecord(left: Type.TPowerQueryType, right: Type.TRecord)
 
     switch (right.maybeExtendedKind) {
         case undefined:
-            return isCompatibleWithNullable(left, right);
+            return true;
 
         case Type.ExtendedTypeKind.DefinedRecord:
             return isCompatibleWithDefinedRecord(left, right);
@@ -396,7 +436,7 @@ function isCompatibleWithTable(left: Type.TPowerQueryType, right: Type.TTable): 
 
     switch (right.maybeExtendedKind) {
         case undefined:
-            return isCompatibleWithNullable(left, right);
+            return true;
 
         case Type.ExtendedTypeKind.DefinedTable:
             return isCompatibleWithDefinedTable(left, right);
@@ -466,7 +506,7 @@ function isCompatibleWithText(left: Type.TPowerQueryType, right: Type.TText): bo
 
     switch (right.maybeExtendedKind) {
         case undefined:
-            return isCompatibleWithNullable(left, right);
+            return true;
 
         case Type.ExtendedTypeKind.TextLiteral:
             return isCompatibleWithTextLiteral(left, right);
@@ -511,7 +551,7 @@ function isCompatibleWithType(
 
     switch (right.maybeExtendedKind) {
         case undefined:
-            return isCompatibleWithNullable(left, right);
+            return true;
 
         case Type.ExtendedTypeKind.FunctionType:
             return isCompatibleWithFunctionSignature(left, right);

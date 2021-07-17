@@ -72,15 +72,22 @@ describe(`TypeUtils.isCompatible`, () => {
     });
 
     describe(`${Type.ExtendedTypeKind.DefinedList}`, () => {
-        it(`identical`, () => {
-            const definedList: Type.DefinedList = TypeUtils.createDefinedList(false, [
-                Type.TextInstance,
-                Type.NumberInstance,
-            ]);
-            expect(TypeUtils.isCompatible(definedList, definedList)).to.equal(true, undefined);
+        describe(`identity`, () => {
+            it(`empty`, () => {
+                const definedList: Type.DefinedList = TypeUtils.createDefinedList(false, []);
+                expect(TypeUtils.isCompatible(definedList, definedList)).to.equal(true, undefined);
+            });
+
+            it(`non-empty`, () => {
+                const definedList: Type.DefinedList = TypeUtils.createDefinedList(false, [
+                    Type.TextInstance,
+                    Type.NumberInstance,
+                ]);
+                expect(TypeUtils.isCompatible(definedList, definedList)).to.equal(true, undefined);
+            });
         });
 
-        describe(`literal element is compatible with parent type`, () => {
+        describe(`list item literal is compatible with parent type`, () => {
             it(`${Type.ExtendedTypeKind.LogicalLiteral}`, () => {
                 const left: Type.DefinedList = TypeUtils.createDefinedList(false, [
                     TypeUtils.createLogicalLiteral(false, true),
@@ -106,6 +113,23 @@ describe(`TypeUtils.isCompatible`, () => {
                 const right: Type.DefinedList = TypeUtils.createDefinedList(false, [Type.TextInstance]);
 
                 expect(TypeUtils.isCompatible(left, right)).to.equal(true, undefined);
+            });
+        });
+
+        describe(`null`, () => {
+            it(`null is not compatible with non-nullable`, () => {
+                const definedList: Type.DefinedList = TypeUtils.createDefinedList(false, []);
+                expect(TypeUtils.isCompatible(Type.NullInstance, definedList)).to.equal(false, undefined);
+            });
+
+            it(`non-nullable is not compatible with null`, () => {
+                const definedList: Type.DefinedList = TypeUtils.createDefinedList(false, []);
+                expect(TypeUtils.isCompatible(definedList, Type.NullInstance)).to.equal(false, undefined);
+            });
+
+            it(`null is compatible with nullable`, () => {
+                const definedList: Type.DefinedList = TypeUtils.createDefinedList(true, []);
+                expect(TypeUtils.isCompatible(Type.NullInstance, definedList)).to.equal(true, undefined);
             });
         });
     });
