@@ -3,6 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
+import { OrderedMap } from "../../../../powerquery-parser";
 import { Type, TypeUtils } from "../../../../powerquery-parser/language";
 
 describe(`TypeUtils.isCompatible`, () => {
@@ -134,7 +135,179 @@ describe(`TypeUtils.isCompatible`, () => {
         });
     });
 
+    describe(`${Type.ExtendedTypeKind.DefinedRecord}`, () => {
+        describe(`identity`, () => {
+            it(`empty`, () => {
+                const definedRecord: Type.DefinedRecord = TypeUtils.createDefinedRecord(false, new Map(), false);
+                expect(TypeUtils.isCompatible(definedRecord, definedRecord)).to.equal(true, undefined);
+            });
+
+            it(`non-empty`, () => {
+                const definedRecord: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                    false,
+                    new Map([["number", Type.NumberInstance]]),
+                    false,
+                );
+                expect(TypeUtils.isCompatible(definedRecord, definedRecord)).to.equal(true, undefined);
+            });
+        });
+
+        describe(`field member literal is compatible with parent type`, () => {
+            it(`${Type.ExtendedTypeKind.LogicalLiteral}`, () => {
+                const left: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                    false,
+                    new Map([["logical", TypeUtils.createLogicalLiteral(false, true)]]),
+                    false,
+                );
+                const right: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                    false,
+                    new Map([["logical", Type.LogicalInstance]]),
+                    false,
+                );
+
+                expect(TypeUtils.isCompatible(left, right)).to.equal(true, undefined);
+            });
+
+            it(`${Type.ExtendedTypeKind.NumberLiteral}`, () => {
+                const left: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                    false,
+                    new Map([["number", TypeUtils.createNumberLiteral(false, 1)]]),
+                    false,
+                );
+                const right: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                    false,
+                    new Map([["number", Type.NumberInstance]]),
+                    false,
+                );
+
+                expect(TypeUtils.isCompatible(left, right)).to.equal(true, undefined);
+            });
+
+            it(`${Type.ExtendedTypeKind.TextLiteral}`, () => {
+                const left: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                    false,
+                    new Map([["text", TypeUtils.createTextLiteral(false, `""`)]]),
+                    false,
+                );
+                const right: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                    false,
+                    new Map([["text", Type.TextInstance]]),
+                    false,
+                );
+
+                expect(TypeUtils.isCompatible(left, right)).to.equal(true, undefined);
+            });
+        });
+
+        describe(`null`, () => {
+            it(`null is not compatible with non-nullable`, () => {
+                const definedRecord: Type.DefinedRecord = TypeUtils.createDefinedRecord(false, new Map(), false);
+                expect(TypeUtils.isCompatible(Type.NullInstance, definedRecord)).to.equal(false, undefined);
+            });
+
+            it(`non-nullable is not compatible with null`, () => {
+                const definedRecord: Type.DefinedRecord = TypeUtils.createDefinedRecord(false, new Map(), false);
+                expect(TypeUtils.isCompatible(definedRecord, Type.NullInstance)).to.equal(false, undefined);
+            });
+
+            it(`null is compatible with nullable`, () => {
+                const definedRecord: Type.DefinedRecord = TypeUtils.createDefinedRecord(true, new Map(), false);
+                expect(TypeUtils.isCompatible(Type.NullInstance, definedRecord)).to.equal(true, undefined);
+            });
+        });
+    });
+
+    describe(`${Type.ExtendedTypeKind.DefinedTable}`, () => {
+        describe(`identity`, () => {
+            it(`empty`, () => {
+                const definedTable: Type.DefinedTable = TypeUtils.createDefinedTable(false, new OrderedMap(), false);
+                expect(TypeUtils.isCompatible(definedTable, definedTable)).to.equal(true, undefined);
+            });
+
+            it(`non-empty`, () => {
+                const definedTable: Type.DefinedTable = TypeUtils.createDefinedTable(
+                    false,
+                    new OrderedMap([["number", Type.NumberInstance]]),
+                    false,
+                );
+                expect(TypeUtils.isCompatible(definedTable, definedTable)).to.equal(true, undefined);
+            });
+        });
+
+        describe(`field member literal is compatible with parent type`, () => {
+            it(`${Type.ExtendedTypeKind.LogicalLiteral}`, () => {
+                const left: Type.DefinedTable = TypeUtils.createDefinedTable(
+                    false,
+                    new OrderedMap([["logical", TypeUtils.createLogicalLiteral(false, true)]]),
+                    false,
+                );
+                const right: Type.DefinedTable = TypeUtils.createDefinedTable(
+                    false,
+                    new OrderedMap([["logical", Type.LogicalInstance]]),
+                    false,
+                );
+
+                expect(TypeUtils.isCompatible(left, right)).to.equal(true, undefined);
+            });
+
+            it(`${Type.ExtendedTypeKind.NumberLiteral}`, () => {
+                const left: Type.DefinedTable = TypeUtils.createDefinedTable(
+                    false,
+                    new OrderedMap([["number", TypeUtils.createNumberLiteral(false, 1)]]),
+                    false,
+                );
+                const right: Type.DefinedTable = TypeUtils.createDefinedTable(
+                    false,
+                    new OrderedMap([["number", Type.NumberInstance]]),
+                    false,
+                );
+
+                expect(TypeUtils.isCompatible(left, right)).to.equal(true, undefined);
+            });
+
+            it(`${Type.ExtendedTypeKind.TextLiteral}`, () => {
+                const left: Type.DefinedTable = TypeUtils.createDefinedTable(
+                    false,
+                    new OrderedMap([["text", TypeUtils.createTextLiteral(false, `""`)]]),
+                    false,
+                );
+                const right: Type.DefinedTable = TypeUtils.createDefinedTable(
+                    false,
+                    new OrderedMap([["text", Type.TextInstance]]),
+                    false,
+                );
+
+                expect(TypeUtils.isCompatible(left, right)).to.equal(true, undefined);
+            });
+        });
+
+        describe(`null`, () => {
+            it(`null is not compatible with non-nullable`, () => {
+                const definedTable: Type.DefinedTable = TypeUtils.createDefinedTable(false, new OrderedMap(), false);
+                expect(TypeUtils.isCompatible(Type.NullInstance, definedTable)).to.equal(false, undefined);
+            });
+
+            it(`non-nullable is not compatible with null`, () => {
+                const definedTable: Type.DefinedTable = TypeUtils.createDefinedTable(false, new OrderedMap(), false);
+                expect(TypeUtils.isCompatible(definedTable, Type.NullInstance)).to.equal(false, undefined);
+            });
+
+            it(`null is compatible with nullable`, () => {
+                const definedTable: Type.DefinedTable = TypeUtils.createDefinedTable(true, new OrderedMap(), false);
+                expect(TypeUtils.isCompatible(Type.NullInstance, definedTable)).to.equal(true, undefined);
+            });
+        });
+    });
+
     describe(`literals are compatible with parent type`, () => {
+        describe(`${Type.ExtendedTypeKind.LogicalLiteral}`, () => {
+            it(`true`, () =>
+                expect(TypeUtils.isCompatible(Type.TrueInstance, Type.LogicalInstance)).to.equal(true, undefined));
+
+            it(`false`, () =>
+                expect(TypeUtils.isCompatible(Type.FalseInstance, Type.LogicalInstance)).to.equal(true, undefined));
+        });
+
         describe(`${Type.ExtendedTypeKind.NumberLiteral}`, () => {
             it(`1`, () => {
                 expect(TypeUtils.isCompatible(TypeUtils.createNumberLiteral(false, `1`), Type.NumberInstance)).to.equal(
@@ -156,7 +329,7 @@ describe(`TypeUtils.isCompatible`, () => {
             });
         });
 
-        it(`"foo"`, () => {
+        it(`${Type.ExtendedTypeKind.TextLiteral}`, () => {
             expect(TypeUtils.isCompatible(TypeUtils.createTextLiteral(false, `"foo"`), Type.TextInstance)).to.equal(
                 true,
                 undefined,

@@ -227,7 +227,10 @@ function isCompatibleWithFieldSpecificationList(
     return MapUtils.isSubsetMap(
         left.fields,
         right.fields,
-        (leftValue: Type.TPowerQueryType, rightValue: Type.TPowerQueryType) => isEqualType(leftValue, rightValue),
+        (leftValue: Type.TPowerQueryType, rightValue: Type.TPowerQueryType) => {
+            const result: boolean | undefined = isCompatible(leftValue, rightValue);
+            return result !== undefined && result;
+        },
     );
 }
 
