@@ -7,6 +7,20 @@ import { OrderedMap } from "../../../../powerquery-parser";
 import { Type, TypeUtils } from "../../../../powerquery-parser/language";
 
 describe(`TypeUtils.isCompatible`, () => {
+    describe(`${Type.TypeKind.AnyNonNull}`, () => {
+        it(`null is not compatible`, () => {
+            expect(TypeUtils.isCompatible(Type.NullInstance, Type.AnyNonNullInstance)).to.equal(false);
+        });
+
+        it(`nullable is not compatible`, () => {
+            expect(TypeUtils.isCompatible(Type.NullableTextInstance, Type.AnyNonNullInstance)).to.equal(false);
+        });
+
+        it(`text is compatible`, () => {
+            expect(TypeUtils.isCompatible(Type.TextInstance, Type.AnyNonNullInstance)).to.equal(true);
+        });
+    });
+
     it(`${Type.TypeKind.NotApplicable} should return undefined`, () => {
         const actual: boolean | undefined = TypeUtils.isCompatible(Type.NotApplicableInstance, Type.AnyInstance);
         expect(actual).to.equal(undefined, undefined);

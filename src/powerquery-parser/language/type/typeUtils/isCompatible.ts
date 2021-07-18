@@ -43,7 +43,7 @@ export function isCompatible(left: Type.TPowerQueryType, right: Type.TPowerQuery
             return isCompatibleWithAny(left, right);
 
         case Type.TypeKind.AnyNonNull:
-            return left.kind !== right.kind;
+            return left.kind !== Type.TypeKind.Null && !left.isNullable;
 
         case Type.TypeKind.Function:
             return isCompatibleWithFunction(left, right);
@@ -522,6 +522,6 @@ function isDefinedListTypeCompatibleWithListType(definedList: Type.DefinedListTy
     const itemTypeCompatabilities: ReadonlyArray<boolean | undefined> = definedList.itemTypes.map(itemType =>
         isCompatible(itemType, listType.itemType),
     );
-    // !itemTypeCompatabilities.includes(undefined) && !itemTypeCompatabilities.includes(false);
+
     return itemTypeCompatabilities.find(value => value === undefined || value === false) !== undefined;
 }
