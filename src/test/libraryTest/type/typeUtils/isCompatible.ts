@@ -9,15 +9,18 @@ import { Type, TypeUtils } from "../../../../powerquery-parser/language";
 describe(`TypeUtils.isCompatible`, () => {
     describe(`${Type.TypeKind.AnyNonNull}`, () => {
         it(`null is not compatible`, () => {
-            expect(TypeUtils.isCompatible(Type.NullInstance, Type.AnyNonNullInstance)).to.equal(false);
+            expect(TypeUtils.isCompatible(Type.NullInstance, Type.AnyNonNullInstance)).to.equal(false, undefined);
         });
 
         it(`nullable is not compatible`, () => {
-            expect(TypeUtils.isCompatible(Type.NullableTextInstance, Type.AnyNonNullInstance)).to.equal(false);
+            expect(TypeUtils.isCompatible(Type.NullableTextInstance, Type.AnyNonNullInstance)).to.equal(
+                false,
+                undefined,
+            );
         });
 
         it(`text is compatible`, () => {
-            expect(TypeUtils.isCompatible(Type.TextInstance, Type.AnyNonNullInstance)).to.equal(true);
+            expect(TypeUtils.isCompatible(Type.TextInstance, Type.AnyNonNullInstance)).to.equal(true, undefined);
         });
     });
 
