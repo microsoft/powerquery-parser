@@ -114,17 +114,11 @@ export function createLogicalLiteral(isNullable: boolean, literal: string | bool
     let parsedLiteral: string;
     let normalizedLiteral: boolean;
 
-    if (literal === true) {
+    if (literal === true || literal === "true") {
         parsedLiteral = "true";
         normalizedLiteral = true;
-    } else if (literal === false) {
+    } else if (literal === false || literal === "false") {
         parsedLiteral = "false";
-        normalizedLiteral = false;
-    } else if (literal === "true") {
-        parsedLiteral = literal;
-        normalizedLiteral = true;
-    } else if (literal === "false") {
-        parsedLiteral = literal;
         normalizedLiteral = false;
     } else {
         throw new CommonError.InvariantError(`invalid boolean string`);
