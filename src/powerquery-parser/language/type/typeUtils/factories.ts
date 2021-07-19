@@ -110,13 +110,26 @@ export function createFunctionType(
     };
 }
 
-export function createNumberLiteral(isNullable: boolean, literal: string): Type.NumberLiteral {
+export function createLogicalLiteral(isNullable: boolean, literal: string | boolean): Type.LogicalLiteral {
+    let parsedLiteral: string;
+    let normalizedLiteral: boolean;
+
+    if (literal === true || literal === "true") {
+        parsedLiteral = "true";
+        normalizedLiteral = true;
+    } else if (literal === false || literal === "false") {
+        parsedLiteral = "false";
+        normalizedLiteral = false;
+    } else {
+        throw new CommonError.InvariantError(`invalid boolean string`);
+    }
+
     return {
         isNullable,
-        kind: Type.TypeKind.Number,
-        maybeExtendedKind: Type.ExtendedTypeKind.NumberLiteral,
-        literal,
-        normalizedLiteral: Number.parseFloat(Assert.asDefined(StringUtils.maybeNormalizeNumber(literal))),
+        kind: Type.TypeKind.Logical,
+        maybeExtendedKind: Type.ExtendedTypeKind.LogicalLiteral,
+        literal: parsedLiteral,
+        normalizedLiteral,
     };
 }
 
@@ -126,6 +139,27 @@ export function createListType(isNullable: boolean, itemType: Type.TPowerQueryTy
         maybeExtendedKind: Type.ExtendedTypeKind.ListType,
         isNullable,
         itemType,
+    };
+}
+
+export function createNumberLiteral(isNullable: boolean, literal: string | number): Type.NumberLiteral {
+    let parsedLiteral: string;
+    let normalizedLiteral: number;
+
+    if (typeof literal === "number") {
+        parsedLiteral = literal.toString();
+        normalizedLiteral = literal;
+    } else {
+        parsedLiteral = literal;
+        normalizedLiteral = Number.parseFloat(Assert.asDefined(StringUtils.maybeNormalizeNumber(literal)));
+    }
+
+    return {
+        isNullable,
+        kind: Type.TypeKind.Number,
+        maybeExtendedKind: Type.ExtendedTypeKind.NumberLiteral,
+        literal: parsedLiteral,
+        normalizedLiteral,
     };
 }
 
@@ -179,6 +213,7 @@ export function createTextLiteral(isNullable: boolean, literal: string): Type.Te
         kind: Type.TypeKind.Text,
         maybeExtendedKind: Type.ExtendedTypeKind.TextLiteral,
         literal,
+        normalizedLiteral: literal,
     };
 }
 

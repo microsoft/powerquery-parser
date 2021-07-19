@@ -207,8 +207,9 @@ export interface IExtendedType extends IType {
     readonly maybeExtendedKind: ExtendedTypeKind;
 }
 
-export interface IPrimitiveLiteral extends IExtendedType {
+export interface IPrimitiveLiteral<T> extends IExtendedType {
     readonly literal: string;
+    readonly normalizedLiteral: T;
 }
 
 export interface IPrimitiveType<T extends TypeKind = TypeKind> extends IType<T> {
@@ -297,16 +298,14 @@ export interface ListType extends IExtendedType {
     readonly itemType: TPowerQueryType;
 }
 
-export interface LogicalLiteral extends IPrimitiveLiteral {
+export interface LogicalLiteral extends IPrimitiveLiteral<boolean> {
     readonly kind: TypeKind.Logical;
     readonly maybeExtendedKind: ExtendedTypeKind.LogicalLiteral;
-    readonly normalizedLiteral: boolean;
 }
 
-export interface NumberLiteral extends IPrimitiveLiteral {
+export interface NumberLiteral extends IPrimitiveLiteral<number> {
     readonly kind: TypeKind.Number;
     readonly maybeExtendedKind: ExtendedTypeKind.NumberLiteral;
-    readonly normalizedLiteral: number;
 }
 
 export interface PrimaryPrimitiveType extends IExtendedType {
@@ -333,7 +332,7 @@ export interface TableTypePrimaryExpression extends IExtendedType {
     readonly primaryExpression: TPowerQueryType;
 }
 
-export interface TextLiteral extends IPrimitiveLiteral {
+export interface TextLiteral extends IPrimitiveLiteral<string> {
     readonly kind: TypeKind.Text;
     readonly maybeExtendedKind: ExtendedTypeKind.TextLiteral;
 }

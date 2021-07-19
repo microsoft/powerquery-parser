@@ -23,10 +23,7 @@ function createAbridgedChecked(actual: Language.TypeUtils.TChecked): AbridgedChe
 }
 
 function assertAbridgedEqual(actual: AbridgedChecked, expected: AbridgedChecked): void {
-    expect(actual.valid).to.have.members(expected.valid, "mismatch on valid");
-    expect(actual.invalid).to.have.members(expected.invalid, "mismatch on invalid");
-    expect(actual.extraneous).to.have.members(expected.extraneous, "mismatch on extraneous");
-    expect(actual.missing).to.have.members(expected.missing, "mismatch on missing");
+    expect(actual).to.deep.equal(expected);
 }
 
 describe(`TypeUtils.typeCheck`, () => {
@@ -110,7 +107,7 @@ describe(`TypeUtils.typeCheck`, () => {
 
         it(`valid parameter`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [
-                Language.TypeUtils.createNumberLiteral(false, "1"),
+                Language.TypeUtils.createNumberLiteral(false, 1),
             ];
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
@@ -140,7 +137,7 @@ describe(`TypeUtils.typeCheck`, () => {
 
         it(`valid multiple parameters`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [
-                Language.TypeUtils.createNumberLiteral(false, "1"),
+                Language.TypeUtils.createNumberLiteral(false, 1),
                 Language.TypeUtils.createTextLiteral(false, `"cat"`),
             ];
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from "..";
-import { Assert, MapUtils } from "../../../common";
+import { Assert, CommonError, MapUtils } from "../../../common";
 import { isEqualFunctionSignature, isEqualType } from "./isEqualType";
 import { isFieldSpecificationList, isFunctionSignature } from "./isType";
 
@@ -19,8 +19,14 @@ export function isCompatible(left: Type.TPowerQueryType, right: Type.TPowerQuery
         right.kind === Type.TypeKind.Unknown
     ) {
         return undefined;
-    } else if (left.kind === Type.TypeKind.None || right.kind === Type.TypeKind.None) {
+    } else if (
+        left.kind === Type.TypeKind.None ||
+        right.kind === Type.TypeKind.None ||
+        (left.isNullable && !right.isNullable)
+    ) {
         return false;
+    } else if (left.kind === Type.TypeKind.Null && right.isNullable) {
+        return true;
     }
 
     switch (right.kind) {
@@ -30,16 +36,14 @@ export function isCompatible(left: Type.TPowerQueryType, right: Type.TPowerQuery
         case Type.TypeKind.DateTime:
         case Type.TypeKind.DateTimeZone:
         case Type.TypeKind.Duration:
-        case Type.TypeKind.Logical:
-        case Type.TypeKind.Null:
         case Type.TypeKind.Time:
-            return isCompatibleWithNullable(left, right) || isEqualType(left, right);
+            return isEqualType(left, right);
 
         case Type.TypeKind.Any:
             return isCompatibleWithAny(left, right);
 
         case Type.TypeKind.AnyNonNull:
-            return left.kind !== right.kind;
+            return left.kind !== Type.TypeKind.Null && !left.isNullable;
 
         case Type.TypeKind.Function:
             return isCompatibleWithFunction(left, right);
@@ -47,8 +51,14 @@ export function isCompatible(left: Type.TPowerQueryType, right: Type.TPowerQuery
         case Type.TypeKind.List:
             return isCompatibleWithList(left, right);
 
+        case Type.TypeKind.Logical:
+            return isCompatibleWithPrimitiveOrLiteral(left, right);
+
         case Type.TypeKind.Number:
-            return isCompatibleWithNumber(left, right);
+            return isCompatibleWithPrimitiveOrLiteral(left, right);
+
+        case Type.TypeKind.Null:
+            return left.kind === Type.TypeKind.Null;
 
         case Type.TypeKind.Record:
             return isCompatibleWithRecord(left, right);
@@ -57,7 +67,7 @@ export function isCompatible(left: Type.TPowerQueryType, right: Type.TPowerQuery
             return isCompatibleWithTable(left, right);
 
         case Type.TypeKind.Text:
-            return isCompatibleWithText(left, right);
+            return isCompatibleWithPrimitiveOrLiteral(left, right);
 
         case Type.TypeKind.Type:
             return isCompatibleWithType(left, right);
@@ -71,7 +81,7 @@ export function isCompatibleWithFunctionSignature(
     left: Type.TPowerQueryType,
     right: Type.TPowerQueryType & Type.FunctionSignature,
 ): boolean {
-    if (!isCompatibleWithNullable(left, right) || !isFunctionSignature(left)) {
+    if (!isFunctionSignature(left)) {
         return false;
     }
 
@@ -96,7 +106,7 @@ export function isCompatibleWithFunctionParameter(
 function isCompatibleWithAny(left: Type.TPowerQueryType, right: Type.TAny): boolean | undefined {
     switch (right.maybeExtendedKind) {
         case undefined:
-            return isCompatibleWithNullable(left, right);
+            return true;
 
         case Type.ExtendedTypeKind.AnyUnion:
             return isCompatibleWithAnyUnion(left, right);
@@ -125,8 +135,9 @@ function isCompatibleWithDefinedList(left: Type.TPowerQueryType, right: Type.Def
         case undefined:
             return false;
 
-        case Type.ExtendedTypeKind.DefinedList:
-            return isEqualType(left, right);
+        case Type.ExtendedTypeKind.DefinedList: {
+            return isCompatibleDefinedListOrDefinedListType(left, right);
+        }
 
         default:
             throw Assert.isNever(left);
@@ -139,15 +150,13 @@ function isCompatibleWithDefinedListType(left: Type.TPowerQueryType, right: Type
     }
 
     switch (left.maybeExtendedKind) {
-        case undefined:
-            return false;
-
         case Type.ExtendedTypeKind.DefinedListType:
-            return isEqualType(left, right);
+            return isCompatibleDefinedListOrDefinedListType(left, right);
 
         case Type.ExtendedTypeKind.ListType:
             return isDefinedListTypeCompatibleWithListType(right, left);
 
+        case undefined:
         case Type.ExtendedTypeKind.FunctionType:
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
         case Type.ExtendedTypeKind.RecordType:
@@ -200,14 +209,17 @@ function isCompatibleWithFieldSpecificationList(
     left: Type.TPowerQueryType,
     right: Type.TPowerQueryType & Type.TFieldSpecificationList,
 ): boolean {
-    if (!isCompatibleWithNullable(left, right) || !isFieldSpecificationList(left)) {
+    if (!isFieldSpecificationList(left)) {
         return false;
     }
 
     return MapUtils.isSubsetMap(
         left.fields,
         right.fields,
-        (leftValue: Type.TPowerQueryType, rightValue: Type.TPowerQueryType) => isEqualType(leftValue, rightValue),
+        (leftValue: Type.TPowerQueryType, rightValue: Type.TPowerQueryType) => {
+            const result: boolean | undefined = isCompatible(leftValue, rightValue);
+            return result !== undefined && result;
+        },
     );
 }
 
@@ -218,7 +230,7 @@ function isCompatibleWithFunction(left: Type.TPowerQueryType, right: Type.TFunct
 
     switch (right.maybeExtendedKind) {
         case undefined:
-            return isCompatibleWithNullable(left, right);
+            return true;
 
         case Type.ExtendedTypeKind.DefinedFunction:
             return isCompatibleWithFunctionSignature(left, right);
@@ -251,15 +263,13 @@ function isCompatibleWithListType(left: Type.TPowerQueryType, right: Type.ListTy
     }
 
     switch (left.maybeExtendedKind) {
-        case undefined:
-            return false;
-
         case Type.ExtendedTypeKind.DefinedListType:
             return isDefinedListTypeCompatibleWithListType(left, right);
 
         case Type.ExtendedTypeKind.ListType:
             return isEqualType(left.itemType, right.itemType);
 
+        case undefined:
         case Type.ExtendedTypeKind.FunctionType:
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
         case Type.ExtendedTypeKind.RecordType:
@@ -278,12 +288,10 @@ function isCompatibleWithPrimaryPrimitiveType(left: Type.TPowerQueryType, right:
     }
 
     switch (left.maybeExtendedKind) {
-        case undefined:
-            return false;
-
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
             return left.primitiveType === right.primitiveType;
 
+        case undefined:
         case Type.ExtendedTypeKind.DefinedListType:
         case Type.ExtendedTypeKind.ListType:
         case Type.ExtendedTypeKind.FunctionType:
@@ -297,44 +305,6 @@ function isCompatibleWithPrimaryPrimitiveType(left: Type.TPowerQueryType, right:
     }
 }
 
-function isCompatibleWithNullable(left: Type.TPowerQueryType, right: Type.TPowerQueryType): boolean {
-    return right.isNullable === true ? true : left.isNullable === false;
-}
-
-function isCompatibleWithNumber(left: Type.TPowerQueryType, right: Type.TNumber): boolean {
-    if (left.kind !== right.kind) {
-        return false;
-    }
-
-    switch (right.maybeExtendedKind) {
-        case undefined:
-            return isCompatibleWithNullable(left, right);
-
-        case Type.ExtendedTypeKind.NumberLiteral:
-            return isCompatibleWithNumberLiteral(left, right);
-
-        default:
-            throw Assert.isNever(right);
-    }
-}
-
-function isCompatibleWithNumberLiteral(left: Type.TPowerQueryType, right: Type.NumberLiteral): boolean {
-    if (left.kind !== right.kind) {
-        return false;
-    }
-
-    switch (left.maybeExtendedKind) {
-        case undefined:
-            return false;
-
-        case Type.ExtendedTypeKind.NumberLiteral:
-            return isEqualType(left, right);
-
-        default:
-            throw Assert.isNever(left);
-    }
-}
-
 function isCompatibleWithRecord(left: Type.TPowerQueryType, right: Type.TRecord): boolean {
     if (left.kind !== right.kind) {
         return false;
@@ -342,7 +312,7 @@ function isCompatibleWithRecord(left: Type.TPowerQueryType, right: Type.TRecord)
 
     switch (right.maybeExtendedKind) {
         case undefined:
-            return isCompatibleWithNullable(left, right);
+            return true;
 
         case Type.ExtendedTypeKind.DefinedRecord:
             return isCompatibleWithDefinedRecord(left, right);
@@ -358,12 +328,10 @@ function isCompatibleWithRecordType(left: Type.TPowerQueryType, right: Type.Reco
     }
 
     switch (left.maybeExtendedKind) {
-        case undefined:
-            return false;
-
         case Type.ExtendedTypeKind.RecordType:
             return isCompatibleWithFieldSpecificationList(left, right);
 
+        case undefined:
         case Type.ExtendedTypeKind.DefinedListType:
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
         case Type.ExtendedTypeKind.ListType:
@@ -384,7 +352,7 @@ function isCompatibleWithTable(left: Type.TPowerQueryType, right: Type.TTable): 
 
     switch (right.maybeExtendedKind) {
         case undefined:
-            return isCompatibleWithNullable(left, right);
+            return true;
 
         case Type.ExtendedTypeKind.DefinedTable:
             return isCompatibleWithDefinedTable(left, right);
@@ -447,38 +415,61 @@ function isCompatibleWithTableTypePrimaryExpression(
     }
 }
 
-function isCompatibleWithText(left: Type.TPowerQueryType, right: Type.TText): boolean {
-    if (left.kind !== right.kind) {
+function isCompatibleWithLiteral<T extends Type.TLiteral>(left: Type.TPowerQueryType, right: T): boolean {
+    if (left.kind !== right.kind || !left.maybeExtendedKind || left.maybeExtendedKind !== right.maybeExtendedKind) {
         return false;
-    }
-
-    switch (right.maybeExtendedKind) {
-        case undefined:
-            return isCompatibleWithNullable(left, right);
-
-        case Type.ExtendedTypeKind.TextLiteral:
-            return isCompatibleWithTextLiteral(left, right);
-
-        default:
-            throw Assert.isNever(right);
+    } else {
+        return left.normalizedLiteral === right.normalizedLiteral;
     }
 }
 
-function isCompatibleWithTextLiteral(left: Type.TPowerQueryType, right: Type.TextLiteral): boolean {
-    if (left.kind !== right.kind) {
+function isCompatibleDefinedListOrDefinedListType<T extends Type.DefinedList | Type.DefinedListType>(
+    left: T,
+    right: T,
+): boolean {
+    let leftElements: ReadonlyArray<Type.TPowerQueryType>;
+    let rightElements: ReadonlyArray<Type.TPowerQueryType>;
+
+    if (
+        left.maybeExtendedKind === Type.ExtendedTypeKind.DefinedList &&
+        right.maybeExtendedKind === Type.ExtendedTypeKind.DefinedList
+    ) {
+        leftElements = left.elements;
+        rightElements = right.elements;
+    } else if (
+        left.maybeExtendedKind === Type.ExtendedTypeKind.DefinedListType &&
+        right.maybeExtendedKind === Type.ExtendedTypeKind.DefinedListType
+    ) {
+        leftElements = left.itemTypes;
+        rightElements = right.itemTypes;
+    } else {
+        throw new CommonError.InvariantError(`unknown scenario for isCompatibleDefinedListOrDefinedListType`, {
+            leftTypeKind: left.kind,
+            rightTypeKind: right.kind,
+            leftMaybeExtendedTypeKind: left.maybeExtendedKind,
+            rightMaybeExtendedTypeKind: right.maybeExtendedKind,
+        });
+    }
+
+    if (leftElements.length !== rightElements.length) {
         return false;
     }
 
-    switch (left.maybeExtendedKind) {
-        case undefined:
+    const numElements: number = leftElements.length;
+    for (let index: number = 0; index < numElements; index += 1) {
+        if (!isCompatible(leftElements[index], rightElements[index])) {
             return false;
-
-        case Type.ExtendedTypeKind.TextLiteral:
-            return isEqualType(left, right);
-
-        default:
-            throw Assert.isNever(left);
+        }
     }
+
+    return true;
+}
+
+function isCompatibleWithPrimitiveOrLiteral(
+    left: Type.TPowerQueryType,
+    right: Type.TLogical | Type.TText | Type.TNumber,
+): boolean {
+    return left.kind === right.kind && (!right.maybeExtendedKind || isCompatibleWithLiteral(left, right));
 }
 
 function isCompatibleWithType(
@@ -499,7 +490,7 @@ function isCompatibleWithType(
 
     switch (right.maybeExtendedKind) {
         case undefined:
-            return isCompatibleWithNullable(left, right);
+            return true;
 
         case Type.ExtendedTypeKind.FunctionType:
             return isCompatibleWithFunctionSignature(left, right);
@@ -531,6 +522,6 @@ function isDefinedListTypeCompatibleWithListType(definedList: Type.DefinedListTy
     const itemTypeCompatabilities: ReadonlyArray<boolean | undefined> = definedList.itemTypes.map(itemType =>
         isCompatible(itemType, listType.itemType),
     );
-    // !itemTypeCompatabilities.includes(undefined) && !itemTypeCompatabilities.includes(false);
+
     return itemTypeCompatabilities.find(value => value === undefined || value === false) !== undefined;
 }

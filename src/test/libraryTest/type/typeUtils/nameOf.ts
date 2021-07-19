@@ -62,7 +62,7 @@ describe(`TypeUtils.nameOf`, () => {
                 expect(TypeUtils.nameOf(Type.NumberInstance)).to.equal("number");
             });
             it(`${Type.NumberInstance.kind} literal`, () => {
-                expect(TypeUtils.nameOf(TypeUtils.createNumberLiteral(false, "1"))).to.equal("1");
+                expect(TypeUtils.nameOf(TypeUtils.createNumberLiteral(false, 1))).to.equal("1");
             });
             it(`${Type.RecordInstance.kind}`, () => {
                 expect(TypeUtils.nameOf(Type.RecordInstance)).to.equal("record");
@@ -228,7 +228,7 @@ describe(`TypeUtils.nameOf`, () => {
                             nameLiteral: "y",
                         },
                     ],
-                    TypeUtils.createNumberLiteral(false, "1"),
+                    TypeUtils.createNumberLiteral(false, 1),
                 );
                 const actual: string = TypeUtils.nameOf(type);
 
