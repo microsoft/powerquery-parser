@@ -105,6 +105,62 @@ describe(`TypeUtils.typeCheck`, () => {
             expect(actual).to.deep.equal(expected);
         });
 
+        it(`maybeType === null translates to any`, () => {
+            const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.NumberInstance];
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
+                false,
+                [
+                    {
+                        isNullable: true,
+                        isOptional: false,
+                        maybeType: undefined,
+                        nameLiteral: "foo",
+                    },
+                ],
+                Language.Type.ActionInstance,
+            );
+            const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
+                args,
+                definedFunction,
+            );
+            const expected: Language.TypeUtils.CheckedInvocation = {
+                valid: [0],
+                invalid: new Map(),
+                extraneous: [],
+                missing: [],
+            };
+
+            expect(actual).to.deep.equal(expected);
+        });
+
+        it(`maybeType === any allows any type`, () => {
+            const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.NumberInstance];
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
+                false,
+                [
+                    {
+                        isNullable: false,
+                        isOptional: false,
+                        maybeType: Language.Type.TypeKind.Any,
+                        nameLiteral: "foo",
+                    },
+                ],
+                Language.Type.ActionInstance,
+            );
+            const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
+                args,
+                definedFunction,
+            );
+            const expected: Language.TypeUtils.CheckedInvocation = {
+                valid: [0],
+                invalid: new Map(),
+                extraneous: [],
+                missing: [],
+            };
+
+            expect(actual).to.deep.equal(expected);
+        });
+
         it(`valid parameter`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [
                 Language.TypeUtils.createNumberLiteral(false, 1),

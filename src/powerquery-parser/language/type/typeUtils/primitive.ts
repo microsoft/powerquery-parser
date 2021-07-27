@@ -219,10 +219,6 @@ export const PrimitiveTypeConstantMap: ReadonlyMap<string, Type.TPrimitiveType> 
         Type.NullableNotApplicableInstance,
     ],
     [
-        primitiveTypeMapKey(Type.NullableNullInstance.isNullable, Type.NullableNullInstance.kind),
-        Type.NullableNullInstance,
-    ],
-    [
         primitiveTypeMapKey(Type.NullableNumberInstance.isNullable, Type.NullableNumberInstance.kind),
         Type.NullableNumberInstance,
     ],

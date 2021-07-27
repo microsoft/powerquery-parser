@@ -96,10 +96,8 @@ export function isCompatibleWithFunctionParameter(
         return right.isOptional;
     } else if (left.isNullable && !right.isNullable) {
         return false;
-    } else if (right.maybeType) {
-        return left.kind === right.maybeType;
     } else {
-        return true;
+        return !right.maybeType || right.maybeType === Type.TypeKind.Any || left.kind === right.maybeType;
     }
 }
 

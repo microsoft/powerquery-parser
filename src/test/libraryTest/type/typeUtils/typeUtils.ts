@@ -308,11 +308,6 @@ describe(`TypeUtils`, () => {
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable none");
                 });
-                it(`${Type.NullableNullInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableNullInstance);
-                    // tslint:disable-next-line: chai-vague-errors
-                    expect(actual).to.equal("nullable null");
-                });
                 it(`${Type.NullableNumberInstance.kind}`, () => {
                     const actual: string = TypeUtils.nameOf(Type.NullableNumberInstance);
                     // tslint:disable-next-line: chai-vague-errors
