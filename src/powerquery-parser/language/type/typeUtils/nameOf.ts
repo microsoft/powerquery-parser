@@ -6,6 +6,10 @@ import { Constant } from "../..";
 import { Assert } from "../../../common";
 
 export function nameOf(type: Type.TPowerQueryType): string {
+    if (type.kind === Type.TypeKind.Null) {
+        return "null";
+    }
+
     switch (type.maybeExtendedKind) {
         case Type.ExtendedTypeKind.NumberLiteral:
         case Type.ExtendedTypeKind.TextLiteral:

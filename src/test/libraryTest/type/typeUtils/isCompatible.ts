@@ -48,7 +48,6 @@ describe(`TypeUtils.isCompatible`, () => {
                 Type.TypeKind.Function,
                 Type.TypeKind.List,
                 Type.TypeKind.Logical,
-                Type.TypeKind.Null,
                 Type.TypeKind.Number,
                 Type.TypeKind.Record,
                 Type.TypeKind.Table,
