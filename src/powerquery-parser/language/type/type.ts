@@ -360,7 +360,7 @@ export const NotApplicableInstance: IPrimitiveType<TypeKind.NotApplicable> = cre
     TypeKind.NotApplicable,
     false,
 );
-export const NullInstance: IPrimitiveType<TypeKind.Null> = createPrimitiveType(TypeKind.Null, false);
+export const NullInstance: IPrimitiveType<TypeKind.Null> = createPrimitiveType(TypeKind.Null, true);
 export const NumberInstance: IPrimitiveType<TypeKind.Number> = createPrimitiveType(TypeKind.Number, false);
 export const RecordInstance: IPrimitiveType<TypeKind.Record> = createPrimitiveType(TypeKind.Record, false);
 export const TableInstance: IPrimitiveType<TypeKind.Table> = createPrimitiveType(TypeKind.Table, false);
@@ -391,7 +391,6 @@ export const NullableNotApplicableInstance: IPrimitiveType<TypeKind.NotApplicabl
     TypeKind.NotApplicable,
     true,
 );
-export const NullableNullInstance: IPrimitiveType<TypeKind.Null> = createPrimitiveType(TypeKind.Null, true);
 export const NullableNumberInstance: IPrimitiveType<TypeKind.Number> = createPrimitiveType(TypeKind.Number, true);
 export const NullableRecordInstance: IPrimitiveType<TypeKind.Record> = createPrimitiveType(TypeKind.Record, true);
 export const NullableTableInstance: IPrimitiveType<TypeKind.Table> = createPrimitiveType(TypeKind.Table, true);
@@ -454,7 +453,6 @@ export const NullablePrimitiveInstance: AnyUnion = {
         NullableLogicalInstance,
         NullableNoneInstance,
         NullableNotApplicableInstance,
-        NullableNullInstance,
         NullableNumberInstance,
         NullableRecordInstance,
         NullableTableInstance,

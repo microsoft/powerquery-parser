@@ -137,10 +137,6 @@ describe(`TypeUtils.nameOf`, () => {
                 const actual: string = TypeUtils.nameOf(Type.NullableNotApplicableInstance);
                 expect(actual).to.equal("nullable not applicable", undefined);
             });
-            it(`${Type.NullableNullInstance.kind}`, () => {
-                const actual: string = TypeUtils.nameOf(Type.NullableNullInstance);
-                expect(actual).to.equal("nullable null", undefined);
-            });
             it(`${Type.NullableNumberInstance.kind}`, () => {
                 const actual: string = TypeUtils.nameOf(Type.NullableNumberInstance);
                 expect(actual).to.equal("nullable number", undefined);
