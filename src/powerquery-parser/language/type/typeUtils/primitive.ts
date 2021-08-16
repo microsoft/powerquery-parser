@@ -141,112 +141,50 @@ export function typeKindFromPrimitiveTypeConstantKind(
     }
 }
 
-export const PrimitiveTypeConstantMap: ReadonlyMap<string, Type.TPrimitiveType> = new Map<string, Type.TPrimitiveType>([
-    [primitiveTypeMapKey(Type.ActionInstance.isNullable, Type.ActionInstance.kind), Type.ActionInstance],
-    [primitiveTypeMapKey(Type.AnyInstance.isNullable, Type.AnyInstance.kind), Type.AnyInstance],
-    [primitiveTypeMapKey(Type.AnyNonNullInstance.isNullable, Type.AnyNonNullInstance.kind), Type.AnyNonNullInstance],
-    [primitiveTypeMapKey(Type.BinaryInstance.isNullable, Type.BinaryInstance.kind), Type.BinaryInstance],
-    [primitiveTypeMapKey(Type.DateInstance.isNullable, Type.DateInstance.kind), Type.DateInstance],
-    [primitiveTypeMapKey(Type.DateTimeInstance.isNullable, Type.DateTimeInstance.kind), Type.DateTimeInstance],
+export const PrimitiveTypeConstantMap: ReadonlyMap<string, Type.TPrimitiveType> = new Map(
     [
-        primitiveTypeMapKey(Type.DateTimeZoneInstance.isNullable, Type.DateTimeZoneInstance.kind),
+        Type.ActionInstance,
+        Type.AnyInstance,
+        Type.AnyNonNullInstance,
+        Type.BinaryInstance,
+        Type.DateInstance,
+        Type.DateTimeInstance,
         Type.DateTimeZoneInstance,
-    ],
-    [primitiveTypeMapKey(Type.DurationInstance.isNullable, Type.DurationInstance.kind), Type.DurationInstance],
-    [primitiveTypeMapKey(Type.FunctionInstance.isNullable, Type.FunctionInstance.kind), Type.FunctionInstance],
-    [primitiveTypeMapKey(Type.ListInstance.isNullable, Type.ListInstance.kind), Type.ListInstance],
-    [primitiveTypeMapKey(Type.LogicalInstance.isNullable, Type.LogicalInstance.kind), Type.LogicalInstance],
-    [primitiveTypeMapKey(Type.NoneInstance.isNullable, Type.NoneInstance.kind), Type.NoneInstance],
-    [
-        primitiveTypeMapKey(Type.NotApplicableInstance.isNullable, Type.NotApplicableInstance.kind),
+        Type.DurationInstance,
+        Type.FunctionInstance,
+        Type.ListInstance,
+        Type.LogicalInstance,
+        Type.NoneInstance,
         Type.NotApplicableInstance,
-    ],
-    [primitiveTypeMapKey(Type.NullInstance.isNullable, Type.NullInstance.kind), Type.NullInstance],
-    [primitiveTypeMapKey(Type.NumberInstance.isNullable, Type.NumberInstance.kind), Type.NumberInstance],
-    [primitiveTypeMapKey(Type.RecordInstance.isNullable, Type.RecordInstance.kind), Type.RecordInstance],
-    [primitiveTypeMapKey(Type.TableInstance.isNullable, Type.TableInstance.kind), Type.TableInstance],
-    [primitiveTypeMapKey(Type.TimeInstance.isNullable, Type.TimeInstance.kind), Type.TimeInstance],
-    [primitiveTypeMapKey(Type.TextInstance.isNullable, Type.TextInstance.kind), Type.TextInstance],
-    [
-        primitiveTypeMapKey(Type.TypePrimitiveInstance.isNullable, Type.TypePrimitiveInstance.kind),
+        Type.NullInstance,
+        Type.NumberInstance,
+        Type.RecordInstance,
+        Type.TableInstance,
+        Type.TimeInstance,
+        Type.TextInstance,
         Type.TypePrimitiveInstance,
-    ],
-    [primitiveTypeMapKey(Type.UnknownInstance.isNullable, Type.UnknownInstance.kind), Type.UnknownInstance],
-
-    [
-        primitiveTypeMapKey(Type.NullableActionInstance.isNullable, Type.NullableActionInstance.kind),
+        Type.UnknownInstance,
         Type.NullableActionInstance,
-    ],
-    [primitiveTypeMapKey(Type.NullableAnyInstance.isNullable, Type.NullableAnyInstance.kind), Type.NullableAnyInstance],
-    [
-        primitiveTypeMapKey(Type.NullableBinaryInstance.isNullable, Type.NullableBinaryInstance.kind),
+        Type.NullableAnyInstance,
         Type.NullableBinaryInstance,
-    ],
-    [
-        primitiveTypeMapKey(Type.NullableDateInstance.isNullable, Type.NullableDateInstance.kind),
         Type.NullableDateInstance,
-    ],
-    [
-        primitiveTypeMapKey(Type.NullableDateTimeInstance.isNullable, Type.NullableDateTimeInstance.kind),
         Type.NullableDateTimeInstance,
-    ],
-    [
-        primitiveTypeMapKey(Type.NullableDateTimeZoneInstance.isNullable, Type.NullableDateTimeZoneInstance.kind),
         Type.NullableDateTimeZoneInstance,
-    ],
-    [
-        primitiveTypeMapKey(Type.NullableDurationInstance.isNullable, Type.NullableDurationInstance.kind),
         Type.NullableDurationInstance,
-    ],
-    [
-        primitiveTypeMapKey(Type.NullableFunctionInstance.isNullable, Type.NullableFunctionInstance.kind),
         Type.NullableFunctionInstance,
-    ],
-    [
-        primitiveTypeMapKey(Type.NullableListInstance.isNullable, Type.NullableListInstance.kind),
         Type.NullableListInstance,
-    ],
-    [
-        primitiveTypeMapKey(Type.NullableLogicalInstance.isNullable, Type.NullableLogicalInstance.kind),
         Type.NullableLogicalInstance,
-    ],
-    [
-        primitiveTypeMapKey(Type.NullableNoneInstance.isNullable, Type.NullableNoneInstance.kind),
         Type.NullableNoneInstance,
-    ],
-    [
-        primitiveTypeMapKey(Type.NullableNotApplicableInstance.isNullable, Type.NullableNotApplicableInstance.kind),
         Type.NullableNotApplicableInstance,
-    ],
-    [
-        primitiveTypeMapKey(Type.NullableNumberInstance.isNullable, Type.NullableNumberInstance.kind),
         Type.NullableNumberInstance,
-    ],
-    [
-        primitiveTypeMapKey(Type.NullableRecordInstance.isNullable, Type.NullableRecordInstance.kind),
         Type.NullableRecordInstance,
-    ],
-    [
-        primitiveTypeMapKey(Type.NullableTableInstance.isNullable, Type.NullableTableInstance.kind),
         Type.NullableTableInstance,
-    ],
-    [
-        primitiveTypeMapKey(Type.NullableTextInstance.isNullable, Type.NullableTextInstance.kind),
         Type.NullableTextInstance,
-    ],
-    [
-        primitiveTypeMapKey(Type.NullableTimeInstance.isNullable, Type.NullableTimeInstance.kind),
         Type.NullableTimeInstance,
-    ],
-    [
-        primitiveTypeMapKey(Type.NullableTypeInstance.isNullable, Type.NullableTypeInstance.kind),
         Type.NullableTypeInstance,
-    ],
-    [
-        primitiveTypeMapKey(Type.NullableUnknownInstance.isNullable, Type.NullableUnknownInstance.kind),
         Type.NullableUnknownInstance,
-    ],
-]);
+    ].map((type: Type.TPrimitiveType) => [primitiveTypeMapKey(type.isNullable, type.kind), type]),
+);
 
 export function primitiveTypeMapKey(isNullable: boolean, typeKind: Type.TypeKind): string {
     return `${typeKind},${isNullable}`;
