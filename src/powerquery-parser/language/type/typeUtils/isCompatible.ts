@@ -97,7 +97,12 @@ export function isCompatibleWithFunctionParameter(
     } else if (left.isNullable && !right.isNullable) {
         return false;
     } else {
-        return !right.maybeType || right.maybeType === Type.TypeKind.Any || left.kind === right.maybeType;
+        return (
+            !right.maybeType ||
+            right.maybeType === Type.TypeKind.Any ||
+            left.kind === Type.TypeKind.Any ||
+            left.kind === right.maybeType
+        );
     }
 }
 
