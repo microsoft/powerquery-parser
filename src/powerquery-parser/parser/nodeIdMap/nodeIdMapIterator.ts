@@ -201,6 +201,56 @@ export function iterFieldProjectionNames(
     return result;
 }
 
+export function iterFunctionExpressionParameters(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    functionExpression: TXorNode,
+): ReadonlyArray<TXorNode> {
+    XorNodeUtils.assertAstNodeKind(functionExpression, Ast.NodeKind.FunctionExpression);
+
+    if (functionExpression.kind === XorNodeKind.Ast) {
+        return (functionExpression.node as Ast.FunctionExpression).parameters.content.elements.map(
+            (parameter: Ast.ICsv<Ast.IParameter<Ast.AsNullablePrimitiveType | undefined>>) =>
+                XorNodeUtils.createAstNode(parameter.node),
+        );
+    }
+
+    const maybeParameterList: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
+        nodeIdMapCollection,
+        functionExpression.node.id,
+        0,
+        [Ast.NodeKind.ParameterList],
+    );
+    if (maybeParameterList === undefined) {
+        return [];
+    }
+
+    return iterArrayWrapperInWrappedContent(nodeIdMapCollection, maybeParameterList);
+}
+
+export function iterFunctionExpressionParameterNames(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    functionExpression: TXorNode,
+): ReadonlyArray<string> {
+    const result: string[] = [];
+
+    for (const parameter of iterFunctionExpressionParameters(nodeIdMapCollection, functionExpression)) {
+        const maybeName: Ast.TNode | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(
+            nodeIdMapCollection,
+            parameter.node.id,
+            1,
+            [Ast.NodeKind.Identifier],
+        );
+
+        if (!maybeName) {
+            return result;
+        } else {
+            result.push((maybeName as Ast.Identifier).literal);
+        }
+    }
+
+    return result;
+}
+
 // Return all FieldSpecification children under the given FieldSpecificationList.
 export function iterFieldSpecification(
     nodeIdMapCollection: NodeIdMap.Collection,
