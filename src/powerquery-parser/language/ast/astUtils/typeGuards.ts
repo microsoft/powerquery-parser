@@ -15,6 +15,10 @@ export function isAsNullablePrimitiveType(node: Ast.TNode): node is Ast.AsNullab
     return node.kind === Ast.NodeKind.AsNullablePrimitiveType;
 }
 
+export function isAnyNodeKind<T extends Ast.TNode>(node: Ast.TNode, nodeKinds: ReadonlyArray<T["kind"]>): node is T {
+    return nodeKinds.includes(node.kind);
+}
+
 export function isAsType(node: Ast.TNode): node is Ast.AsType {
     return node.kind === Ast.NodeKind.AsType;
 }
@@ -139,6 +143,10 @@ export function isMetadataExpression(node: Ast.TNode): node is Ast.MetadataExpre
     return node.kind === Ast.NodeKind.MetadataExpression;
 }
 
+export function isNodeKind<T extends Ast.TNode>(node: Ast.TNode, nodeKind: T["kind"]): node is T {
+    return node.kind === nodeKind;
+}
+
 export function isNotImplementedExpression(node: Ast.TNode): node is Ast.NotImplementedExpression {
     return node.kind === Ast.NodeKind.NotImplementedExpression;
 }
@@ -208,24 +216,25 @@ export function isTArrayWrapper(node: Ast.TNode): node is Ast.TArrayWrapper {
 }
 
 export function isTBinOpExpression(node: Ast.TNode): node is Ast.TBinOpExpression {
-    return isTBinOpExpressionKind(node.kind);
-}
-
-export function isTBinOpExpressionKind(nodeKind: Ast.NodeKind): nodeKind is Ast.TBinOpExpressionNodeKind {
-    switch (nodeKind) {
-        case Ast.NodeKind.ArithmeticExpression:
-        case Ast.NodeKind.AsExpression:
-        case Ast.NodeKind.EqualityExpression:
-        case Ast.NodeKind.IsExpression:
-        case Ast.NodeKind.LogicalExpression:
-        case Ast.NodeKind.NullCoalescingExpression:
-        case Ast.NodeKind.MetadataExpression:
-        case Ast.NodeKind.RelationalExpression:
-            return true;
-
-        default:
-            return false;
-    }
+    return isAnyNodeKind<
+        | Ast.ArithmeticExpression
+        | Ast.AsExpression
+        | Ast.EqualityExpression
+        | Ast.IsExpression
+        | Ast.LogicalExpression
+        | Ast.NullCoalescingExpression
+        | Ast.MetadataExpression
+        | Ast.RelationalExpression
+    >(node, [
+        Ast.NodeKind.ArithmeticExpression,
+        Ast.NodeKind.AsExpression,
+        Ast.NodeKind.EqualityExpression,
+        Ast.NodeKind.IsExpression,
+        Ast.NodeKind.LogicalExpression,
+        Ast.NodeKind.NullCoalescingExpression,
+        Ast.NodeKind.MetadataExpression,
+        Ast.NodeKind.RelationalExpression,
+    ]);
 }
 
 export function isTConstant(node: Ast.TNode): node is Ast.TConstant {

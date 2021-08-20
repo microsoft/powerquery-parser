@@ -8,13 +8,13 @@ import { Collection } from "../nodeIdMap";
 import { TXorNode, XorNodeKind } from "../xorNode";
 import { assertGetChildXorByAttributeIndex, maybeChildXorByAttributeIndex } from "./childSelectors";
 import { assertGetXor } from "./commonSelectors";
-import { assertGetParentXor } from "./parentSelectors";
+import { assertGetParentXor, assertGetParentXorChecked } from "./parentSelectors";
 
 // Returns the previous sibling of the given recursive expression.
 // Commonly used for things like getting the identifier name used in an InvokeExpression.
 export function assertGetRecursiveExpressionPreviousSibling(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
     const xorNode: TXorNode = assertGetXor(nodeIdMapCollection, nodeId);
-    const arrayWrapper: TXorNode = assertGetParentXor(nodeIdMapCollection, nodeId, [Ast.NodeKind.ArrayWrapper]);
+    const arrayWrapper: TXorNode = assertGetParentXorChecked(nodeIdMapCollection, nodeId, Ast.NodeKind.ArrayWrapper);
     const maybePrimaryExpressionAttributeId: number | undefined = xorNode.node.maybeAttributeIndex;
 
     // It's not the first element in the ArrayWrapper.

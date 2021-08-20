@@ -3,17 +3,27 @@
 
 import { XorNodeUtils } from "..";
 import { Assert, MapUtils } from "../../../common";
-import { Ast } from "../../../language";
+import { Ast, AstUtils } from "../../../language";
 import { ParseContext } from "../../context";
 import { AstNodeById, Collection, ContextNodeById } from "../nodeIdMap";
 import { TXorNode, XorNodeKind } from "../xorNode";
 import { maybeChildXorByAttributeIndex } from "./childSelectors";
 
-export function assertGetAst(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
+export function assertUnwrapAst(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
     return MapUtils.assertGet(astNodeById, nodeId);
 }
 
-export function assertGetContext(contextNodeById: ContextNodeById, nodeId: number): ParseContext.Node {
+export function assertUnwrapAstChecked<T extends Ast.TNode>(
+    astNodeById: AstNodeById,
+    nodeId: number,
+    nodeKind: T["kind"],
+): Ast.TNode {
+    const ast: Ast.TNode = MapUtils.assertGet(astNodeById, nodeId);
+    AstUtils.assertHasNodeKind(ast, nodeKind);
+    return ast;
+}
+
+export function assertUnwrapContext(contextNodeById: ContextNodeById, nodeId: number): ParseContext.Node {
     return MapUtils.assertGet(contextNodeById, nodeId);
 }
 

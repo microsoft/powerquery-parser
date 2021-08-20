@@ -275,7 +275,7 @@ export function deleteContext(state: State, nodeId: number): Node | undefined {
     leafIds.delete(nodeId);
 
     // Return the node's parent if it exits
-    return maybeParentId !== undefined ? NodeIdMapUtils.assertGetContext(contextNodeById, maybeParentId) : undefined;
+    return maybeParentId !== undefined ? NodeIdMapUtils.assertUnwrapContext(contextNodeById, maybeParentId) : undefined;
 }
 
 function deleteFromKindMap(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): void {

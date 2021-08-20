@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast } from "..";
-import { ArrayUtils, CommonError } from "../../../common";
 import * as TypeGuards from "./typeGuards";
+
+import { Ast } from "..";
+import { CommonError } from "../../../common";
 
 export function assertAsArithmeticExpression(node: Ast.TNode): Ast.ArithmeticExpression {
     return assertAs(TypeGuards.isArithmeticExpression, node, [Ast.NodeKind.ArithmeticExpression]);
@@ -258,12 +259,27 @@ export function assertAsUnaryExpression(node: Ast.TNode): Ast.UnaryExpression {
     return assertAs(TypeGuards.isUnaryExpression, node, [Ast.NodeKind.UnaryExpression]);
 }
 
-export function assertIsAnyNodeKind(node: Ast.TNode, allowedNodeKinds: ReadonlyArray<Ast.NodeKind>): void {
-    ArrayUtils.assertIn(allowedNodeKinds, node.kind, "assert failed, given nodeKind wasn't in allowedNodeKinds", {
-        allowedNodeKinds,
-        actualNodeKind: node.kind,
-        actualNodeId: node.id,
-    });
+export function assertHasNodeKind<T extends Ast.TNode>(node: Ast.TNode, expectedNodeKind: T["kind"]): void {
+    if (!TypeGuards.isNodeKind(node, expectedNodeKind)) {
+        throw new CommonError.InvariantError(`assert failed, expected a different nodeKind`, {
+            nodeId: node.id,
+            nodeKind: node.kind,
+            expectedNodeKind,
+        });
+    }
+}
+
+export function assertHasAnyNodeKind<T extends Ast.TNode>(
+    node: Ast.TNode,
+    expectedNodeKinds: ReadonlyArray<T["kind"]>,
+): void {
+    if (!TypeGuards.isAnyNodeKind(node, expectedNodeKinds)) {
+        throw new CommonError.InvariantError(`assert failed, expected a different nodeKind`, {
+            nodeId: node.id,
+            nodeKind: node.kind,
+            expectedNodeKinds,
+        });
+    }
 }
 
 export function assertIsArithmeticExpression(node: Ast.TNode): asserts node is Ast.ArithmeticExpression {

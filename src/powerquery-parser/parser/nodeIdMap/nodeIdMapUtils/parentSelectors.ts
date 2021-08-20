@@ -3,93 +3,110 @@
 
 import { XorNodeUtils } from "..";
 import { Assert } from "../../../common";
-import { Ast } from "../../../language";
+import { Ast, AstUtils } from "../../../language";
 import { ParseContext } from "../../context";
 import { Collection } from "../nodeIdMap";
-import { TXorNode } from "../xorNode";
+import { TXorNode, XorNode } from "../xorNode";
+import { createAstNode, createContextNode } from "../xorNodeUtils";
 
-export function assertGetParentAst(
+export function assertUnwrapParentAst<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     nodeId: number,
-    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
-): Ast.TNode {
-    const maybeNode: Ast.TNode | undefined = maybeParentAst(nodeIdMapCollection, nodeId, maybeAllowedNodeKinds);
+    expectedNodeKind: T["kind"],
+): T {
+    const maybeNode: T | undefined = maybeParentAstChecked(nodeIdMapCollection, nodeId, expectedNodeKind);
     return Assert.asDefined(maybeNode, `nodeId doesn't have a parent`, { nodeId });
 }
 
-export function assertGetParentXor(
-    nodeIdMapCollection: Collection,
-    nodeId: number,
-    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
-): TXorNode {
-    const maybeNode: TXorNode | undefined = maybeParentXor(nodeIdMapCollection, nodeId, maybeAllowedNodeKinds);
+export function assertGetParentXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
+    const maybeNode: TXorNode | undefined = maybeParentXor(nodeIdMapCollection, nodeId);
     return Assert.asDefined(maybeNode, `nodeId doesn't have a parent`, { nodeId });
 }
 
-export function maybeParentAst(
+export function assertGetParentXorChecked<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
-    childId: number,
-    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
-): Ast.TNode | undefined {
+    nodeId: number,
+    expectedNodeKind: T["kind"],
+): XorNode<T> {
+    const maybeNode: XorNode<T> | undefined = maybeParentXorChecked(nodeIdMapCollection, nodeId, expectedNodeKind);
+    return Assert.asDefined(maybeNode, `nodeId doesn't have a parent`, { nodeId });
+}
+
+export function maybeParentAst(nodeIdMapCollection: Collection, childId: number): Ast.TNode | undefined {
     const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(childId);
     if (maybeParentId === undefined) {
         return undefined;
     }
-    const maybeParent: Ast.TNode | undefined = nodeIdMapCollection.astNodeById.get(maybeParentId);
+    return nodeIdMapCollection.astNodeById.get(maybeParentId);
+}
 
+export function maybeParentAstChecked<T extends Ast.TNode>(
+    nodeIdMapCollection: Collection,
+    childId: number,
+    expectedNodeKind: T["kind"],
+): T | undefined {
+    const maybeParent: Ast.TNode | undefined = maybeParentAst(nodeIdMapCollection, childId);
     if (maybeParent === undefined) {
         return undefined;
     }
-    const parent: Ast.TNode = maybeParent;
 
-    if (maybeAllowedNodeKinds?.indexOf(parent.kind) === -1) {
+    return AstUtils.isNodeKind(maybeParent, expectedNodeKind) ? maybeParent : undefined;
+}
+
+export function maybeParentAstCheckedMany<T extends Ast.TNode>(
+    nodeIdMapCollection: Collection,
+    childId: number,
+    expectedNodeKinds: ReadonlyArray<T["kind"]>,
+): T | undefined {
+    const maybeParent: Ast.TNode | undefined = maybeParentAst(nodeIdMapCollection, childId);
+    if (maybeParent === undefined) {
         return undefined;
     }
 
-    return parent;
+    return AstUtils.isAnyNodeKind(maybeParent, expectedNodeKinds) ? maybeParent : undefined;
 }
 
-export function maybeParentContext(
+export function maybeParentContext(nodeIdMapCollection: Collection, childId: number): ParseContext.Node | undefined {
+    const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(childId);
+    if (maybeParentId === undefined) {
+        return undefined;
+    }
+
+    return nodeIdMapCollection.contextNodeById.get(maybeParentId);
+}
+
+export function maybeParentContextChecked(
     nodeIdMapCollection: Collection,
     childId: number,
-    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
+    expectedNodeKind: Ast.NodeKind,
 ): ParseContext.Node | undefined {
-    const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(childId);
-    if (maybeParentId === undefined) {
-        return undefined;
-    }
-    const maybeParent: ParseContext.Node | undefined = nodeIdMapCollection.contextNodeById.get(maybeParentId);
-
-    if (maybeParent === undefined) {
-        return undefined;
-    }
-    const parent: ParseContext.Node = maybeParent;
-
-    if (maybeAllowedNodeKinds?.indexOf(parent.kind) === -1) {
-        return undefined;
-    }
-
-    return parent;
+    const maybeParent: ParseContext.Node | undefined = maybeParentContext(nodeIdMapCollection, childId);
+    return maybeParent?.kind === expectedNodeKind ? maybeParent : undefined;
 }
 
-export function maybeParentXor(
-    nodeIdMapCollection: Collection,
-    childId: number,
-    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
-): TXorNode | undefined {
-    const maybeAstNode: Ast.TNode | undefined = maybeParentAst(nodeIdMapCollection, childId, maybeAllowedNodeKinds);
-    if (maybeAstNode !== undefined) {
-        return XorNodeUtils.createAstNode(maybeAstNode);
+export function maybeParentXor(nodeIdMapCollection: Collection, childId: number): TXorNode | undefined {
+    const maybeAst: Ast.TNode | undefined = maybeParentAst(nodeIdMapCollection, childId);
+    if (maybeAst !== undefined) {
+        return createAstNode(maybeAst);
     }
 
-    const maybeContextNode: ParseContext.Node | undefined = maybeParentContext(
-        nodeIdMapCollection,
-        childId,
-        maybeAllowedNodeKinds,
-    );
-    if (maybeContextNode !== undefined) {
-        return XorNodeUtils.createContextNode(maybeContextNode);
+    const maybeContext: ParseContext.Node | undefined = maybeParentContext(nodeIdMapCollection, childId);
+    if (maybeContext !== undefined) {
+        return createContextNode(maybeContext);
     }
 
     return undefined;
+}
+
+export function maybeParentXorChecked<T extends Ast.TNode>(
+    nodeIdMapCollection: Collection,
+    childId: number,
+    expectedNodeKind: T["kind"],
+): XorNode<T> | undefined {
+    const maybeXor: TXorNode | undefined = maybeParentXor(nodeIdMapCollection, childId);
+    if (maybeXor === undefined) {
+        return undefined;
+    }
+
+    return XorNodeUtils.isAst(maybeXor, expectedNodeKind) || XorNodeUtils.isContextXor(maybeXor) ? maybeXor : undefined;
 }
