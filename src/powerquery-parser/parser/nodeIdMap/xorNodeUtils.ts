@@ -97,18 +97,13 @@ export function assertIsList(xorNode: TXorNode): void {
     assertAnyAstNodeKind(xorNode, [Ast.NodeKind.ListExpression, Ast.NodeKind.ListLiteral]);
 }
 
-export function assertGetAst<T extends Ast.TNode>(xorNode: TXorNode, expectedNodeKind: T["kind"]): T {
-    assertIsAst(xorNode, expectedNodeKind);
-    return xorNode.node;
-}
-
-export function assertUnwrapAst<T extends Ast.TNode>(xorNode: TXorNode, expectedNodeKind: T["kind"]): T {
-    assertIsAst(xorNode, expectedNodeKind);
-    return xorNode.node;
-}
-
-export function assertUnwrapTAst(xorNode: TXorNode): Ast.TNode {
+export function assertUnwrapAst(xorNode: TXorNode): Ast.TNode {
     assertIsAstXor(xorNode);
+    return xorNode.node;
+}
+
+export function assertUnwrapAstChecked<T extends Ast.TNode>(xorNode: TXorNode, expectedNodeKind: T["kind"]): T {
+    assertIsAst(xorNode, expectedNodeKind);
     return xorNode.node;
 }
 

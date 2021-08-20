@@ -306,7 +306,7 @@ function readParenthesizedExpressionOrBinOpExpression(
 ): Ast.ParenthesizedExpression | Ast.TLogicalExpression {
     const node: Ast.TNode = parser.readLogicalExpression(state, parser);
 
-    const leftMostNode: Ast.TNode = NodeIdMapUtils.assertUnwrapLeftMostAstXor(
+    const leftMostNode: Ast.TNode = NodeIdMapUtils.assertUnwrapLeftMostLeaf(
         state.contextState.nodeIdMapCollection,
         node.id,
     );
