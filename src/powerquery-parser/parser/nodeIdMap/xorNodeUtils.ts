@@ -64,11 +64,15 @@ export function assertIsAst<T extends Ast.TNode>(
     xorNode: TXorNode,
     expectedNodeKind: T["kind"],
 ): asserts xorNode is AstXorNode<T> {
-    Assert.isTrue(isAst(xorNode, expectedNodeKind), "expected xorNode to hold an Ast node of a specific node kind", {
-        xorNodeKind: xorNode.kind,
-        xorNodeId: xorNode.node.id,
-        expectedNodeKind,
-    });
+    Assert.isTrue(
+        isAstXorKind(xorNode, expectedNodeKind),
+        "expected xorNode to hold an Ast node of a specific node kind",
+        {
+            xorNodeKind: xorNode.kind,
+            xorNodeId: xorNode.node.id,
+            expectedNodeKind,
+        },
+    );
 }
 
 export function assertIsAstXor(xorNode: TXorNode): asserts xorNode is TAstXorNode {
@@ -112,7 +116,7 @@ export function assertUnwrapContext(xorNode: TXorNode): ParseContext.Node {
     return xorNode.node;
 }
 
-export function isAst<T extends Ast.TNode>(xorNode: TXorNode, nodeKind: T["kind"]): xorNode is AstXorNode<T> {
+export function isAstXorKind<T extends Ast.TNode>(xorNode: TXorNode, nodeKind: T["kind"]): xorNode is AstXorNode<T> {
     return isAstXor(xorNode) && xorNode.node.kind === nodeKind;
 }
 
@@ -140,5 +144,5 @@ export function maybeIdentifierExpressionLiteral(xorNode: TXorNode): string | un
 }
 
 export function maybeUnwrapAst<T extends Ast.TNode>(xorNode: TXorNode, expectedNodeKind: T["kind"]): T | undefined {
-    return isAst(xorNode, expectedNodeKind) ? xorNode.node : undefined;
+    return isAstXorKind(xorNode, expectedNodeKind) ? xorNode.node : undefined;
 }

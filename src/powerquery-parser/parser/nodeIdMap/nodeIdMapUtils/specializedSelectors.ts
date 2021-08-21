@@ -6,7 +6,7 @@ import { CommonError } from "../../../common";
 import { Ast } from "../../../language";
 import { Collection } from "../nodeIdMap";
 import { TXorNode, XorNodeKind } from "../xorNode";
-import { assertGetChildXorByAttributeIndex, maybeChildXorByAttributeIndex } from "./childSelectors";
+import { assertGetChildXorByAttributeIndex, maybeNthChildChecked } from "./childSelectors";
 import { assertGetXor } from "./commonSelectors";
 import { assertGetParentXor, assertGetParentXorChecked } from "./parentSelectors";
 
@@ -63,11 +63,11 @@ export function maybeInvokeExpressionIdentifier(nodeIdMapCollection: Collection,
     // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
     const recursiveArrayXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, invokeExprXorNode.node.id);
     const recursiveExprXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, recursiveArrayXorNode.node.id);
-    const maybeHeadXorNode: TXorNode | undefined = maybeChildXorByAttributeIndex(
+    const maybeHeadXorNode: TXorNode | undefined = maybeNthChildChecked(
         nodeIdMapCollection,
         recursiveExprXorNode.node.id,
         0,
-        [Ast.NodeKind.IdentifierExpression],
+        Ast.NodeKind.IdentifierExpression,
     );
 
     // It's not an identifier expression so there's nothing we can do.

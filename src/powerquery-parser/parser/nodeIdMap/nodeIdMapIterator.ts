@@ -225,11 +225,11 @@ export function iterLetExpression(
 ): ReadonlyArray<LetKeyValuePair> {
     XorNodeUtils.assertAstNodeKind(letExpression, Ast.NodeKind.LetExpression);
 
-    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
+    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeNthChildChecked(
         nodeIdMapCollection,
         letExpression.node.id,
         1,
-        [Ast.NodeKind.ArrayWrapper],
+        Ast.NodeKind.ArrayWrapper,
     );
     if (maybeArrayWrapper === undefined) {
         return [];
@@ -293,11 +293,12 @@ export function iterSection(
         });
     }
 
-    const maybeSectionMemberArrayWrapper:
-        | undefined
-        | TXorNode = NodeIdMapUtils.maybeChildXorByAttributeIndex(nodeIdMapCollection, section.node.id, 4, [
+    const maybeSectionMemberArrayWrapper: undefined | TXorNode = NodeIdMapUtils.maybeNthChildChecked(
+        nodeIdMapCollection,
+        section.node.id,
+        4,
         Ast.NodeKind.ArrayWrapper,
-    ]);
+    );
     if (maybeSectionMemberArrayWrapper === undefined) {
         return [];
     }
@@ -305,11 +306,12 @@ export function iterSection(
 
     const partial: SectionKeyValuePair[] = [];
     for (const sectionMember of assertIterChildrenXor(nodeIdMapCollection, sectionMemberArrayWrapper.node.id)) {
-        const maybeKeyValuePair:
-            | undefined
-            | TXorNode = NodeIdMapUtils.maybeChildXorByAttributeIndex(nodeIdMapCollection, sectionMember.node.id, 2, [
+        const maybeKeyValuePair: undefined | TXorNode = NodeIdMapUtils.maybeNthChildChecked(
+            nodeIdMapCollection,
+            sectionMember.node.id,
+            2,
             Ast.NodeKind.IdentifierPairedExpression,
-        ]);
+        );
         if (maybeKeyValuePair === undefined) {
             continue;
         }
@@ -333,12 +335,7 @@ export function iterSection(
             key,
             keyLiteral,
             normalizedKeyLiteral: StringUtils.normalizeIdentifier(keyLiteral),
-            maybeValue: NodeIdMapUtils.maybeChildXorByAttributeIndex(
-                nodeIdMapCollection,
-                keyValuePairNodeId,
-                2,
-                undefined,
-            ),
+            maybeValue: NodeIdMapUtils.maybeNthChild(nodeIdMapCollection, keyValuePairNodeId, 2),
             pairKind: PairKind.SectionMember,
         });
     }
@@ -369,12 +366,7 @@ function iterKeyValuePairs<
             key,
             keyLiteral,
             normalizedKeyLiteral: StringUtils.normalizeIdentifier(keyLiteral),
-            maybeValue: NodeIdMapUtils.maybeChildXorByAttributeIndex(
-                nodeIdMapCollection,
-                keyValuePair.node.id,
-                2,
-                undefined,
-            ),
+            maybeValue: NodeIdMapUtils.maybeNthChild(nodeIdMapCollection, keyValuePair.node.id, 2),
             pairKind,
         } as KVP);
     }

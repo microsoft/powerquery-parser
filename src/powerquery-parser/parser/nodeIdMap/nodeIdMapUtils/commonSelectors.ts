@@ -7,7 +7,7 @@ import { Ast, AstUtils } from "../../../language";
 import { ParseContext } from "../../context";
 import { AstNodeById, Collection, ContextNodeById } from "../nodeIdMap";
 import { TXorNode, XorNodeKind } from "../xorNode";
-import { maybeChildXorByAttributeIndex } from "./childSelectors";
+import { maybeNthChild, maybeNthChildChecked } from "./childSelectors";
 
 export function assertUnwrapAst(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
     return MapUtils.assertGet(astNodeById, nodeId);
@@ -50,18 +50,21 @@ export function maybeWrappedContentAst(
     wrapped: TXorNode,
     maybeChildNodeKind: Ast.NodeKind,
 ): Ast.TNode | undefined {
-    const maybeAst: TXorNode | undefined = maybeChildXorByAttributeIndex(nodeIdMapCollection, wrapped.node.id, 1, [
+    const maybeAst: TXorNode | undefined = maybeNthChildChecked(
+        nodeIdMapCollection,
+        wrapped.node.id,
+        1,
         maybeChildNodeKind,
-    ]);
+    );
     return maybeAst?.kind === XorNodeKind.Ast ? maybeAst.node : undefined;
 }
 
 export function maybeCsv(nodeIdMapCollection: Collection, csv: TXorNode): TXorNode | undefined {
-    return maybeChildXorByAttributeIndex(nodeIdMapCollection, csv.node.id, 0, undefined);
+    return maybeNthChild(nodeIdMapCollection, csv.node.id, 0);
 }
 
 export function maybeArrayWrapperContent(nodeIdMapCollection: Collection, wrapped: TXorNode): TXorNode | undefined {
-    return maybeChildXorByAttributeIndex(nodeIdMapCollection, wrapped.node.id, 1, [Ast.NodeKind.ArrayWrapper]);
+    return maybeNthChildChecked(nodeIdMapCollection, wrapped.node.id, 1, Ast.NodeKind.ArrayWrapper);
 }
 
 export function maybeWrappedContent(
@@ -69,5 +72,5 @@ export function maybeWrappedContent(
     wrapped: TXorNode,
     maybeChildNodeKind: Ast.NodeKind,
 ): TXorNode | undefined {
-    return maybeChildXorByAttributeIndex(nodeIdMapCollection, wrapped.node.id, 1, [maybeChildNodeKind]);
+    return maybeNthChildChecked(nodeIdMapCollection, wrapped.node.id, 1, maybeChildNodeKind);
 }
