@@ -4,6 +4,7 @@
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
 import { Assert, MapUtils, StringUtils } from "../../common";
 import { Ast } from "../../language";
+import { XorNode } from "./xorNode";
 
 export type TKeyValuePair = LetKeyValuePair | RecordKeyValuePair | SectionKeyValuePair;
 
@@ -186,7 +187,7 @@ export function iterFieldProjectionNames(
     const result: string[] = [];
 
     for (const selector of iterFieldProjection(nodeIdMapCollection, fieldProjection)) {
-        const maybeIdentifier: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(
+        const maybeIdentifier: XorNode<Ast.GeneralizedIdentifier> | undefined = NodeIdMapUtils.maybeWrappedContent(
             nodeIdMapCollection,
             selector,
             Ast.NodeKind.GeneralizedIdentifier,
@@ -194,7 +195,7 @@ export function iterFieldProjectionNames(
         if (maybeIdentifier?.kind !== XorNodeKind.Ast) {
             break;
         } else {
-            result.push((maybeIdentifier.node as Ast.GeneralizedIdentifier).literal);
+            result.push(maybeIdentifier.node.literal);
         }
     }
 

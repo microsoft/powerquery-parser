@@ -88,10 +88,10 @@ export function maybeArrayWrapperContent(nodeIdMapCollection: Collection, wrappe
     return maybeNthChildChecked(nodeIdMapCollection, wrapped.node.id, 1, Ast.NodeKind.ArrayWrapper);
 }
 
-export function maybeWrappedContent(
+export function maybeWrappedContent<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     wrapped: TXorNode,
-    maybeChildNodeKind: Ast.NodeKind,
-): TXorNode | undefined {
+    maybeChildNodeKind: T["kind"],
+): XorNode<T> | undefined {
     return maybeNthChildChecked(nodeIdMapCollection, wrapped.node.id, 1, maybeChildNodeKind);
 }
