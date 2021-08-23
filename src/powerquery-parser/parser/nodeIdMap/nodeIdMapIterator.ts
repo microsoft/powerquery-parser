@@ -318,12 +318,12 @@ export function iterSection(
         const keyValuePair: TXorNode = maybeKeyValuePair;
         const keyValuePairNodeId: number = keyValuePair.node.id;
 
-        const maybeKey: Ast.Identifier | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(
+        const maybeKey: Ast.Identifier | undefined = NodeIdMapUtils.maybeNthChildAsAstChecked(
             nodeIdMapCollection,
             keyValuePairNodeId,
             0,
-            [Ast.NodeKind.Identifier],
-        ) as Ast.Identifier;
+            Ast.NodeKind.Identifier,
+        );
         if (maybeKey === undefined) {
             continue;
         }
@@ -349,7 +349,7 @@ function iterKeyValuePairs<
 >(nodeIdMapCollection: NodeIdMap.Collection, arrayWrapper: TXorNode, pairKind: KVP["pairKind"]): ReadonlyArray<KVP> {
     const partial: KVP[] = [];
     for (const keyValuePair of iterArrayWrapper(nodeIdMapCollection, arrayWrapper)) {
-        const maybeKey: Ast.TNode | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(
+        const maybeKey: Key | undefined = NodeIdMapUtils.maybeNthChildAsAstCheckedMany(
             nodeIdMapCollection,
             keyValuePair.node.id,
             0,
@@ -358,12 +358,11 @@ function iterKeyValuePairs<
         if (maybeKey === undefined) {
             break;
         }
-        const key: Key = maybeKey as Key;
-        const keyLiteral: string = key.literal;
+        const keyLiteral: string = maybeKey.literal;
 
         partial.push({
             source: keyValuePair,
-            key,
+            key: maybeKey,
             keyLiteral,
             normalizedKeyLiteral: StringUtils.normalizeIdentifier(keyLiteral),
             maybeValue: NodeIdMapUtils.maybeNthChild(nodeIdMapCollection, keyValuePair.node.id, 2),

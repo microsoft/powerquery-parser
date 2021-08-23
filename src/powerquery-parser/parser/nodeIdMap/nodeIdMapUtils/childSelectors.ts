@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { XorNodeUtils } from "..";
-import { ArrayUtils, Assert } from "../../../common";
+import { Assert } from "../../../common";
 import { Ast } from "../../../language";
 import { ParseContext } from "../../context";
 import { ChildIdsById, Collection } from "../nodeIdMap";
@@ -13,27 +13,25 @@ export function assertGetChildren(childIdsById: ChildIdsById, parentId: number):
     return Assert.asDefined(childIdsById.get(parentId), `parentId doesn't have any children`, { parentId });
 }
 
-export function assertGetChildAstByAttributeIndex(
+export function assertGetNthChildAsAst(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
-    maybeChildNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined,
 ): Ast.TNode {
     return Assert.asDefined(
-        maybeChildAstByAttributeIndex(nodeIdMapCollection, parentId, attributeIndex, maybeChildNodeKinds),
+        maybeNthChildAsAst(nodeIdMapCollection, parentId, attributeIndex),
         `parentId doesn't have an Ast child at the given index`,
         { parentId, attributeIndex },
     );
 }
 
-export function assertGetChildContextByAttributeIndex(
+export function assertGetNthChildAsContext(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
-    maybeChildNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined,
 ): ParseContext.Node {
     return Assert.asDefined(
-        maybeChildContextByAttributeIndex(nodeIdMapCollection, parentId, attributeIndex, maybeChildNodeKinds),
+        maybeNthChildAsContext(nodeIdMapCollection, parentId, attributeIndex),
         `parentId doesn't have a context child at the given index`,
         {
             parentId,
@@ -42,47 +40,58 @@ export function assertGetChildContextByAttributeIndex(
     );
 }
 
-export function assertGetChildXorByAttributeIndex(
-    nodeIdMapCollection: Collection,
-    parentId: number,
-    attributeIndex: number,
-    maybeChildNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined,
-): TXorNode {
+export function assertGetNthChild(nodeIdMapCollection: Collection, parentId: number, attributeIndex: number): TXorNode {
     return Assert.asDefined(
-        maybeNthChild(nodeIdMapCollection, parentId, attributeIndex, maybeChildNodeKinds),
+        maybeNthChild(nodeIdMapCollection, parentId, attributeIndex),
         `parentId doesn't have a child at the given index`,
         { parentId, attributeIndex },
     );
 }
 
-export function maybeChildAstByAttributeIndex(
+export function maybeNthChildAsAst(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
-    maybeChildNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined,
 ): Ast.TNode | undefined {
-    const maybeNode: TXorNode | undefined = maybeNthChild(
-        nodeIdMapCollection,
-        parentId,
-        attributeIndex,
-        maybeChildNodeKinds,
-    );
+    const maybeNode: TXorNode | undefined = maybeNthChild(nodeIdMapCollection, parentId, attributeIndex);
 
     return maybeNode?.kind === XorNodeKind.Ast ? maybeNode.node : undefined;
 }
 
-export function maybeChildContextByAttributeIndex(
+export function maybeNthChildAsAstChecked<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
-    maybeChildNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined,
+    expectedNodeKind: T["kind"],
+): T | undefined {
+    const maybeNode: TXorNode | undefined = maybeNthChild(nodeIdMapCollection, parentId, attributeIndex);
+    if (maybeNode === undefined) {
+        return undefined;
+    }
+
+    return XorNodeUtils.isAstXorChecked(maybeNode, expectedNodeKind) ? maybeNode.node : undefined;
+}
+
+export function maybeNthChildAsAstCheckedMany<T extends Ast.TNode>(
+    nodeIdMapCollection: Collection,
+    parentId: number,
+    attributeIndex: number,
+    expectedNodeKinds: ReadonlyArray<T["kind"]>,
+): T | undefined {
+    const maybeNode: TXorNode | undefined = maybeNthChild(nodeIdMapCollection, parentId, attributeIndex);
+    if (maybeNode === undefined) {
+        return undefined;
+    }
+
+    return XorNodeUtils.isAstXorCheckedMany(maybeNode, expectedNodeKinds) ? maybeNode.node : undefined;
+}
+
+export function maybeNthChildAsContext(
+    nodeIdMapCollection: Collection,
+    parentId: number,
+    attributeIndex: number,
 ): ParseContext.Node | undefined {
-    const maybeNode: TXorNode | undefined = maybeNthChild(
-        nodeIdMapCollection,
-        parentId,
-        attributeIndex,
-        maybeChildNodeKinds,
-    );
+    const maybeNode: TXorNode | undefined = maybeNthChild(nodeIdMapCollection, parentId, attributeIndex);
 
     return maybeNode?.kind === XorNodeKind.Context ? maybeNode.node : undefined;
 }
@@ -133,31 +142,5 @@ export function maybeNthChildChecked<T extends Ast.TNode>(
         return undefined;
     }
 
-    if (XorNodeUtils.isAst<T>(maybeChild, expectedChildNodeKind)) {
-        return maybeChild;
-    } else if (XorNodeUtils.isContextXor(maybeChild)) {
-        return maybeChild;
-    }
-
-    // Grab the node's childIds.
-    const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(parentId);
-    if (maybeChildIds === undefined) {
-        return undefined;
-    }
-    const childIds: ReadonlyArray<number> = maybeChildIds;
-
-    // Iterate over the children and try to find one which matches attributeIndex.
-    for (const childId of childIds) {
-        const xorNode: TXorNode = assertGetXor(nodeIdMapCollection, childId);
-        if (xorNode.node.maybeAttributeIndex === attributeIndex) {
-            // If a Ast.NodeKind is given, validate the Ast.TNode at the given index matches the Ast.NodeKind.
-            if (maybeChildNodeKinds !== undefined) {
-                ArrayUtils.assertIn(maybeChildNodeKinds, xorNode.node.kind);
-            }
-
-            return xorNode;
-        }
-    }
-
-    return undefined;
+    return XorNodeUtils.isXorChecked(maybeChild, expectedChildNodeKind) ? maybeChild : undefined;
 }

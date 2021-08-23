@@ -65,7 +65,7 @@ export function assertIsAst<T extends Ast.TNode>(
     expectedNodeKind: T["kind"],
 ): asserts xorNode is AstXorNode<T> {
     Assert.isTrue(
-        isAstXorKind(xorNode, expectedNodeKind),
+        isAstXorChecked(xorNode, expectedNodeKind),
         "expected xorNode to hold an Ast node of a specific node kind",
         {
             xorNodeKind: xorNode.kind,
@@ -116,16 +116,40 @@ export function assertUnwrapContext(xorNode: TXorNode): ParseContext.Node {
     return xorNode.node;
 }
 
-export function isAstXorKind<T extends Ast.TNode>(xorNode: TXorNode, nodeKind: T["kind"]): xorNode is AstXorNode<T> {
-    return isAstXor(xorNode) && xorNode.node.kind === nodeKind;
-}
-
 export function isAstXor(xorNode: TXorNode): xorNode is TAstXorNode {
     return xorNode.kind === XorNodeKind.Ast;
 }
 
+export function isAstXorChecked<T extends Ast.TNode>(
+    xorNode: TXorNode,
+    expectedNodeKind: T["kind"],
+): xorNode is AstXorNode<T> {
+    return isAstXor(xorNode) && xorNode.node.kind === expectedNodeKind;
+}
+
+export function isAstXorCheckedMany<T extends Ast.TNode>(
+    xorNode: TXorNode,
+    expectedNodeKinds: ReadonlyArray<T["kind"]>,
+): xorNode is AstXorNode<T> {
+    return isAstXor(xorNode) && expectedNodeKinds.includes(xorNode.node.kind);
+}
+
 export function isContextXor(xorNode: TXorNode): xorNode is ContextXorNode {
     return xorNode.kind === XorNodeKind.Context;
+}
+
+export function isXorChecked<T extends Ast.TNode>(
+    xorNode: TXorNode,
+    expectedNodeKind: T["kind"],
+): xorNode is XorNode<T> {
+    return isAstXorChecked(xorNode, expectedNodeKind) || isContextXor(xorNode);
+}
+
+export function isXorCheckedMany<T extends Ast.TNode>(
+    xorNode: TXorNode,
+    expectedNodeKinds: ReadonlyArray<T["kind"]>,
+): xorNode is XorNode<T> {
+    return isAstXorCheckedMany(xorNode, expectedNodeKinds) || isContextXor(xorNode);
 }
 
 export function maybeIdentifierExpressionLiteral(xorNode: TXorNode): string | undefined {
@@ -144,5 +168,5 @@ export function maybeIdentifierExpressionLiteral(xorNode: TXorNode): string | un
 }
 
 export function maybeUnwrapAst<T extends Ast.TNode>(xorNode: TXorNode, expectedNodeKind: T["kind"]): T | undefined {
-    return isAstXorKind(xorNode, expectedNodeKind) ? xorNode.node : undefined;
+    return isAstXorChecked(xorNode, expectedNodeKind) ? xorNode.node : undefined;
 }

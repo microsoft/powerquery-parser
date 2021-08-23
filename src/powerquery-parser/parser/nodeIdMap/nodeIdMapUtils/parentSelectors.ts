@@ -108,7 +108,7 @@ export function maybeParentXorChecked<T extends Ast.TNode>(
         return undefined;
     }
 
-    return XorNodeUtils.isAstXorKind(maybeXor, expectedNodeKind) || XorNodeUtils.isContextXor(maybeXor)
+    return XorNodeUtils.isAstXorChecked(maybeXor, expectedNodeKind) || XorNodeUtils.isContextXor(maybeXor)
         ? maybeXor
         : undefined;
 }

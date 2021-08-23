@@ -6,7 +6,7 @@ import { Assert, MapUtils } from "../../../common";
 import { Ast, AstUtils } from "../../../language";
 import { ParseContext } from "../../context";
 import { AstNodeById, Collection, ContextNodeById } from "../nodeIdMap";
-import { TXorNode, XorNodeKind } from "../xorNode";
+import { TXorNode, XorNode, XorNodeKind } from "../xorNode";
 import { maybeNthChild, maybeNthChildChecked } from "./childSelectors";
 
 export function assertUnwrapAst(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
@@ -31,6 +31,14 @@ export function assertGetXor(nodeIdMapCollection: Collection, nodeId: number): T
     return Assert.asDefined(maybeXor(nodeIdMapCollection, nodeId), undefined, { nodeId });
 }
 
+export function assertGetXorChecked<T extends Ast.TNode>(
+    nodeIdMapCollection: Collection,
+    nodeId: number,
+    expectedNodeKind: T["kind"],
+): XorNode<T> {
+    return Assert.asDefined(maybeXorChecked(nodeIdMapCollection, nodeId, expectedNodeKind), undefined, { nodeId });
+}
+
 export function maybeXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
     const maybeAstNode: Ast.TNode | undefined = nodeIdMapCollection.astNodeById.get(nodeId);
     if (maybeAstNode) {
@@ -43,6 +51,19 @@ export function maybeXor(nodeIdMapCollection: Collection, nodeId: number): TXorN
     }
 
     return undefined;
+}
+
+export function maybeXorChecked<T extends Ast.TNode>(
+    nodeIdMapCollection: Collection,
+    nodeId: number,
+    expectedNodeKind: T["kind"],
+): XorNode<T> | undefined {
+    const maybeNode: TXorNode | undefined = maybeXor(nodeIdMapCollection, nodeId);
+    if (maybeNode === undefined) {
+        return undefined;
+    }
+
+    return XorNodeUtils.isXorChecked<T>(maybeNode, expectedNodeKind) ? maybeNode : undefined;
 }
 
 export function maybeWrappedContentAst(

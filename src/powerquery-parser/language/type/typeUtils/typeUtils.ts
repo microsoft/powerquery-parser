@@ -171,32 +171,32 @@ function inspectContextParameter(
     let isNullable: boolean;
     let maybeType: Type.TypeKind | undefined;
 
-    const maybeName: Ast.TNode | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(
+    const maybeName: Ast.Identifier | undefined = NodeIdMapUtils.maybeNthChildAsAstChecked(
         nodeIdMapCollection,
         parameter.id,
         1,
-        [Ast.NodeKind.Identifier],
+        Ast.NodeKind.Identifier,
     );
     if (maybeName === undefined) {
         return undefined;
     }
 
-    const maybeOptional: Ast.TNode | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(
+    const maybeOptional: Ast.TConstant | undefined = NodeIdMapUtils.maybeNthChildAsAstChecked(
         nodeIdMapCollection,
         parameter.id,
         0,
-        [Ast.NodeKind.Constant],
+        Ast.NodeKind.Constant,
     );
     isOptional = maybeOptional !== undefined;
 
-    const maybeParameterType: Ast.TNode | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(
+    const maybeParameterType: Ast.AsNullablePrimitiveType | undefined = NodeIdMapUtils.maybeNthChildAsAstChecked(
         nodeIdMapCollection,
         parameter.id,
         2,
-        undefined,
+        Ast.NodeKind.AsNullablePrimitiveType,
     );
     if (maybeParameterType !== undefined) {
-        const parameterType: Ast.AsNullablePrimitiveType = maybeParameterType as Ast.AsNullablePrimitiveType;
+        const parameterType: Ast.AsNullablePrimitiveType = maybeParameterType;
         const simplified: AstUtils.SimplifiedType = AstUtils.simplifyAsNullablePrimitiveType(parameterType);
         isNullable = simplified.isNullable;
         maybeType = typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind);
@@ -206,7 +206,7 @@ function inspectContextParameter(
     }
 
     return {
-        nameLiteral: (maybeName as Ast.Identifier).literal,
+        nameLiteral: maybeName.literal,
         isOptional,
         isNullable,
         maybeType,

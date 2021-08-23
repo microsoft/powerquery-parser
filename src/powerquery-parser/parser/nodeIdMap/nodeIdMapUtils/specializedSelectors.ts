@@ -5,8 +5,8 @@ import { NodeIdMapIterator, XorNodeUtils } from "..";
 import { CommonError } from "../../../common";
 import { Ast } from "../../../language";
 import { Collection } from "../nodeIdMap";
-import { TXorNode, XorNodeKind } from "../xorNode";
-import { assertGetChildXorByAttributeIndex, maybeNthChildChecked } from "./childSelectors";
+import { TXorNode, XorNode, XorNodeKind } from "../xorNode";
+import { assertGetNthChild, maybeNthChildChecked } from "./childSelectors";
 import { assertGetXor } from "./commonSelectors";
 import { assertGetParentXor, assertGetParentXorChecked } from "./parentSelectors";
 
@@ -36,21 +36,19 @@ export function assertGetRecursiveExpressionPreviousSibling(nodeIdMapCollection:
             );
         }
 
-        return assertGetChildXorByAttributeIndex(
-            nodeIdMapCollection,
-            arrayWrapper.node.id,
-            indexOfPrimaryExpressionId - 1,
-            undefined,
-        );
+        return assertGetNthChild(nodeIdMapCollection, arrayWrapper.node.id, indexOfPrimaryExpressionId - 1);
     }
     // It's the first element in ArrayWrapper, meaning we must grab RecursivePrimaryExpression.head
     else {
         const recursivePrimaryExpression: TXorNode = assertGetParentXor(nodeIdMapCollection, arrayWrapper.node.id);
-        return assertGetChildXorByAttributeIndex(nodeIdMapCollection, recursivePrimaryExpression.node.id, 0, undefined);
+        return assertGetNthChild(nodeIdMapCollection, recursivePrimaryExpression.node.id, 0);
     }
 }
 
-export function maybeInvokeExpressionIdentifier(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
+export function maybeInvokeExpressionIdentifier(
+    nodeIdMapCollection: Collection,
+    nodeId: number,
+): XorNode<Ast.IdentifierExpression> | undefined {
     const invokeExprXorNode: TXorNode = assertGetXor(nodeIdMapCollection, nodeId);
     XorNodeUtils.assertAstNodeKind(invokeExprXorNode, Ast.NodeKind.InvokeExpression);
 
@@ -63,7 +61,7 @@ export function maybeInvokeExpressionIdentifier(nodeIdMapCollection: Collection,
     // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
     const recursiveArrayXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, invokeExprXorNode.node.id);
     const recursiveExprXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, recursiveArrayXorNode.node.id);
-    const maybeHeadXorNode: TXorNode | undefined = maybeNthChildChecked(
+    const maybeHeadXorNode: XorNode<Ast.IdentifierExpression> | undefined = maybeNthChildChecked(
         nodeIdMapCollection,
         recursiveExprXorNode.node.id,
         0,
@@ -74,7 +72,7 @@ export function maybeInvokeExpressionIdentifier(nodeIdMapCollection: Collection,
     if (maybeHeadXorNode === undefined) {
         return undefined;
     }
-    const headXorNode: TXorNode = maybeHeadXorNode;
+    const headXorNode: XorNode<Ast.IdentifierExpression> = maybeHeadXorNode;
 
     // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
     // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
