@@ -161,6 +161,10 @@ export function assertAsOtherwiseExpression(node: Ast.TNode): Ast.OtherwiseExpre
     return assertAs(TypeGuards.isOtherwiseExpression, node, [Ast.NodeKind.OtherwiseExpression]);
 }
 
+export function assertAsParameter(node: Ast.TNode): Ast.TParameter {
+    return assertAs(TypeGuards.isParameter, node, [Ast.NodeKind.Parameter]);
+}
+
 export function assertAsParenthesizedExpression(node: Ast.TNode): Ast.ParenthesizedExpression {
     return assertAs(TypeGuards.isParenthesizedExpression, node, [Ast.NodeKind.ParenthesizedExpression]);
 }
