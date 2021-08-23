@@ -17,6 +17,19 @@ export function assertUnwrapParentAst<T extends Ast.TNode>(
     return Assert.asDefined(maybeNode, `nodeId doesn't have a parent`, { nodeId, maybeExpectedNodeKinds });
 }
 
+export function assertUnwrapParentContext<T extends Ast.TNode>(
+    nodeIdMapCollection: Collection,
+    nodeId: number,
+    maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
+): ParseContext.Node {
+    const maybeNode: ParseContext.Node | undefined = maybeParentContext(
+        nodeIdMapCollection,
+        nodeId,
+        maybeExpectedNodeKinds,
+    );
+    return Assert.asDefined(maybeNode, `nodeId doesn't have a parent`, { nodeId, maybeExpectedNodeKinds });
+}
+
 export function assertGetParentXor<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     nodeId: number,

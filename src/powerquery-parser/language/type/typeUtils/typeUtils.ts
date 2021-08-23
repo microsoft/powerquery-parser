@@ -171,7 +171,7 @@ function inspectContextParameter(
     let isNullable: boolean;
     let maybeType: Type.TypeKind | undefined;
 
-    const maybeName: Ast.Identifier | undefined = NodeIdMapUtils.maybeNthChildIfAst(
+    const maybeName: Ast.Identifier | undefined = NodeIdMapUtils.maybeUnwrapNthChildIfAst(
         nodeIdMapCollection,
         parameter.id,
         1,
@@ -181,7 +181,7 @@ function inspectContextParameter(
         return undefined;
     }
 
-    const maybeOptional: Ast.TConstant | undefined = NodeIdMapUtils.maybeNthChildIfAst(
+    const maybeOptional: Ast.TConstant | undefined = NodeIdMapUtils.maybeUnwrapNthChildIfAst(
         nodeIdMapCollection,
         parameter.id,
         0,
@@ -189,7 +189,7 @@ function inspectContextParameter(
     );
     isOptional = maybeOptional !== undefined;
 
-    const maybeParameterType: Ast.AsNullablePrimitiveType | undefined = NodeIdMapUtils.maybeNthChildIfAst(
+    const maybeParameterType: Ast.AsNullablePrimitiveType | undefined = NodeIdMapUtils.maybeUnwrapNthChildIfAst(
         nodeIdMapCollection,
         parameter.id,
         2,

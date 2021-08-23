@@ -54,7 +54,7 @@ export function maybeInvokeExpressionIdentifier(
     nodeId: number,
 ): XorNode<Ast.IdentifierExpression> | undefined {
     const invokeExprXorNode: TXorNode = assertGetXor(nodeIdMapCollection, nodeId);
-    XorNodeUtils.assertAstNodeKind(invokeExprXorNode, Ast.NodeKind.InvokeExpression);
+    XorNodeUtils.assertIsNodeKind(invokeExprXorNode, Ast.NodeKind.InvokeExpression);
 
     // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
     // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
@@ -99,7 +99,7 @@ export function maybeInvokeExpressionIdentifierLiteral(
     nodeId: number,
 ): string | undefined {
     const invokeExprXorNode: TXorNode = assertGetXor(nodeIdMapCollection, nodeId);
-    XorNodeUtils.assertAstNodeKind(invokeExprXorNode, Ast.NodeKind.InvokeExpression);
+    XorNodeUtils.assertIsNodeKind(invokeExprXorNode, Ast.NodeKind.InvokeExpression);
 
     const maybeIdentifierExpressionXorNode: TXorNode | undefined = maybeInvokeExpressionIdentifier(
         nodeIdMapCollection,
@@ -109,7 +109,7 @@ export function maybeInvokeExpressionIdentifierLiteral(
         return undefined;
     }
     const identifierExpressionXorNode: TXorNode = maybeIdentifierExpressionXorNode;
-    XorNodeUtils.assertAstNodeKind(identifierExpressionXorNode, Ast.NodeKind.IdentifierExpression);
+    XorNodeUtils.assertIsNodeKind(identifierExpressionXorNode, Ast.NodeKind.IdentifierExpression);
     const identifierExpression: Ast.IdentifierExpression = identifierExpressionXorNode.node as Ast.IdentifierExpression;
 
     return identifierExpression.maybeInclusiveConstant === undefined

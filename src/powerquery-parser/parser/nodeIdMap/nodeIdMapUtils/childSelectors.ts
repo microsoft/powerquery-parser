@@ -35,27 +35,27 @@ export function assertGetNthChild<T extends Ast.TNode>(
     );
 }
 
-export function assertGetNthChildIfAst<T extends Ast.TNode>(
+export function assertUnwrapNthChildAsAst<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
     maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
 ): T {
     return Assert.asDefined(
-        maybeNthChildIfAst<T>(nodeIdMapCollection, parentId, attributeIndex, maybeExpectedNodeKinds),
+        maybeUnwrapNthChildIfAst<T>(nodeIdMapCollection, parentId, attributeIndex, maybeExpectedNodeKinds),
         `parentId doesn't have an Ast child at the given index`,
         { parentId, attributeIndex, maybeExpectedNodeKinds },
     );
 }
 
-export function assertGetNthChildIfContext<T extends Ast.TNode>(
+export function assertUnwrapNthChildAsContext<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
     maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
 ): ParseContext.Node {
     return Assert.asDefined(
-        maybeNthChildIfContext(nodeIdMapCollection, parentId, attributeIndex, maybeExpectedNodeKinds),
+        maybeUnwrapNthChildIfContext(nodeIdMapCollection, parentId, attributeIndex, maybeExpectedNodeKinds),
         `parentId doesn't have a context child at the given index`,
         { parentId, attributeIndex, maybeExpectedNodeKinds },
     );
@@ -79,7 +79,7 @@ export function maybeNthChild<T extends Ast.TNode>(
         const xorNode: XorNode<T> = assertGetXor(nodeIdMapCollection, childId, undefined);
         if (
             xorNode.node.maybeAttributeIndex === attributeIndex &&
-            XorNodeUtils.checkNodeKind(xorNode, maybeExpectedNodeKinds)
+            XorNodeUtils.isNodeKind(xorNode, maybeExpectedNodeKinds)
         ) {
             return xorNode;
         }
@@ -88,7 +88,7 @@ export function maybeNthChild<T extends Ast.TNode>(
     return undefined;
 }
 
-export function maybeNthChildIfAst<T extends Ast.TNode>(
+export function maybeUnwrapNthChildIfAst<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
@@ -109,7 +109,7 @@ export function maybeNthChildIfAst<T extends Ast.TNode>(
         : undefined;
 }
 
-export function maybeNthChildIfContext<T extends Ast.TNode>(
+export function maybeUnwrapNthChildIfContext<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,

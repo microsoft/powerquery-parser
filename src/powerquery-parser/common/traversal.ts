@@ -117,7 +117,7 @@ export function assertGetAllAstChildren<State extends ITraversalState<ResultType
 
     if (maybeChildIds) {
         const childIds: ReadonlyArray<number> = maybeChildIds;
-        return childIds.map(nodeId => NodeIdMapUtils.assertGetAst(nodeIdMapCollection.astNodeById, nodeId));
+        return childIds.map(nodeId => NodeIdMapUtils.assertUnwrapAst(nodeIdMapCollection.astNodeById, nodeId));
     } else {
         return [];
     }
