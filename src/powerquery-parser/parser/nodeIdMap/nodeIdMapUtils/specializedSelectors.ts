@@ -6,15 +6,19 @@ import { CommonError } from "../../../common";
 import { Ast } from "../../../language";
 import { Collection } from "../nodeIdMap";
 import { TXorNode, XorNode, XorNodeKind } from "../xorNode";
-import { assertGetNthChild, maybeNthChildChecked } from "./childSelectors";
+import { assertGetNthChild, maybeNthChild } from "./childSelectors";
 import { assertGetXor } from "./commonSelectors";
-import { assertGetParentXor, assertGetParentXorChecked } from "./parentSelectors";
+import { assertGetParentXor } from "./parentSelectors";
 
 // Returns the previous sibling of the given recursive expression.
 // Commonly used for things like getting the identifier name used in an InvokeExpression.
-export function assertGetRecursiveExpressionPreviousSibling(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
-    const xorNode: TXorNode = assertGetXor(nodeIdMapCollection, nodeId);
-    const arrayWrapper: TXorNode = assertGetParentXorChecked(nodeIdMapCollection, nodeId, Ast.NodeKind.ArrayWrapper);
+export function assertGetRecursiveExpressionPreviousSibling<T extends Ast.TNode>(
+    nodeIdMapCollection: Collection,
+    nodeId: number,
+    maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
+): TXorNode {
+    const xorNode: TXorNode = assertGetXor(nodeIdMapCollection, nodeId, maybeExpectedNodeKinds);
+    const arrayWrapper: TXorNode = assertGetParentXor(nodeIdMapCollection, nodeId, Ast.NodeKind.ArrayWrapper);
     const maybePrimaryExpressionAttributeId: number | undefined = xorNode.node.maybeAttributeIndex;
 
     // It's not the first element in the ArrayWrapper.
@@ -61,7 +65,7 @@ export function maybeInvokeExpressionIdentifier(
     // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
     const recursiveArrayXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, invokeExprXorNode.node.id);
     const recursiveExprXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, recursiveArrayXorNode.node.id);
-    const maybeHeadXorNode: XorNode<Ast.IdentifierExpression> | undefined = maybeNthChildChecked(
+    const maybeHeadXorNode: XorNode<Ast.IdentifierExpression> | undefined = maybeNthChild(
         nodeIdMapCollection,
         recursiveExprXorNode.node.id,
         0,

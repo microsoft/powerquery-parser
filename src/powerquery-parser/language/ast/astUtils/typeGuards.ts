@@ -15,10 +15,6 @@ export function isAsNullablePrimitiveType(node: Ast.TNode): node is Ast.AsNullab
     return node.kind === Ast.NodeKind.AsNullablePrimitiveType;
 }
 
-export function isAnyNodeKind<T extends Ast.TNode>(node: Ast.TNode, nodeKinds: ReadonlyArray<T["kind"]>): node is T {
-    return nodeKinds.includes(node.kind);
-}
-
 export function isAsType(node: Ast.TNode): node is Ast.AsType {
     return node.kind === Ast.NodeKind.AsType;
 }
@@ -143,8 +139,11 @@ export function isMetadataExpression(node: Ast.TNode): node is Ast.MetadataExpre
     return node.kind === Ast.NodeKind.MetadataExpression;
 }
 
-export function isNodeKind<T extends Ast.TNode>(node: Ast.TNode, nodeKind: T["kind"]): node is T {
-    return node.kind === nodeKind;
+export function isNodeKind<T extends Ast.TNode>(
+    node: Ast.TNode,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): node is T {
+    return Array.isArray(expectedNodeKinds) ? expectedNodeKinds.includes(node.kind) : node.kind === expectedNodeKinds;
 }
 
 export function isNotImplementedExpression(node: Ast.TNode): node is Ast.NotImplementedExpression {
@@ -216,7 +215,7 @@ export function isTArrayWrapper(node: Ast.TNode): node is Ast.TArrayWrapper {
 }
 
 export function isTBinOpExpression(node: Ast.TNode): node is Ast.TBinOpExpression {
-    return isAnyNodeKind<
+    return isNodeKind<
         | Ast.ArithmeticExpression
         | Ast.AsExpression
         | Ast.EqualityExpression

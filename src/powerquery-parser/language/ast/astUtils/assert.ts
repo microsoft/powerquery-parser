@@ -273,7 +273,7 @@ export function assertHasAnyNodeKind<T extends Ast.TNode>(
     node: Ast.TNode,
     expectedNodeKinds: ReadonlyArray<T["kind"]>,
 ): asserts node is T {
-    if (!TypeGuards.isAnyNodeKind(node, expectedNodeKinds)) {
+    if (!TypeGuards.isNodeKind(node, expectedNodeKinds)) {
         throw new CommonError.InvariantError(`assert failed, expected a different nodeKind`, {
             nodeId: node.id,
             nodeKind: node.kind,

@@ -53,7 +53,7 @@ export function assertIterChildrenAst(
 ): ReadonlyArray<Ast.TNode> {
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
     return assertIterChildIds(nodeIdMapCollection.childIdsById, parentId).map(childId =>
-        NodeIdMapUtils.assertAst(astNodeById, childId),
+        NodeIdMapUtils.assertGetAst(astNodeById, childId),
     );
 }
 
@@ -92,7 +92,7 @@ export function maybeIterChildrenAst(
     const childIds: ReadonlyArray<number> = maybeChildIds;
 
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
-    return childIds.map(childId => NodeIdMapUtils.assertAst(astNodeById, childId));
+    return childIds.map(childId => NodeIdMapUtils.assertGetAst(astNodeById, childId));
 }
 
 export function maybeNextSiblingXor(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): TXorNode | undefined {
@@ -191,9 +191,7 @@ export function iterFieldProjectionNames(
     const result: string[] = [];
 
     for (const selector of iterFieldProjection(nodeIdMapCollection, fieldProjection)) {
-        const maybeIdentifier:
-            | XorNode<Ast.GeneralizedIdentifier>
-            | undefined = NodeIdMapUtils.maybeWrappedContentChecked(
+        const maybeIdentifier: XorNode<Ast.GeneralizedIdentifier> | undefined = NodeIdMapUtils.maybeWrappedContent(
             nodeIdMapCollection,
             selector,
             Ast.NodeKind.GeneralizedIdentifier,
@@ -232,7 +230,7 @@ export function iterLetExpression(
 ): ReadonlyArray<LetKeyValuePair> {
     XorNodeUtils.assertAstNodeKind(letExpression, Ast.NodeKind.LetExpression);
 
-    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeNthChildChecked(
+    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeNthChild(
         nodeIdMapCollection,
         letExpression.node.id,
         1,
@@ -297,7 +295,7 @@ export function iterSection(
         });
     }
 
-    const maybeSectionMemberArrayWrapper: undefined | TXorNode = NodeIdMapUtils.maybeNthChildChecked(
+    const maybeSectionMemberArrayWrapper: undefined | TXorNode = NodeIdMapUtils.maybeNthChild(
         nodeIdMapCollection,
         section.node.id,
         4,
@@ -310,7 +308,7 @@ export function iterSection(
 
     const partial: SectionKeyValuePair[] = [];
     for (const sectionMember of assertIterChildrenXor(nodeIdMapCollection, sectionMemberArrayWrapper.node.id)) {
-        const maybeKeyValuePair: undefined | TXorNode = NodeIdMapUtils.maybeNthChildChecked(
+        const maybeKeyValuePair: undefined | TXorNode = NodeIdMapUtils.maybeNthChild(
             nodeIdMapCollection,
             sectionMember.node.id,
             2,
@@ -322,7 +320,7 @@ export function iterSection(
         const keyValuePair: TXorNode = maybeKeyValuePair;
         const keyValuePairNodeId: number = keyValuePair.node.id;
 
-        const maybeKey: Ast.Identifier | undefined = NodeIdMapUtils.maybeNthChildIfAstChecked(
+        const maybeKey: Ast.Identifier | undefined = NodeIdMapUtils.maybeNthChildIfAst(
             nodeIdMapCollection,
             keyValuePairNodeId,
             0,
@@ -353,7 +351,7 @@ function iterKeyValuePairs<
 >(nodeIdMapCollection: NodeIdMap.Collection, arrayWrapper: TXorNode, pairKind: KVP["pairKind"]): ReadonlyArray<KVP> {
     const partial: KVP[] = [];
     for (const keyValuePair of iterArrayWrapper(nodeIdMapCollection, arrayWrapper)) {
-        const maybeKey: Key | undefined = NodeIdMapUtils.maybeNthChildIfAstCheckedMany(
+        const maybeKey: Key | undefined = NodeIdMapUtils.maybeNthChildIfAst(
             nodeIdMapCollection,
             keyValuePair.node.id,
             0,
@@ -381,7 +379,7 @@ function iterArrayWrapperInWrappedContent(
     nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: TXorNode,
 ): ReadonlyArray<TXorNode> {
-    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContentChecked(
+    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(
         nodeIdMapCollection,
         xorNode,
         Ast.NodeKind.ArrayWrapper,

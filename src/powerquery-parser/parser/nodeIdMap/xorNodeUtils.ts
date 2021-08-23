@@ -13,7 +13,7 @@ export function createAstNode<T extends Ast.TNode>(node: T): XorNode<T> {
     };
 }
 
-export function createContextNode(node: ParseContext.Node): TXorNode {
+export function createContextNode(node: ParseContext.Node): ContextXorNode {
     return {
         kind: XorNodeKind.Context,
         node,
@@ -62,30 +62,38 @@ export function assertAnyAstNodeKind(xorNode: TXorNode, allowedNodeKinds: Readon
 
 export function assertIsAst<T extends Ast.TNode>(
     xorNode: TXorNode,
-    expectedNodeKind: T["kind"],
+    maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
 ): asserts xorNode is AstXorNode<T> {
     Assert.isTrue(
-        isAstXorChecked(xorNode, expectedNodeKind),
+        isAstXor(xorNode, maybeExpectedNodeKinds),
         "expected xorNode to hold an Ast node of a specific node kind",
         {
             xorNodeKind: xorNode.kind,
             xorNodeId: xorNode.node.id,
-            expectedNodeKind,
+            maybeExpectedNodeKinds,
         },
     );
 }
 
-export function assertIsAstXor(xorNode: TXorNode): asserts xorNode is TAstXorNode {
-    Assert.isTrue(isAstXor(xorNode), "expected xorNode to hold an Ast node", {
+export function assertIsAstXor<T extends Ast.TNode>(
+    xorNode: TXorNode,
+    maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
+): asserts xorNode is TAstXorNode {
+    Assert.isTrue(isAstXor(xorNode, maybeExpectedNodeKinds), "expected xorNode to hold an Ast node", {
         xorNodeKind: xorNode.kind,
         xorNodeId: xorNode.node.id,
+        maybeExpectedNodeKinds,
     });
 }
 
-export function assertIsContextXor(xorNode: TXorNode): asserts xorNode is ContextXorNode {
-    Assert.isTrue(isContextXor(xorNode), "expected xorNode to hold a Context node", {
+export function assertIsContextXor<T extends Ast.TNode>(
+    xorNode: TXorNode,
+    maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
+): asserts xorNode is ContextXorNode {
+    Assert.isTrue(isContextXor(xorNode, maybeExpectedNodeKinds), "expected xorNode to hold a Context node", {
         xorNodeKind: xorNode.kind,
         xorNodeId: xorNode.node.id,
+        maybeExpectedNodeKinds,
     });
 }
 
@@ -101,55 +109,52 @@ export function assertIsList(xorNode: TXorNode): void {
     assertAnyAstNodeKind(xorNode, [Ast.NodeKind.ListExpression, Ast.NodeKind.ListLiteral]);
 }
 
-export function assertUnwrapAst(xorNode: TXorNode): Ast.TNode {
-    assertIsAstXor(xorNode);
+export function assertUnwrapAst<T extends Ast.TNode>(
+    xorNode: TXorNode,
+    maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
+): Ast.TNode {
+    assertIsAstXor(xorNode, maybeExpectedNodeKinds);
     return xorNode.node;
 }
 
-export function assertUnwrapAstChecked<T extends Ast.TNode>(xorNode: TXorNode, expectedNodeKind: T["kind"]): T {
-    assertIsAst(xorNode, expectedNodeKind);
+export function assertUnwrapContext<T extends Ast.TNode>(
+    xorNode: TXorNode,
+    maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
+): ParseContext.Node {
+    assertIsContextXor(xorNode, maybeExpectedNodeKinds);
     return xorNode.node;
 }
 
-export function assertUnwrapContext(xorNode: TXorNode): ParseContext.Node {
-    assertIsContextXor(xorNode);
-    return xorNode.node;
-}
-
-export function isAstXor(xorNode: TXorNode): xorNode is TAstXorNode {
-    return xorNode.kind === XorNodeKind.Ast;
-}
-
-export function isAstXorChecked<T extends Ast.TNode>(
+export function checkNodeKind<T extends Ast.TNode>(
     xorNode: TXorNode,
-    expectedNodeKind: T["kind"],
-): xorNode is AstXorNode<T> {
-    return isAstXor(xorNode) && xorNode.node.kind === expectedNodeKind;
-}
-
-export function isAstXorCheckedMany<T extends Ast.TNode>(
-    xorNode: TXorNode,
-    expectedNodeKinds: ReadonlyArray<T["kind"]>,
-): xorNode is AstXorNode<T> {
-    return isAstXor(xorNode) && expectedNodeKinds.includes(xorNode.node.kind);
-}
-
-export function isContextXor(xorNode: TXorNode): xorNode is ContextXorNode {
-    return xorNode.kind === XorNodeKind.Context;
-}
-
-export function isXorChecked<T extends Ast.TNode>(
-    xorNode: TXorNode,
-    expectedNodeKind: T["kind"],
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): xorNode is XorNode<T> {
-    return isAstXorChecked(xorNode, expectedNodeKind) || isContextXor(xorNode);
+    return (
+        xorNode.node.kind === expectedNodeKinds ||
+        (Array.isArray(expectedNodeKinds) && expectedNodeKinds.includes(xorNode.node.kind))
+    );
 }
 
-export function isXorCheckedMany<T extends Ast.TNode>(
+export function isAstXor<T extends Ast.TNode>(
     xorNode: TXorNode,
-    expectedNodeKinds: ReadonlyArray<T["kind"]>,
-): xorNode is XorNode<T> {
-    return isAstXorCheckedMany(xorNode, expectedNodeKinds) || isContextXor(xorNode);
+    maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
+): xorNode is AstXorNode<T> {
+    if (xorNode.kind !== XorNodeKind.Ast) {
+        return false;
+    } else {
+        return !maybeExpectedNodeKinds || checkNodeKind(xorNode, maybeExpectedNodeKinds);
+    }
+}
+
+export function isContextXor<T extends Ast.TNode>(
+    xorNode: TXorNode,
+    maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
+): xorNode is ContextXorNode {
+    if (xorNode.kind !== XorNodeKind.Context) {
+        return false;
+    } else {
+        return !maybeExpectedNodeKinds || checkNodeKind(xorNode, maybeExpectedNodeKinds);
+    }
 }
 
 export function maybeIdentifierExpressionLiteral(xorNode: TXorNode): string | undefined {
@@ -167,6 +172,9 @@ export function maybeIdentifierExpressionLiteral(xorNode: TXorNode): string | un
         : identifierExpression.maybeInclusiveConstant.constantKind + identifierExpression.identifier.literal;
 }
 
-export function maybeUnwrapAst<T extends Ast.TNode>(xorNode: TXorNode, expectedNodeKind: T["kind"]): T | undefined {
-    return isAstXorChecked(xorNode, expectedNodeKind) ? xorNode.node : undefined;
+export function maybeUnwrapAst<T extends Ast.TNode>(
+    xorNode: TXorNode,
+    expectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
+): T | undefined {
+    return isAstXor(xorNode, expectedNodeKinds) ? xorNode.node : undefined;
 }
