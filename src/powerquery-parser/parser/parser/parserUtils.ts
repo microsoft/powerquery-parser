@@ -140,7 +140,7 @@ export function restoreCheckpoint(state: ParseState, checkpoint: ParseStateCheck
     }
 
     if (checkpoint.maybeContextNodeId) {
-        state.maybeCurrentContextNode = NodeIdMapUtils.assertUnwrapContext(
+        state.maybeCurrentContextNode = NodeIdMapUtils.assertContext(
             state.contextState.nodeIdMapCollection.contextNodeById,
             checkpoint.maybeContextNodeId,
         );

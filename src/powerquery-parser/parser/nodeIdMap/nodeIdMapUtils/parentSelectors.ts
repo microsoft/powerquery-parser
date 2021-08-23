@@ -9,12 +9,21 @@ import { Collection } from "../nodeIdMap";
 import { TXorNode, XorNode } from "../xorNode";
 import { createAstNode, createContextNode } from "../xorNodeUtils";
 
-export function assertUnwrapParentAst<T extends Ast.TNode>(
+export function assertUnwrapParentAstChecked<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     nodeId: number,
     expectedNodeKind: T["kind"],
 ): T {
     const maybeNode: T | undefined = maybeParentAstChecked(nodeIdMapCollection, nodeId, expectedNodeKind);
+    return Assert.asDefined(maybeNode, `nodeId doesn't have a parent`, { nodeId });
+}
+
+export function assertUnwrapParentAstCheckedMany<T extends Ast.TNode>(
+    nodeIdMapCollection: Collection,
+    nodeId: number,
+    expectedNodeKinds: ReadonlyArray<T["kind"]>,
+): T {
+    const maybeNode: T | undefined = maybeParentAstCheckedMany(nodeIdMapCollection, nodeId, expectedNodeKinds);
     return Assert.asDefined(maybeNode, `nodeId doesn't have a parent`, { nodeId });
 }
 

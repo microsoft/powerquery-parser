@@ -237,6 +237,23 @@ export function isTBinOpExpression(node: Ast.TNode): node is Ast.TBinOpExpressio
     ]);
 }
 
+export function isTBinOpExpressionKind(nodeKind: Ast.NodeKind): nodeKind is Ast.TBinOpExpressionNodeKind {
+    switch (nodeKind) {
+        case Ast.NodeKind.ArithmeticExpression:
+        case Ast.NodeKind.AsExpression:
+        case Ast.NodeKind.EqualityExpression:
+        case Ast.NodeKind.IsExpression:
+        case Ast.NodeKind.LogicalExpression:
+        case Ast.NodeKind.NullCoalescingExpression:
+        case Ast.NodeKind.MetadataExpression:
+        case Ast.NodeKind.RelationalExpression:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 export function isTConstant(node: Ast.TNode): node is Ast.TConstant {
     return node.kind === Ast.NodeKind.Constant;
 }
