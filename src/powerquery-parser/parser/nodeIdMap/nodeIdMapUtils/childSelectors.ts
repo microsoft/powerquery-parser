@@ -76,8 +76,11 @@ export function maybeNthChild<T extends Ast.TNode>(
 
     // Iterate over the children and try to find one which matches attributeIndex.
     for (const childId of childIds) {
-        const xorNode: XorNode<T> = assertGetXor(nodeIdMapCollection, childId, maybeExpectedNodeKinds);
-        if (xorNode.node.maybeAttributeIndex === attributeIndex) {
+        const xorNode: XorNode<T> = assertGetXor(nodeIdMapCollection, childId, undefined);
+        if (
+            xorNode.node.maybeAttributeIndex === attributeIndex &&
+            XorNodeUtils.checkNodeKind(xorNode, maybeExpectedNodeKinds)
+        ) {
             return xorNode;
         }
     }

@@ -127,11 +127,11 @@ export function assertUnwrapContext<T extends Ast.TNode>(
 
 export function checkNodeKind<T extends Ast.TNode>(
     xorNode: TXorNode,
-    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+    maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
 ): xorNode is XorNode<T> {
     return (
-        xorNode.node.kind === expectedNodeKinds ||
-        (Array.isArray(expectedNodeKinds) && expectedNodeKinds.includes(xorNode.node.kind))
+        xorNode.node.kind === maybeExpectedNodeKinds ||
+        (Array.isArray(maybeExpectedNodeKinds) && maybeExpectedNodeKinds.includes(xorNode.node.kind))
     );
 }
 
