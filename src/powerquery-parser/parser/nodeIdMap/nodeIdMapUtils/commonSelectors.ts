@@ -6,7 +6,7 @@ import { Assert, MapUtils } from "../../../common";
 import { Ast, AstUtils } from "../../../language";
 import { ParseContext } from "../../context";
 import { AstNodeById, Collection, ContextNodeById } from "../nodeIdMap";
-import { TXorNode, XorNode, XorNodeKind } from "../xorNode";
+import { AstXorNode, TXorNode, XorNode } from "../xorNode";
 import { maybeNthChild, maybeNthChildChecked } from "./childSelectors";
 
 export function assertUnwrapAst(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
@@ -66,18 +66,22 @@ export function maybeXorChecked<T extends Ast.TNode>(
     return XorNodeUtils.isXorChecked<T>(maybeNode, expectedNodeKind) ? maybeNode : undefined;
 }
 
-export function maybeWrappedContentAst(
+export function maybeWrappedContentAst<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     wrapped: TXorNode,
-    maybeChildNodeKind: Ast.NodeKind,
-): Ast.TNode | undefined {
-    const maybeAst: TXorNode | undefined = maybeNthChildChecked(
+    expectedNodeKind: T["kind"],
+): AstXorNode<T> | undefined {
+    const maybeNode: TXorNode | undefined = maybeNthChildChecked(
         nodeIdMapCollection,
         wrapped.node.id,
         1,
-        maybeChildNodeKind,
+        expectedNodeKind,
     );
-    return maybeAst?.kind === XorNodeKind.Ast ? maybeAst.node : undefined;
+    if (maybeNode === undefined) {
+        return maybeNode;
+    }
+
+    return XorNodeUtils.isAstXorChecked(maybeNode, expectedNodeKind) ? maybeNode : undefined;
 }
 
 export function maybeCsv(nodeIdMapCollection: Collection, csv: TXorNode): TXorNode | undefined {
