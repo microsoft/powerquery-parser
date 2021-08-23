@@ -166,6 +166,10 @@ export function isOtherwiseExpression(node: Ast.TNode): node is Ast.OtherwiseExp
     return node.kind === Ast.NodeKind.OtherwiseExpression;
 }
 
+export function isParameter(node: Ast.TNode): node is Ast.TParameter {
+    return node.kind === Ast.NodeKind.Parameter;
+}
+
 export function isParenthesizedExpression(node: Ast.TNode): node is Ast.ParenthesizedExpression {
     return node.kind === Ast.NodeKind.ParenthesizedExpression;
 }
