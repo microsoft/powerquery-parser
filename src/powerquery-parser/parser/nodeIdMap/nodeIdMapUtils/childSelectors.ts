@@ -27,7 +27,7 @@ export function assertGetNthChild<T extends Ast.TNode>(
     parentId: number,
     attributeIndex: number,
     maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
-): TXorNode {
+): XorNode<T> {
     return Assert.asDefined(
         maybeNthChild(nodeIdMapCollection, parentId, attributeIndex, maybeExpectedNodeKinds),
         `parentId doesn't have a child at the given index`,

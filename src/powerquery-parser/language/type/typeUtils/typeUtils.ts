@@ -4,7 +4,7 @@
 import { Type } from "..";
 import { Ast, AstUtils } from "../..";
 import { Assert } from "../../../common";
-import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../../parser";
+import { NodeIdMap, NodeIdMapUtils, ParseContext, XorNode, XorNodeKind } from "../../../parser";
 import { createPrimitiveType } from "./factories";
 import { isCompatible } from "./isCompatible";
 import { isEqualType } from "./isEqualType";
@@ -110,11 +110,11 @@ export function isValidInvocation(
 
 export function inspectParameter(
     nodeIdMapCollection: NodeIdMap.Collection,
-    parameter: TXorNode,
+    parameter: XorNode<Ast.TParameter>,
 ): Type.FunctionParameter | undefined {
     switch (parameter.kind) {
         case XorNodeKind.Ast:
-            return inspectAstParameter(parameter.node as Ast.TParameter);
+            return inspectAstParameter(parameter.node);
 
         case XorNodeKind.Context:
             return inspectContextParameter(nodeIdMapCollection, parameter.node);

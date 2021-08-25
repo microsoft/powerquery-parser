@@ -16,8 +16,8 @@ export function assertGetRecursiveExpressionPreviousSibling<T extends Ast.TNode>
     nodeIdMapCollection: Collection,
     nodeId: number,
     maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
-): TXorNode {
-    const xorNode: TXorNode = assertGetXor(nodeIdMapCollection, nodeId, maybeExpectedNodeKinds);
+): XorNode<T> {
+    const xorNode: TXorNode = assertGetXor(nodeIdMapCollection, nodeId);
     const arrayWrapper: TXorNode = assertGetParentXor(nodeIdMapCollection, nodeId, Ast.NodeKind.ArrayWrapper);
     const maybePrimaryExpressionAttributeId: number | undefined = xorNode.node.maybeAttributeIndex;
 
@@ -40,12 +40,17 @@ export function assertGetRecursiveExpressionPreviousSibling<T extends Ast.TNode>
             );
         }
 
-        return assertGetNthChild(nodeIdMapCollection, arrayWrapper.node.id, indexOfPrimaryExpressionId - 1);
+        return assertGetNthChild(
+            nodeIdMapCollection,
+            arrayWrapper.node.id,
+            indexOfPrimaryExpressionId - 1,
+            maybeExpectedNodeKinds,
+        );
     }
     // It's the first element in ArrayWrapper, meaning we must grab RecursivePrimaryExpression.head
     else {
         const recursivePrimaryExpression: TXorNode = assertGetParentXor(nodeIdMapCollection, arrayWrapper.node.id);
-        return assertGetNthChild(nodeIdMapCollection, recursivePrimaryExpression.node.id, 0);
+        return assertGetNthChild(nodeIdMapCollection, recursivePrimaryExpression.node.id, 0, maybeExpectedNodeKinds);
     }
 }
 

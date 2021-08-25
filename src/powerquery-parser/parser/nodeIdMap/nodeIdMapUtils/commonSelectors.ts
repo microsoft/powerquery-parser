@@ -27,7 +27,7 @@ export function assertUnwrapAst<T extends Ast.TNode>(
     );
 
     if (maybeExpectedNodeKinds !== undefined) {
-        assertNodeKind(node.kind, maybeExpectedNodeKinds);
+        assertNodeKind(nodeId, node.kind, maybeExpectedNodeKinds);
     }
 
     return node;
@@ -43,7 +43,7 @@ export function assertUnwrapContext<T extends Ast.TNode>(
     );
 
     if (maybeExpectedNodeKinds !== undefined) {
-        assertNodeKind(node.kind, maybeExpectedNodeKinds);
+        assertNodeKind(nodeId, node.kind, maybeExpectedNodeKinds);
     }
 
     return node;
@@ -53,7 +53,7 @@ export function maybeArrayWrapper(
     nodeIdMapCollection: Collection,
     wrapped: TXorNode,
 ): XorNode<Ast.TArrayWrapper> | undefined {
-    return maybeNthChild(nodeIdMapCollection, wrapped.node.id, 1, Ast.NodeKind.ArrayWrapper);
+    return maybeWrappedContent(nodeIdMapCollection, wrapped, Ast.NodeKind.ArrayWrapper);
 }
 
 export function maybeWrappedContent<T extends Ast.TNode>(
@@ -104,12 +104,14 @@ export function maybeXor<T extends Ast.TNode>(
 }
 
 function assertNodeKind<T extends Ast.TNode>(
+    nodeId: number,
     nodeKind: Ast.NodeKind,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): void {
     if (expectedNodeKinds !== undefined && nodeKind !== expectedNodeKinds && !expectedNodeKinds.includes(nodeKind)) {
-        throw new CommonError.InvariantError(`either failed to find the given node or it was an invalid node kind`, {
-            actualNodeKind: nodeKind,
+        throw new CommonError.InvariantError(`found the node but it was an invalid node kind`, {
+            nodeId,
+            nodeKind,
             maybeExpectedNodeKinds: expectedNodeKinds,
         });
     }

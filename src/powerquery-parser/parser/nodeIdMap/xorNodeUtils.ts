@@ -92,15 +92,19 @@ export function assertIsContextXor<T extends Ast.TNode>(
     );
 }
 
-export function assertIsIdentifier(xorNode: TXorNode): void {
+export function assertIsIdentifier(
+    xorNode: TXorNode,
+): asserts xorNode is XorNode<Ast.Identifier | Ast.IdentifierExpression> {
     assertIsNodeKind(xorNode, [Ast.NodeKind.Identifier, Ast.NodeKind.IdentifierExpression]);
 }
 
-export function assertIsRecord(xorNode: TXorNode): void {
+export function assertIsRecord(
+    xorNode: TXorNode,
+): asserts xorNode is XorNode<Ast.RecordExpression | Ast.RecordLiteral> {
     assertIsNodeKind(xorNode, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);
 }
 
-export function assertIsList(xorNode: TXorNode): void {
+export function assertIsList(xorNode: TXorNode): asserts xorNode is XorNode<Ast.ListExpression | Ast.ListLiteral> {
     assertIsNodeKind(xorNode, [Ast.NodeKind.ListExpression, Ast.NodeKind.ListLiteral]);
 }
 
@@ -144,7 +148,7 @@ export function isContextXor<T extends Ast.TNode>(
 
 export function isNodeKind<T extends Ast.TNode>(
     xorNode: TXorNode,
-    maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
+    maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"],
 ): xorNode is XorNode<T> {
     return (
         xorNode.node.kind === maybeExpectedNodeKinds ||

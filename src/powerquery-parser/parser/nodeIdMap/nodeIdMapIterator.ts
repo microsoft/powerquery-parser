@@ -176,7 +176,7 @@ export function iterFieldProjection(
 ): ReadonlyArray<TXorNode> {
     XorNodeUtils.assertIsNodeKind(fieldProjection, Ast.NodeKind.FieldProjection);
 
-    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeArrayWrapper(
+    const maybeArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.maybeArrayWrapper(
         nodeIdMapCollection,
         fieldProjection,
     );
@@ -210,7 +210,7 @@ export function iterFunctionExpressionParameters(
     nodeIdMapCollection: NodeIdMap.Collection,
     functionExpression: TXorNode,
 ): ReadonlyArray<TXorNode> {
-    XorNodeUtils.assertAstNodeKind(functionExpression, Ast.NodeKind.FunctionExpression);
+    XorNodeUtils.assertIsNodeKind(functionExpression, Ast.NodeKind.FunctionExpression);
 
     if (functionExpression.kind === XorNodeKind.Ast) {
         return (functionExpression.node as Ast.FunctionExpression).parameters.content.elements.map(
@@ -219,12 +219,11 @@ export function iterFunctionExpressionParameters(
         );
     }
 
-    const maybeParameterList: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
-        nodeIdMapCollection,
-        functionExpression.node.id,
-        0,
-        [Ast.NodeKind.ParameterList],
-    );
+    const maybeParameterList:
+        | XorNode<Ast.TParameterList>
+        | undefined = NodeIdMapUtils.maybeNthChild(nodeIdMapCollection, functionExpression.node.id, 0, [
+        Ast.NodeKind.ParameterList,
+    ]);
     if (maybeParameterList === undefined) {
         return [];
     }
@@ -239,11 +238,11 @@ export function iterFunctionExpressionParameterNames(
     const result: string[] = [];
 
     for (const parameter of iterFunctionExpressionParameters(nodeIdMapCollection, functionExpression)) {
-        const maybeName: Ast.TNode | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(
+        const maybeName: Ast.Identifier | undefined = NodeIdMapUtils.maybeUnwrapNthChildIfAst(
             nodeIdMapCollection,
             parameter.node.id,
             1,
-            [Ast.NodeKind.Identifier],
+            Ast.NodeKind.Identifier,
         );
 
         if (!maybeName) {
@@ -259,7 +258,7 @@ export function iterFunctionExpressionParameterNames(
 // Return all FieldSpecification children under the given FieldSpecificationList.
 export function iterFieldSpecification(
     nodeIdMapCollection: NodeIdMap.Collection,
-    fieldSpecificationList: TXorNode,
+    fieldSpecificationList: XorNode<Ast.FieldSpecificationList>,
 ): ReadonlyArray<TXorNode> {
     XorNodeUtils.assertIsNodeKind(fieldSpecificationList, Ast.NodeKind.FieldSpecificationList);
     return iterArrayWrapperInWrappedContent(nodeIdMapCollection, fieldSpecificationList);
@@ -267,7 +266,7 @@ export function iterFieldSpecification(
 
 export function iterInvokeExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
-    invokeExpression: TXorNode,
+    invokeExpression: XorNode<Ast.InvokeExpression>,
 ): ReadonlyArray<TXorNode> {
     XorNodeUtils.assertIsNodeKind(invokeExpression, Ast.NodeKind.InvokeExpression);
     return iterArrayWrapperInWrappedContent(nodeIdMapCollection, invokeExpression);
@@ -276,15 +275,13 @@ export function iterInvokeExpression(
 // Return all key-value-pair children under the given LetExpression.
 export function iterLetExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
-    letExpression: TXorNode,
+    letExpression: XorNode<Ast.LetExpression>,
 ): ReadonlyArray<LetKeyValuePair> {
     XorNodeUtils.assertIsNodeKind(letExpression, Ast.NodeKind.LetExpression);
 
-    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeNthChild(
+    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeArrayWrapper(
         nodeIdMapCollection,
-        letExpression.node.id,
-        1,
-        Ast.NodeKind.ArrayWrapper,
+        letExpression,
     );
     if (maybeArrayWrapper === undefined) {
         return [];
@@ -310,7 +307,10 @@ export function iterRecord(
 ): ReadonlyArray<RecordKeyValuePair> {
     XorNodeUtils.assertIsRecord(record);
 
-    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeArrayWrapper(nodeIdMapCollection, record);
+    const maybeArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.maybeArrayWrapper(
+        nodeIdMapCollection,
+        record,
+    );
     if (maybeArrayWrapper === undefined) {
         return [];
     }
@@ -345,7 +345,7 @@ export function iterSection(
         });
     }
 
-    const maybeSectionMemberArrayWrapper: undefined | TXorNode = NodeIdMapUtils.maybeNthChild(
+    const maybeSectionMemberArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.maybeNthChild(
         nodeIdMapCollection,
         section.node.id,
         4,
@@ -358,7 +358,7 @@ export function iterSection(
 
     const partial: SectionKeyValuePair[] = [];
     for (const sectionMember of assertIterChildrenXor(nodeIdMapCollection, sectionMemberArrayWrapper.node.id)) {
-        const maybeKeyValuePair: undefined | TXorNode = NodeIdMapUtils.maybeNthChild(
+        const maybeKeyValuePair: XorNode<Ast.IdentifierPairedExpression> | undefined = NodeIdMapUtils.maybeNthChild(
             nodeIdMapCollection,
             sectionMember.node.id,
             2,
@@ -427,12 +427,11 @@ function iterKeyValuePairs<
 
 function iterArrayWrapperInWrappedContent(
     nodeIdMapCollection: NodeIdMap.Collection,
-    xorNode: TXorNode,
+    xorNode: XorNode<Ast.TWrapped>,
 ): ReadonlyArray<TXorNode> {
-    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(
+    const maybeArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.maybeArrayWrapper(
         nodeIdMapCollection,
         xorNode,
-        Ast.NodeKind.ArrayWrapper,
     );
     if (maybeArrayWrapper === undefined) {
         return [];

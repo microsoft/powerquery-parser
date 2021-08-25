@@ -263,29 +263,6 @@ export function assertAsUnaryExpression(node: Ast.TNode): Ast.UnaryExpression {
     return assertAs(TypeGuards.isUnaryExpression, node, [Ast.NodeKind.UnaryExpression]);
 }
 
-export function assertHasNodeKind<T extends Ast.TNode>(node: Ast.TNode, expectedNodeKind: T["kind"]): void {
-    if (!TypeGuards.isNodeKind(node, expectedNodeKind)) {
-        throw new CommonError.InvariantError(`assert failed, expected a different nodeKind`, {
-            nodeId: node.id,
-            nodeKind: node.kind,
-            expectedNodeKind,
-        });
-    }
-}
-
-export function assertHasAnyNodeKind<T extends Ast.TNode>(
-    node: Ast.TNode,
-    expectedNodeKinds: ReadonlyArray<T["kind"]>,
-): asserts node is T {
-    if (!TypeGuards.isNodeKind(node, expectedNodeKinds)) {
-        throw new CommonError.InvariantError(`assert failed, expected a different nodeKind`, {
-            nodeId: node.id,
-            nodeKind: node.kind,
-            expectedNodeKinds,
-        });
-    }
-}
-
 export function assertIsArithmeticExpression(node: Ast.TNode): asserts node is Ast.ArithmeticExpression {
     assertIs(TypeGuards.isArithmeticExpression, node, [Ast.NodeKind.ArithmeticExpression]);
 }
