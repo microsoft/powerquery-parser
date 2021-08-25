@@ -148,11 +148,11 @@ export function isContextXor<T extends Ast.TNode>(
 
 export function isNodeKind<T extends Ast.TNode>(
     xorNode: TXorNode,
-    maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"],
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): xorNode is XorNode<T> {
     return (
-        xorNode.node.kind === maybeExpectedNodeKinds ||
-        (Array.isArray(maybeExpectedNodeKinds) && maybeExpectedNodeKinds.includes(xorNode.node.kind))
+        xorNode.node.kind === expectedNodeKinds ||
+        (Array.isArray(expectedNodeKinds) && expectedNodeKinds.includes(xorNode.node.kind))
     );
 }
 

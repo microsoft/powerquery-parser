@@ -79,7 +79,7 @@ export function maybeNthChild<T extends Ast.TNode>(
         const xorNode: XorNode<T> = assertGetXor(nodeIdMapCollection, childId, undefined);
         if (
             xorNode.node.maybeAttributeIndex === attributeIndex &&
-            XorNodeUtils.isNodeKind(xorNode, maybeExpectedNodeKinds)
+            (!maybeExpectedNodeKinds || XorNodeUtils.isNodeKind(xorNode, maybeExpectedNodeKinds))
         ) {
             return xorNode;
         }

@@ -73,17 +73,16 @@ export function assertGetNthXor<T extends Ast.TNode>(
     ancestryIndex: number,
     expectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
 ): XorNode<T> {
-    const maybeXorNode: TXorNode | undefined = maybeNthXor(ancestry, ancestryIndex, undefined);
+    const maybeXorNode: XorNode<T> | undefined = maybeNthXor(ancestry, ancestryIndex, expectedNodeKinds);
     if (maybeXorNode === undefined) {
-        throw new CommonError.InvariantError(`the given ancestryIndex is out of bounds`, { ancestryIndex });
+        throw new CommonError.InvariantError(`couldn't find the nth node or it had the incorrect node type`, {
+            ancestryIndex,
+            expectedNodeKinds,
+            leafNodeId: assertGetLeaf(ancestry, undefined).node.id,
+        });
     }
 
-    if (expectedNodeKinds !== undefined) {
-        XorNodeUtils.assertIsNodeKind(maybeXorNode, expectedNodeKinds);
-        return maybeXorNode;
-    }
-
-    return maybeXorNode as XorNode<T>;
+    return maybeXorNode;
 }
 
 export function maybeNthXor<T extends Ast.TNode>(
@@ -92,11 +91,11 @@ export function maybeNthXor<T extends Ast.TNode>(
     expectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
 ): XorNode<T> | undefined {
     const maybeNode: TXorNode | undefined = ancestry[ancestryIndex];
-    if (maybeNode && !XorNodeUtils.isNodeKind(maybeNode, expectedNodeKinds)) {
+    if (maybeNode === undefined || (expectedNodeKinds && !XorNodeUtils.isNodeKind(maybeNode, expectedNodeKinds))) {
         return undefined;
     }
 
-    return maybeNode;
+    return maybeNode as XorNode<T>;
 }
 
 export function maybeNextXor<T extends Ast.TNode>(
@@ -153,11 +152,10 @@ export function maybeFirstXorOfNodeKind<T extends Ast.TNode>(
     nodeKind: T["kind"],
 ): XorNode<T> | undefined {
     const maybeNode: TXorNode | undefined = ancestry.find((xorNode: TXorNode) => xorNode.node.kind === nodeKind);
-    if (maybeNode === undefined) {
+    if (maybeNode === undefined || !XorNodeUtils.isNodeKind(maybeNode, nodeKind)) {
         return undefined;
     }
 
-    XorNodeUtils.assertIsNodeKind(maybeNode, nodeKind);
     return maybeNode;
 }
 
