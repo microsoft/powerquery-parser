@@ -61,6 +61,13 @@ export function assertUnwrapNthChildAsContext<T extends Ast.TNode>(
     );
 }
 
+export function maybeArrayWrapper(
+    nodeIdMapCollection: Collection,
+    wrapped: TXorNode,
+): XorNode<Ast.TArrayWrapper> | undefined {
+    return maybeNthChild(nodeIdMapCollection, wrapped.node.id, 1, Ast.NodeKind.ArrayWrapper);
+}
+
 export function maybeNthChild<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     parentId: number,
@@ -128,4 +135,27 @@ export function maybeUnwrapNthChildIfContext<T extends Ast.TNode>(
     return XorNodeUtils.isContextXor<T>(maybeNode, /* already checked in maybeNthChild */ undefined)
         ? maybeNode.node
         : undefined;
+}
+
+export function maybeUnwrapWrappedContentIfAst<T extends Ast.TWrapped, C extends T["content"]>(
+    nodeIdMapCollection: Collection,
+    wrapped: TXorNode,
+    maybeExpectedNodeKinds?: ReadonlyArray<C["kind"]> | C["kind"] | undefined,
+): C | undefined {
+    const maybeNode: TXorNode | undefined = maybeWrappedContent(nodeIdMapCollection, wrapped, maybeExpectedNodeKinds);
+    if (maybeNode === undefined) {
+        return maybeNode;
+    }
+
+    return XorNodeUtils.isAstXor<C>(maybeNode, /* already checked in maybeNthChild */ undefined)
+        ? maybeNode.node
+        : undefined;
+}
+
+export function maybeWrappedContent<T extends Ast.TWrapped, C extends T["content"]>(
+    nodeIdMapCollection: Collection,
+    wrapped: TXorNode,
+    maybeExpectedNodeKinds?: ReadonlyArray<C["kind"]> | C["kind"] | undefined,
+): XorNode<C> | undefined {
+    return maybeNthChild(nodeIdMapCollection, wrapped.node.id, 1, maybeExpectedNodeKinds);
 }
