@@ -58,8 +58,7 @@ export function maybeInvokeExpressionIdentifier(
     nodeIdMapCollection: Collection,
     nodeId: number,
 ): XorNode<Ast.IdentifierExpression> | undefined {
-    const invokeExprXorNode: TXorNode = assertGetXor(nodeIdMapCollection, nodeId);
-    XorNodeUtils.assertIsNodeKind(invokeExprXorNode, Ast.NodeKind.InvokeExpression);
+    const invokeExprXorNode: TXorNode = assertGetXor(nodeIdMapCollection, nodeId, Ast.NodeKind.InvokeExpression);
 
     // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
     // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
@@ -103,19 +102,16 @@ export function maybeInvokeExpressionIdentifierLiteral(
     nodeIdMapCollection: Collection,
     nodeId: number,
 ): string | undefined {
-    const invokeExprXorNode: TXorNode = assertGetXor(nodeIdMapCollection, nodeId);
-    XorNodeUtils.assertIsNodeKind(invokeExprXorNode, Ast.NodeKind.InvokeExpression);
+    assertGetXor(nodeIdMapCollection, nodeId, Ast.NodeKind.InvokeExpression);
 
-    const maybeIdentifierExpressionXorNode: TXorNode | undefined = maybeInvokeExpressionIdentifier(
-        nodeIdMapCollection,
-        nodeId,
-    );
-    if (maybeIdentifierExpressionXorNode === undefined || maybeIdentifierExpressionXorNode.kind !== XorNodeKind.Ast) {
+    const maybeIdentifierExpressionXorNode:
+        | XorNode<Ast.IdentifierExpression>
+        | undefined = maybeInvokeExpressionIdentifier(nodeIdMapCollection, nodeId);
+    if (maybeIdentifierExpressionXorNode === undefined || !XorNodeUtils.isAstXor(maybeIdentifierExpressionXorNode)) {
         return undefined;
     }
-    const identifierExpressionXorNode: TXorNode = maybeIdentifierExpressionXorNode;
-    XorNodeUtils.assertIsNodeKind(identifierExpressionXorNode, Ast.NodeKind.IdentifierExpression);
-    const identifierExpression: Ast.IdentifierExpression = identifierExpressionXorNode.node as Ast.IdentifierExpression;
+
+    const identifierExpression: Ast.IdentifierExpression = maybeIdentifierExpressionXorNode.node;
 
     return identifierExpression.maybeInclusiveConstant === undefined
         ? identifierExpression.identifier.literal
