@@ -16,5 +16,5 @@ export interface ParseState {
     maybeCurrentToken: Token.Token | undefined;
     maybeCurrentTokenKind: Token.TokenKind | undefined;
     contextState: ParseContext.State;
-    maybeCurrentContextNode: ParseContext.Node | undefined;
+    maybeCurrentContextNode: ParseContext.TNode | undefined;
 }

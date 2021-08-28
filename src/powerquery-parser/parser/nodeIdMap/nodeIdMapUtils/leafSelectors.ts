@@ -8,8 +8,8 @@ import { AstNodeById, Collection } from "../nodeIdMap";
 import { TXorNode, XorNodeKind } from "../xorNode";
 import { maybeXor } from "./commonSelectors";
 
-export function assertGetLeftMostAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
-    return XorNodeUtils.assertGetAst(
+export function assertUnwrapLeftMostLeaf(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
+    return XorNodeUtils.assertUnwrapAst(
         Assert.asDefined(
             maybeLeftMostXor(nodeIdMapCollection, nodeId),
             `nodeId does not exist in nodeIdMapCollection`,

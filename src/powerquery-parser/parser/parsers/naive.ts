@@ -644,7 +644,7 @@ export function readRecursivePrimaryExpression(
     ParseStateUtils.startContext(state, nodeKind);
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
-    const currentContextNode: ParseContext.Node = Assert.asDefined(
+    const currentContextNode: ParseContext.TNode = Assert.asDefined(
         state.maybeCurrentContextNode,
         "state.maybeCurrentContextNode",
     );
@@ -659,7 +659,7 @@ export function readRecursivePrimaryExpression(
     nodeIdMapCollection.parentIdById.set(head.id, currentContextNode.id);
 
     const newTokenIndexStart: number = head.tokenRange.tokenIndexStart;
-    const mutableContext: TypeScriptUtils.StripReadonly<ParseContext.Node> = currentContextNode;
+    const mutableContext: TypeScriptUtils.StripReadonly<ParseContext.TNode> = currentContextNode;
     const mutableHead: TypeScriptUtils.StripReadonly<Ast.TPrimaryExpression> = head;
 
     // Update token start to match the first parsed node under it, aka the head.

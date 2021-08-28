@@ -117,7 +117,7 @@ export function assertGetAllAstChildren<State extends ITraversalState<ResultType
 
     if (maybeChildIds) {
         const childIds: ReadonlyArray<number> = maybeChildIds;
-        return childIds.map(nodeId => NodeIdMapUtils.assertGetAst(nodeIdMapCollection.astNodeById, nodeId));
+        return childIds.map(nodeId => NodeIdMapUtils.assertUnwrapAst(nodeIdMapCollection.astNodeById, nodeId));
     } else {
         return [];
     }
@@ -136,7 +136,7 @@ export function assertGetAllXorChildren<State extends ITraversalState<ResultType
         }
         case XorNodeKind.Context: {
             const result: TXorNode[] = [];
-            const contextNode: ParseContext.Node = xorNode.node;
+            const contextNode: ParseContext.TNode = xorNode.node;
             const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(
                 contextNode.id,
             );
