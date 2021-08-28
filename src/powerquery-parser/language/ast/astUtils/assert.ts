@@ -256,77 +256,77 @@ export function assertAsTPairedConstant(node: Ast.TNode): Ast.TPairedConstant {
 }
 
 export function assertAsTypePrimaryType(node: Ast.TNode): Ast.TypePrimaryType {
-    return assertAs(TypeGuards.isTypePrimaryType, node, [Ast.NodeKind.TypePrimaryType]);
+    return assertAs(TypeGuards.isTypePrimaryType, node, Ast.NodeKind.TypePrimaryType);
 }
 
 export function assertAsUnaryExpression(node: Ast.TNode): Ast.UnaryExpression {
-    return assertAs(TypeGuards.isUnaryExpression, node, [Ast.NodeKind.UnaryExpression]);
+    return assertAs(TypeGuards.isUnaryExpression, node, Ast.NodeKind.UnaryExpression);
 }
 
 export function assertIsArithmeticExpression(node: Ast.TNode): asserts node is Ast.ArithmeticExpression {
-    assertIs(TypeGuards.isArithmeticExpression, node, [Ast.NodeKind.ArithmeticExpression]);
+    assertIsNodeKind(TypeGuards.isArithmeticExpression, node, Ast.NodeKind.ArithmeticExpression);
 }
 
 export function assertIsAsExpression(node: Ast.TNode): asserts node is Ast.AsExpression {
-    assertIs(TypeGuards.isAsExpression, node, [Ast.NodeKind.AsExpression]);
+    assertIsNodeKind(TypeGuards.isAsExpression, node, Ast.NodeKind.AsExpression);
 }
 
 export function assertIsAsNullablePrimitiveType(node: Ast.TNode): asserts node is Ast.AsNullablePrimitiveType {
-    assertIs(TypeGuards.isAsNullablePrimitiveType, node, [Ast.NodeKind.AsNullablePrimitiveType]);
+    assertIsNodeKind(TypeGuards.isAsNullablePrimitiveType, node, Ast.NodeKind.AsNullablePrimitiveType);
 }
 
 export function assertIsEachExpression(node: Ast.TNode): asserts node is Ast.EachExpression {
-    assertIs(TypeGuards.isEachExpression, node, [Ast.NodeKind.EachExpression]);
+    assertIsNodeKind(TypeGuards.isEachExpression, node, Ast.NodeKind.EachExpression);
 }
 
 export function assertIsEqualityExpression(node: Ast.TNode): asserts node is Ast.EqualityExpression {
-    assertIs(TypeGuards.isEqualityExpression, node, [Ast.NodeKind.EqualityExpression]);
+    assertIsNodeKind(TypeGuards.isEqualityExpression, node, Ast.NodeKind.EqualityExpression);
 }
 
 export function assertIsErrorHandlingExpression(node: Ast.TNode): asserts node is Ast.ErrorHandlingExpression {
-    assertIs(TypeGuards.isErrorHandlingExpression, node, [Ast.NodeKind.ErrorHandlingExpression]);
+    assertIsNodeKind(TypeGuards.isErrorHandlingExpression, node, Ast.NodeKind.ErrorHandlingExpression);
 }
 
 export function assertIsErrorRaisingExpression(node: Ast.TNode): asserts node is Ast.ErrorRaisingExpression {
-    assertIs(TypeGuards.isErrorRaisingExpression, node, [Ast.NodeKind.ErrorRaisingExpression]);
+    assertIsNodeKind(TypeGuards.isErrorRaisingExpression, node, Ast.NodeKind.ErrorRaisingExpression);
 }
 
 export function assertIsFieldProjection(node: Ast.TNode): asserts node is Ast.FieldProjection {
-    assertIs(TypeGuards.isFieldProjection, node, [Ast.NodeKind.FieldProjection]);
+    assertIsNodeKind(TypeGuards.isFieldProjection, node, Ast.NodeKind.FieldProjection);
 }
 
 export function assertIsFieldSelector(node: Ast.TNode): asserts node is Ast.FieldSelector {
-    assertIs(TypeGuards.isFieldSelector, node, [Ast.NodeKind.FieldSelector]);
+    assertIsNodeKind(TypeGuards.isFieldSelector, node, Ast.NodeKind.FieldSelector);
 }
 
 export function assertIsFieldSpecification(node: Ast.TNode): asserts node is Ast.FieldSpecification {
-    assertIs(TypeGuards.isFieldSpecification, node, [Ast.NodeKind.FieldSpecification]);
+    assertIsNodeKind(TypeGuards.isFieldSpecification, node, Ast.NodeKind.FieldSpecification);
 }
 
 export function assertIsFieldSpecificationList(node: Ast.TNode): asserts node is Ast.FieldSpecificationList {
-    assertIs(TypeGuards.isFieldSpecificationList, node, [Ast.NodeKind.FieldSpecificationList]);
+    assertIsNodeKind(TypeGuards.isFieldSpecificationList, node, Ast.NodeKind.FieldSpecificationList);
 }
 
 export function assertIsFieldTypeSpecification(node: Ast.TNode): asserts node is Ast.FieldTypeSpecification {
-    assertIs(TypeGuards.isFieldTypeSpecification, node, [Ast.NodeKind.FieldTypeSpecification]);
+    assertIsNodeKind(TypeGuards.isFieldTypeSpecification, node, Ast.NodeKind.FieldTypeSpecification);
 }
 
 export function assertIsFunctionExpression(node: Ast.TNode): asserts node is Ast.FunctionExpression {
-    assertIs(TypeGuards.isFunctionExpression, node, [Ast.NodeKind.FunctionExpression]);
+    assertIsNodeKind(TypeGuards.isFunctionExpression, node, Ast.NodeKind.FunctionExpression);
 }
 
 export function assertIsFunctionType(node: Ast.TNode): asserts node is Ast.FunctionType {
-    assertIs(TypeGuards.isFunctionType, node, [Ast.NodeKind.FunctionType]);
+    assertIsNodeKind(TypeGuards.isFunctionType, node, Ast.NodeKind.FunctionType);
 }
 
 export function assertIsGeneralizedIdentifier(node: Ast.TNode): asserts node is Ast.GeneralizedIdentifier {
-    assertIs(TypeGuards.isGeneralizedIdentifier, node, [Ast.NodeKind.GeneralizedIdentifier]);
+    assertIsNodeKind(TypeGuards.isGeneralizedIdentifier, node, Ast.NodeKind.GeneralizedIdentifier);
 }
 
 export function assertIsGeneralizedIdentifierPairedAnyLiteral(
     node: Ast.TNode,
 ): asserts node is Ast.GeneralizedIdentifierPairedAnyLiteral {
-    assertIs(TypeGuards.isGeneralizedIdentifierPairedAnyLiteral, node, [
+    assertIsNodeKind(TypeGuards.isGeneralizedIdentifierPairedAnyLiteral, node, [
         Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
     ]);
 }
@@ -334,141 +334,159 @@ export function assertIsGeneralizedIdentifierPairedAnyLiteral(
 export function assertIsGeneralizedIdentifierPairedExpression(
     node: Ast.TNode,
 ): asserts node is Ast.GeneralizedIdentifierPairedExpression {
-    assertIs(TypeGuards.isGeneralizedIdentifierPairedExpression, node, [
+    assertIsNodeKind(TypeGuards.isGeneralizedIdentifierPairedExpression, node, [
         Ast.NodeKind.GeneralizedIdentifierPairedExpression,
     ]);
 }
 
 export function assertIsIdentifier(node: Ast.TNode): asserts node is Ast.Identifier {
-    assertIs(TypeGuards.isIdentifier, node, [Ast.NodeKind.Identifier]);
+    assertIsNodeKind(TypeGuards.isIdentifier, node, Ast.NodeKind.Identifier);
 }
 
 export function assertIsIdentifierExpression(node: Ast.TNode): asserts node is Ast.IdentifierExpression {
-    assertIs(TypeGuards.isIdentifierExpression, node, [Ast.NodeKind.IdentifierExpression]);
+    assertIsNodeKind(TypeGuards.isIdentifierExpression, node, Ast.NodeKind.IdentifierExpression);
 }
 
 export function assertIsIdentifierPairedExpression(node: Ast.TNode): asserts node is Ast.IdentifierPairedExpression {
-    assertIs(TypeGuards.isIdentifierPairedExpression, node, [Ast.NodeKind.IdentifierPairedExpression]);
+    assertIsNodeKind(TypeGuards.isIdentifierPairedExpression, node, Ast.NodeKind.IdentifierPairedExpression);
 }
 
 export function assertIsIfExpression(node: Ast.TNode): asserts node is Ast.IfExpression {
-    assertIs(TypeGuards.isIfExpression, node, [Ast.NodeKind.IfExpression]);
+    assertIsNodeKind(TypeGuards.isIfExpression, node, Ast.NodeKind.IfExpression);
 }
 
 export function assertIsInvokeExpression(node: Ast.TNode): asserts node is Ast.InvokeExpression {
-    assertIs(TypeGuards.isInvokeExpression, node, [Ast.NodeKind.InvokeExpression]);
+    assertIsNodeKind(TypeGuards.isInvokeExpression, node, Ast.NodeKind.InvokeExpression);
 }
 
 export function assertIsIsExpression(node: Ast.TNode): asserts node is Ast.IsExpression {
-    assertIs(TypeGuards.isIsExpression, node, [Ast.NodeKind.IsExpression]);
+    assertIsNodeKind(TypeGuards.isIsExpression, node, Ast.NodeKind.IsExpression);
 }
 
 export function assertIsIsNullablePrimitiveType(node: Ast.TNode): asserts node is Ast.IsNullablePrimitiveType {
-    assertIs(TypeGuards.isIsNullablePrimitiveType, node, [Ast.NodeKind.IsNullablePrimitiveType]);
+    assertIsNodeKind(TypeGuards.isIsNullablePrimitiveType, node, Ast.NodeKind.IsNullablePrimitiveType);
 }
 
 export function assertIsItemAccessExpression(node: Ast.TNode): asserts node is Ast.ItemAccessExpression {
-    assertIs(TypeGuards.isItemAccessExpression, node, [Ast.NodeKind.ItemAccessExpression]);
+    assertIsNodeKind(TypeGuards.isItemAccessExpression, node, Ast.NodeKind.ItemAccessExpression);
 }
 
 export function assertIsLetExpression(node: Ast.TNode): asserts node is Ast.LetExpression {
-    assertIs(TypeGuards.isLetExpression, node, [Ast.NodeKind.LetExpression]);
+    assertIsNodeKind(TypeGuards.isLetExpression, node, Ast.NodeKind.LetExpression);
 }
 
 export function assertIsListExpression(node: Ast.TNode): asserts node is Ast.ListExpression {
-    assertIs(TypeGuards.isListExpression, node, [Ast.NodeKind.ListExpression]);
+    assertIsNodeKind(TypeGuards.isListExpression, node, Ast.NodeKind.ListExpression);
 }
 
 export function assertIsListLiteral(node: Ast.TNode): asserts node is Ast.ListLiteral {
-    assertIs(TypeGuards.isListLiteral, node, [Ast.NodeKind.ListLiteral]);
+    assertIsNodeKind(TypeGuards.isListLiteral, node, Ast.NodeKind.ListLiteral);
 }
 
 export function assertIsListType(node: Ast.TNode): asserts node is Ast.ListType {
-    assertIs(TypeGuards.isListType, node, [Ast.NodeKind.ListType]);
+    assertIsNodeKind(TypeGuards.isListType, node, Ast.NodeKind.ListType);
 }
 
 export function assertIsLiteralExpression(node: Ast.TNode): asserts node is Ast.LiteralExpression {
-    assertIs(TypeGuards.isLiteralExpression, node, [Ast.NodeKind.LiteralExpression]);
+    assertIsNodeKind(TypeGuards.isLiteralExpression, node, Ast.NodeKind.LiteralExpression);
 }
 
 export function assertIsLogicalExpression(node: Ast.TNode): asserts node is Ast.LogicalExpression {
-    assertIs(TypeGuards.isLogicalExpression, node, [Ast.NodeKind.LogicalExpression]);
+    assertIsNodeKind(TypeGuards.isLogicalExpression, node, Ast.NodeKind.LogicalExpression);
 }
 
 export function assertIsMetadataExpression(node: Ast.TNode): asserts node is Ast.MetadataExpression {
-    assertIs(TypeGuards.isMetadataExpression, node, [Ast.NodeKind.MetadataExpression]);
+    assertIsNodeKind(TypeGuards.isMetadataExpression, node, Ast.NodeKind.MetadataExpression);
+}
+
+export function assertIsNodeKind<T extends Ast.TNode>(
+    predicateFn: (node: Ast.TNode, expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"]) => node is T,
+    node: Ast.TNode,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): asserts node is T {
+    if (!predicateFn(node, expectedNodeKinds)) {
+        throw new CommonError.InvariantError(`unexpected node kind`, {
+            nodeId: node.id,
+            nodeKind: node.kind,
+            expectedNodeKinds,
+        });
+    }
 }
 
 export function assertIsNotImplementedExpression(node: Ast.TNode): asserts node is Ast.NotImplementedExpression {
-    assertIs(TypeGuards.isNotImplementedExpression, node, [Ast.NodeKind.NotImplementedExpression]);
+    assertIsNodeKind<Ast.NotImplementedExpression>(
+        TypeGuards.isNotImplementedExpression,
+        node,
+        Ast.NodeKind.NotImplementedExpression,
+    );
 }
 
 export function assertIsNullCoalescingExpression(node: Ast.TNode): asserts node is Ast.NullCoalescingExpression {
-    assertIs(TypeGuards.isNullCoalescingExpression, node, [Ast.NodeKind.NullCoalescingExpression]);
+    assertIsNodeKind(TypeGuards.isNullCoalescingExpression, node, Ast.NodeKind.NullCoalescingExpression);
 }
 
 export function assertIsNullablePrimitiveType(node: Ast.TNode): asserts node is Ast.NullablePrimitiveType {
-    assertIs(TypeGuards.isNullablePrimitiveType, node, [Ast.NodeKind.NullablePrimitiveType]);
+    assertIsNodeKind(TypeGuards.isNullablePrimitiveType, node, Ast.NodeKind.NullablePrimitiveType);
 }
 
 export function assertIsNullableType(node: Ast.TNode): asserts node is Ast.NullableType {
-    assertIs(TypeGuards.isNullableType, node, [Ast.NodeKind.NullableType]);
+    assertIsNodeKind(TypeGuards.isNullableType, node, Ast.NodeKind.NullableType);
 }
 
 export function assertIsOtherwiseExpression(node: Ast.TNode): asserts node is Ast.OtherwiseExpression {
-    assertIs(TypeGuards.isOtherwiseExpression, node, [Ast.NodeKind.OtherwiseExpression]);
+    assertIsNodeKind(TypeGuards.isOtherwiseExpression, node, Ast.NodeKind.OtherwiseExpression);
 }
 
 export function assertIsParenthesizedExpression(node: Ast.TNode): asserts node is Ast.ParenthesizedExpression {
-    assertIs(TypeGuards.isParenthesizedExpression, node, [Ast.NodeKind.ParenthesizedExpression]);
+    assertIsNodeKind(TypeGuards.isParenthesizedExpression, node, Ast.NodeKind.ParenthesizedExpression);
 }
 
 export function assertIsPrimitiveType(node: Ast.TNode): asserts node is Ast.PrimitiveType {
-    assertIs(TypeGuards.isPrimitiveType, node, [Ast.NodeKind.PrimitiveType]);
+    assertIsNodeKind(TypeGuards.isPrimitiveType, node, Ast.NodeKind.PrimitiveType);
 }
 
 export function assertIsRangeExpression(node: Ast.TNode): asserts node is Ast.RangeExpression {
-    assertIs(TypeGuards.isRangeExpression, node, [Ast.NodeKind.RangeExpression]);
+    assertIsNodeKind(TypeGuards.isRangeExpression, node, Ast.NodeKind.RangeExpression);
 }
 
 export function assertIsRecordExpression(node: Ast.TNode): asserts node is Ast.RecordExpression {
-    assertIs(TypeGuards.isRecordExpression, node, [Ast.NodeKind.RecordExpression]);
+    assertIsNodeKind(TypeGuards.isRecordExpression, node, Ast.NodeKind.RecordExpression);
 }
 
 export function assertIsRecordLiteral(node: Ast.TNode): asserts node is Ast.RecordLiteral {
-    assertIs(TypeGuards.isRecordLiteral, node, [Ast.NodeKind.RecordLiteral]);
+    assertIsNodeKind(TypeGuards.isRecordLiteral, node, Ast.NodeKind.RecordLiteral);
 }
 
 export function assertIsRecordType(node: Ast.TNode): asserts node is Ast.RecordType {
-    assertIs(TypeGuards.isRecordType, node, [Ast.NodeKind.RecordType]);
+    assertIsNodeKind(TypeGuards.isRecordType, node, Ast.NodeKind.RecordType);
 }
 
 export function assertIsRecursivePrimaryExpression(node: Ast.TNode): asserts node is Ast.RecursivePrimaryExpression {
-    assertIs(TypeGuards.isRecursivePrimaryExpression, node, [Ast.NodeKind.RecursivePrimaryExpression]);
+    assertIsNodeKind(TypeGuards.isRecursivePrimaryExpression, node, Ast.NodeKind.RecursivePrimaryExpression);
 }
 
 export function assertIsRelationalExpression(node: Ast.TNode): asserts node is Ast.RelationalExpression {
-    assertIs(TypeGuards.isRelationalExpression, node, [Ast.NodeKind.RelationalExpression]);
+    assertIsNodeKind(TypeGuards.isRelationalExpression, node, Ast.NodeKind.RelationalExpression);
 }
 
 export function assertIsSection(node: Ast.TNode): asserts node is Ast.Section {
-    assertIs(TypeGuards.isSection, node, [Ast.NodeKind.Section]);
+    assertIsNodeKind(TypeGuards.isSection, node, Ast.NodeKind.Section);
 }
 
 export function assertIsSectionMember(node: Ast.TNode): asserts node is Ast.SectionMember {
-    assertIs(TypeGuards.isSectionMember, node, [Ast.NodeKind.SectionMember]);
+    assertIsNodeKind(TypeGuards.isSectionMember, node, Ast.NodeKind.SectionMember);
 }
 
 export function assertIsTableType(node: Ast.TNode): asserts node is Ast.TableType {
-    assertIs(TypeGuards.isTableType, node, [Ast.NodeKind.TableType]);
+    assertIsNodeKind(TypeGuards.isTableType, node, Ast.NodeKind.TableType);
 }
 
 export function assertIsTArrayWrapper(node: Ast.TNode): asserts node is Ast.TArrayWrapper {
-    assertIs(TypeGuards.isTArrayWrapper, node, [Ast.NodeKind.ArrayWrapper]);
+    assertIsNodeKind(TypeGuards.isTArrayWrapper, node, Ast.NodeKind.ArrayWrapper);
 }
 
 export function assertIsTBinOpExpression(node: Ast.TNode): asserts node is Ast.TBinOpExpression {
-    assertIs(TypeGuards.isTBinOpExpression, node, [
+    assertIsNodeKind(TypeGuards.isTBinOpExpression, node, [
         Ast.NodeKind.ArithmeticExpression,
         Ast.NodeKind.AsExpression,
         Ast.NodeKind.EqualityExpression,
@@ -480,15 +498,15 @@ export function assertIsTBinOpExpression(node: Ast.TNode): asserts node is Ast.T
 }
 
 export function assertIsTConstant(node: Ast.TNode): asserts node is Ast.TConstant {
-    assertIs(TypeGuards.isTConstant, node, [Ast.NodeKind.Constant]);
+    assertIsNodeKind(TypeGuards.isTConstant, node, Ast.NodeKind.Constant);
 }
 
 export function assertIsTCsv(node: Ast.TNode): asserts node is Ast.TCsv {
-    assertIs(TypeGuards.isTCsv, node, [Ast.NodeKind.Csv]);
+    assertIsNodeKind(TypeGuards.isTCsv, node, [Ast.NodeKind.Csv]);
 }
 
 export function assertIsTKeyValuePair(node: Ast.TNode): asserts node is Ast.TKeyValuePair {
-    assertIs(TypeGuards.isTKeyValuePair, node, [
+    assertIsNodeKind(TypeGuards.isTKeyValuePair, node, [
         Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
         Ast.NodeKind.GeneralizedIdentifierPairedExpression,
         Ast.NodeKind.IdentifierPairedExpression,
@@ -496,7 +514,7 @@ export function assertIsTKeyValuePair(node: Ast.TNode): asserts node is Ast.TKey
 }
 
 export function assertIsTPairedConstant(node: Ast.TNode): asserts node is Ast.TPairedConstant {
-    assertIs(TypeGuards.isTPairedConstant, node, [
+    assertIsNodeKind(TypeGuards.isTPairedConstant, node, [
         Ast.NodeKind.AsNullablePrimitiveType,
         Ast.NodeKind.AsType,
         Ast.NodeKind.ErrorRaisingExpression,
@@ -509,33 +527,19 @@ export function assertIsTPairedConstant(node: Ast.TNode): asserts node is Ast.TP
 }
 
 export function assertIsTypePrimaryType(node: Ast.TNode): asserts node is Ast.TypePrimaryType {
-    assertIs(TypeGuards.isTypePrimaryType, node, [Ast.NodeKind.TypePrimaryType]);
+    assertIsNodeKind(TypeGuards.isTypePrimaryType, node, Ast.NodeKind.TypePrimaryType);
 }
 
 export function assertIsUnaryExpression(node: Ast.TNode): asserts node is Ast.UnaryExpression {
-    assertIs(TypeGuards.isUnaryExpression, node, [Ast.NodeKind.UnaryExpression]);
+    assertIsNodeKind(TypeGuards.isUnaryExpression, node, Ast.NodeKind.UnaryExpression);
 }
 
 function assertAs<T extends Ast.TNode>(
     predicateFn: (node: Ast.TNode) => node is T,
     node: Ast.TNode,
-    expectedNodeKinds: ReadonlyArray<Ast.NodeKind>,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): T {
-    assertIs<T>(predicateFn, node, expectedNodeKinds);
+    assertIsNodeKind<T>(predicateFn, node, expectedNodeKinds);
 
     return node;
-}
-
-function assertIs<T extends Ast.TNode>(
-    predicateFn: (node: Ast.TNode) => node is T,
-    node: Ast.TNode,
-    expectedNodeKinds: ReadonlyArray<Ast.NodeKind>,
-): asserts node is T {
-    if (!predicateFn(node)) {
-        throw new CommonError.InvariantError(`assert failed, expected a different nodeKind`, {
-            nodeId: node.id,
-            nodeKind: node.kind,
-            expectedNodeKinds,
-        });
-    }
 }

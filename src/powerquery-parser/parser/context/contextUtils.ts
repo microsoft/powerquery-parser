@@ -7,6 +7,19 @@ import { Ast, Token } from "../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
 import { Node, State } from "./context";
 
+export function assertIsNodeKind<T extends Ast.TNode>(
+    node: Node,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): void {
+    if (!isNodeKind(node, expectedNodeKinds)) {
+        throw new CommonError.InvariantError(`expected parse context node has a different than expected node kind`, {
+            nodeId: node.id,
+            nodeKind: node.kind,
+            expectedNodeKinds,
+        });
+    }
+}
+
 export function createState(): State {
     return {
         nodeIdMapCollection: {
@@ -32,6 +45,10 @@ export function copyState(state: State): State {
         maybeRoot,
         nodeIdMapCollection: NodeIdMapUtils.copy(state.nodeIdMapCollection),
     };
+}
+
+export function isNodeKind(node: Node, expectedNodeKinds: ReadonlyArray<Ast.NodeKind> | Ast.NodeKind): boolean {
+    return node.kind === expectedNodeKinds || expectedNodeKinds.includes(node.kind);
 }
 
 export function nextId(state: State): number {
