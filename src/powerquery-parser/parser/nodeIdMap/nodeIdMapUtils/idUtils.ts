@@ -144,7 +144,7 @@ function applyDelta(
                 nodeIdMapCollection.astNodeById.delete(oldId);
             }
         } else {
-            const mutableNode: TypeScriptUtils.StripReadonly<ParseContext.Node> = xorNode.node;
+            const mutableNode: TypeScriptUtils.StripReadonly<ParseContext.TNode> = xorNode.node;
             mutableNode.id = newId;
             nodeIdMapCollection.contextNodeById.set(newId, mutableNode);
             if (!delta.contextNodeById.has(oldId)) {

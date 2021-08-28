@@ -2,13 +2,13 @@
 // Licensed under the MIT license.
 
 import { XorNodeUtils } from "..";
-import { Assert, CommonError, MapUtils } from "../../../common";
-import { Ast } from "../../../language";
+import { Assert, MapUtils } from "../../../common";
+import { Ast, AstUtils } from "../../../language";
 import { ParseContext, ParseContextUtils } from "../../context";
 import { AstNodeById, Collection, ContextNodeById } from "../nodeIdMap";
-import { XorNode } from "../xorNode";
+import { TXorNode, XorNode } from "../xorNode";
 
-export function assertGetXor<T extends Ast.TNode>(nodeIdMapCollection: Collection, nodeId: number): XorNode<T> {
+export function assertGetXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
     return Assert.asDefined(maybeXor(nodeIdMapCollection, nodeId), undefined, { nodeId });
 }
 
@@ -17,27 +17,32 @@ export function assertGetXorChecked<T extends Ast.TNode>(
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> {
-    return Assert.asDefined(maybeXorChecked(nodeIdMapCollection, nodeId, expectedNodeKinds), undefined, { nodeId });
+    return Assert.asDefined(maybeXorChecked(nodeIdMapCollection, nodeId, expectedNodeKinds), undefined, {
+        nodeId,
+        expectedNodeKinds,
+    });
 }
 
-export function assertUnwrapAst<T extends Ast.TNode>(
-    astNodeById: AstNodeById,
-    nodeId: number,
-    maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
-): Ast.TNode {
+export function assertUnwrapAst(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
     const node: Ast.TNode = Assert.asDefined(
         MapUtils.assertGet(astNodeById, nodeId, "failed to find the given ast node", { nodeId }),
     );
 
-    if (maybeExpectedNodeKinds !== undefined) {
-        assertNodeKind(nodeId, node.kind, maybeExpectedNodeKinds);
-    }
-
     return node;
 }
 
-export function assertUnwrapContext(contextNodeById: ContextNodeById, nodeId: number): ParseContext.Node {
-    const node: ParseContext.Node = Assert.asDefined(
+export function assertUnwrapAstChecked<T extends Ast.TNode>(
+    astNodeById: AstNodeById,
+    nodeId: number,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): Ast.TNode {
+    const astNode: Ast.TNode = assertUnwrapAst(astNodeById, nodeId);
+    AstUtils.assertIsNodeKind(AstUtils.isNodeKind, astNode, expectedNodeKinds);
+    return astNode;
+}
+
+export function assertUnwrapContext(contextNodeById: ContextNodeById, nodeId: number): ParseContext.TNode {
+    const node: ParseContext.TNode = Assert.asDefined(
         MapUtils.assertGet(contextNodeById, nodeId, "failed to find the given context node", { nodeId }),
     );
 
@@ -48,19 +53,19 @@ export function assertUnwrapContextChecked<T extends Ast.TNode>(
     contextNodeById: ContextNodeById,
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): ParseContext.Node {
-    const contextNode: ParseContext.Node = assertUnwrapContext(contextNodeById, nodeId);
+): ParseContext.Node<T> {
+    const contextNode: ParseContext.TNode = assertUnwrapContext(contextNodeById, nodeId);
     ParseContextUtils.assertIsNodeKind(contextNode, expectedNodeKinds);
     return contextNode;
 }
 
-export function maybeXor<T extends Ast.TNode>(nodeIdMapCollection: Collection, nodeId: number): XorNode<T> | undefined {
+export function maybeXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
     const maybeAstNode: Ast.TNode | undefined = nodeIdMapCollection.astNodeById.get(nodeId);
     if (maybeAstNode !== undefined) {
-        return XorNodeUtils.createAstNode(maybeAstNode as T);
+        return XorNodeUtils.createAstNode(maybeAstNode);
     }
 
-    const maybeContextNode: ParseContext.Node | undefined = nodeIdMapCollection.contextNodeById.get(nodeId);
+    const maybeContextNode: ParseContext.TNode | undefined = nodeIdMapCollection.contextNodeById.get(nodeId);
     if (maybeContextNode !== undefined) {
         return XorNodeUtils.createContextNode(maybeContextNode);
     }
@@ -73,24 +78,6 @@ export function maybeXorChecked<T extends Ast.TNode>(
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> | undefined {
-    const maybeXorNode: XorNode<T> | undefined = maybeXor(nodeIdMapCollection, nodeId);
-    if (maybeXorNode === undefined) {
-        return undefined;
-    }
-
-    return XorNodeUtils.isNodeKind(maybeXorNode, expectedNodeKinds) ? maybeXorNode : undefined;
-}
-
-function assertNodeKind<T extends Ast.TNode>(
-    nodeId: number,
-    nodeKind: Ast.NodeKind,
-    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): void {
-    if (expectedNodeKinds !== undefined && nodeKind !== expectedNodeKinds && !expectedNodeKinds.includes(nodeKind)) {
-        throw new CommonError.InvariantError(`found the node but it was an invalid node kind`, {
-            nodeId,
-            nodeKind,
-            maybeExpectedNodeKinds: expectedNodeKinds,
-        });
-    }
+    const maybeXorNode: TXorNode | undefined = maybeXor(nodeIdMapCollection, nodeId);
+    return maybeXorNode && XorNodeUtils.isNodeKind(maybeXorNode, expectedNodeKinds) ? maybeXorNode : undefined;
 }

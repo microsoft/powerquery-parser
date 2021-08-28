@@ -9,8 +9,8 @@ import { TXorNode, XorNodeKind, XorNodeTokenRange } from "../xorNode";
 import { maybeRightMostLeaf } from "./leafSelectors";
 
 export function copy(nodeIdMapCollection: Collection): Collection {
-    const contextNodeById: Map<number, ParseContext.Node> = new Map(
-        [...nodeIdMapCollection.contextNodeById.entries()].map(([id, contextNode]: [number, ParseContext.Node]) => {
+    const contextNodeById: Map<number, ParseContext.TNode> = new Map(
+        [...nodeIdMapCollection.contextNodeById.entries()].map(([id, contextNode]: [number, ParseContext.TNode]) => {
             return [id, { ...contextNode }];
         }),
     );
@@ -77,7 +77,7 @@ export function xorNodeTokenRange(nodeIdMapCollection: Collection, xorNode: TXor
         }
 
         case XorNodeKind.Context: {
-            const contextNode: ParseContext.Node = xorNode.node;
+            const contextNode: ParseContext.TNode = xorNode.node;
             let tokenIndexEnd: number;
 
             const maybeRightMostChild: Ast.TNode | undefined = maybeRightMostLeaf(nodeIdMapCollection, xorNode.node.id);

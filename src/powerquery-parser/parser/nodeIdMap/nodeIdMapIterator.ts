@@ -193,7 +193,7 @@ export function iterFieldProjectionNames(
     for (const selector of iterFieldProjection(nodeIdMapCollection, fieldProjection)) {
         const maybeIdentifier:
             | XorNode<Ast.GeneralizedIdentifier>
-            | undefined = NodeIdMapUtils.maybeWrappedContentChecked(
+            | undefined = NodeIdMapUtils.maybeWrappedContentChecked<Ast.GeneralizedIdentifier>(
             nodeIdMapCollection,
             selector,
             Ast.NodeKind.GeneralizedIdentifier,
@@ -221,11 +221,9 @@ export function iterFunctionExpressionParameters(
         );
     }
 
-    const maybeParameterList:
-        | XorNode<Ast.TParameterList>
-        | undefined = NodeIdMapUtils.maybeNthChildChecked(nodeIdMapCollection, functionExpression.node.id, 0, [
-        Ast.NodeKind.ParameterList,
-    ]);
+    const maybeParameterList: XorNode<Ast.TParameterList> | undefined = NodeIdMapUtils.maybeNthChildChecked<
+        Ast.TParameterList
+    >(nodeIdMapCollection, functionExpression.node.id, 0, Ast.NodeKind.ParameterList);
     if (maybeParameterList === undefined) {
         return [];
     }
@@ -347,12 +345,9 @@ export function iterSection(
         });
     }
 
-    const maybeSectionMemberArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.maybeNthChildChecked(
-        nodeIdMapCollection,
-        section.node.id,
-        4,
-        Ast.NodeKind.ArrayWrapper,
-    );
+    const maybeSectionMemberArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.maybeNthChildChecked<
+        Ast.TArrayWrapper
+    >(nodeIdMapCollection, section.node.id, 4, Ast.NodeKind.ArrayWrapper);
     if (maybeSectionMemberArrayWrapper === undefined) {
         return [];
     }
@@ -362,7 +357,7 @@ export function iterSection(
     for (const sectionMember of assertIterChildrenXor(nodeIdMapCollection, sectionMemberArrayWrapper.node.id)) {
         const maybeKeyValuePair:
             | XorNode<Ast.IdentifierPairedExpression>
-            | undefined = NodeIdMapUtils.maybeNthChildChecked(
+            | undefined = NodeIdMapUtils.maybeNthChildChecked<Ast.IdentifierPairedExpression>(
             nodeIdMapCollection,
             sectionMember.node.id,
             2,

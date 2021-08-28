@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { XorNodeUtils } from "..";
-import { Assert } from "../../../common";
+import { Assert, CommonError } from "../../../common";
 import { Ast, AstUtils } from "../../../language";
 import { ParseContext, ParseContextUtils } from "../../context";
 import { ChildIdsById, Collection } from "../nodeIdMap";
@@ -22,11 +22,7 @@ export function assertGetChildren(childIdsById: ChildIdsById, parentId: number):
     return Assert.asDefined(childIdsById.get(parentId), `parentId doesn't have any children`, { parentId });
 }
 
-export function assertGetNthChild<T extends Ast.TNode>(
-    nodeIdMapCollection: Collection,
-    parentId: number,
-    attributeIndex: number,
-): XorNode<T> {
+export function assertGetNthChild(nodeIdMapCollection: Collection, parentId: number, attributeIndex: number): TXorNode {
     return Assert.asDefined(
         maybeNthChild(nodeIdMapCollection, parentId, attributeIndex),
         `parentId doesn't have a child at the given index`,
@@ -72,7 +68,7 @@ export function assertUnwrapNthChildAsContext(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
-): ParseContext.Node {
+): ParseContext.TNode {
     return Assert.asDefined(
         maybeUnwrapNthChildIfContext(nodeIdMapCollection, parentId, attributeIndex),
         `parentId doesn't have a context child at the given index`,
@@ -85,13 +81,20 @@ export function assertUnwrapNthChildAsContextChecked<T extends Ast.TNode>(
     parentId: number,
     attributeIndex: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): ParseContext.Node {
-    const parseContext: ParseContext.Node = assertUnwrapNthChildAsContext(
+): ParseContext.Node<T> {
+    const parseContext: ParseContext.TNode = assertUnwrapNthChildAsContext(
         nodeIdMapCollection,
         parentId,
         attributeIndex,
     );
-    ParseContextUtils.isNodeKind(parseContext, expectedNodeKinds);
+    if (!ParseContextUtils.isNodeKind(parseContext, expectedNodeKinds)) {
+        throw new CommonError.InvariantError("expected a different node kind", {
+            parentId,
+            expectedNodeKinds,
+            nodeId: parseContext.id,
+            nodeKind: parseContext.kind,
+        });
+    }
     return parseContext;
 }
 
@@ -99,14 +102,14 @@ export function maybeArrayWrapper(
     nodeIdMapCollection: Collection,
     wrapped: TXorNode,
 ): XorNode<Ast.TArrayWrapper> | undefined {
-    return maybeNthChildChecked(nodeIdMapCollection, wrapped.node.id, 1, Ast.NodeKind.ArrayWrapper);
+    return maybeNthChildChecked<Ast.TArrayWrapper>(nodeIdMapCollection, wrapped.node.id, 1, Ast.NodeKind.ArrayWrapper);
 }
 
-export function maybeNthChild<T extends Ast.TNode>(
+export function maybeNthChild(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
-): XorNode<T> | undefined {
+): TXorNode | undefined {
     // Grab the node's childIds.
     const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(parentId);
     if (maybeChildIds === undefined) {
@@ -116,7 +119,7 @@ export function maybeNthChild<T extends Ast.TNode>(
 
     // Iterate over the children and try to find one which matches attributeIndex.
     for (const childId of childIds) {
-        const xorNode: XorNode<T> = assertGetXor(nodeIdMapCollection, childId);
+        const xorNode: TXorNode = assertGetXor(nodeIdMapCollection, childId);
         if (xorNode.node.maybeAttributeIndex === attributeIndex) {
             return xorNode;
         }
@@ -131,7 +134,7 @@ export function maybeNthChildChecked<T extends Ast.TNode>(
     attributeIndex: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> | undefined {
-    const maybeXorNode: XorNode<T> | undefined = maybeNthChild(nodeIdMapCollection, parentId, attributeIndex);
+    const maybeXorNode: TXorNode | undefined = maybeNthChild(nodeIdMapCollection, parentId, attributeIndex);
     return maybeXorNode && XorNodeUtils.isNodeKind(maybeXorNode, expectedNodeKinds) ? maybeXorNode : undefined;
 }
 
@@ -158,7 +161,7 @@ export function maybeUnwrapNthChildIfContext(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
-): ParseContext.Node | undefined {
+): ParseContext.TNode | undefined {
     const maybeXorNode: TXorNode | undefined = maybeNthChild(nodeIdMapCollection, parentId, attributeIndex);
     return maybeXorNode && XorNodeUtils.isContextXor(maybeXorNode) ? maybeXorNode.node : undefined;
 }
@@ -168,8 +171,8 @@ export function maybeUnwrapNthChildIfContextChecked<T extends Ast.TNode>(
     parentId: number,
     attributeIndex: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): ParseContext.Node | undefined {
-    const maybeContextNode: ParseContext.Node | undefined = maybeUnwrapNthChildIfContext(
+): ParseContext.Node<T> | undefined {
+    const maybeContextNode: ParseContext.TNode | undefined = maybeUnwrapNthChildIfContext(
         nodeIdMapCollection,
         parentId,
         attributeIndex,
@@ -179,12 +182,14 @@ export function maybeUnwrapNthChildIfContextChecked<T extends Ast.TNode>(
         : undefined;
 }
 
-export function maybeUnwrapWrappedContentIfAst<T extends Ast.TWrapped, C extends T["content"]>(
+export function maybeUnwrapWrappedContentIfAst(
     nodeIdMapCollection: Collection,
     wrapped: TXorNode,
-): C | undefined {
-    const maybeXorNode: XorNode<C> | undefined = maybeWrappedContent(nodeIdMapCollection, wrapped);
-    return maybeXorNode && XorNodeUtils.isAstXor(maybeXorNode) ? maybeXorNode.node : undefined;
+): Ast.TWrapped | undefined {
+    const maybeXorNode: TXorNode | undefined = maybeWrappedContent(nodeIdMapCollection, wrapped);
+    return maybeXorNode && XorNodeUtils.isAstXor(maybeXorNode) && XorNodeUtils.isTWrapped(maybeXorNode)
+        ? maybeXorNode.node
+        : undefined;
 }
 
 export function maybeUnwrapWrappedContentIfAstChecked<T extends Ast.TWrapped, C extends T["content"]>(
@@ -196,18 +201,15 @@ export function maybeUnwrapWrappedContentIfAstChecked<T extends Ast.TWrapped, C 
     return maybeAstNode && AstUtils.isNodeKind<C>(maybeAstNode, expectedNodeKinds) ? maybeAstNode : undefined;
 }
 
-export function maybeWrappedContent<T extends Ast.TWrapped, C extends T["content"]>(
-    nodeIdMapCollection: Collection,
-    wrapped: TXorNode,
-): XorNode<C> | undefined {
+export function maybeWrappedContent(nodeIdMapCollection: Collection, wrapped: TXorNode): TXorNode | undefined {
     return maybeNthChild(nodeIdMapCollection, wrapped.node.id, 1);
 }
 
-export function maybeWrappedContentChecked<T extends Ast.TWrapped, C extends T["content"]>(
+export function maybeWrappedContentChecked<C extends Ast.TWrapped["content"]>(
     nodeIdMapCollection: Collection,
     wrapped: TXorNode,
     expectedNodeKinds: ReadonlyArray<C["kind"]> | C["kind"],
 ): XorNode<C> | undefined {
-    const maybeXorNode: XorNode<C> | undefined = maybeWrappedContent(nodeIdMapCollection, wrapped);
+    const maybeXorNode: TXorNode | undefined = maybeWrappedContent(nodeIdMapCollection, wrapped);
     return maybeXorNode && XorNodeUtils.isNodeKind(maybeXorNode, expectedNodeKinds) ? maybeXorNode : undefined;
 }

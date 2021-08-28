@@ -136,7 +136,7 @@ export function assertGetAllXorChildren<State extends ITraversalState<ResultType
         }
         case XorNodeKind.Context: {
             const result: TXorNode[] = [];
-            const contextNode: ParseContext.Node = xorNode.node;
+            const contextNode: ParseContext.TNode = xorNode.node;
             const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(
                 contextNode.id,
             );

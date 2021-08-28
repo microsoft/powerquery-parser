@@ -11,13 +11,15 @@ export const enum XorNodeKind {
 
 export type TXorNode = XorNode<Ast.TNode>;
 
-export type TAstXorNode = AstXorNode<Ast.TNode>;
+export type XorNode<T extends Ast.TNode> = AstXorNode<T> | ContextXorNode<T>;
 
-export type XorNode<T extends Ast.TNode> = AstXorNode<T> | ContextXorNode;
+export type TAstXorNode = AstXorNode<Ast.TNode>;
 
 export type AstXorNode<T extends Ast.TNode> = IXorNode<XorNodeKind.Ast, T>;
 
-export type ContextXorNode = IXorNode<XorNodeKind.Context, ParseContext.Node>;
+export type TContextXorNode = ContextXorNode<Ast.TNode>;
+
+export type ContextXorNode<T extends Ast.TNode> = IXorNode<XorNodeKind.Context, ParseContext.Node<T>>;
 
 export interface IXorNode<Kind extends XorNodeKind, T> {
     readonly kind: Kind;

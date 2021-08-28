@@ -163,9 +163,9 @@ function inspectAstParameter(node: Ast.TParameter): Type.FunctionParameter {
     };
 }
 
-function inspectContextParameter(
+function inspectContextParameter<T extends Ast.TNode>(
     nodeIdMapCollection: NodeIdMap.Collection,
-    parameter: ParseContext.Node,
+    parameter: ParseContext.Node<T>,
 ): Type.FunctionParameter | undefined {
     let isOptional: boolean;
     let isNullable: boolean;

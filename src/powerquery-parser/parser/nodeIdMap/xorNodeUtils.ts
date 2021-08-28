@@ -14,22 +14,22 @@ export function createAstNode<T extends Ast.TNode>(node: T): XorNode<T> {
     };
 }
 
-export function createContextNode(node: ParseContext.Node): ContextXorNode {
+export function createContextNode<T extends Ast.TNode>(node: ParseContext.Node<T>): ContextXorNode<T> {
     return {
         kind: XorNodeKind.Context,
         node,
     };
 }
 
-export function isTUnaryType(xorNode: TXorNode): boolean {
+export function isTUnaryType(xorNode: TXorNode): xorNode is XorNode<Ast.TUnaryExpression> {
     return xorNode.node.kind === Ast.NodeKind.UnaryExpression || isTTypeExpression(xorNode);
 }
 
-export function isTTypeExpression(xorNode: TXorNode): boolean {
+export function isTTypeExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TTypeExpression> {
     return xorNode.node.kind === Ast.NodeKind.TypePrimaryType || isTPrimaryExpression(xorNode);
 }
 
-export function isTPrimaryExpression(xorNode: TXorNode): boolean {
+export function isTPrimaryExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TPrimaryExpression> {
     switch (xorNode.node.kind) {
         case Ast.NodeKind.LiteralExpression:
         case Ast.NodeKind.ListExpression:
@@ -46,7 +46,7 @@ export function isTPrimaryExpression(xorNode: TXorNode): boolean {
     }
 }
 
-export function isTFieldAccessExpression(xorNode: TXorNode): boolean {
+export function isTFieldAccessExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TFieldAccessExpression> {
     return xorNode.node.kind === Ast.NodeKind.FieldSelector || xorNode.node.kind === Ast.NodeKind.FieldProjection;
 }
 
@@ -78,7 +78,7 @@ export function assertIsAstXorChecked<T extends Ast.TNode>(
     assertIsNodeKind(xorNode, expectedNodeKinds);
 }
 
-export function assertIsContextXor(xorNode: TXorNode): asserts xorNode is ContextXorNode {
+export function assertIsContextXor<T extends Ast.TNode>(xorNode: TXorNode): asserts xorNode is ContextXorNode<T> {
     Assert.isTrue(isContextXor(xorNode), "expected xorNode to hold an Context node", {
         xorNodeKind: xorNode.kind,
         xorNodeId: xorNode.node.id,
@@ -88,7 +88,7 @@ export function assertIsContextXor(xorNode: TXorNode): asserts xorNode is Contex
 export function assertIsContextXorChecked<T extends Ast.TNode>(
     xorNode: TXorNode,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): asserts xorNode is ContextXorNode {
+): asserts xorNode is ContextXorNode<T> {
     assertIsContextXor(xorNode);
     assertIsNodeKind(xorNode, expectedNodeKinds);
 }
@@ -122,15 +122,15 @@ export function assertUnwrapAstChecked<T extends Ast.TNode>(
     return xorNode.node;
 }
 
-export function assertUnwrapContext(xorNode: TXorNode): ParseContext.Node {
-    assertIsContextXor(xorNode);
+export function assertUnwrapContext<T extends Ast.TNode>(xorNode: TXorNode): ParseContext.Node<T> {
+    assertIsContextXor<T>(xorNode);
     return xorNode.node;
 }
 
 export function assertUnwrapContextChecked<T extends Ast.TNode>(
     xorNode: TXorNode,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): ParseContext.Node {
+): ParseContext.Node<T> {
     assertIsContextXorChecked(xorNode, expectedNodeKinds);
     return xorNode.node;
 }
@@ -146,14 +146,14 @@ export function isAstXorChecked<T extends Ast.TNode>(
     return isAstXor(xorNode) && AstUtils.isNodeKind(xorNode.node, expectedNodeKinds);
 }
 
-export function isContextXor(xorNode: TXorNode): xorNode is ContextXorNode {
-    return xorNode.kind !== XorNodeKind.Context;
+export function isContextXor<T extends Ast.TNode>(xorNode: TXorNode): xorNode is ContextXorNode<T> {
+    return xorNode.kind === XorNodeKind.Context;
 }
 
 export function isContextXorChecked<T extends Ast.TNode>(
     xorNode: TXorNode,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): xorNode is ContextXorNode {
+): xorNode is ContextXorNode<T> {
     return isContextXor(xorNode) && ParseContextUtils.isNodeKind(xorNode.node, expectedNodeKinds);
 }
 
@@ -165,6 +165,23 @@ export function isNodeKind<T extends Ast.TNode>(
         xorNode.node.kind === expectedNodeKinds ||
         (Array.isArray(expectedNodeKinds) && expectedNodeKinds.includes(xorNode.node.kind))
     );
+}
+
+export function isTWrapped(xorNode: TXorNode): xorNode is XorNode<Ast.TWrapped> {
+    return isNodeKind<Ast.TWrapped>(xorNode, [
+        Ast.NodeKind.FieldProjection,
+        Ast.NodeKind.FieldSelector,
+        Ast.NodeKind.FieldSpecificationList,
+        Ast.NodeKind.InvokeExpression,
+        Ast.NodeKind.ItemAccessExpression,
+        Ast.NodeKind.ListExpression,
+        Ast.NodeKind.ListLiteral,
+        Ast.NodeKind.ListType,
+        Ast.NodeKind.ParameterList,
+        Ast.NodeKind.ParenthesizedExpression,
+        Ast.NodeKind.RecordExpression,
+        Ast.NodeKind.RecordLiteral,
+    ]);
 }
 
 export function maybeIdentifierExpressionLiteral(xorNode: TXorNode): string | undefined {
