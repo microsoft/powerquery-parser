@@ -5,7 +5,7 @@ import { ParseContext } from "..";
 import { ArrayUtils, Assert } from "../../common";
 import { Ast, AstUtils } from "../../language";
 import { ParseContextUtils } from "../context";
-import { AstXorNode, ContextXorNode, TAstXorNode, TXorNode, XorNode, XorNodeKind } from "./xorNode";
+import { AstXorNode, ContextXorNode, TAstXorNode, TContextXorNode, TXorNode, XorNode, XorNodeKind } from "./xorNode";
 
 export function createAstNode<T extends Ast.TNode>(node: T): XorNode<T> {
     return {
@@ -50,6 +50,14 @@ export function isTFieldAccessExpression(xorNode: TXorNode): xorNode is XorNode<
     return xorNode.node.kind === Ast.NodeKind.FieldSelector || xorNode.node.kind === Ast.NodeKind.FieldProjection;
 }
 
+export function assertAsNodeKind<T extends Ast.TNode>(
+    xorNode: TXorNode,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): XorNode<T> {
+    assertIsNodeKind(xorNode, expectedNodeKinds);
+    return xorNode;
+}
+
 export function assertIsNodeKind<T extends Ast.TNode>(
     xorNode: TXorNode,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
@@ -78,7 +86,7 @@ export function assertIsAstXorChecked<T extends Ast.TNode>(
     assertIsNodeKind(xorNode, expectedNodeKinds);
 }
 
-export function assertIsContextXor<T extends Ast.TNode>(xorNode: TXorNode): asserts xorNode is ContextXorNode<T> {
+export function assertIsContextXor(xorNode: TXorNode): asserts xorNode is TContextXorNode {
     Assert.isTrue(isContextXor(xorNode), "expected xorNode to hold an Context node", {
         xorNodeKind: xorNode.kind,
         xorNodeId: xorNode.node.id,
@@ -122,8 +130,8 @@ export function assertUnwrapAstChecked<T extends Ast.TNode>(
     return xorNode.node;
 }
 
-export function assertUnwrapContext<T extends Ast.TNode>(xorNode: TXorNode): ParseContext.Node<T> {
-    assertIsContextXor<T>(xorNode);
+export function assertUnwrapContext(xorNode: TXorNode): ParseContext.TNode {
+    assertIsContextXor(xorNode);
     return xorNode.node;
 }
 
