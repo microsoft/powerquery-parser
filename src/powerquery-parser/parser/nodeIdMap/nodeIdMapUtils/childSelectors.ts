@@ -60,7 +60,7 @@ export function assertUnwrapNthChildAsAstChecked<T extends Ast.TNode>(
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): T {
     const astNode: Ast.TNode = assertUnwrapNthChildAsAst(nodeIdMapCollection, parentId, attributeIndex);
-    AstUtils.assertIsNodeKind(AstUtils.isNodeKind, astNode, expectedNodeKinds);
+    AstUtils.assertIsNodeKind(astNode, expectedNodeKinds);
     return astNode;
 }
 

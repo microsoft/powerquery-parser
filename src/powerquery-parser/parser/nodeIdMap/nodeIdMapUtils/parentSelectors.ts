@@ -23,7 +23,7 @@ export function assertUnwrapParentAstChecked<T extends Ast.TNode>(
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): T {
     const astNode: Ast.TNode = assertUnwrapParentAst(nodeIdMapCollection, nodeId);
-    AstUtils.assertIsNodeKind(AstUtils.isNodeKind, astNode, expectedNodeKinds);
+    AstUtils.assertIsNodeKind(astNode, expectedNodeKinds);
     return astNode;
 }
 
@@ -54,7 +54,7 @@ export function assertGetParentXorChecked<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): TXorNode {
+): XorNode<T> {
     const maybeXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, nodeId);
     XorNodeUtils.assertIsNodeKind(maybeXorNode, expectedNodeKinds);
     return maybeXorNode;

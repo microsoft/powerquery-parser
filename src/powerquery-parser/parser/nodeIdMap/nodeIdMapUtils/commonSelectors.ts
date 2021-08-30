@@ -35,9 +35,9 @@ export function assertUnwrapAstChecked<T extends Ast.TNode>(
     astNodeById: AstNodeById,
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): Ast.TNode {
+): T {
     const astNode: Ast.TNode = assertUnwrapAst(astNodeById, nodeId);
-    AstUtils.assertIsNodeKind(AstUtils.isNodeKind, astNode, expectedNodeKinds);
+    AstUtils.assertIsNodeKind(astNode, expectedNodeKinds);
     return astNode;
 }
 

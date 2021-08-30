@@ -68,6 +68,12 @@ export function assertIsNodeKind<T extends Ast.TNode>(
             actualNodeId: xorNode.node.id,
             expectedNodeKinds,
         });
+    } else {
+        Assert.isTrue(xorNode.node.kind === expectedNodeKinds, "xorNode.node.kind === expectedNodeKinds", {
+            nodeId: xorNode.node.id,
+            nodeKind: xorNode.node.kind,
+            expectedNodeKind: expectedNodeKinds,
+        });
     }
 }
 
@@ -125,9 +131,10 @@ export function assertUnwrapAst(xorNode: TXorNode): Ast.TNode {
 export function assertUnwrapAstChecked<T extends Ast.TNode>(
     xorNode: TXorNode,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): Ast.TNode {
-    assertIsAstXorChecked(xorNode, expectedNodeKinds);
-    return xorNode.node;
+): T {
+    const astNode: Ast.TNode = assertUnwrapAst(xorNode);
+    AstUtils.assertIsNodeKind(astNode, expectedNodeKinds);
+    return astNode;
 }
 
 export function assertUnwrapContext(xorNode: TXorNode): ParseContext.TNode {
