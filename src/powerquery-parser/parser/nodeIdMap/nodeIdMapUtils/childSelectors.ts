@@ -41,6 +41,16 @@ export function assertGetNthChildChecked<T extends Ast.TNode>(
     return xorNode;
 }
 
+export function assertUnwrapArrayWrapperAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TArrayWrapper {
+    const maybeXorNode: XorNode<Ast.TArrayWrapper> | undefined = Assert.asDefined(
+        maybeUnwrapArrayWrapper(nodeIdMapCollection, nodeId),
+        "failure in assertUnwrapArrayWrapperAst",
+        { nodeId },
+    );
+    XorNodeUtils.assertIsAstXor(maybeXorNode);
+    return maybeXorNode.node;
+}
+
 export function assertUnwrapNthChildAsAst(
     nodeIdMapCollection: Collection,
     parentId: number,
@@ -98,13 +108,6 @@ export function assertUnwrapNthChildAsContextChecked<T extends Ast.TNode>(
     return parseContext;
 }
 
-export function maybeArrayWrapper(
-    nodeIdMapCollection: Collection,
-    wrapped: TXorNode,
-): XorNode<Ast.TArrayWrapper> | undefined {
-    return maybeNthChildChecked<Ast.TArrayWrapper>(nodeIdMapCollection, wrapped.node.id, 1, Ast.NodeKind.ArrayWrapper);
-}
-
 export function maybeNthChild(
     nodeIdMapCollection: Collection,
     parentId: number,
@@ -136,6 +139,13 @@ export function maybeNthChildChecked<T extends Ast.TNode>(
 ): XorNode<T> | undefined {
     const maybeXorNode: TXorNode | undefined = maybeNthChild(nodeIdMapCollection, parentId, attributeIndex);
     return maybeXorNode && XorNodeUtils.isNodeKind(maybeXorNode, expectedNodeKinds) ? maybeXorNode : undefined;
+}
+
+export function maybeUnwrapArrayWrapper(
+    nodeIdMapCollection: Collection,
+    nodeId: number,
+): XorNode<Ast.TArrayWrapper> | undefined {
+    return maybeNthChildChecked<Ast.TArrayWrapper>(nodeIdMapCollection, nodeId, 1, Ast.NodeKind.ArrayWrapper);
 }
 
 export function maybeUnwrapNthChildIfAst(
@@ -182,34 +192,31 @@ export function maybeUnwrapNthChildIfContextChecked<T extends Ast.TNode>(
         : undefined;
 }
 
-export function maybeUnwrapWrappedContentIfAst(
-    nodeIdMapCollection: Collection,
-    wrapped: TXorNode,
-): Ast.TWrapped | undefined {
-    const maybeXorNode: TXorNode | undefined = maybeWrappedContent(nodeIdMapCollection, wrapped);
+export function maybeUnwrapContentIfAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TWrapped | undefined {
+    const maybeXorNode: TXorNode | undefined = maybeUnwrapContent(nodeIdMapCollection, nodeId);
     return maybeXorNode && XorNodeUtils.isAstXor(maybeXorNode) && XorNodeUtils.isTWrapped(maybeXorNode)
         ? maybeXorNode.node
         : undefined;
 }
 
-export function maybeUnwrapWrappedContentIfAstChecked<T extends Ast.TWrapped, C extends T["content"]>(
+export function maybeUnwrapContentIfAstChecked<T extends Ast.TWrapped, C extends T["content"]>(
     nodeIdMapCollection: Collection,
-    wrapped: TXorNode,
+    nodeId: number,
     expectedNodeKinds: ReadonlyArray<C["kind"]> | C["kind"],
 ): C | undefined {
-    const maybeAstNode: Ast.TNode | undefined = maybeUnwrapWrappedContentIfAst(nodeIdMapCollection, wrapped);
+    const maybeAstNode: Ast.TNode | undefined = maybeUnwrapContentIfAst(nodeIdMapCollection, nodeId);
     return maybeAstNode && AstUtils.isNodeKind<C>(maybeAstNode, expectedNodeKinds) ? maybeAstNode : undefined;
 }
 
-export function maybeWrappedContent(nodeIdMapCollection: Collection, wrapped: TXorNode): TXorNode | undefined {
-    return maybeNthChild(nodeIdMapCollection, wrapped.node.id, 1);
+export function maybeUnwrapContent(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
+    return maybeNthChild(nodeIdMapCollection, nodeId, 1);
 }
 
-export function maybeWrappedContentChecked<C extends Ast.TWrapped["content"]>(
+export function maybeUnwrapContentChecked<C extends Ast.TWrapped["content"]>(
     nodeIdMapCollection: Collection,
-    wrapped: TXorNode,
+    nodeId: number,
     expectedNodeKinds: ReadonlyArray<C["kind"]> | C["kind"],
 ): XorNode<C> | undefined {
-    const maybeXorNode: TXorNode | undefined = maybeWrappedContent(nodeIdMapCollection, wrapped);
+    const maybeXorNode: TXorNode | undefined = maybeUnwrapContent(nodeIdMapCollection, nodeId);
     return maybeXorNode && XorNodeUtils.isNodeKind(maybeXorNode, expectedNodeKinds) ? maybeXorNode : undefined;
 }
