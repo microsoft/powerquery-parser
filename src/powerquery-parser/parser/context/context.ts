@@ -27,14 +27,14 @@ import { Ast, Token } from "../../language";
 
 export interface State {
     readonly nodeIdMapCollection: NodeIdMap.Collection;
-    maybeRoot: Node | undefined;
+    maybeRoot: Node<Ast.TNode> | undefined;
     idCounter: number;
     leafIds: Set<number>;
 }
 
-export interface Node {
+export interface Node<T extends Ast.TNode> {
     readonly id: number;
-    readonly kind: Ast.NodeKind;
+    readonly kind: T["kind"];
     readonly tokenIndexStart: number;
     readonly maybeTokenStart: Token.Token | undefined;
     // Incremented for each child context created with the Node as its parent,
@@ -43,3 +43,5 @@ export interface Node {
     maybeAttributeIndex: number | undefined;
     isClosed: boolean;
 }
+
+export type TNode = Node<Ast.TNode>;

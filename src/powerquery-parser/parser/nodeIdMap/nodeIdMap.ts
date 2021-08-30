@@ -6,7 +6,7 @@ import { Ast } from "../../language";
 
 export type AstNodeById = NumberMap<Ast.TNode>;
 export type ChildIdsById = NumberMap<ReadonlyArray<number>>;
-export type ContextNodeById = NumberMap<ParseContext.Node>;
+export type ContextNodeById = NumberMap<ParseContext.TNode>;
 export type IdsByNodeKind = Map<Ast.NodeKind, Set<number>>;
 export type ParentIdById = NumberMap<number>;
 

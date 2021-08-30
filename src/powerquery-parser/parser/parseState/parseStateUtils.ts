@@ -21,7 +21,7 @@ export function createState(lexerSnapshot: LexerSnapshot, maybeOverrides: Partia
             ? Math.max(...contextState.nodeIdMapCollection.contextNodeById.keys())
             : undefined;
 
-    const maybeCurrentContextNode: ParseContext.Node | undefined =
+    const maybeCurrentContextNode: ParseContext.TNode | undefined =
         maybeCurrentContextNodeId !== undefined
             ? MapUtils.assertGet(contextState.nodeIdMapCollection.contextNodeById, maybeCurrentContextNodeId)
             : undefined;
@@ -60,8 +60,8 @@ export function copyState(state: ParseState): ParseState {
     };
 }
 
-export function startContext(state: ParseState, nodeKind: Ast.NodeKind): void {
-    const newContextNode: ParseContext.Node = ParseContextUtils.startContext(
+export function startContext<T extends Ast.TNode>(state: ParseState, nodeKind: T["kind"]): void {
+    const newContextNode: ParseContext.Node<T> = ParseContextUtils.startContext(
         state.contextState,
         nodeKind,
         state.tokenIndex,
@@ -71,13 +71,13 @@ export function startContext(state: ParseState, nodeKind: Ast.NodeKind): void {
     state.maybeCurrentContextNode = newContextNode;
 }
 
-export function endContext(state: ParseState, astNode: Ast.TNode): void {
-    const contextNode: ParseContext.Node = Assert.asDefined(
+export function endContext<T extends Ast.TNode>(state: ParseState, astNode: T): void {
+    const contextNode: ParseContext.TNode = Assert.asDefined(
         state.maybeCurrentContextNode,
         `can't end a context if one doesn't exist`,
     );
 
-    const maybeParentOfContextNode: ParseContext.Node | undefined = ParseContextUtils.endContext(
+    const maybeParentOfContextNode: ParseContext.TNode | undefined = ParseContextUtils.endContext(
         state.contextState,
         contextNode,
         astNode,
@@ -203,7 +203,7 @@ export function isRecursivePrimaryExpressionNext(
 // -----------------------------
 
 export function assertGetContextNodeMetadata(state: ParseState): ContextNodeMetadata {
-    const currentContextNode: ParseContext.Node = Assert.asDefined(state.maybeCurrentContextNode);
+    const currentContextNode: ParseContext.TNode = Assert.asDefined(state.maybeCurrentContextNode);
     const tokenStart: Token.Token = Assert.asDefined(currentContextNode.maybeTokenStart);
 
     // inclusive token index

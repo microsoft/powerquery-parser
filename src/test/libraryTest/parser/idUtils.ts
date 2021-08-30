@@ -180,7 +180,7 @@ function assertTraverseMatchesState(traverseState: TraverseState, nodeIdMapColle
 }
 
 function traverseVisitNode(state: TraverseState, xorNode: TXorNode): void {
-    if (XorNodeUtils.isAst(xorNode)) {
+    if (XorNodeUtils.isAstXor(xorNode)) {
         state.astIds.push(xorNode.node.id);
 
         if (xorNode.node.isLeaf) {

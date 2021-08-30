@@ -5,9 +5,21 @@ import { NodeIdMap, ParseContext } from "..";
 import { ArrayUtils, Assert, CommonError, MapUtils, SetUtils, TypeScriptUtils } from "../../common";
 import { Ast, Token } from "../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
-import { Node, State } from "./context";
 
-export function createState(): State {
+export function assertIsNodeKind<T extends Ast.TNode>(
+    node: ParseContext.TNode,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): asserts node is ParseContext.Node<T> {
+    if (!isNodeKind(node, expectedNodeKinds)) {
+        throw new CommonError.InvariantError(`expected parse context node has a different than expected node kind`, {
+            nodeId: node.id,
+            nodeKind: node.kind,
+            expectedNodeKinds,
+        });
+    }
+}
+
+export function createState(): ParseContext.State {
     return {
         nodeIdMapCollection: {
             astNodeById: new Map(),
@@ -24,8 +36,9 @@ export function createState(): State {
     };
 }
 
-export function copyState(state: State): State {
-    const maybeRoot: Node | undefined = state.maybeRoot !== undefined ? { ...state.maybeRoot } : undefined;
+export function copyState(state: ParseContext.State): ParseContext.State {
+    const maybeRoot: ParseContext.TNode | undefined =
+        state.maybeRoot !== undefined ? { ...state.maybeRoot } : undefined;
 
     return {
         ...state,
@@ -34,24 +47,31 @@ export function copyState(state: State): State {
     };
 }
 
-export function nextId(state: State): number {
+export function isNodeKind<T extends Ast.TNode>(
+    node: ParseContext.TNode,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): node is ParseContext.Node<T> {
+    return node.kind === expectedNodeKinds || expectedNodeKinds.includes(node.kind);
+}
+
+export function nextId(state: ParseContext.State): number {
     state.idCounter += 1;
     return state.idCounter;
 }
 
-export function nextAttributeIndex(parentNode: Node): number {
+export function nextAttributeIndex(parentNode: ParseContext.TNode): number {
     const result: number = parentNode.attributeCounter;
     parentNode.attributeCounter += 1;
     return result;
 }
 
-export function startContext(
-    state: State,
+export function startContext<T extends Ast.TNode>(
+    state: ParseContext.State,
     nodeKind: Ast.NodeKind,
     tokenIndexStart: number,
     maybeTokenStart: Token.Token | undefined,
-    maybeParentNode: Node | undefined,
-): Node {
+    maybeParentNode: ParseContext.TNode | undefined,
+): ParseContext.Node<T> {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     let maybeAttributeIndex: number | undefined;
 
@@ -60,7 +80,7 @@ export function startContext(
     // If a parent context Node exists, update the parent/child mapping attributes and attributeCounter.
     if (maybeParentNode) {
         const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
-        const parentNode: Node = maybeParentNode;
+        const parentNode: ParseContext.TNode = maybeParentNode;
         const parentId: number = parentNode.id;
 
         maybeAttributeIndex = nextAttributeIndex(parentNode);
@@ -75,7 +95,7 @@ export function startContext(
         }
     }
 
-    const contextNode: Node = {
+    const contextNode: ParseContext.Node<T> = {
         id: nodeId,
         kind: nodeKind,
         tokenIndexStart,
@@ -101,7 +121,11 @@ export function startContext(
 }
 
 // Returns the Node's parent context (if one exists).
-export function endContext(state: State, contextNode: Node, astNode: Ast.TNode): Node | undefined {
+export function endContext<T extends Ast.TNode>(
+    state: ParseContext.State,
+    contextNode: ParseContext.Node<T>,
+    astNode: T,
+): ParseContext.TNode | undefined {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
     if (state.maybeRoot?.id === astNode.id) {
@@ -125,7 +149,7 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
 
     // Ending a context should return the context's parent node (if one exists).
     const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(contextNode.id);
-    const maybeParentNode: Node | undefined =
+    const maybeParentNode: ParseContext.TNode | undefined =
         maybeParentId !== undefined ? nodeIdMapCollection.contextNodeById.get(maybeParentId) : undefined;
 
     // Move nodeId from contextNodeMap to astNodeMap.
@@ -151,7 +175,7 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
     return maybeParentNode;
 }
 
-export function deleteAst(state: State, nodeId: number, parentWillBeDeleted: boolean): void {
+export function deleteAst(state: ParseContext.State, nodeId: number, parentWillBeDeleted: boolean): void {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
@@ -211,7 +235,7 @@ export function deleteAst(state: State, nodeId: number, parentWillBeDeleted: boo
     parentIdById.delete(nodeId);
 }
 
-export function deleteContext(state: State, nodeId: number): Node | undefined {
+export function deleteContext(state: ParseContext.State, nodeId: number): ParseContext.TNode | undefined {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
@@ -219,13 +243,13 @@ export function deleteContext(state: State, nodeId: number): Node | undefined {
     const leafIds: Set<number> = nodeIdMapCollection.leafIds;
     const parentIdById: NodeIdMap.ParentIdById = nodeIdMapCollection.parentIdById;
 
-    const maybeContextNode: Node | undefined = contextNodeById.get(nodeId);
+    const maybeContextNode: ParseContext.TNode | undefined = contextNodeById.get(nodeId);
     if (maybeContextNode === undefined) {
         throw new CommonError.InvariantError(`failed to deleteContext as the given nodeId isn't a valid context node`, {
             nodeId,
         });
     }
-    const contextNode: Node = maybeContextNode;
+    const contextNode: ParseContext.TNode = maybeContextNode;
 
     const maybeParentId: number | undefined = parentIdById.get(nodeId);
     const maybeChildIds: ReadonlyArray<number> | undefined = childIdsById.get(nodeId);
@@ -240,9 +264,9 @@ export function deleteContext(state: State, nodeId: number): Node | undefined {
         // Promote the child to the root if it's a Context node.
         if (maybeParentId === undefined) {
             parentIdById.delete(childId);
-            const maybeChildContext: Node | undefined = contextNodeById.get(childId);
+            const maybeChildContext: ParseContext.TNode | undefined = contextNodeById.get(childId);
             if (maybeChildContext) {
-                const childContext: Node = maybeChildContext;
+                const childContext: ParseContext.TNode = maybeChildContext;
                 state.maybeRoot = childContext;
             }
         }
@@ -255,7 +279,7 @@ export function deleteContext(state: State, nodeId: number): Node | undefined {
 
         // The child Node inherits the attributeIndex.
         const childXorNode: TXorNode = NodeIdMapUtils.assertGetXor(state.nodeIdMapCollection, childId);
-        const mutableChildXorNode: TypeScriptUtils.StripReadonly<Ast.TNode | Node> = childXorNode.node;
+        const mutableChildXorNode: TypeScriptUtils.StripReadonly<Ast.TNode | ParseContext.TNode> = childXorNode.node;
         mutableChildXorNode.maybeAttributeIndex = contextNode.maybeAttributeIndex;
     }
     // Is a leaf node, not root node.
@@ -275,7 +299,7 @@ export function deleteContext(state: State, nodeId: number): Node | undefined {
     leafIds.delete(nodeId);
 
     // Return the node's parent if it exits
-    return maybeParentId !== undefined ? NodeIdMapUtils.assertGetContext(contextNodeById, maybeParentId) : undefined;
+    return maybeParentId !== undefined ? NodeIdMapUtils.assertUnwrapContext(contextNodeById, maybeParentId) : undefined;
 }
 
 function deleteFromKindMap(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): void {
@@ -343,7 +367,7 @@ function removeOrReplaceChildId(
         childIdsById.delete(parentId);
     }
 
-    const maybeParent: ParseContext.Node | undefined = nodeIdMapCollection.contextNodeById.get(parentId);
+    const maybeParent: ParseContext.TNode | undefined = nodeIdMapCollection.contextNodeById.get(parentId);
     if (maybeParent !== undefined && maybeReplacementId === undefined) {
         maybeParent.attributeCounter -= 1;
     }
