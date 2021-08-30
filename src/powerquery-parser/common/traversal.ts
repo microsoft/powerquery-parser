@@ -117,7 +117,7 @@ export function assertGetAllAstChildren<State extends ITraversalState<ResultType
 
     if (maybeChildIds) {
         const childIds: ReadonlyArray<number> = maybeChildIds;
-        return childIds.map(nodeId => NodeIdMapUtils.assertUnwrapAst(nodeIdMapCollection.astNodeById, nodeId));
+        return childIds.map(nodeId => NodeIdMapUtils.assertUnboxAst(nodeIdMapCollection.astNodeById, nodeId));
     } else {
         return [];
     }
@@ -132,7 +132,7 @@ export function assertGetAllXorChildren<State extends ITraversalState<ResultType
     switch (xorNode.kind) {
         case XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
-            return assertGetAllAstChildren(_state, astNode, nodeIdMapCollection).map(XorNodeUtils.createAstNode);
+            return assertGetAllAstChildren(_state, astNode, nodeIdMapCollection).map(XorNodeUtils.boxAst);
         }
         case XorNodeKind.Context: {
             const result: TXorNode[] = [];

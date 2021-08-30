@@ -7,9 +7,9 @@ import { Ast, AstUtils } from "../../../language";
 import { ParseContext, ParseContextUtils } from "../../context";
 import { Collection } from "../nodeIdMap";
 import { TXorNode, XorNode } from "../xorNode";
-import { createAstNode, createContextNode } from "../xorNodeUtils";
+import { boxAst, boxContext } from "../xorNodeUtils";
 
-export function assertUnwrapParentAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
+export function assertUnboxParentAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
     return Assert.asDefined(
         maybeParentAst(nodeIdMapCollection, nodeId),
         "couldn't find the expected parent Ast for nodeId",
@@ -17,17 +17,17 @@ export function assertUnwrapParentAst(nodeIdMapCollection: Collection, nodeId: n
     );
 }
 
-export function assertUnwrapParentAstChecked<T extends Ast.TNode>(
+export function assertUnboxParentAstChecked<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): T {
-    const astNode: Ast.TNode = assertUnwrapParentAst(nodeIdMapCollection, nodeId);
+    const astNode: Ast.TNode = assertUnboxParentAst(nodeIdMapCollection, nodeId);
     AstUtils.assertIsNodeKind(astNode, expectedNodeKinds);
     return astNode;
 }
 
-export function assertUnwrapParentContext(nodeIdMapCollection: Collection, nodeId: number): ParseContext.TNode {
+export function assertUnboxParentContext(nodeIdMapCollection: Collection, nodeId: number): ParseContext.TNode {
     return Assert.asDefined(
         maybeParentContext(nodeIdMapCollection, nodeId),
         "couldn't find the expected parent context for nodeId",
@@ -35,12 +35,12 @@ export function assertUnwrapParentContext(nodeIdMapCollection: Collection, nodeI
     );
 }
 
-export function assertUnwrapParentContextChecked<T extends Ast.TNode>(
+export function assertUnboxParentContextChecked<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): ParseContext.Node<T> {
-    const contextNode: ParseContext.TNode = assertUnwrapParentContext(nodeIdMapCollection, nodeId);
+    const contextNode: ParseContext.TNode = assertUnboxParentContext(nodeIdMapCollection, nodeId);
     ParseContextUtils.assertIsNodeKind(contextNode, expectedNodeKinds);
     return contextNode;
 }
@@ -94,12 +94,12 @@ export function maybeParentContextChecked<T extends Ast.TNode>(
 export function maybeParentXor(nodeIdMapCollection: Collection, childId: number): TXorNode | undefined {
     const maybeAstNode: Ast.TNode | undefined = maybeParentAst(nodeIdMapCollection, childId);
     if (maybeAstNode !== undefined) {
-        return createAstNode(maybeAstNode);
+        return boxAst(maybeAstNode);
     }
 
     const maybeContext: ParseContext.TNode | undefined = maybeParentContext(nodeIdMapCollection, childId);
     if (maybeContext !== undefined) {
-        return createContextNode(maybeContext);
+        return boxContext(maybeContext);
     }
 
     return undefined;

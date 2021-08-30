@@ -36,12 +36,12 @@ export function readAmbiguous<T extends Ast.TNode>(
 
         try {
             maybeNode = parseFn(variantState, parser);
-            variantResult = ResultUtils.createOk(maybeNode);
+            variantResult = ResultUtils.boxOk(maybeNode);
         } catch (err) {
             if (!ParseError.isTInnerParseError(err)) {
                 throw err;
             }
-            variantResult = ResultUtils.createError(new ParseError.ParseError(err, variantState));
+            variantResult = ResultUtils.boxError(new ParseError.ParseError(err, variantState));
         }
 
         const candiate: AmbiguousParse<T> = {
@@ -306,7 +306,7 @@ function readParenthesizedExpressionOrBinOpExpression(
 ): Ast.ParenthesizedExpression | Ast.TLogicalExpression {
     const node: Ast.TNode = parser.readLogicalExpression(state, parser);
 
-    const leftMostNode: Ast.TNode = NodeIdMapUtils.assertUnwrapLeftMostLeaf(
+    const leftMostNode: Ast.TNode = NodeIdMapUtils.assertUnboxLeftMostLeaf(
         state.contextState.nodeIdMapCollection,
         node.id,
     );

@@ -65,12 +65,12 @@ export function isError<T, E>(result: Result<T, E>): asserts result is ErrorResu
     }
 }
 
-export function unwrapOk<T, E>(result: Result<T, E>): T {
+export function unboxOk<T, E>(result: Result<T, E>): T {
     isOk(result);
     return result.value;
 }
 
-export function unwrapError<T, E>(result: Result<T, E>): E {
+export function unboxError<T, E>(result: Result<T, E>): E {
     isError(result);
     return result.error;
 }

@@ -63,7 +63,7 @@ export class LexerSnapshot {
 
 export function trySnapshot(state: Lexer.State): TriedLexerSnapshot {
     try {
-        return ResultUtils.createOk(createSnapshot(state));
+        return ResultUtils.boxOk(createSnapshot(state));
     } catch (e) {
         let error: LexError.TLexError;
         if (LexError.isTInnerLexError(e)) {
@@ -71,7 +71,7 @@ export function trySnapshot(state: Lexer.State): TriedLexerSnapshot {
         } else {
             error = CommonError.ensureCommonError(state.locale, e);
         }
-        return ResultUtils.createError(error);
+        return ResultUtils.boxError(error);
     }
 }
 

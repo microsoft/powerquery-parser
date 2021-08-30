@@ -299,7 +299,7 @@ export function deleteContext(state: ParseContext.State, nodeId: number): ParseC
     leafIds.delete(nodeId);
 
     // Return the node's parent if it exits
-    return maybeParentId !== undefined ? NodeIdMapUtils.assertUnwrapContext(contextNodeById, maybeParentId) : undefined;
+    return maybeParentId !== undefined ? NodeIdMapUtils.assertUnboxContext(contextNodeById, maybeParentId) : undefined;
 }
 
 function deleteFromKindMap(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): void {

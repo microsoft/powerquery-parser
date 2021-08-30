@@ -54,10 +54,10 @@ function expectLinksMatch(triedLexParse: Task.TriedLexParseTask, expected: Abrid
 
     if (TaskUtils.isParseStageOk(triedLexParse)) {
         nodeIdMapCollection = triedLexParse.nodeIdMapCollection;
-        xorNode = XorNodeUtils.createAstNode(triedLexParse.ast);
+        xorNode = XorNodeUtils.boxAst(triedLexParse.ast);
     } else if (TaskUtils.isParseStageParseError(triedLexParse)) {
         nodeIdMapCollection = triedLexParse.nodeIdMapCollection;
-        xorNode = XorNodeUtils.createContextNode(Assert.asDefined(triedLexParse.error.state.contextState.maybeRoot));
+        xorNode = XorNodeUtils.boxContext(Assert.asDefined(triedLexParse.error.state.contextState.maybeRoot));
     } else {
         throw new Error(`expected TriedLexParse to be Ok`);
     }

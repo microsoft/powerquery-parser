@@ -1504,15 +1504,15 @@ function tryReadPrimaryType(state: ParseState, parser: Parser): TriedReadPrimary
         ParseStateUtils.isNextTokenKind(state, Token.TokenKind.LeftParenthesis);
 
     if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.LeftBracket)) {
-        return ResultUtils.createOk(parser.readRecordType(state, parser));
+        return ResultUtils.boxOk(parser.readRecordType(state, parser));
     } else if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.LeftBrace)) {
-        return ResultUtils.createOk(parser.readListType(state, parser));
+        return ResultUtils.boxOk(parser.readListType(state, parser));
     } else if (isTableTypeNext) {
-        return ResultUtils.createOk(parser.readTableType(state, parser));
+        return ResultUtils.boxOk(parser.readTableType(state, parser));
     } else if (isFunctionTypeNext) {
-        return ResultUtils.createOk(parser.readFunctionType(state, parser));
+        return ResultUtils.boxOk(parser.readFunctionType(state, parser));
     } else if (ParseStateUtils.isOnConstantKind(state, Constant.LanguageConstantKind.Nullable)) {
-        return ResultUtils.createOk(parser.readNullableType(state, parser));
+        return ResultUtils.boxOk(parser.readNullableType(state, parser));
     } else {
         const checkpoint: ParseStateCheckpoint = parser.createCheckpoint(state);
         const triedReadPrimitiveType: TriedReadPrimaryType = tryReadPrimitiveType(state, parser);
@@ -1720,7 +1720,7 @@ function tryReadPrimitiveType(state: ParseState, parser: Parser): TriedReadPrimi
     );
     if (maybeErr) {
         const error: ParseError.ExpectedAnyTokenKindError = maybeErr;
-        return ResultUtils.createError(error);
+        return ResultUtils.boxError(error);
     }
 
     let primitiveTypeKind: Constant.PrimitiveTypeConstantKind;
@@ -1752,7 +1752,7 @@ function tryReadPrimitiveType(state: ParseState, parser: Parser): TriedReadPrimi
             default:
                 const token: Token.Token = ParseStateUtils.assertGetTokenAt(state, state.tokenIndex);
                 parser.restoreCheckpoint(state, checkpoint);
-                return ResultUtils.createError(
+                return ResultUtils.boxError(
                     new ParseError.InvalidPrimitiveTypeError(
                         state.locale,
                         token,
@@ -1769,7 +1769,7 @@ function tryReadPrimitiveType(state: ParseState, parser: Parser): TriedReadPrimi
     } else {
         const details: {} = { tokenKind: state.maybeCurrentTokenKind };
         parser.restoreCheckpoint(state, checkpoint);
-        return ResultUtils.createError(
+        return ResultUtils.boxError(
             new CommonError.InvariantError(`unknown currentTokenKind, not found in [${expectedTokenKinds}]`, details),
         );
     }
@@ -1781,7 +1781,7 @@ function tryReadPrimitiveType(state: ParseState, parser: Parser): TriedReadPrimi
         primitiveTypeKind,
     };
     ParseStateUtils.endContext(state, astNode);
-    return ResultUtils.createOk(astNode);
+    return ResultUtils.boxOk(astNode);
 }
 
 // -------------------------------------

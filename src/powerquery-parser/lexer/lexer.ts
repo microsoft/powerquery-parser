@@ -294,7 +294,7 @@ function ensureCommonOrLexerResult<T>(
     functionToWrap: () => T,
 ): Result<T, CommonError.CommonError | LexError.LexError> {
     try {
-        return ResultUtils.createOk(functionToWrap());
+        return ResultUtils.boxOk(functionToWrap());
     } catch (err) {
         let convertedError: CommonError.CommonError | LexError.LexError;
         if (LexError.isTInnerLexError(err)) {
@@ -302,7 +302,7 @@ function ensureCommonOrLexerResult<T>(
         } else {
             convertedError = CommonError.ensureCommonError(locale, err);
         }
-        return ResultUtils.createError(convertedError);
+        return ResultUtils.boxError(convertedError);
     }
 }
 
