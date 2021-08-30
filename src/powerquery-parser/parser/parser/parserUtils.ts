@@ -26,13 +26,13 @@ export function tryParse(parseSettings: ParseSettings, lexerSnapshot: LexerSnaps
     try {
         const root: Ast.TNode = maybeParserEntryPointFn(parseState, parseSettings.parser);
         ParseStateUtils.assertIsDoneParsing(parseState);
-        return ResultUtils.createOk({
+        return ResultUtils.boxOk({
             lexerSnapshot,
             root,
             state: parseState,
         });
     } catch (error) {
-        return ResultUtils.createError(ensureParseError(parseState, error, parseSettings.locale));
+        return ResultUtils.boxError(ensureParseError(parseState, error, parseSettings.locale));
     }
 }
 
@@ -46,7 +46,7 @@ export function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: Le
     try {
         root = parseSettings.parser.readExpression(expressionDocumentState, parseSettings.parser);
         ParseStateUtils.assertIsDoneParsing(expressionDocumentState);
-        return ResultUtils.createOk({
+        return ResultUtils.boxOk({
             lexerSnapshot,
             root,
             state: expressionDocumentState,
@@ -59,7 +59,7 @@ export function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: Le
         try {
             root = parseSettings.parser.readSectionDocument(sectionDocumentState, parseSettings.parser);
             ParseStateUtils.assertIsDoneParsing(sectionDocumentState);
-            return ResultUtils.createOk({
+            return ResultUtils.boxOk({
                 lexerSnapshot,
                 root,
                 state: sectionDocumentState,
@@ -76,9 +76,7 @@ export function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: Le
                 betterParsedError = sectionDocumentError;
             }
 
-            return ResultUtils.createError(
-                ensureParseError(betterParsedState, betterParsedError, parseSettings.locale),
-            );
+            return ResultUtils.boxError(ensureParseError(betterParsedState, betterParsedError, parseSettings.locale));
         }
     }
 }
@@ -140,7 +138,7 @@ export function restoreCheckpoint(state: ParseState, checkpoint: ParseStateCheck
     }
 
     if (checkpoint.maybeContextNodeId) {
-        state.maybeCurrentContextNode = NodeIdMapUtils.assertUnwrapContext(
+        state.maybeCurrentContextNode = NodeIdMapUtils.assertUnboxContext(
             state.contextState.nodeIdMapCollection.contextNodeById,
             checkpoint.maybeContextNodeId,
         );

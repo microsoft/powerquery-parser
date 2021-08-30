@@ -23,7 +23,7 @@ export function assertGetXorChecked<T extends Ast.TNode>(
     });
 }
 
-export function assertUnwrapAst(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
+export function assertUnboxAst(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
     const node: Ast.TNode = Assert.asDefined(
         MapUtils.assertGet(astNodeById, nodeId, "failed to find the given ast node", { nodeId }),
     );
@@ -31,17 +31,17 @@ export function assertUnwrapAst(astNodeById: AstNodeById, nodeId: number): Ast.T
     return node;
 }
 
-export function assertUnwrapAstChecked<T extends Ast.TNode>(
+export function assertUnboxAstChecked<T extends Ast.TNode>(
     astNodeById: AstNodeById,
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): T {
-    const astNode: Ast.TNode = assertUnwrapAst(astNodeById, nodeId);
+    const astNode: Ast.TNode = assertUnboxAst(astNodeById, nodeId);
     AstUtils.assertIsNodeKind(astNode, expectedNodeKinds);
     return astNode;
 }
 
-export function assertUnwrapContext(contextNodeById: ContextNodeById, nodeId: number): ParseContext.TNode {
+export function assertUnboxContext(contextNodeById: ContextNodeById, nodeId: number): ParseContext.TNode {
     const node: ParseContext.TNode = Assert.asDefined(
         MapUtils.assertGet(contextNodeById, nodeId, "failed to find the given context node", { nodeId }),
     );
@@ -49,12 +49,12 @@ export function assertUnwrapContext(contextNodeById: ContextNodeById, nodeId: nu
     return node;
 }
 
-export function assertUnwrapContextChecked<T extends Ast.TNode>(
+export function assertUnboxContextChecked<T extends Ast.TNode>(
     contextNodeById: ContextNodeById,
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): ParseContext.Node<T> {
-    const contextNode: ParseContext.TNode = assertUnwrapContext(contextNodeById, nodeId);
+    const contextNode: ParseContext.TNode = assertUnboxContext(contextNodeById, nodeId);
     ParseContextUtils.assertIsNodeKind(contextNode, expectedNodeKinds);
     return contextNode;
 }
@@ -62,12 +62,12 @@ export function assertUnwrapContextChecked<T extends Ast.TNode>(
 export function maybeXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
     const maybeAstNode: Ast.TNode | undefined = nodeIdMapCollection.astNodeById.get(nodeId);
     if (maybeAstNode !== undefined) {
-        return XorNodeUtils.createAstNode(maybeAstNode);
+        return XorNodeUtils.boxAst(maybeAstNode);
     }
 
     const maybeContextNode: ParseContext.TNode | undefined = nodeIdMapCollection.contextNodeById.get(nodeId);
     if (maybeContextNode !== undefined) {
-        return XorNodeUtils.createContextNode(maybeContextNode);
+        return XorNodeUtils.boxContext(maybeContextNode);
     }
 
     return undefined;
