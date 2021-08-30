@@ -4,9 +4,10 @@
 import { expect } from "chai";
 import "mocha";
 import { DefaultSettings, Task } from "../../..";
-import { Assert, Language, MapUtils } from "../../../powerquery-parser";
+import { Assert, Language, MapUtils, Parser } from "../../../powerquery-parser";
 import { Ast } from "../../../powerquery-parser/language";
 import {
+    NodeIdMap,
     NodeIdMapIterator,
     NodeIdMapUtils,
     ParseError,
@@ -150,6 +151,40 @@ describe("nodeIdMapIterator", () => {
             );
 
             expect(parameterNames).to.deep.equal(["x", "y"]);
+        });
+    });
+
+    describe("maybeUnboxWrappedContent", () => {
+        it("Ast", () => {
+            const text: string = `[a = 1]`;
+            const parseOk: Task.ParseTaskOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+            const nodeIdMapCollection: NodeIdMap.Collection = parseOk.nodeIdMapCollection;
+            const recordExpressionNodeIds: Set<number> = Assert.asDefined(
+                nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordExpression),
+            );
+            expect(recordExpressionNodeIds.size).to.equal(1);
+            const recordExpressionNodeId: number = recordExpressionNodeIds.values().next().value;
+
+            XorNodeUtils.assertUnboxAstChecked(
+                Assert.asDefined(NodeIdMapUtils.maybeUnboxWrappedContent(nodeIdMapCollection, recordExpressionNodeId)),
+                Ast.NodeKind.ArrayWrapper,
+            );
+        });
+
+        it("Context", () => {
+            const text: string = `[a = 1][`;
+            const parseError: Parser.ParseError.ParseError = TestAssertUtils.assertGetParseError(DefaultSettings, text);
+            const nodeIdMapCollection: NodeIdMap.Collection = parseError.state.contextState.nodeIdMapCollection;
+            const recordExpressionNodeIds: Set<number> = Assert.asDefined(
+                nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordExpression),
+            );
+            expect(recordExpressionNodeIds.size).to.equal(1);
+            const recordExpressionNodeId: number = recordExpressionNodeIds.values().next().value;
+
+            XorNodeUtils.assertUnboxAstChecked(
+                Assert.asDefined(NodeIdMapUtils.maybeUnboxWrappedContent(nodeIdMapCollection, recordExpressionNodeId)),
+                Ast.NodeKind.ArrayWrapper,
+            );
         });
     });
 });
