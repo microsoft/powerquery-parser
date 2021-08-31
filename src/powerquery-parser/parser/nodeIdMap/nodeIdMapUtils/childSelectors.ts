@@ -215,11 +215,16 @@ export function maybeUnboxWrappedContentChecked<C extends Ast.TWrapped["content"
     return maybeXorNode && XorNodeUtils.isNodeKind(maybeXorNode, expectedNodeKinds) ? maybeXorNode : undefined;
 }
 
+export function maybeUnboxWrappedContentIfAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode | undefined {
+    const maybeXorNode: TXorNode | undefined = maybeUnboxWrappedContent(nodeIdMapCollection, nodeId);
+    return maybeXorNode && XorNodeUtils.isAstXor(maybeXorNode) ? maybeXorNode.node : undefined;
+}
+
 export function maybeUnboxWrappedContentIfAstChecked<C extends Ast.TWrapped["content"]>(
     nodeIdMapCollection: Collection,
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<C["kind"]> | C["kind"],
 ): C | undefined {
-    const maybeAstNode: Ast.TNode | undefined = maybeUnboxIfAst(nodeIdMapCollection, nodeId);
+    const maybeAstNode: Ast.TNode | undefined = maybeUnboxWrappedContentIfAst(nodeIdMapCollection, nodeId);
     return maybeAstNode && AstUtils.isNodeKind<C>(maybeAstNode, expectedNodeKinds) ? maybeAstNode : undefined;
 }
