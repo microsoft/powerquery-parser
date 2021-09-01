@@ -120,7 +120,7 @@ export function isOnTokenKind(
     return isTokenKind(state, tokenKind, tokenIndex);
 }
 
-export function isOnConstantKind(state: ParseState, constantKind: Constant.TConstantKind): boolean {
+export function isOnConstantKind(state: ParseState, constantKind: Constant.TConstant): boolean {
     if (isOnTokenKind(state, Token.TokenKind.Identifier)) {
         const currentToken: Token.Token = state.lexerSnapshot.tokens[state.tokenIndex];
         if (currentToken?.data === undefined) {

@@ -135,7 +135,7 @@ describe("Parser.AbridgedNode", () => {
                 Language.Ast.NodeKind.Constant,
                 1,
             );
-            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperatorKind.And);
+            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperator.And);
         });
 
         it(`1 * 2`, () => {
@@ -153,7 +153,7 @@ describe("Parser.AbridgedNode", () => {
                 Language.Ast.NodeKind.Constant,
                 1,
             );
-            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperatorKind.Multiplication);
+            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperator.Multiplication);
         });
 
         it(`1 / 2`, () => {
@@ -171,7 +171,7 @@ describe("Parser.AbridgedNode", () => {
                 Language.Ast.NodeKind.Constant,
                 1,
             );
-            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperatorKind.Division);
+            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperator.Division);
         });
 
         it(`1 + 2`, () => {
@@ -189,7 +189,7 @@ describe("Parser.AbridgedNode", () => {
                 Language.Ast.NodeKind.Constant,
                 1,
             );
-            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperatorKind.Addition);
+            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperator.Addition);
         });
 
         it(`1 - 2`, () => {
@@ -207,7 +207,7 @@ describe("Parser.AbridgedNode", () => {
                 Language.Ast.NodeKind.Constant,
                 1,
             );
-            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperatorKind.Subtraction);
+            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperator.Subtraction);
         });
 
         it(`1 + 2 + 3 + 4`, () => {
@@ -295,7 +295,7 @@ describe("Parser.AbridgedNode", () => {
                 Language.Ast.NodeKind.Constant,
                 1,
             );
-            expect(operatorNode.constantKind).to.equal(Language.Constant.EqualityOperatorKind.EqualTo);
+            expect(operatorNode.constantKind).to.equal(Language.Constant.EqualityOperator.EqualTo);
         });
 
         it(`1 <> 2`, () => {
@@ -313,7 +313,7 @@ describe("Parser.AbridgedNode", () => {
                 Language.Ast.NodeKind.Constant,
                 1,
             );
-            expect(operatorNode.constantKind).to.equal(Language.Constant.EqualityOperatorKind.NotEqualTo);
+            expect(operatorNode.constantKind).to.equal(Language.Constant.EqualityOperator.NotEqualTo);
         });
     });
 
@@ -1615,7 +1615,7 @@ describe("Parser.AbridgedNode", () => {
                 Language.Ast.NodeKind.Constant,
                 1,
             );
-            expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperatorKind.GreaterThan);
+            expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperator.GreaterThan);
         });
 
         it(`1 >= 2`, () => {
@@ -1633,7 +1633,7 @@ describe("Parser.AbridgedNode", () => {
                 Language.Ast.NodeKind.Constant,
                 1,
             );
-            expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperatorKind.GreaterThanEqualTo);
+            expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperator.GreaterThanEqualTo);
         });
 
         it(`1 < 2`, () => {
@@ -1651,7 +1651,7 @@ describe("Parser.AbridgedNode", () => {
                 Language.Ast.NodeKind.Constant,
                 1,
             );
-            expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperatorKind.LessThan);
+            expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperator.LessThan);
         });
 
         it(`1 <= 2`, () => {
@@ -1669,7 +1669,7 @@ describe("Parser.AbridgedNode", () => {
                 Language.Ast.NodeKind.Constant,
                 1,
             );
-            expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperatorKind.LessThanEqualTo);
+            expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperator.LessThanEqualTo);
         });
     });
 
@@ -1865,7 +1865,7 @@ describe("Parser.AbridgedNode", () => {
                 Language.Ast.NodeKind.Constant,
                 1,
             );
-            expect(operatorNode.constantKind).to.equal(Language.Constant.UnaryOperatorKind.Negative);
+            expect(operatorNode.constantKind).to.equal(Language.Constant.UnaryOperator.Negative);
         });
 
         it(`not 1`, () => {
@@ -1883,7 +1883,7 @@ describe("Parser.AbridgedNode", () => {
                 Language.Ast.NodeKind.Constant,
                 1,
             );
-            expect(operatorNode.constantKind).to.equal(Language.Constant.UnaryOperatorKind.Not);
+            expect(operatorNode.constantKind).to.equal(Language.Constant.UnaryOperator.Not);
         });
 
         it(`+1`, () => {
@@ -1901,7 +1901,7 @@ describe("Parser.AbridgedNode", () => {
                 Language.Ast.NodeKind.Constant,
                 1,
             );
-            expect(operatorNode.constantKind).to.equal(Language.Constant.UnaryOperatorKind.Positive);
+            expect(operatorNode.constantKind).to.equal(Language.Constant.UnaryOperator.Positive);
         });
     });
 });

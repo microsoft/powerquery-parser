@@ -5,7 +5,7 @@ import { TokenKind } from "../../token";
 
 export interface SimplifiedType {
     readonly isNullable: boolean;
-    readonly primitiveTypeConstantKind: Constant.PrimitiveTypeConstantKind;
+    readonly primitiveTypeConstantKind: Constant.PrimitiveTypeConstant;
 }
 
 export function maybeLiteralKindFrom(
@@ -35,7 +35,7 @@ export function maybeLiteralKindFrom(
 
 export function simplifyType(type: Ast.TType): SimplifiedType {
     let isNullable: boolean;
-    let primitiveTypeConstantKind: Constant.PrimitiveTypeConstantKind;
+    let primitiveTypeConstantKind: Constant.PrimitiveTypeConstant;
 
     switch (type.kind) {
         case Ast.NodeKind.PrimitiveType:
@@ -50,22 +50,22 @@ export function simplifyType(type: Ast.TType): SimplifiedType {
 
         case Ast.NodeKind.FunctionType:
             isNullable = false;
-            primitiveTypeConstantKind = Constant.PrimitiveTypeConstantKind.Function;
+            primitiveTypeConstantKind = Constant.PrimitiveTypeConstant.Function;
             break;
 
         case Ast.NodeKind.ListType:
             isNullable = false;
-            primitiveTypeConstantKind = Constant.PrimitiveTypeConstantKind.List;
+            primitiveTypeConstantKind = Constant.PrimitiveTypeConstant.List;
             break;
 
         case Ast.NodeKind.RecordType:
             isNullable = false;
-            primitiveTypeConstantKind = Constant.PrimitiveTypeConstantKind.Record;
+            primitiveTypeConstantKind = Constant.PrimitiveTypeConstant.Record;
             break;
 
         case Ast.NodeKind.TableType:
             isNullable = false;
-            primitiveTypeConstantKind = Constant.PrimitiveTypeConstantKind.Table;
+            primitiveTypeConstantKind = Constant.PrimitiveTypeConstant.Table;
             break;
 
         default:
@@ -84,7 +84,7 @@ export function simplifyType(type: Ast.TType): SimplifiedType {
 
 export function simplifyAsNullablePrimitiveType(node: Ast.AsNullablePrimitiveType): SimplifiedType {
     let isNullable: boolean;
-    let primitiveTypeConstantKind: Constant.PrimitiveTypeConstantKind;
+    let primitiveTypeConstantKind: Constant.PrimitiveTypeConstant;
 
     const nullablePrimitiveType: Ast.TNullablePrimitiveType = node.paired;
     switch (nullablePrimitiveType.kind) {
@@ -110,7 +110,7 @@ export function simplifyAsNullablePrimitiveType(node: Ast.AsNullablePrimitiveTyp
 
 export function primitiveTypeConstantKindFrom(
     node: Ast.AsNullablePrimitiveType | Ast.NullablePrimitiveType | Ast.PrimitiveType,
-): Constant.PrimitiveTypeConstantKind {
+): Constant.PrimitiveTypeConstant {
     switch (node.kind) {
         case Ast.NodeKind.AsNullablePrimitiveType:
             return primitiveTypeConstantKindFrom(node.paired);
