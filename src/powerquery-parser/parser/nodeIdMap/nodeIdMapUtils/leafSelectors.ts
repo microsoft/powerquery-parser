@@ -9,7 +9,7 @@ import { TXorNode, XorNodeKind } from "../xorNode";
 import { maybeXor } from "./commonSelectors";
 
 export function assertUnboxLeftMostLeaf(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
-    return XorNodeUtils.asserUnboxAst(
+    return XorNodeUtils.assertUnboxAst(
         Assert.asDefined(
             maybeLeftMostXor(nodeIdMapCollection, nodeId),
             `nodeId does not exist in nodeIdMapCollection`,
