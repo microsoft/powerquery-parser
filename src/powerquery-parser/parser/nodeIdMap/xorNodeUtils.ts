@@ -166,7 +166,7 @@ export function assertIsParameter(xorNode: TXorNode): asserts xorNode is XorNode
     assertIsNodeKind(xorNode, Ast.NodeKind.Parameter);
 }
 
-export function asserUnboxAst(xorNode: TXorNode): Ast.TNode {
+export function assertUnboxAst(xorNode: TXorNode): Ast.TNode {
     assertIsAstXor(xorNode);
     return xorNode.node;
 }
@@ -175,7 +175,7 @@ export function assertUnboxAstChecked<T extends Ast.TNode>(
     xorNode: TXorNode,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): T {
-    const astNode: Ast.TNode = asserUnboxAst(xorNode);
+    const astNode: Ast.TNode = assertUnboxAst(xorNode);
     AstUtils.assertIsNodeKind(astNode, expectedNodeKinds);
     return astNode;
 }
