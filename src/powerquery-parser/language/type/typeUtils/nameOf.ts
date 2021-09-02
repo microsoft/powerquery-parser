@@ -113,5 +113,5 @@ function nameOfIterable(collection: ReadonlyArray<Type.TPowerQueryType>): string
 }
 
 function prefixNullableIfRequired(type: Type.TPowerQueryType, name: string): string {
-    return type.isNullable ? `${Constant.LanguageConstantKind.Nullable} ${name}` : name;
+    return type.isNullable ? `${Constant.LanguageConstant.Nullable} ${name}` : name;
 }

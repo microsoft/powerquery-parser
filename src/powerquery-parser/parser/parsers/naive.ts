@@ -31,11 +31,11 @@ type TriedReadPrimitiveType = Result<
 
 interface WrappedRead<
     Kind extends Ast.TWrappedNodeKind,
-    Open extends Constant.WrapperConstantKind,
+    Open extends Constant.WrapperConstant,
     Content,
-    Close extends Constant.WrapperConstantKind
+    Close extends Constant.WrapperConstant
 > extends Ast.IWrapped<Kind, Open, Content, Close> {
-    readonly maybeOptionalConstant: Ast.IConstant<Constant.MiscConstantKind.QuestionMark> | undefined;
+    readonly maybeOptionalConstant: Ast.IConstant<Constant.MiscConstant.QuestionMark> | undefined;
 }
 
 const GeneralizedIdentifierTerminatorTokenKinds: ReadonlyArray<Token.TokenKind> = [
@@ -200,10 +200,10 @@ export function readSectionDocument(state: ParseState, parser: Parser): Ast.Sect
     ParseStateUtils.startContext(state, nodeKind);
 
     const maybeLiteralAttributes: Ast.RecordLiteral | undefined = maybeReadLiteralAttributes(state, parser);
-    const sectionConstant: Ast.IConstant<Constant.KeywordConstantKind.Section> = readTokenKindAsConstant(
+    const sectionConstant: Ast.IConstant<Constant.KeywordConstant.Section> = readTokenKindAsConstant(
         state,
         Token.TokenKind.KeywordSection,
-        Constant.KeywordConstantKind.Section,
+        Constant.KeywordConstant.Section,
     );
 
     let maybeName: Ast.Identifier | undefined;
@@ -213,10 +213,10 @@ export function readSectionDocument(state: ParseState, parser: Parser): Ast.Sect
         ParseStateUtils.incrementAttributeCounter(state);
     }
 
-    const semicolonConstant: Ast.IConstant<Constant.MiscConstantKind.Semicolon> = readTokenKindAsConstant(
+    const semicolonConstant: Ast.IConstant<Constant.MiscConstant.Semicolon> = readTokenKindAsConstant(
         state,
         Token.TokenKind.Semicolon,
-        Constant.MiscConstantKind.Semicolon,
+        Constant.MiscConstant.Semicolon,
     );
     const sectionMembers: Ast.IArrayWrapper<Ast.SectionMember> = parser.readSectionMembers(state, parser);
 
@@ -262,17 +262,17 @@ export function readSectionMember(state: ParseState, parser: Parser): Ast.Sectio
 
     const maybeLiteralAttributes: Ast.RecordLiteral | undefined = maybeReadLiteralAttributes(state, parser);
     const maybeSharedConstant:
-        | Ast.IConstant<Constant.KeywordConstantKind.Shared>
+        | Ast.IConstant<Constant.KeywordConstant.Shared>
         | undefined = maybeReadTokenKindAsConstant(
         state,
         Token.TokenKind.KeywordShared,
-        Constant.KeywordConstantKind.Shared,
+        Constant.KeywordConstant.Shared,
     );
     const namePairedExpression: Ast.IdentifierPairedExpression = parser.readIdentifierPairedExpression(state, parser);
-    const semicolonConstant: Ast.IConstant<Constant.MiscConstantKind.Semicolon> = readTokenKindAsConstant(
+    const semicolonConstant: Ast.IConstant<Constant.MiscConstant.Semicolon> = readTokenKindAsConstant(
         state,
         Token.TokenKind.Semicolon,
-        Constant.MiscConstantKind.Semicolon,
+        Constant.MiscConstant.Semicolon,
     );
 
     const astNode: Ast.SectionMember = {
@@ -302,7 +302,7 @@ export function readNullCoalescingExpression(state: ParseState, parser: Parser):
     return recursiveReadBinOpExpression<
         Ast.NodeKind.NullCoalescingExpression,
         Ast.TLogicalExpression,
-        Constant.MiscConstantKind.NullCoalescingOperator,
+        Constant.MiscConstant.NullCoalescingOperator,
         Ast.TLogicalExpression
     >(
         state,
@@ -310,7 +310,7 @@ export function readNullCoalescingExpression(state: ParseState, parser: Parser):
         () => parser.readLogicalExpression(state, parser),
         (maybeCurrentTokenKind: Token.TokenKind | undefined) =>
             maybeCurrentTokenKind === Token.TokenKind.NullCoalescingOperator
-                ? Constant.MiscConstantKind.NullCoalescingOperator
+                ? Constant.MiscConstant.NullCoalescingOperator
                 : undefined,
         () => parser.readLogicalExpression(state, parser),
     );
@@ -353,7 +353,7 @@ export function readLogicalExpression(state: ParseState, parser: Parser): Ast.TL
     return recursiveReadBinOpExpression<
         Ast.NodeKind.LogicalExpression,
         Ast.TLogicalExpression,
-        Constant.LogicalOperatorKind,
+        Constant.LogicalOperator,
         Ast.TLogicalExpression
     >(
         state,
@@ -374,14 +374,14 @@ export function readIsExpression(state: ParseState, parser: Parser): Ast.TIsExpr
     return recursiveReadBinOpExpression<
         Ast.NodeKind.IsExpression,
         Ast.TAsExpression,
-        Constant.KeywordConstantKind.Is,
+        Constant.KeywordConstant.Is,
         Ast.TNullablePrimitiveType
     >(
         state,
         Ast.NodeKind.IsExpression,
         () => parser.readAsExpression(state, parser),
         maybeCurrentTokenKind =>
-            maybeCurrentTokenKind === Token.TokenKind.KeywordIs ? Constant.KeywordConstantKind.Is : undefined,
+            maybeCurrentTokenKind === Token.TokenKind.KeywordIs ? Constant.KeywordConstant.Is : undefined,
         () => parser.readNullablePrimitiveType(state, parser),
     );
 }
@@ -390,11 +390,11 @@ export function readIsExpression(state: ParseState, parser: Parser): Ast.TIsExpr
 export function readNullablePrimitiveType(state: ParseState, parser: Parser): Ast.TNullablePrimitiveType {
     state.maybeCancellationToken?.throwIfCancelled();
 
-    if (ParseStateUtils.isOnConstantKind(state, Constant.LanguageConstantKind.Nullable)) {
+    if (ParseStateUtils.isOnConstantKind(state, Constant.LanguageConstant.Nullable)) {
         return readPairedConstant(
             state,
             Ast.NodeKind.NullablePrimitiveType,
-            () => readConstantKind(state, Constant.LanguageConstantKind.Nullable),
+            () => readConstantKind(state, Constant.LanguageConstant.Nullable),
             () => parser.readPrimitiveType(state, parser),
         );
     } else {
@@ -412,14 +412,14 @@ export function readAsExpression(state: ParseState, parser: Parser): Ast.TAsExpr
     return recursiveReadBinOpExpression<
         Ast.NodeKind.AsExpression,
         Ast.TEqualityExpression,
-        Constant.KeywordConstantKind.As,
+        Constant.KeywordConstant.As,
         Ast.TNullablePrimitiveType
     >(
         state,
         Ast.NodeKind.AsExpression,
         () => parser.readEqualityExpression(state, parser),
         maybeCurrentTokenKind =>
-            maybeCurrentTokenKind === Token.TokenKind.KeywordAs ? Constant.KeywordConstantKind.As : undefined,
+            maybeCurrentTokenKind === Token.TokenKind.KeywordAs ? Constant.KeywordConstant.As : undefined,
         () => parser.readNullablePrimitiveType(state, parser),
     );
 }
@@ -434,7 +434,7 @@ export function readEqualityExpression(state: ParseState, parser: Parser): Ast.T
     return recursiveReadBinOpExpression<
         Ast.NodeKind.EqualityExpression,
         Ast.TEqualityExpression,
-        Constant.EqualityOperatorKind,
+        Constant.EqualityOperator,
         Ast.TEqualityExpression
     >(
         state,
@@ -455,7 +455,7 @@ export function readRelationalExpression(state: ParseState, parser: Parser): Ast
     return recursiveReadBinOpExpression<
         Ast.NodeKind.RelationalExpression,
         Ast.TArithmeticExpression,
-        Constant.RelationalOperatorKind,
+        Constant.RelationalOperator,
         Ast.TArithmeticExpression
     >(
         state,
@@ -476,7 +476,7 @@ export function readArithmeticExpression(state: ParseState, parser: Parser): Ast
     return recursiveReadBinOpExpression<
         Ast.NodeKind.ArithmeticExpression,
         Ast.TMetadataExpression,
-        Constant.ArithmeticOperatorKind,
+        Constant.ArithmeticOperator,
         Ast.TMetadataExpression
     >(
         state,
@@ -498,15 +498,15 @@ export function readMetadataExpression(state: ParseState, parser: Parser): Ast.T
 
     const left: Ast.TUnaryExpression = parser.readUnaryExpression(state, parser);
     const maybeMetaConstant:
-        | Ast.IConstant<Constant.KeywordConstantKind.Meta>
+        | Ast.IConstant<Constant.KeywordConstant.Meta>
         | undefined = maybeReadTokenKindAsConstant(
         state,
         Token.TokenKind.KeywordMeta,
-        Constant.KeywordConstantKind.Meta,
+        Constant.KeywordConstant.Meta,
     );
 
     if (maybeMetaConstant !== undefined) {
-        const operatorConstant: Ast.IConstant<Constant.KeywordConstantKind.Meta> = maybeMetaConstant;
+        const operatorConstant: Ast.IConstant<Constant.KeywordConstant.Meta> = maybeMetaConstant;
         const right: Ast.TUnaryExpression = parser.readUnaryExpression(state, parser);
 
         const astNode: Ast.MetadataExpression = {
@@ -533,7 +533,7 @@ export function readMetadataExpression(state: ParseState, parser: Parser): Ast.T
 export function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUnaryExpression {
     state.maybeCancellationToken?.throwIfCancelled();
 
-    let maybeOperator: Constant.UnaryOperatorKind | undefined = ConstantUtils.maybeUnaryOperatorKindFrom(
+    let maybeOperator: Constant.UnaryOperator | undefined = ConstantUtils.maybeUnaryOperatorKindFrom(
         state.maybeCurrentTokenKind,
     );
     if (maybeOperator === undefined) {
@@ -546,14 +546,14 @@ export function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUna
     const arrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     ParseStateUtils.startContext(state, arrayNodeKind);
 
-    const operatorConstants: Ast.IConstant<Constant.UnaryOperatorKind>[] = [];
+    const operatorConstants: Ast.IConstant<Constant.UnaryOperator>[] = [];
     while (maybeOperator) {
         operatorConstants.push(
             readTokenKindAsConstant(state, state.maybeCurrentTokenKind as Token.TokenKind, maybeOperator),
         );
         maybeOperator = ConstantUtils.maybeUnaryOperatorKindFrom(state.maybeCurrentTokenKind);
     }
-    const operators: Ast.IArrayWrapper<Ast.IConstant<Constant.UnaryOperatorKind>> = {
+    const operators: Ast.IArrayWrapper<Ast.IConstant<Constant.UnaryOperator>> = {
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
         kind: arrayNodeKind,
         isLeaf: false,
@@ -784,8 +784,8 @@ export function readIdentifierExpression(state: ParseState, parser: Parser): Ast
     ParseStateUtils.startContext(state, nodeKind);
 
     const maybeInclusiveConstant:
-        | Ast.IConstant<Constant.MiscConstantKind.AtSign>
-        | undefined = maybeReadTokenKindAsConstant(state, Token.TokenKind.AtSign, Constant.MiscConstantKind.AtSign);
+        | Ast.IConstant<Constant.MiscConstant.AtSign>
+        | undefined = maybeReadTokenKindAsConstant(state, Token.TokenKind.AtSign, Constant.MiscConstant.AtSign);
     const identifier: Ast.Identifier = parser.readIdentifier(state, parser);
 
     const astNode: Ast.IdentifierExpression = {
@@ -813,14 +813,14 @@ export function readParenthesizedExpression(state: ParseState, parser: Parser): 
             readTokenKindAsConstant(
                 state,
                 Token.TokenKind.LeftParenthesis,
-                Constant.WrapperConstantKind.LeftParenthesis,
+                Constant.WrapperConstant.LeftParenthesis,
             ),
         () => parser.readExpression(state, parser),
         () =>
             readTokenKindAsConstant(
                 state,
                 Token.TokenKind.RightParenthesis,
-                Constant.WrapperConstantKind.RightParenthesis,
+                Constant.WrapperConstant.RightParenthesis,
             ),
         false,
     );
@@ -835,10 +835,10 @@ export function readNotImplementedExpression(state: ParseState, _parser: Parser)
     const nodeKind: Ast.NodeKind.NotImplementedExpression = Ast.NodeKind.NotImplementedExpression;
     ParseStateUtils.startContext(state, nodeKind);
 
-    const ellipsisConstant: Ast.IConstant<Constant.MiscConstantKind.Ellipsis> = readTokenKindAsConstant(
+    const ellipsisConstant: Ast.IConstant<Constant.MiscConstant.Ellipsis> = readTokenKindAsConstant(
         state,
         Token.TokenKind.Ellipsis,
-        Constant.MiscConstantKind.Ellipsis,
+        Constant.MiscConstant.Ellipsis,
     );
 
     const astNode: Ast.NotImplementedExpression = {
@@ -866,7 +866,7 @@ export function readInvokeExpression(state: ParseState, parser: Parser): Ast.Inv
             readTokenKindAsConstant(
                 state,
                 Token.TokenKind.LeftParenthesis,
-                Constant.WrapperConstantKind.LeftParenthesis,
+                Constant.WrapperConstant.LeftParenthesis,
             ),
         () =>
             // The type inference in VSCode considers the lambda below a type error, but it compiles just fine.
@@ -881,7 +881,7 @@ export function readInvokeExpression(state: ParseState, parser: Parser): Ast.Inv
             readTokenKindAsConstant(
                 state,
                 Token.TokenKind.RightParenthesis,
-                Constant.WrapperConstantKind.RightParenthesis,
+                Constant.WrapperConstant.RightParenthesis,
             ),
         false,
     );
@@ -898,7 +898,7 @@ export function readListExpression(state: ParseState, parser: Parser): Ast.ListE
     return readWrapped(
         state,
         Ast.NodeKind.ListExpression,
-        () => readTokenKindAsConstant(state, Token.TokenKind.LeftBrace, Constant.WrapperConstantKind.LeftBrace),
+        () => readTokenKindAsConstant(state, Token.TokenKind.LeftBrace, Constant.WrapperConstant.LeftBrace),
         () =>
             readCsvArray<Ast.TListItem>(
                 state,
@@ -906,7 +906,7 @@ export function readListExpression(state: ParseState, parser: Parser): Ast.ListE
                 continueReadingValues,
                 testCsvContinuationDanglingCommaForBrace,
             ),
-        () => readTokenKindAsConstant(state, Token.TokenKind.RightBrace, Constant.WrapperConstantKind.RightBrace),
+        () => readTokenKindAsConstant(state, Token.TokenKind.RightBrace, Constant.WrapperConstant.RightBrace),
         false,
     );
 }
@@ -918,10 +918,10 @@ export function readListItem(state: ParseState, parser: Parser): Ast.TListItem {
 
     const left: Ast.TExpression = parser.readExpression(state, parser);
     if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.DotDot)) {
-        const rangeConstant: Ast.IConstant<Constant.MiscConstantKind.DotDot> = readTokenKindAsConstant(
+        const rangeConstant: Ast.IConstant<Constant.MiscConstant.DotDot> = readTokenKindAsConstant(
             state,
             Token.TokenKind.DotDot,
-            Constant.MiscConstantKind.DotDot,
+            Constant.MiscConstant.DotDot,
         );
         const right: Ast.TExpression = parser.readExpression(state, parser);
         const astNode: Ast.RangeExpression = {
@@ -952,7 +952,7 @@ export function readRecordExpression(state: ParseState, parser: Parser): Ast.Rec
     return readWrapped(
         state,
         Ast.NodeKind.RecordExpression,
-        () => readTokenKindAsConstant(state, Token.TokenKind.LeftBracket, Constant.WrapperConstantKind.LeftBracket),
+        () => readTokenKindAsConstant(state, Token.TokenKind.LeftBracket, Constant.WrapperConstant.LeftBracket),
         () =>
             parser.readGeneralizedIdentifierPairedExpressions(
                 state,
@@ -960,7 +960,7 @@ export function readRecordExpression(state: ParseState, parser: Parser): Ast.Rec
                 continueReadingValues,
                 testCsvContinuationDanglingCommaForBracket,
             ),
-        () => readTokenKindAsConstant(state, Token.TokenKind.RightBracket, Constant.WrapperConstantKind.RightBracket),
+        () => readTokenKindAsConstant(state, Token.TokenKind.RightBracket, Constant.WrapperConstant.RightBracket),
         false,
     );
 }
@@ -975,9 +975,9 @@ export function readItemAccessExpression(state: ParseState, parser: Parser): Ast
     return readWrapped(
         state,
         Ast.NodeKind.ItemAccessExpression,
-        () => readTokenKindAsConstant(state, Token.TokenKind.LeftBrace, Constant.WrapperConstantKind.LeftBrace),
+        () => readTokenKindAsConstant(state, Token.TokenKind.LeftBrace, Constant.WrapperConstant.LeftBrace),
         () => parser.readExpression(state, parser),
-        () => readTokenKindAsConstant(state, Token.TokenKind.RightBrace, Constant.WrapperConstantKind.RightBrace),
+        () => readTokenKindAsConstant(state, Token.TokenKind.RightBrace, Constant.WrapperConstant.RightBrace),
         true,
     );
 }
@@ -997,7 +997,7 @@ export function readFieldProjection(state: ParseState, parser: Parser): Ast.Fiel
     return readWrapped(
         state,
         Ast.NodeKind.FieldProjection,
-        () => readTokenKindAsConstant(state, Token.TokenKind.LeftBracket, Constant.WrapperConstantKind.LeftBracket),
+        () => readTokenKindAsConstant(state, Token.TokenKind.LeftBracket, Constant.WrapperConstant.LeftBracket),
         () =>
             readCsvArray(
                 state,
@@ -1005,7 +1005,7 @@ export function readFieldProjection(state: ParseState, parser: Parser): Ast.Fiel
                 true,
                 testCsvContinuationDanglingCommaForBracket,
             ),
-        () => readTokenKindAsConstant(state, Token.TokenKind.RightBracket, Constant.WrapperConstantKind.RightBracket),
+        () => readTokenKindAsConstant(state, Token.TokenKind.RightBracket, Constant.WrapperConstant.RightBracket),
         true,
     );
 }
@@ -1016,9 +1016,9 @@ export function readFieldSelector(state: ParseState, parser: Parser, allowOption
     return readWrapped(
         state,
         Ast.NodeKind.FieldSelector,
-        () => readTokenKindAsConstant(state, Token.TokenKind.LeftBracket, Constant.WrapperConstantKind.LeftBracket),
+        () => readTokenKindAsConstant(state, Token.TokenKind.LeftBracket, Constant.WrapperConstant.LeftBracket),
         () => parser.readGeneralizedIdentifier(state, parser),
-        () => readTokenKindAsConstant(state, Token.TokenKind.RightBracket, Constant.WrapperConstantKind.RightBracket),
+        () => readTokenKindAsConstant(state, Token.TokenKind.RightBracket, Constant.WrapperConstant.RightBracket),
         allowOptional,
     );
 }
@@ -1040,10 +1040,10 @@ export function readFunctionExpression(state: ParseState, parser: Parser): Ast.F
         state,
         parser,
     );
-    const fatArrowConstant: Ast.IConstant<Constant.MiscConstantKind.FatArrow> = readTokenKindAsConstant(
+    const fatArrowConstant: Ast.IConstant<Constant.MiscConstant.FatArrow> = readTokenKindAsConstant(
         state,
         Token.TokenKind.FatArrow,
-        Constant.MiscConstantKind.FatArrow,
+        Constant.MiscConstant.FatArrow,
     );
     const expression: Ast.TExpression = parser.readExpression(state, parser);
 
@@ -1076,7 +1076,7 @@ function maybeReadAsNullablePrimitiveType(state: ParseState, parser: Parser): As
         state,
         Ast.NodeKind.AsNullablePrimitiveType,
         () => ParseStateUtils.isOnTokenKind(state, Token.TokenKind.KeywordAs),
-        () => readTokenKindAsConstant(state, Token.TokenKind.KeywordAs, Constant.KeywordConstantKind.As),
+        () => readTokenKindAsConstant(state, Token.TokenKind.KeywordAs, Constant.KeywordConstant.As),
         () => parser.readNullablePrimitiveType(state, parser),
     );
 }
@@ -1087,7 +1087,7 @@ export function readAsType(state: ParseState, parser: Parser): Ast.AsType {
     return readPairedConstant(
         state,
         Ast.NodeKind.AsType,
-        () => readTokenKindAsConstant(state, Token.TokenKind.KeywordAs, Constant.KeywordConstantKind.As),
+        () => readTokenKindAsConstant(state, Token.TokenKind.KeywordAs, Constant.KeywordConstant.As),
         () => parser.readType(state, parser),
     );
 }
@@ -1102,7 +1102,7 @@ export function readEachExpression(state: ParseState, parser: Parser): Ast.EachE
     return readPairedConstant(
         state,
         Ast.NodeKind.EachExpression,
-        () => readTokenKindAsConstant(state, Token.TokenKind.KeywordEach, Constant.KeywordConstantKind.Each),
+        () => readTokenKindAsConstant(state, Token.TokenKind.KeywordEach, Constant.KeywordConstant.Each),
         () => parser.readExpression(state, parser),
     );
 }
@@ -1116,10 +1116,10 @@ export function readLetExpression(state: ParseState, parser: Parser): Ast.LetExp
     const nodeKind: Ast.NodeKind.LetExpression = Ast.NodeKind.LetExpression;
     ParseStateUtils.startContext(state, nodeKind);
 
-    const letConstant: Ast.IConstant<Constant.KeywordConstantKind.Let> = readTokenKindAsConstant(
+    const letConstant: Ast.IConstant<Constant.KeywordConstant.Let> = readTokenKindAsConstant(
         state,
         Token.TokenKind.KeywordLet,
-        Constant.KeywordConstantKind.Let,
+        Constant.KeywordConstant.Let,
     );
     const identifierPairedExpression: Ast.ICsvArray<Ast.IdentifierPairedExpression> = parser.readIdentifierPairedExpressions(
         state,
@@ -1127,10 +1127,10 @@ export function readLetExpression(state: ParseState, parser: Parser): Ast.LetExp
         !ParseStateUtils.isNextTokenKind(state, Token.TokenKind.KeywordIn),
         ParseStateUtils.testCsvContinuationLetExpression,
     );
-    const inConstant: Ast.IConstant<Constant.KeywordConstantKind.In> = readTokenKindAsConstant(
+    const inConstant: Ast.IConstant<Constant.KeywordConstant.In> = readTokenKindAsConstant(
         state,
         Token.TokenKind.KeywordIn,
-        Constant.KeywordConstantKind.In,
+        Constant.KeywordConstant.In,
     );
     const expression: Ast.TExpression = parser.readExpression(state, parser);
 
@@ -1156,24 +1156,24 @@ export function readIfExpression(state: ParseState, parser: Parser): Ast.IfExpre
     const nodeKind: Ast.NodeKind.IfExpression = Ast.NodeKind.IfExpression;
     ParseStateUtils.startContext(state, nodeKind);
 
-    const ifConstant: Ast.IConstant<Constant.KeywordConstantKind.If> = readTokenKindAsConstant(
+    const ifConstant: Ast.IConstant<Constant.KeywordConstant.If> = readTokenKindAsConstant(
         state,
         Token.TokenKind.KeywordIf,
-        Constant.KeywordConstantKind.If,
+        Constant.KeywordConstant.If,
     );
     const condition: Ast.TExpression = parser.readExpression(state, parser);
 
-    const thenConstant: Ast.IConstant<Constant.KeywordConstantKind.Then> = readTokenKindAsConstant(
+    const thenConstant: Ast.IConstant<Constant.KeywordConstant.Then> = readTokenKindAsConstant(
         state,
         Token.TokenKind.KeywordThen,
-        Constant.KeywordConstantKind.Then,
+        Constant.KeywordConstant.Then,
     );
     const trueExpression: Ast.TExpression = parser.readExpression(state, parser);
 
-    const elseConstant: Ast.IConstant<Constant.KeywordConstantKind.Else> = readTokenKindAsConstant(
+    const elseConstant: Ast.IConstant<Constant.KeywordConstant.Else> = readTokenKindAsConstant(
         state,
         Token.TokenKind.KeywordElse,
-        Constant.KeywordConstantKind.Else,
+        Constant.KeywordConstant.Else,
     );
     const falseExpression: Ast.TExpression = parser.readExpression(state, parser);
 
@@ -1203,7 +1203,7 @@ export function readTypeExpression(state: ParseState, parser: Parser): Ast.TType
         return readPairedConstant(
             state,
             Ast.NodeKind.TypePrimaryType,
-            () => readTokenKindAsConstant(state, Token.TokenKind.KeywordType, Constant.KeywordConstantKind.Type),
+            () => readTokenKindAsConstant(state, Token.TokenKind.KeywordType, Constant.KeywordConstant.Type),
             () => parser.readPrimaryType(state, parser),
         );
     } else {
@@ -1260,9 +1260,9 @@ export function readTableType(state: ParseState, parser: Parser): Ast.TableType 
     const nodeKind: Ast.NodeKind.TableType = Ast.NodeKind.TableType;
     ParseStateUtils.startContext(state, nodeKind);
 
-    const tableConstant: Ast.IConstant<Constant.PrimitiveTypeConstantKind.Table> = readConstantKind(
+    const tableConstant: Ast.IConstant<Constant.PrimitiveTypeConstant.Table> = readConstantKind(
         state,
-        Constant.PrimitiveTypeConstantKind.Table,
+        Constant.PrimitiveTypeConstant.Table,
     );
     const maybeCurrentTokenKind: Token.TokenKind | undefined = state.maybeCurrentTokenKind;
     const isPrimaryExpressionExpected: boolean =
@@ -1298,10 +1298,10 @@ export function readFieldSpecificationList(
     const nodeKind: Ast.NodeKind.FieldSpecificationList = Ast.NodeKind.FieldSpecificationList;
     ParseStateUtils.startContext(state, nodeKind);
 
-    const leftBracketConstant: Ast.IConstant<Constant.WrapperConstantKind.LeftBracket> = readTokenKindAsConstant(
+    const leftBracketConstant: Ast.IConstant<Constant.WrapperConstant.LeftBracket> = readTokenKindAsConstant(
         state,
         Token.TokenKind.LeftBracket,
-        Constant.WrapperConstantKind.LeftBracket,
+        Constant.WrapperConstant.LeftBracket,
     );
     const fields: Ast.ICsv<Ast.FieldSpecification>[] = [];
     let continueReadingValues: boolean = true;
@@ -1335,8 +1335,8 @@ export function readFieldSpecificationList(
             ParseStateUtils.startContext(state, fieldSpecificationNodeKind);
 
             const maybeOptionalConstant:
-                | Ast.IConstant<Constant.LanguageConstantKind.Optional>
-                | undefined = maybeReadConstantKind(state, Constant.LanguageConstantKind.Optional);
+                | Ast.IConstant<Constant.LanguageConstant.Optional>
+                | undefined = maybeReadConstantKind(state, Constant.LanguageConstant.Optional);
 
             const name: Ast.GeneralizedIdentifier = parser.readGeneralizedIdentifier(state, parser);
 
@@ -1356,11 +1356,11 @@ export function readFieldSpecificationList(
             ParseStateUtils.endContext(state, field);
 
             const maybeCommaConstant:
-                | Ast.IConstant<Constant.MiscConstantKind.Comma>
+                | Ast.IConstant<Constant.MiscConstant.Comma>
                 | undefined = maybeReadTokenKindAsConstant(
                 state,
                 Token.TokenKind.Comma,
-                Constant.MiscConstantKind.Comma,
+                Constant.MiscConstant.Comma,
             );
             continueReadingValues = maybeCommaConstant !== undefined;
 
@@ -1386,19 +1386,19 @@ export function readFieldSpecificationList(
     };
     ParseStateUtils.endContext(state, fieldArray);
 
-    let maybeOpenRecordMarkerConstant: Ast.IConstant<Constant.MiscConstantKind.Ellipsis> | undefined = undefined;
+    let maybeOpenRecordMarkerConstant: Ast.IConstant<Constant.MiscConstant.Ellipsis> | undefined = undefined;
     if (isOnOpenRecordMarker) {
         maybeOpenRecordMarkerConstant = readTokenKindAsConstant(
             state,
             Token.TokenKind.Ellipsis,
-            Constant.MiscConstantKind.Ellipsis,
+            Constant.MiscConstant.Ellipsis,
         );
     }
 
-    const rightBracketConstant: Ast.IConstant<Constant.WrapperConstantKind.RightBracket> = readTokenKindAsConstant(
+    const rightBracketConstant: Ast.IConstant<Constant.WrapperConstant.RightBracket> = readTokenKindAsConstant(
         state,
         Token.TokenKind.RightBracket,
-        Constant.WrapperConstantKind.RightBracket,
+        Constant.WrapperConstant.RightBracket,
     );
 
     const astNode: Ast.FieldSpecificationList = {
@@ -1419,10 +1419,10 @@ function maybeReadFieldTypeSpecification(state: ParseState, parser: Parser): Ast
     const nodeKind: Ast.NodeKind.FieldTypeSpecification = Ast.NodeKind.FieldTypeSpecification;
     ParseStateUtils.startContext(state, nodeKind);
 
-    const maybeEqualConstant: Ast.IConstant<Constant.MiscConstantKind.Equal> | undefined = maybeReadTokenKindAsConstant(
+    const maybeEqualConstant: Ast.IConstant<Constant.MiscConstant.Equal> | undefined = maybeReadTokenKindAsConstant(
         state,
         Token.TokenKind.Equal,
-        Constant.MiscConstantKind.Equal,
+        Constant.MiscConstant.Equal,
     );
     if (maybeEqualConstant) {
         const fieldType: Ast.TType = parser.readType(state, parser);
@@ -1461,9 +1461,9 @@ export function readListType(state: ParseState, parser: Parser): Ast.ListType {
     return readWrapped(
         state,
         Ast.NodeKind.ListType,
-        () => readTokenKindAsConstant(state, Token.TokenKind.LeftBrace, Constant.WrapperConstantKind.LeftBrace),
+        () => readTokenKindAsConstant(state, Token.TokenKind.LeftBrace, Constant.WrapperConstant.LeftBrace),
         () => parser.readType(state, parser),
-        () => readTokenKindAsConstant(state, Token.TokenKind.RightBrace, Constant.WrapperConstantKind.RightBrace),
+        () => readTokenKindAsConstant(state, Token.TokenKind.RightBrace, Constant.WrapperConstant.RightBrace),
         false,
     );
 }
@@ -1473,9 +1473,9 @@ export function readFunctionType(state: ParseState, parser: Parser): Ast.Functio
     const nodeKind: Ast.NodeKind.FunctionType = Ast.NodeKind.FunctionType;
     ParseStateUtils.startContext(state, nodeKind);
 
-    const functionConstant: Ast.IConstant<Constant.PrimitiveTypeConstantKind.Function> = readConstantKind(
+    const functionConstant: Ast.IConstant<Constant.PrimitiveTypeConstant.Function> = readConstantKind(
         state,
-        Constant.PrimitiveTypeConstantKind.Function,
+        Constant.PrimitiveTypeConstant.Function,
     );
     const parameters: Ast.IParameterList<Ast.AsType> = parser.readParameterSpecificationList(state, parser);
     const functionReturnType: Ast.AsType = parser.readAsType(state, parser);
@@ -1494,13 +1494,13 @@ export function readFunctionType(state: ParseState, parser: Parser): Ast.Functio
 
 function tryReadPrimaryType(state: ParseState, parser: Parser): TriedReadPrimaryType {
     const isTableTypeNext: boolean =
-        ParseStateUtils.isOnConstantKind(state, Constant.PrimitiveTypeConstantKind.Table) &&
+        ParseStateUtils.isOnConstantKind(state, Constant.PrimitiveTypeConstant.Table) &&
         (ParseStateUtils.isNextTokenKind(state, Token.TokenKind.LeftBracket) ||
             ParseStateUtils.isNextTokenKind(state, Token.TokenKind.LeftParenthesis) ||
             ParseStateUtils.isNextTokenKind(state, Token.TokenKind.AtSign) ||
             ParseStateUtils.isNextTokenKind(state, Token.TokenKind.Identifier));
     const isFunctionTypeNext: boolean =
-        ParseStateUtils.isOnConstantKind(state, Constant.PrimitiveTypeConstantKind.Function) &&
+        ParseStateUtils.isOnConstantKind(state, Constant.PrimitiveTypeConstant.Function) &&
         ParseStateUtils.isNextTokenKind(state, Token.TokenKind.LeftParenthesis);
 
     if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.LeftBracket)) {
@@ -1511,7 +1511,7 @@ function tryReadPrimaryType(state: ParseState, parser: Parser): TriedReadPrimary
         return ResultUtils.boxOk(parser.readTableType(state, parser));
     } else if (isFunctionTypeNext) {
         return ResultUtils.boxOk(parser.readFunctionType(state, parser));
-    } else if (ParseStateUtils.isOnConstantKind(state, Constant.LanguageConstantKind.Nullable)) {
+    } else if (ParseStateUtils.isOnConstantKind(state, Constant.LanguageConstant.Nullable)) {
         return ResultUtils.boxOk(parser.readNullableType(state, parser));
     } else {
         const checkpoint: ParseStateCheckpoint = parser.createCheckpoint(state);
@@ -1536,7 +1536,7 @@ export function readNullableType(state: ParseState, parser: Parser): Ast.Nullabl
     return readPairedConstant(
         state,
         Ast.NodeKind.NullableType,
-        () => readConstantKind(state, Constant.LanguageConstantKind.Nullable),
+        () => readConstantKind(state, Constant.LanguageConstant.Nullable),
         () => parser.readType(state, parser),
     );
 }
@@ -1551,7 +1551,7 @@ export function readErrorRaisingExpression(state: ParseState, parser: Parser): A
     return readPairedConstant(
         state,
         Ast.NodeKind.ErrorRaisingExpression,
-        () => readTokenKindAsConstant(state, Token.TokenKind.KeywordError, Constant.KeywordConstantKind.Error),
+        () => readTokenKindAsConstant(state, Token.TokenKind.KeywordError, Constant.KeywordConstant.Error),
         () => parser.readExpression(state, parser),
     );
 }
@@ -1565,10 +1565,10 @@ export function readErrorHandlingExpression(state: ParseState, parser: Parser): 
     const nodeKind: Ast.NodeKind.ErrorHandlingExpression = Ast.NodeKind.ErrorHandlingExpression;
     ParseStateUtils.startContext(state, nodeKind);
 
-    const tryConstant: Ast.IConstant<Constant.KeywordConstantKind.Try> = readTokenKindAsConstant(
+    const tryConstant: Ast.IConstant<Constant.KeywordConstant.Try> = readTokenKindAsConstant(
         state,
         Token.TokenKind.KeywordTry,
-        Constant.KeywordConstantKind.Try,
+        Constant.KeywordConstant.Try,
     );
     const protectedExpression: Ast.TExpression = parser.readExpression(state, parser);
 
@@ -1577,7 +1577,7 @@ export function readErrorHandlingExpression(state: ParseState, parser: Parser): 
         state,
         otherwiseExpressionNodeKind,
         () => ParseStateUtils.isOnTokenKind(state, Token.TokenKind.KeywordOtherwise),
-        () => readTokenKindAsConstant(state, Token.TokenKind.KeywordOtherwise, Constant.KeywordConstantKind.Otherwise),
+        () => readTokenKindAsConstant(state, Token.TokenKind.KeywordOtherwise, Constant.KeywordConstant.Otherwise),
         () => parser.readExpression(state, parser),
     );
 
@@ -1603,13 +1603,13 @@ export function readRecordLiteral(state: ParseState, parser: Parser): Ast.Record
     const continueReadingValues: boolean = !ParseStateUtils.isNextTokenKind(state, Token.TokenKind.RightBracket);
     const wrappedRead: Ast.IWrapped<
         Ast.NodeKind.RecordLiteral,
-        Constant.WrapperConstantKind.LeftBracket,
+        Constant.WrapperConstant.LeftBracket,
         Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>,
-        Constant.WrapperConstantKind.RightBracket
+        Constant.WrapperConstant.RightBracket
     > = readWrapped(
         state,
         Ast.NodeKind.RecordLiteral,
-        () => readTokenKindAsConstant(state, Token.TokenKind.LeftBracket, Constant.WrapperConstantKind.LeftBracket),
+        () => readTokenKindAsConstant(state, Token.TokenKind.LeftBracket, Constant.WrapperConstant.LeftBracket),
         () =>
             parser.readFieldNamePairedAnyLiterals(
                 state,
@@ -1617,7 +1617,7 @@ export function readRecordLiteral(state: ParseState, parser: Parser): Ast.Record
                 continueReadingValues,
                 testCsvContinuationDanglingCommaForBracket,
             ),
-        () => readTokenKindAsConstant(state, Token.TokenKind.RightBracket, Constant.WrapperConstantKind.RightBracket),
+        () => readTokenKindAsConstant(state, Token.TokenKind.RightBracket, Constant.WrapperConstant.RightBracket),
         false,
     );
     return {
@@ -1658,13 +1658,13 @@ export function readListLiteral(state: ParseState, parser: Parser): Ast.ListLite
     const continueReadingValues: boolean = !ParseStateUtils.isNextTokenKind(state, Token.TokenKind.RightBrace);
     const wrappedRead: Ast.IWrapped<
         Ast.NodeKind.ListLiteral,
-        Constant.WrapperConstantKind.LeftBrace,
+        Constant.WrapperConstant.LeftBrace,
         Ast.ICsvArray<Ast.TAnyLiteral>,
-        Constant.WrapperConstantKind.RightBrace
+        Constant.WrapperConstant.RightBrace
     > = readWrapped(
         state,
         Ast.NodeKind.ListLiteral,
-        () => readTokenKindAsConstant(state, Token.TokenKind.LeftBrace, Constant.WrapperConstantKind.LeftBrace),
+        () => readTokenKindAsConstant(state, Token.TokenKind.LeftBrace, Constant.WrapperConstant.LeftBrace),
         () =>
             readCsvArray<Ast.TAnyLiteral>(
                 state,
@@ -1672,7 +1672,7 @@ export function readListLiteral(state: ParseState, parser: Parser): Ast.ListLite
                 continueReadingValues,
                 testCsvContinuationDanglingCommaForBrace,
             ),
-        () => readTokenKindAsConstant(state, Token.TokenKind.RightBrace, Constant.WrapperConstantKind.RightBrace),
+        () => readTokenKindAsConstant(state, Token.TokenKind.RightBrace, Constant.WrapperConstant.RightBrace),
         false,
     );
     return {
@@ -1723,28 +1723,28 @@ function tryReadPrimitiveType(state: ParseState, parser: Parser): TriedReadPrimi
         return ResultUtils.boxError(error);
     }
 
-    let primitiveTypeKind: Constant.PrimitiveTypeConstantKind;
+    let primitiveTypeKind: Constant.PrimitiveTypeConstant;
     if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.Identifier)) {
         const currentTokenData: string = state.lexerSnapshot.tokens[state.tokenIndex].data;
 
         switch (currentTokenData) {
-            case Constant.PrimitiveTypeConstantKind.Action:
-            case Constant.PrimitiveTypeConstantKind.Any:
-            case Constant.PrimitiveTypeConstantKind.AnyNonNull:
-            case Constant.PrimitiveTypeConstantKind.Binary:
-            case Constant.PrimitiveTypeConstantKind.Date:
-            case Constant.PrimitiveTypeConstantKind.DateTime:
-            case Constant.PrimitiveTypeConstantKind.DateTimeZone:
-            case Constant.PrimitiveTypeConstantKind.Duration:
-            case Constant.PrimitiveTypeConstantKind.Function:
-            case Constant.PrimitiveTypeConstantKind.List:
-            case Constant.PrimitiveTypeConstantKind.Logical:
-            case Constant.PrimitiveTypeConstantKind.None:
-            case Constant.PrimitiveTypeConstantKind.Number:
-            case Constant.PrimitiveTypeConstantKind.Record:
-            case Constant.PrimitiveTypeConstantKind.Table:
-            case Constant.PrimitiveTypeConstantKind.Text:
-            case Constant.PrimitiveTypeConstantKind.Time:
+            case Constant.PrimitiveTypeConstant.Action:
+            case Constant.PrimitiveTypeConstant.Any:
+            case Constant.PrimitiveTypeConstant.AnyNonNull:
+            case Constant.PrimitiveTypeConstant.Binary:
+            case Constant.PrimitiveTypeConstant.Date:
+            case Constant.PrimitiveTypeConstant.DateTime:
+            case Constant.PrimitiveTypeConstant.DateTimeZone:
+            case Constant.PrimitiveTypeConstant.Duration:
+            case Constant.PrimitiveTypeConstant.Function:
+            case Constant.PrimitiveTypeConstant.List:
+            case Constant.PrimitiveTypeConstant.Logical:
+            case Constant.PrimitiveTypeConstant.None:
+            case Constant.PrimitiveTypeConstant.Number:
+            case Constant.PrimitiveTypeConstant.Record:
+            case Constant.PrimitiveTypeConstant.Table:
+            case Constant.PrimitiveTypeConstant.Text:
+            case Constant.PrimitiveTypeConstant.Time:
                 primitiveTypeKind = currentTokenData;
                 readToken(state);
                 break;
@@ -1761,10 +1761,10 @@ function tryReadPrimitiveType(state: ParseState, parser: Parser): TriedReadPrimi
                 );
         }
     } else if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.KeywordType)) {
-        primitiveTypeKind = Constant.PrimitiveTypeConstantKind.Type;
+        primitiveTypeKind = Constant.PrimitiveTypeConstant.Type;
         readToken(state);
     } else if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.NullLiteral)) {
-        primitiveTypeKind = Constant.PrimitiveTypeConstantKind.Null;
+        primitiveTypeKind = Constant.PrimitiveTypeConstant.Null;
         readToken(state);
     } else {
         const details: {} = { tokenKind: state.maybeCurrentTokenKind };
@@ -1970,8 +1970,8 @@ function readCsvArray<T extends Ast.TCsvType>(
 
         const node: T = valueReader();
         const maybeCommaConstant:
-            | Ast.IConstant<Constant.MiscConstantKind.Comma>
-            | undefined = maybeReadTokenKindAsConstant(state, Token.TokenKind.Comma, Constant.MiscConstantKind.Comma);
+            | Ast.IConstant<Constant.MiscConstant.Comma>
+            | undefined = maybeReadTokenKindAsConstant(state, Token.TokenKind.Comma, Constant.MiscConstant.Comma);
 
         const element: Ast.TCsv & Ast.ICsv<T> = {
             ...ParseStateUtils.assertGetContextNodeMetadata(state),
@@ -2005,10 +2005,10 @@ function readKeyValuePair<Kind extends Ast.TKeyValuePairNodeKind, Key, Value>(
     ParseStateUtils.startContext(state, nodeKind);
 
     const key: Key = keyReader();
-    const equalConstant: Ast.IConstant<Constant.MiscConstantKind.Equal> = readTokenKindAsConstant(
+    const equalConstant: Ast.IConstant<Constant.MiscConstant.Equal> = readTokenKindAsConstant(
         state,
         Token.TokenKind.Equal,
-        Constant.MiscConstantKind.Equal,
+        Constant.MiscConstant.Equal,
     );
     const value: Value = valueReader();
 
@@ -2026,7 +2026,7 @@ function readKeyValuePair<Kind extends Ast.TKeyValuePairNodeKind, Key, Value>(
 
 function readPairedConstant<
     Kind extends Ast.TPairedConstantNodeKind,
-    ConstantKind extends Constant.TConstantKind,
+    ConstantKind extends Constant.TConstant,
     Paired
 >(
     state: ParseState,
@@ -2054,7 +2054,7 @@ function readPairedConstant<
 
 function maybeReadPairedConstant<
     Kind extends Ast.TPairedConstantNodeKind,
-    ConstantKind extends Constant.TConstantKind,
+    ConstantKind extends Constant.TConstant,
     Paired
 >(
     state: ParseState,
@@ -2079,10 +2079,10 @@ function genericReadParameterList<T extends Ast.TParameterType>(
     const nodeKind: Ast.NodeKind.ParameterList = Ast.NodeKind.ParameterList;
     ParseStateUtils.startContext(state, nodeKind);
 
-    const leftParenthesisConstant: Ast.IConstant<Constant.WrapperConstantKind.LeftParenthesis> = readTokenKindAsConstant(
+    const leftParenthesisConstant: Ast.IConstant<Constant.WrapperConstant.LeftParenthesis> = readTokenKindAsConstant(
         state,
         Token.TokenKind.LeftParenthesis,
-        Constant.WrapperConstantKind.LeftParenthesis,
+        Constant.WrapperConstant.LeftParenthesis,
     );
     let continueReadingValues: boolean = !ParseStateUtils.isOnTokenKind(state, Token.TokenKind.RightParenthesis);
     let reachedOptionalParameter: boolean = false;
@@ -2101,8 +2101,8 @@ function genericReadParameterList<T extends Ast.TParameterType>(
         }
 
         const maybeOptionalConstant:
-            | Ast.IConstant<Constant.LanguageConstantKind.Optional>
-            | undefined = maybeReadConstantKind(state, Constant.LanguageConstantKind.Optional);
+            | Ast.IConstant<Constant.LanguageConstant.Optional>
+            | undefined = maybeReadConstantKind(state, Constant.LanguageConstant.Optional);
 
         if (reachedOptionalParameter && !maybeOptionalConstant) {
             const token: Token.Token = ParseStateUtils.assertGetTokenAt(state, state.tokenIndex);
@@ -2129,8 +2129,8 @@ function genericReadParameterList<T extends Ast.TParameterType>(
         ParseStateUtils.endContext(state, parameter);
 
         const maybeCommaConstant:
-            | Ast.IConstant<Constant.MiscConstantKind.Comma>
-            | undefined = maybeReadTokenKindAsConstant(state, Token.TokenKind.Comma, Constant.MiscConstantKind.Comma);
+            | Ast.IConstant<Constant.MiscConstant.Comma>
+            | undefined = maybeReadTokenKindAsConstant(state, Token.TokenKind.Comma, Constant.MiscConstant.Comma);
         continueReadingValues = maybeCommaConstant !== undefined;
 
         const csv: Ast.ICsv<Ast.IParameter<T>> = {
@@ -2153,10 +2153,10 @@ function genericReadParameterList<T extends Ast.TParameterType>(
     };
     ParseStateUtils.endContext(state, parameterArray);
 
-    const rightParenthesisConstant: Ast.IConstant<Constant.WrapperConstantKind.RightParenthesis> = readTokenKindAsConstant(
+    const rightParenthesisConstant: Ast.IConstant<Constant.WrapperConstant.RightParenthesis> = readTokenKindAsConstant(
         state,
         Token.TokenKind.RightParenthesis,
-        Constant.WrapperConstantKind.RightParenthesis,
+        Constant.WrapperConstant.RightParenthesis,
     );
 
     const astNode: Ast.IParameterList<T> = {
@@ -2173,9 +2173,9 @@ function genericReadParameterList<T extends Ast.TParameterType>(
 
 function readWrapped<
     Kind extends Ast.TWrappedNodeKind,
-    Open extends Constant.WrapperConstantKind,
+    Open extends Constant.WrapperConstant,
     Content,
-    Close extends Constant.WrapperConstantKind
+    Close extends Constant.WrapperConstant
 >(
     state: ParseState,
     nodeKind: Kind,
@@ -2190,12 +2190,12 @@ function readWrapped<
     const content: Content = contentReader();
     const closeWrapperConstant: Ast.IConstant<Close> = closeConstantReader();
 
-    let maybeOptionalConstant: Ast.IConstant<Constant.MiscConstantKind.QuestionMark> | undefined;
+    let maybeOptionalConstant: Ast.IConstant<Constant.MiscConstant.QuestionMark> | undefined;
     if (allowOptionalConstant) {
         maybeOptionalConstant = maybeReadTokenKindAsConstant(
             state,
             Token.TokenKind.QuestionMark,
-            Constant.MiscConstantKind.QuestionMark,
+            Constant.MiscConstant.QuestionMark,
         );
     }
 
@@ -2245,7 +2245,7 @@ export function readToken(state: ParseState): string {
     return data;
 }
 
-export function readTokenKindAsConstant<ConstantKind extends Constant.TConstantKind>(
+export function readTokenKindAsConstant<ConstantKind extends Constant.TConstant>(
     state: ParseState,
     tokenKind: Token.TokenKind,
     constantKind: ConstantKind,
@@ -2272,7 +2272,7 @@ export function readTokenKindAsConstant<ConstantKind extends Constant.TConstantK
     return astNode;
 }
 
-export function maybeReadTokenKindAsConstant<ConstantKind extends Constant.TConstantKind>(
+export function maybeReadTokenKindAsConstant<ConstantKind extends Constant.TConstant>(
     state: ParseState,
     tokenKind: Token.TokenKind,
     constantKind: ConstantKind,
@@ -2313,7 +2313,7 @@ function readTokenKind(state: ParseState, tokenKind: Token.TokenKind): string {
     return readToken(state);
 }
 
-function readConstantKind<ConstantKind extends Constant.TConstantKind>(
+function readConstantKind<ConstantKind extends Constant.TConstant>(
     state: ParseState,
     constantKind: ConstantKind,
 ): Ast.TConstant & Ast.IConstant<ConstantKind> {
@@ -2322,7 +2322,7 @@ function readConstantKind<ConstantKind extends Constant.TConstantKind>(
     });
 }
 
-function maybeReadConstantKind<ConstantKind extends Constant.TConstantKind>(
+function maybeReadConstantKind<ConstantKind extends Constant.TConstant>(
     state: ParseState,
     constantKind: ConstantKind,
 ): (Ast.TConstant & Ast.IConstant<ConstantKind>) | undefined {

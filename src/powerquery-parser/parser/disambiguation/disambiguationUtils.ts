@@ -314,8 +314,8 @@ function readParenthesizedExpressionOrBinOpExpression(
     AstUtils.assertAsTConstant(leftMostNode);
     Assert.isTrue(
         leftMostNode.kind === Ast.NodeKind.Constant &&
-            leftMostNode.constantKind === Constant.WrapperConstantKind.LeftParenthesis,
-        `leftMostNode should be a ${Ast.NodeKind.Constant} with a constantKind of ${Constant.WrapperConstantKind.LeftParenthesis}`,
+            leftMostNode.constantKind === Constant.WrapperConstant.LeftParenthesis,
+        `leftMostNode should be a ${Ast.NodeKind.Constant} with a constantKind of ${Constant.WrapperConstant.LeftParenthesis}`,
     );
 
     return node;

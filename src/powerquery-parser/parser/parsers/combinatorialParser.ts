@@ -93,8 +93,8 @@ function readBinOpExpression(
         );
 
         switch (operator) {
-            case Constant.KeywordConstantKind.As:
-            case Constant.KeywordConstantKind.Is:
+            case Constant.KeywordConstant.As:
+            case Constant.KeywordConstant.Is:
                 expressions.push(parser.readNullablePrimitiveType(state, parser));
                 break;
 
@@ -215,37 +215,37 @@ function readBinOpExpression(
 
 function binOpExpressionNodeKindFrom(operator: Constant.TBinOpExpressionOperator): Ast.TBinOpExpressionNodeKind {
     switch (operator) {
-        case Constant.KeywordConstantKind.Meta:
+        case Constant.KeywordConstant.Meta:
             return Ast.NodeKind.MetadataExpression;
 
-        case Constant.ArithmeticOperatorKind.Multiplication:
-        case Constant.ArithmeticOperatorKind.Division:
-        case Constant.ArithmeticOperatorKind.Addition:
-        case Constant.ArithmeticOperatorKind.Subtraction:
-        case Constant.ArithmeticOperatorKind.And:
+        case Constant.ArithmeticOperator.Multiplication:
+        case Constant.ArithmeticOperator.Division:
+        case Constant.ArithmeticOperator.Addition:
+        case Constant.ArithmeticOperator.Subtraction:
+        case Constant.ArithmeticOperator.And:
             return Ast.NodeKind.ArithmeticExpression;
 
-        case Constant.RelationalOperatorKind.GreaterThan:
-        case Constant.RelationalOperatorKind.GreaterThanEqualTo:
-        case Constant.RelationalOperatorKind.LessThan:
-        case Constant.RelationalOperatorKind.LessThanEqualTo:
+        case Constant.RelationalOperator.GreaterThan:
+        case Constant.RelationalOperator.GreaterThanEqualTo:
+        case Constant.RelationalOperator.LessThan:
+        case Constant.RelationalOperator.LessThanEqualTo:
             return Ast.NodeKind.RelationalExpression;
 
-        case Constant.EqualityOperatorKind.EqualTo:
-        case Constant.EqualityOperatorKind.NotEqualTo:
+        case Constant.EqualityOperator.EqualTo:
+        case Constant.EqualityOperator.NotEqualTo:
             return Ast.NodeKind.EqualityExpression;
 
-        case Constant.KeywordConstantKind.As:
+        case Constant.KeywordConstant.As:
             return Ast.NodeKind.AsExpression;
 
-        case Constant.KeywordConstantKind.Is:
+        case Constant.KeywordConstant.Is:
             return Ast.NodeKind.IsExpression;
 
-        case Constant.LogicalOperatorKind.And:
-        case Constant.LogicalOperatorKind.Or:
+        case Constant.LogicalOperator.And:
+        case Constant.LogicalOperator.Or:
             return Ast.NodeKind.LogicalExpression;
 
-        case Constant.MiscConstantKind.NullCoalescingOperator:
+        case Constant.MiscConstant.NullCoalescingOperator:
             return Ast.NodeKind.NullCoalescingExpression;
 
         default:
