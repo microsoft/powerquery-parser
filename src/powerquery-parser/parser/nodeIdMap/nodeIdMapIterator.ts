@@ -214,7 +214,7 @@ export function iterFunctionExpressionParameters(
     XorNodeUtils.assertIsNodeKind(functionExpression, Ast.NodeKind.FunctionExpression);
 
     if (XorNodeUtils.isAstXorChecked<Ast.FunctionExpression>(functionExpression, Ast.NodeKind.FunctionExpression)) {
-        return (functionExpression.node as Ast.FunctionExpression).parameters.content.elements.map(
+        return functionExpression.node.parameters.content.elements.map(
             (parameter: Ast.ICsv<Ast.IParameter<Ast.AsNullablePrimitiveType | undefined>>) =>
                 XorNodeUtils.boxAst(parameter.node),
         );
