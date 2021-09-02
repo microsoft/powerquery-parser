@@ -108,7 +108,7 @@ describe("nodeIdMapIterator", () => {
         });
     });
 
-    describe(`iterFunctionExpressionParameterNames`, () => {
+    describe(`iterFunctionExpressionParameterNameLiterals`, () => {
         it(`ast`, () => {
             const text: string = `(x, y as number) => x + y`;
             const parseOk: Task.ParseTaskOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
@@ -123,7 +123,7 @@ describe("nodeIdMapIterator", () => {
                 parseOk.nodeIdMapCollection,
                 functionExpressionId,
             );
-            const parameterNames: ReadonlyArray<string> = NodeIdMapIterator.iterFunctionExpressionParameterNames(
+            const parameterNames: ReadonlyArray<string> = NodeIdMapIterator.iterFunctionExpressionParameterNameLiterals(
                 parseOk.nodeIdMapCollection,
                 functionExpression,
             );
@@ -145,7 +145,7 @@ describe("nodeIdMapIterator", () => {
                 parseError.state.contextState.nodeIdMapCollection,
                 functionExpressionId,
             );
-            const parameterNames: ReadonlyArray<string> = NodeIdMapIterator.iterFunctionExpressionParameterNames(
+            const parameterNames: ReadonlyArray<string> = NodeIdMapIterator.iterFunctionExpressionParameterNameLiterals(
                 parseError.state.contextState.nodeIdMapCollection,
                 functionExpression,
             );

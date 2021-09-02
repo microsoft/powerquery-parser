@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils } from "..";
+import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, XorNodeUtils } from "..";
 import { MapUtils, TypeScriptUtils } from "../../../common";
 import { Ast } from "../../../language";
 import { ParseContext } from "../../context";
 import { Collection } from "../nodeIdMap";
-import { TXorNode, XorNodeKind } from "../xorNode";
+import { TXorNode } from "../xorNode";
 
 // Helper functions which are related to updating / remapping nodeIds for NodeIdMap.Collection
 
@@ -80,7 +80,7 @@ function createDelta(
         const oldId: number = xorNode.node.id;
         const newId: number = newIdByOldId.get(oldId)!;
 
-        if (xorNode.kind === XorNodeKind.Ast) {
+        if (XorNodeUtils.isAstXor(xorNode)) {
             partialCollection.astNodeById.set(newId, xorNode.node);
         } else {
             partialCollection.contextNodeById.set(newId, xorNode.node);
@@ -136,7 +136,7 @@ function applyDelta(
 
         // Update nodeIds for either Ast.TNode or ParseContext.Node,
         // both in the NodeIdMap.Collection and on the node itself.
-        if (xorNode.kind === XorNodeKind.Ast) {
+        if (XorNodeUtils.isAstXor(xorNode)) {
             const mutableNode: TypeScriptUtils.StripReadonly<Ast.TNode> = xorNode.node;
             mutableNode.id = newId;
             nodeIdMapCollection.astNodeById.set(newId, mutableNode);
