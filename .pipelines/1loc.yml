@@ -31,6 +31,7 @@ jobs:
             displayName: "Localization Build: src/powerquery-parser-localization/LocProject.json"
             inputs:
                 locProj: "src/powerquery-parser/localization/LocProject.json"
+                isCreatePrSelected: true
                 repoType: gitHub
                 gitHubPatVariable: "$(GitHubPat)"
                 packageSourceAuth: patAuth
