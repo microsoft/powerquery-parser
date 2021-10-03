@@ -103,7 +103,7 @@ export function assertIsNodeKind<T extends Ast.TNode>(
 }
 
 export function assertIsAstXor(xorNode: TXorNode): asserts xorNode is TAstXorNode {
-    Assert.asDefined(isAstXor(xorNode), "expected xorNode to hold an Ast node", {
+    Assert.isTrue(isAstXor(xorNode), "expected xorNode to hold an Ast node", {
         xorNodeKind: xorNode.kind,
         xorNodeId: xorNode.node.id,
     });
