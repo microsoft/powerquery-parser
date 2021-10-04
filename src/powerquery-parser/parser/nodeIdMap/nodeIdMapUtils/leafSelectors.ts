@@ -5,7 +5,7 @@ import { NodeIdMap, XorNodeUtils } from "..";
 import { Assert } from "../../../common";
 import { Ast } from "../../../language";
 import { AstNodeById, Collection } from "../nodeIdMap";
-import { TXorNode, XorNodeKind } from "../xorNode";
+import { TXorNode } from "../xorNode";
 import { maybeXor } from "./commonSelectors";
 
 export function assertUnboxLeftMostLeaf(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
@@ -43,9 +43,8 @@ export function maybeLeftMostXor(nodeIdMapCollection: Collection, nodeId: number
 }
 
 export function maybeLeftMostLeaf(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): Ast.TNode | undefined {
-    const maybeNode: TXorNode | undefined = maybeLeftMostXor(nodeIdMapCollection, nodeId);
-
-    return maybeNode?.kind === XorNodeKind.Ast ? maybeNode.node : undefined;
+    const maybeXorNode: TXorNode | undefined = maybeLeftMostXor(nodeIdMapCollection, nodeId);
+    return maybeXorNode && XorNodeUtils.isAstXor(maybeXorNode) ? maybeXorNode.node : undefined;
 }
 
 // There are a few assumed invariants about children:

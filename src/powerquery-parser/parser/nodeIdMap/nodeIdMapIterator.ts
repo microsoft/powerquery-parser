@@ -4,6 +4,7 @@
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
 import { Assert, MapUtils, StringUtils } from "../../common";
 import { Ast } from "../../language";
+import { maybeParameterName } from "./nodeIdMapUtils";
 import { XorNode } from "./xorNode";
 
 export type TKeyValuePair = LetKeyValuePair | RecordKeyValuePair | SectionKeyValuePair;
@@ -136,7 +137,7 @@ export function iterArrayWrapper(
 ): ReadonlyArray<TXorNode> {
     XorNodeUtils.assertIsNodeKind(arrayWrapper, Ast.NodeKind.ArrayWrapper);
 
-    if (arrayWrapper.kind === XorNodeKind.Ast) {
+    if (XorNodeUtils.isAstXor(arrayWrapper)) {
         return (arrayWrapper.node as Ast.TCsvArray).elements.map((wrapper: Ast.TCsv) =>
             XorNodeUtils.boxAst(wrapper.node),
         );
@@ -198,9 +199,7 @@ export function iterFieldProjectionNames(
             selector.node.id,
             Ast.NodeKind.GeneralizedIdentifier,
         );
-        if (maybeIdentifier?.kind !== XorNodeKind.Ast) {
-            break;
-        } else {
+        if (maybeIdentifier && XorNodeUtils.isAstXor(maybeIdentifier)) {
             result.push(maybeIdentifier.node.literal);
         }
     }
@@ -214,8 +213,8 @@ export function iterFunctionExpressionParameters(
 ): ReadonlyArray<TXorNode> {
     XorNodeUtils.assertIsNodeKind(functionExpression, Ast.NodeKind.FunctionExpression);
 
-    if (functionExpression.kind === XorNodeKind.Ast) {
-        return (functionExpression.node as Ast.FunctionExpression).parameters.content.elements.map(
+    if (XorNodeUtils.isAstXorChecked<Ast.FunctionExpression>(functionExpression, Ast.NodeKind.FunctionExpression)) {
+        return functionExpression.node.parameters.content.elements.map(
             (parameter: Ast.ICsv<Ast.IParameter<Ast.AsNullablePrimitiveType | undefined>>) =>
                 XorNodeUtils.boxAst(parameter.node),
         );
@@ -234,25 +233,28 @@ export function iterFunctionExpressionParameters(
 export function iterFunctionExpressionParameterNames(
     nodeIdMapCollection: NodeIdMap.Collection,
     functionExpression: TXorNode,
-): ReadonlyArray<string> {
-    const result: string[] = [];
+): ReadonlyArray<Ast.Identifier> {
+    const result: Ast.Identifier[] = [];
 
     for (const parameter of iterFunctionExpressionParameters(nodeIdMapCollection, functionExpression)) {
-        const maybeName: Ast.Identifier | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
-            nodeIdMapCollection,
-            parameter.node.id,
-            1,
-            Ast.NodeKind.Identifier,
-        );
-
-        if (!maybeName) {
-            return result;
-        } else {
-            result.push((maybeName as Ast.Identifier).literal);
+        const maybeName: Ast.Identifier | undefined = maybeParameterName(nodeIdMapCollection, parameter);
+        if (maybeName === undefined) {
+            break;
         }
+
+        result.push(maybeName);
     }
 
     return result;
+}
+
+export function iterFunctionExpressionParameterNameLiterals(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    functionExpression: TXorNode,
+): ReadonlyArray<string> {
+    return iterFunctionExpressionParameterNames(nodeIdMapCollection, functionExpression).map(
+        (identifier: Ast.Identifier) => identifier.literal,
+    );
 }
 
 // Return all FieldSpecification children under the given FieldSpecificationList.
@@ -332,8 +334,8 @@ export function iterSection(
 ): ReadonlyArray<SectionKeyValuePair> {
     XorNodeUtils.assertIsNodeKind(section, Ast.NodeKind.Section);
 
-    if (section.kind === XorNodeKind.Ast) {
-        return (section.node as Ast.Section).sectionMembers.elements.map((sectionMember: Ast.SectionMember) => {
+    if (XorNodeUtils.isAstXorChecked<Ast.Section>(section, Ast.NodeKind.Section)) {
+        return section.node.sectionMembers.elements.map((sectionMember: Ast.SectionMember) => {
             const namePairedExpression: Ast.IdentifierPairedExpression = sectionMember.namePairedExpression;
             const keyLiteral: string = namePairedExpression.key.literal;
 

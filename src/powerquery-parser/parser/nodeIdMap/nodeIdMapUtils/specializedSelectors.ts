@@ -1,19 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMapIterator, XorNodeUtils } from "..";
+import { NodeIdMap, NodeIdMapIterator, XorNodeUtils } from "..";
 import { CommonError } from "../../../common";
 import { Ast } from "../../../language";
-import { Collection } from "../nodeIdMap";
-import { TXorNode, XorNode, XorNodeKind } from "../xorNode";
-import { assertGetNthChild, assertGetNthChildChecked, maybeNthChildChecked } from "./childSelectors";
+import { TXorNode, XorNode } from "../xorNode";
+import {
+    assertGetNthChild,
+    assertGetNthChildChecked,
+    maybeNthChildChecked,
+    maybeUnboxNthChildIfAstChecked,
+} from "./childSelectors";
 import { assertGetXor, assertGetXorChecked } from "./commonSelectors";
 import { assertGetParentXor, assertGetParentXorChecked } from "./parentSelectors";
 
 // Returns the previous sibling of the given recursive expression.
 // Commonly used for things like getting the identifier name used in an InvokeExpression.
 export function assertGetRecursiveExpressionPreviousSibling<T extends Ast.TNode>(
-    nodeIdMapCollection: Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
     maybeExpectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
 ): TXorNode {
@@ -64,7 +68,7 @@ export function assertGetRecursiveExpressionPreviousSibling<T extends Ast.TNode>
 }
 
 export function maybeInvokeExpressionIdentifier(
-    nodeIdMapCollection: Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
 ): XorNode<Ast.IdentifierExpression> | undefined {
     const invokeExprXorNode: TXorNode = assertGetXorChecked(nodeIdMapCollection, nodeId, Ast.NodeKind.InvokeExpression);
@@ -90,7 +94,7 @@ export function maybeInvokeExpressionIdentifier(
 
     // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
     // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
-    if (headXorNode.kind !== XorNodeKind.Ast) {
+    if (XorNodeUtils.isContextXor(headXorNode)) {
         const details: {} = {
             identifierExpressionNodeId: headXorNode.node.id,
             invokeExpressionNodeId: invokeExprXorNode.node.id,
@@ -104,8 +108,29 @@ export function maybeInvokeExpressionIdentifier(
     return headXorNode;
 }
 
+export function maybeParameterName(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    functionParameter: TXorNode,
+): Ast.Identifier | undefined {
+    return maybeUnboxNthChildIfAstChecked<Ast.Identifier>(
+        nodeIdMapCollection,
+        functionParameter.node.id,
+        1,
+        Ast.NodeKind.Identifier,
+    );
+}
+
+export function maybeParameterNameLiteral(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    functionParameter: TXorNode,
+): string | undefined {
+    const maybeIdentifier: Ast.Identifier | undefined = maybeParameterName(nodeIdMapCollection, functionParameter);
+
+    return maybeIdentifier ? maybeIdentifier.literal : undefined;
+}
+
 export function maybeInvokeExpressionIdentifierLiteral(
-    nodeIdMapCollection: Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
 ): string | undefined {
     assertGetXorChecked(nodeIdMapCollection, nodeId, Ast.NodeKind.InvokeExpression);
@@ -113,7 +138,7 @@ export function maybeInvokeExpressionIdentifierLiteral(
     const maybeIdentifierExpressionXorNode:
         | XorNode<Ast.IdentifierExpression>
         | undefined = maybeInvokeExpressionIdentifier(nodeIdMapCollection, nodeId);
-    if (maybeIdentifierExpressionXorNode === undefined || !XorNodeUtils.isAstXor(maybeIdentifierExpressionXorNode)) {
+    if (maybeIdentifierExpressionXorNode === undefined || XorNodeUtils.isContextXor(maybeIdentifierExpressionXorNode)) {
         return undefined;
     }
 
