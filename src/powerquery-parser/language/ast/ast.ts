@@ -267,11 +267,7 @@ export interface NullablePrimitiveType
     extends IPairedConstant<NodeKind.NullablePrimitiveType, Constant.LanguageConstant.Nullable, PrimitiveType> {}
 
 export interface IsNullablePrimitiveType
-    extends IPairedConstant<
-        NodeKind.IsNullablePrimitiveType,
-        Constant.KeywordConstant.Is,
-        TNullablePrimitiveType
-    > {}
+    extends IPairedConstant<NodeKind.IsNullablePrimitiveType, Constant.KeywordConstant.Is, TNullablePrimitiveType> {}
 
 export interface PrimitiveType extends INode {
     readonly kind: NodeKind.PrimitiveType;
@@ -605,11 +601,8 @@ export interface IKeyValuePair<Kind extends TKeyValuePairNodeKind, Key, Value> e
 
 // A [Constant, T] tuple
 // eg. EachExpression is a `each` Constant paired with a TExpression
-export interface IPairedConstant<
-    Kind extends TPairedConstantNodeKind,
-    ConstantKind extends Constant.TConstant,
-    Paired
-> extends INode {
+export interface IPairedConstant<Kind extends TPairedConstantNodeKind, ConstantKind extends Constant.TConstant, Paired>
+    extends INode {
     readonly kind: Kind;
     readonly constant: IConstant<ConstantKind>;
     readonly paired: Paired;
@@ -631,12 +624,7 @@ export interface IBraceWrapped<Kind extends TWrappedNodeKind, Content>
     extends IWrapped<Kind, Constant.WrapperConstant.LeftBrace, Content, Constant.WrapperConstant.RightBrace> {}
 
 export interface IBracketWrapped<Kind extends TWrappedNodeKind, Content>
-    extends IWrapped<
-        Kind,
-        Constant.WrapperConstant.LeftBracket,
-        Content,
-        Constant.WrapperConstant.RightBracket
-    > {}
+    extends IWrapped<Kind, Constant.WrapperConstant.LeftBracket, Content, Constant.WrapperConstant.RightBracket> {}
 
 export interface IParenthesisWrapped<Kind extends TWrappedNodeKind, Content>
     extends IWrapped<
@@ -772,11 +760,7 @@ export interface IParameter<T extends TParameterType> extends INode {
 }
 
 export interface AsNullablePrimitiveType
-    extends IPairedConstant<
-        NodeKind.AsNullablePrimitiveType,
-        Constant.KeywordConstant.As,
-        TNullablePrimitiveType
-    > {}
+    extends IPairedConstant<NodeKind.AsNullablePrimitiveType, Constant.KeywordConstant.As, TNullablePrimitiveType> {}
 
 export interface AsType extends IPairedConstant<NodeKind.AsType, Constant.KeywordConstant.As, TType> {}
 
