@@ -294,6 +294,90 @@ describe(`TypeUtils.typeCheck`, () => {
             expect(actual).to.deep.equal(expected);
         });
 
+        it(`allow null for nullable parameter`, () => {
+            const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.NullInstance];
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
+                false,
+                [
+                    {
+                        isNullable: true,
+                        isOptional: false,
+                        maybeType: Language.Type.TypeKind.Number,
+                        nameLiteral: "foo",
+                    },
+                ],
+                Language.Type.ActionInstance,
+            );
+            const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
+                args,
+                definedFunction,
+            );
+            const expected: Language.TypeUtils.CheckedInvocation = {
+                valid: [0],
+                invalid: new Map(),
+                extraneous: [],
+                missing: [],
+            };
+
+            expect(actual).to.deep.equal(expected);
+        });
+
+        it(`disallow null for non-nullable parameter`, () => {
+            const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.NullInstance];
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
+                false,
+                [
+                    {
+                        isNullable: false,
+                        isOptional: false,
+                        maybeType: Language.Type.TypeKind.Number,
+                        nameLiteral: "foo",
+                    },
+                ],
+                Language.Type.ActionInstance,
+            );
+            const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
+                args,
+                definedFunction,
+            );
+            const expected: Language.TypeUtils.CheckedInvocation = {
+                valid: [],
+                invalid: new Map([[0, { actual: args[0], expected: definedFunction.parameters[0] }]]),
+                extraneous: [],
+                missing: [],
+            };
+
+            expect(actual).to.deep.equal(expected);
+        });
+
+        it(`disallow nullable for non-nullable parameter`, () => {
+            const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.NullableTextInstance];
+            const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
+                false,
+                [
+                    {
+                        isNullable: false,
+                        isOptional: false,
+                        maybeType: Language.Type.TypeKind.Number,
+                        nameLiteral: "foo",
+                    },
+                ],
+                Language.Type.ActionInstance,
+            );
+            const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
+                args,
+                definedFunction,
+            );
+            const expected: Language.TypeUtils.CheckedInvocation = {
+                valid: [],
+                invalid: new Map([[0, { actual: args[0], expected: definedFunction.parameters[0] }]]),
+                extraneous: [],
+                missing: [],
+            };
+
+            expect(actual).to.deep.equal(expected);
+        });
+
         it(`invalid multiple parameter`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [
                 Language.Type.LogicalInstance,

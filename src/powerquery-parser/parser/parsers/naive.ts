@@ -497,9 +497,7 @@ export function readMetadataExpression(state: ParseState, parser: Parser): Ast.T
     ParseStateUtils.startContext(state, nodeKind);
 
     const left: Ast.TUnaryExpression = parser.readUnaryExpression(state, parser);
-    const maybeMetaConstant:
-        | Ast.IConstant<Constant.KeywordConstant.Meta>
-        | undefined = maybeReadTokenKindAsConstant(
+    const maybeMetaConstant: Ast.IConstant<Constant.KeywordConstant.Meta> | undefined = maybeReadTokenKindAsConstant(
         state,
         Token.TokenKind.KeywordMeta,
         Constant.KeywordConstant.Meta,
@@ -809,19 +807,10 @@ export function readParenthesizedExpression(state: ParseState, parser: Parser): 
     return readWrapped(
         state,
         Ast.NodeKind.ParenthesizedExpression,
-        () =>
-            readTokenKindAsConstant(
-                state,
-                Token.TokenKind.LeftParenthesis,
-                Constant.WrapperConstant.LeftParenthesis,
-            ),
+        () => readTokenKindAsConstant(state, Token.TokenKind.LeftParenthesis, Constant.WrapperConstant.LeftParenthesis),
         () => parser.readExpression(state, parser),
         () =>
-            readTokenKindAsConstant(
-                state,
-                Token.TokenKind.RightParenthesis,
-                Constant.WrapperConstant.RightParenthesis,
-            ),
+            readTokenKindAsConstant(state, Token.TokenKind.RightParenthesis, Constant.WrapperConstant.RightParenthesis),
         false,
     );
 }
@@ -862,12 +851,7 @@ export function readInvokeExpression(state: ParseState, parser: Parser): Ast.Inv
     return readWrapped(
         state,
         Ast.NodeKind.InvokeExpression,
-        () =>
-            readTokenKindAsConstant(
-                state,
-                Token.TokenKind.LeftParenthesis,
-                Constant.WrapperConstant.LeftParenthesis,
-            ),
+        () => readTokenKindAsConstant(state, Token.TokenKind.LeftParenthesis, Constant.WrapperConstant.LeftParenthesis),
         () =>
             // The type inference in VSCode considers the lambda below a type error, but it compiles just fine.
             // I'm adding an explicit type to stop it from (incorrectly) saying it's an error.
@@ -878,11 +862,7 @@ export function readInvokeExpression(state: ParseState, parser: Parser): Ast.Inv
                 testCsvContinuationDanglingCommaForParenthesis,
             ),
         () =>
-            readTokenKindAsConstant(
-                state,
-                Token.TokenKind.RightParenthesis,
-                Constant.WrapperConstant.RightParenthesis,
-            ),
+            readTokenKindAsConstant(state, Token.TokenKind.RightParenthesis, Constant.WrapperConstant.RightParenthesis),
         false,
     );
 }
@@ -1357,11 +1337,7 @@ export function readFieldSpecificationList(
 
             const maybeCommaConstant:
                 | Ast.IConstant<Constant.MiscConstant.Comma>
-                | undefined = maybeReadTokenKindAsConstant(
-                state,
-                Token.TokenKind.Comma,
-                Constant.MiscConstant.Comma,
-            );
+                | undefined = maybeReadTokenKindAsConstant(state, Token.TokenKind.Comma, Constant.MiscConstant.Comma);
             continueReadingValues = maybeCommaConstant !== undefined;
 
             const csv: Ast.ICsv<Ast.FieldSpecification> = {
@@ -1969,9 +1945,11 @@ function readCsvArray<T extends Ast.TCsvType>(
         }
 
         const node: T = valueReader();
-        const maybeCommaConstant:
-            | Ast.IConstant<Constant.MiscConstant.Comma>
-            | undefined = maybeReadTokenKindAsConstant(state, Token.TokenKind.Comma, Constant.MiscConstant.Comma);
+        const maybeCommaConstant: Ast.IConstant<Constant.MiscConstant.Comma> | undefined = maybeReadTokenKindAsConstant(
+            state,
+            Token.TokenKind.Comma,
+            Constant.MiscConstant.Comma,
+        );
 
         const element: Ast.TCsv & Ast.ICsv<T> = {
             ...ParseStateUtils.assertGetContextNodeMetadata(state),
@@ -2024,11 +2002,7 @@ function readKeyValuePair<Kind extends Ast.TKeyValuePairNodeKind, Key, Value>(
     return keyValuePair;
 }
 
-function readPairedConstant<
-    Kind extends Ast.TPairedConstantNodeKind,
-    ConstantKind extends Constant.TConstant,
-    Paired
->(
+function readPairedConstant<Kind extends Ast.TPairedConstantNodeKind, ConstantKind extends Constant.TConstant, Paired>(
     state: ParseState,
     nodeKind: Kind,
     constantReader: () => Ast.TConstant & Ast.IConstant<ConstantKind>,
@@ -2128,9 +2102,11 @@ function genericReadParameterList<T extends Ast.TParameterType>(
         };
         ParseStateUtils.endContext(state, parameter);
 
-        const maybeCommaConstant:
-            | Ast.IConstant<Constant.MiscConstant.Comma>
-            | undefined = maybeReadTokenKindAsConstant(state, Token.TokenKind.Comma, Constant.MiscConstant.Comma);
+        const maybeCommaConstant: Ast.IConstant<Constant.MiscConstant.Comma> | undefined = maybeReadTokenKindAsConstant(
+            state,
+            Token.TokenKind.Comma,
+            Constant.MiscConstant.Comma,
+        );
         continueReadingValues = maybeCommaConstant !== undefined;
 
         const csv: Ast.ICsv<Ast.IParameter<T>> = {
