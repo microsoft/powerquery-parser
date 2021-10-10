@@ -101,6 +101,7 @@ export function isCompatibleWithFunctionParameter(
             !right.maybeType ||
             right.maybeType === Type.TypeKind.Any ||
             left.kind === Type.TypeKind.Any ||
+            (left.kind === Type.TypeKind.Null && right.isNullable) ||
             left.kind === right.maybeType
         );
     }
