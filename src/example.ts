@@ -49,6 +49,7 @@ function lexText(text: string): void {
         console.log(`An error occured while lexing: ${triedLex.error.message}`);
         return;
     }
+
     let lexerState: Lexer.State = triedLex.value;
 
     // The lexer state might have an error.
