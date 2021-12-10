@@ -4,13 +4,6 @@
 // tslint:disable-next-line: no-require-imports
 import performanceNow = require("performance-now");
 
-import { MapUtils } from ".";
-
-export interface Trace {
-    readonly id: string;
-    readonly message: string;
-}
-
 // phase:
 //      Static string.
 //      Examples: 'Lex', 'Parse', 'StaticAnalysis'
@@ -26,49 +19,52 @@ export interface Trace {
 //      Static string.
 //      Identifies what portion of a task you're in.
 //      Examples: 'traceEntry', 'partialEvaluation', 'traceExit'.
-// details:
+// maybeDetails:
 //      Nullable object that is JSON serializable.
 //      Contains dynamic data, such as arguments to functions.
 //
 // Example where each time the tracer emits a value it'll append to the local message.
 // let message = "";
-// const tracer = new TraceReporter("\t", (entry: string) => (message += entry));
+// const benchmarkTraceManager = new BenchmarkTraceManager((entry: string) => (message += entry), "\t");
 //
-// function foobar(tracer: Tracer): void {
-//     const { id } = tracer.traceEntry("Example", foobar.name, { messageLength: message.length });
+// function foobar(x: number): void {
+//     const trace: BenchmarkTrace = BenchmarkTraceManager.traceEntry("Example", foobar.name, { x, messageLength: message.length });
 //     // ...
-//     tracer.traceExit("Example", foobar.name, id);
+//     benchmarkTraceManager.endTrace(trace);
 // }
 //
-// foobar(tracer);
-export abstract class Tracer {
-    protected idFn: () => string;
+// foobar(10);
 
-    constructor(protected readonly valueDelimiter: string = "\t", maybeIdFn?: () => string) {
-        this.idFn = maybeIdFn ?? createAutoIncrementId();
+export abstract class TraceManager {
+    protected readonly createIdFn: () => string = createAutoIncrementId();
+
+    constructor(private readonly valueDelimiter: string = "\t") {}
+
+    abstract emitTrace(tracer: Trace, message: string, maybeDetails?: {}): void;
+
+    // Creates a new trace instance.
+    // Should be called at the start of a function.
+    public startTrace(phase: string, task: string, maybeDetails?: {}): Trace {
+        const tracer: Trace = this.createTrace(phase, task);
+        this.emitTrace(tracer, Message.TraceEntry, maybeDetails);
+
+        return tracer;
     }
 
-    public abstract emitTrace(id: string, message: string): Trace;
+    // Should be called at the end of a function.
+    public endTrace(trace: Trace, maybeDetails?: {}): void {
+        this.emitTrace(trace, Message.TraceExit, maybeDetails);
+    }
 
-    public dispose(): void {}
-
-    public formatMessage(phase: string, task: string, id: string, message: string, maybeDetails?: {}): string {
+    protected formatMessage(trace: Trace, message: string, maybeDetails?: {}): string {
         const details: string = maybeDetails !== undefined ? this.safeJsonStringify(maybeDetails) : "[Empty]";
 
-        return [phase, task, id, message, details].join(this.valueDelimiter);
+        return [trace.phase, trace.task, trace.id, message, details].join(this.valueDelimiter);
     }
 
-    public trace(phase: string, task: string, id: string, message: string, maybeDetails?: {}): Trace {
-        return this.emitTrace(id, this.formatMessage(phase, task, id, message, maybeDetails));
-    }
-
-    public traceEntry(phase: string, task: string, maybeDetails?: {}): Trace {
-        const id: string = this.idFn();
-        return this.trace(phase, task, id, Message.TraceEntry, maybeDetails);
-    }
-
-    public traceExit(phase: string, task: string, id: string, maybeDetails?: {}): Trace {
-        return this.trace(phase, task, id, Message.TraceExit, maybeDetails);
+    // Subclass this as needed. See BenchmarkTraceManager and BenchmarkTrace for example.
+    protected createTrace(phase: string, task: string): Trace {
+        return new Trace(this.emitTrace, phase, task, this.createIdFn());
     }
 
     protected safeJsonStringify(obj: {}): string {
@@ -80,66 +76,62 @@ export abstract class Tracer {
     }
 }
 
-export class TraceReporter extends Tracer {
-    constructor(deliminator: string, protected readonly outputFn: (message: string) => void) {
-        super(deliminator);
+export class ReportTraceManager extends TraceManager {
+    constructor(private readonly outputFn: (message: string) => void, valueDelimiter: string = "\t") {
+        super(valueDelimiter);
     }
 
-    public emitTrace(id: string, message: string): Trace {
-        this.outputFn(message);
-
-        return {
-            id,
-            message,
-        };
+    emitTrace(trace: Trace, message: string, maybeDetails?: {}): void {
+        this.outputFn(this.formatMessage(trace, message, maybeDetails));
     }
 }
 
-export class TraceBenchmarkReporter extends TraceReporter {
-    private readonly timeStartById: Map<string, number> = new Map();
-
-    constructor(deliminator: string, outputFn: (message: string) => void) {
-        super(deliminator, outputFn);
+export class BenchmarkTraceManager extends ReportTraceManager {
+    constructor(outputFn: (message: string) => void, valueDelimiter: string = "\t") {
+        super(outputFn, valueDelimiter);
     }
 
-    public dispose(): void {
-        super.dispose();
-        this.timeStartById.clear();
+    public startTrace(phase: string, task: string, maybeDetails?: {}): Trace {
+        return super.startTrace(phase, task, { ...maybeDetails, timeStart: performanceNow() });
     }
 
-    public formatMessage(phase: string, task: string, id: string, message: string, maybeDetails?: {}): string {
-        let details: {};
+    public endTrace(trace: BenchmarkTrace, maybeDetails?: {}): void {
+        return super.endTrace(trace, { ...maybeDetails, timeEnd: performanceNow() });
+    }
 
-        if (message === Message.TraceEntry) {
-            const timeStart: number = performanceNow();
-            this.timeStartById.set(id, timeStart);
-            details = {
-                ...maybeDetails,
-                timeStart,
-            };
-        } else if (message === Message.TraceExit) {
-            const timeStart: number = MapUtils.assertGet(this.timeStartById, id, "trace exit called for unknown id", {
-                phase,
-                task,
-                message,
-                id,
-                maybeDetails,
-            });
-            this.timeStartById.delete(id);
+    protected createTrace(phase: string, task: string): BenchmarkTrace {
+        return new BenchmarkTrace(this.emitTrace, phase, task, this.createIdFn());
+    }
+}
 
-            const timeEnd: number = performanceNow();
+export class Trace {
+    constructor(
+        protected readonly emitTraceFn: (trace: Trace, message: string, maybeDetails?: {}) => void,
+        public readonly phase: string,
+        public readonly task: string,
+        public readonly id: string,
+    ) {}
 
-            details = {
-                ...maybeDetails,
-                timeStart,
-                timeEnd,
-                timeDelta: timeEnd - timeStart,
-            };
-        } else {
-            details = maybeDetails !== undefined ? maybeDetails : "[Empty]";
-        }
+    public trace(message: string, maybeDetails?: {}) {
+        this.emitTraceFn(this, message, maybeDetails);
+    }
+}
 
-        return [phase, task, id, message, details].join(this.valueDelimiter);
+export class BenchmarkTrace extends Trace {
+    constructor(
+        emitTraceFn: (trace: Trace, message: string, maybeDetails?: {}) => void,
+        phase: string,
+        task: string,
+        id: string,
+    ) {
+        super(emitTraceFn, phase, task, id);
+    }
+
+    public trace(message: string, maybeDetails?: {}) {
+        this.emitTraceFn(this, message, {
+            ...maybeDetails,
+            timeNow: performanceNow(),
+        });
     }
 }
 
