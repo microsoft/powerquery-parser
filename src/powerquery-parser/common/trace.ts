@@ -14,11 +14,12 @@ import performanceNow = require("performance-now");
 // id:
 //      Dynamic string.
 //      Used to guarantee uniqueness on a (phase, task, id) trio.
-//      Defaults to auto incrementing integer.
+//      An auto incrementing integer.
+//      If we ever run into an integer overflow issue then we could look into a GUID generating library.
 // message:
 //      Static string.
 //      Identifies what portion of a task you're in.
-//      Examples: 'traceEntry', 'partialEvaluation', 'traceExit'.
+//      Examples: 'entry', 'partialEvaluation', 'traceExit'.
 // maybeDetails:
 //      Nullable object that is JSON serializable.
 //      Contains dynamic data, such as arguments to functions.
@@ -28,7 +29,7 @@ import performanceNow = require("performance-now");
 // const benchmarkTraceManager = new BenchmarkTraceManager((entry: string) => (message += entry), "\t");
 //
 // function foobar(x: number): void {
-//     const trace: BenchmarkTrace = BenchmarkTraceManager.traceEntry("Example", foobar.name, { x, messageLength: message.length });
+//     const trace: BenchmarkTrace = BenchmarkTraceManager.entry("Example", foobar.name, { x, messageLength: message.length });
 //     // ...
 //     benchmarkTraceManager.endTrace(trace);
 // }
@@ -40,20 +41,20 @@ export abstract class TraceManager {
 
     constructor(private readonly valueDelimiter: string = "\t") {}
 
-    abstract emitTrace(tracer: Trace, message: string, maybeDetails?: {}): void;
+    abstract emit(trace: Trace, message: string, maybeDetails?: {}): void;
 
-    // Creates a new trace instance.
+    // Creates a new instance of Trace.
     // Should be called at the start of a function.
-    public startTrace(phase: string, task: string, maybeDetails?: {}): Trace {
-        const tracer: Trace = this.createTrace(phase, task);
-        this.emitTrace(tracer, Message.TraceEntry, maybeDetails);
+    public start(phase: string, task: string, maybeDetails?: {}): Trace {
+        const trace: Trace = this.create(phase, task);
+        this.emit(trace, Message.entry, maybeDetails);
 
-        return tracer;
+        return trace;
     }
 
     // Should be called at the end of a function.
-    public endTrace(trace: Trace, maybeDetails?: {}): void {
-        this.emitTrace(trace, Message.TraceExit, maybeDetails);
+    public exit(trace: Trace, maybeDetails?: {}): void {
+        this.emit(trace, Message.TraceExit, maybeDetails);
     }
 
     protected formatMessage(trace: Trace, message: string, maybeDetails?: {}): string {
@@ -62,9 +63,10 @@ export abstract class TraceManager {
         return [trace.phase, trace.task, trace.id, message, details].join(this.valueDelimiter);
     }
 
-    // Subclass this as needed. See BenchmarkTraceManager and BenchmarkTrace for example.
-    protected createTrace(phase: string, task: string): Trace {
-        return new Trace(this.emitTrace, phase, task, this.createIdFn());
+    // The return to the TraceManager.start function.
+    // Subclass this when different values are needed in the tracer, eg. BenchmarkTraceManager/BenchmarkTrace.
+    protected create(phase: string, task: string): Trace {
+        return new Trace(this.emit, phase, task, this.createIdFn());
     }
 
     protected safeJsonStringify(obj: {}): string {
@@ -76,31 +78,41 @@ export abstract class TraceManager {
     }
 }
 
+// Formatted traces are sent to the given callback.
 export class ReportTraceManager extends TraceManager {
     constructor(private readonly outputFn: (message: string) => void, valueDelimiter: string = "\t") {
         super(valueDelimiter);
     }
 
-    emitTrace(trace: Trace, message: string, maybeDetails?: {}): void {
+    emit(trace: Trace, message: string, maybeDetails?: {}): void {
         this.outputFn(this.formatMessage(trace, message, maybeDetails));
     }
 }
 
+// Adds calls to performanceNow() in startTrace, trace, and endTrace
 export class BenchmarkTraceManager extends ReportTraceManager {
     constructor(outputFn: (message: string) => void, valueDelimiter: string = "\t") {
         super(outputFn, valueDelimiter);
     }
 
-    public startTrace(phase: string, task: string, maybeDetails?: {}): Trace {
-        return super.startTrace(phase, task, { ...maybeDetails, timeStart: performanceNow() });
+    public start(phase: string, task: string, maybeDetails?: {}): Trace {
+        return super.start(phase, task, { ...maybeDetails, timeStart: performanceNow() });
     }
 
-    public endTrace(trace: BenchmarkTrace, maybeDetails?: {}): void {
-        return super.endTrace(trace, { ...maybeDetails, timeEnd: performanceNow() });
+    public exit(trace: BenchmarkTrace, maybeDetails?: {}): void {
+        return super.exit(trace, { ...maybeDetails, timeEnd: performanceNow() });
     }
 
-    protected createTrace(phase: string, task: string): BenchmarkTrace {
-        return new BenchmarkTrace(this.emitTrace, phase, task, this.createIdFn());
+    protected create(phase: string, task: string): BenchmarkTrace {
+        return new BenchmarkTrace(this.emit, phase, task, this.createIdFn());
+    }
+}
+
+export class NoOpTraceManager extends TraceManager {
+    emit(_tracer: Trace, _message: string, _maybeDetails?: {}): void {}
+
+    protected create(phase: string, task: string): BenchmarkTrace {
+        return new NoOpTrace(this.emit, phase, task, this.createIdFn());
     }
 }
 
@@ -135,8 +147,12 @@ export class BenchmarkTrace extends Trace {
     }
 }
 
+export class NoOpTrace extends Trace {
+    public trace(_message: string, _maybeDetails?: {}) {}
+}
+
 const enum Message {
-    TraceEntry = "TraceEntry",
+    entry = "entry",
     TraceExit = "TraceExit",
 }
 
