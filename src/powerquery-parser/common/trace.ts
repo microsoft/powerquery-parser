@@ -40,6 +40,9 @@ export const enum TraceConstant {
     ArrayContents = "ArrayContents",
     ArrayLength = "ArrayLength",
     Disambiguation = "Disambiguation",
+    Empty = "[Empty]",
+    Entry = "Entry",
+    Exit = "Exit",
     IsError = "IsError",
     IsFieldTypeSpecification = "isFieldTypeSpecification",
     IsOperatorPresent = "IsOperatorPresent",
@@ -47,13 +50,15 @@ export const enum TraceConstant {
     IsThrowing = "IsThrowing",
     Parse = "Parse",
     Result = "Result",
+    TimeStart = "TimeStart",
+    TimeEnd = "TimeEnd",
     TokenIndex = "TokenIndex",
 }
 
 export abstract class TraceManager {
     protected readonly createIdFn: () => string = createAutoIncrementId();
 
-    constructor(private readonly valueDelimiter: string = "\t") {}
+    constructor(protected readonly valueDelimiter: string = ",", protected readonly newline: "\n" | "\r\n" = "\r\n") {}
 
     abstract emit(trace: Trace, message: string, maybeDetails?: {}): void;
 
@@ -61,20 +66,20 @@ export abstract class TraceManager {
     // Should be called at the start of a function.
     public entry(phase: string, task: string, maybeDetails?: {}): Trace {
         const trace: Trace = this.create(phase, task);
-        this.emit(trace, Message.entry, maybeDetails);
+        this.emit(trace, TraceConstant.Entry, maybeDetails);
 
         return trace;
     }
 
     // Should be called at the end of a function.
     public exit(trace: Trace, maybeDetails?: {}): void {
-        this.emit(trace, Message.TraceExit, maybeDetails);
+        this.emit(trace, TraceConstant.Exit, maybeDetails);
     }
 
     protected formatMessage(trace: Trace, message: string, maybeDetails?: {}): string {
-        const details: string = maybeDetails !== undefined ? this.safeJsonStringify(maybeDetails) : "[Empty]";
+        const details: string = maybeDetails !== undefined ? this.safeJsonStringify(maybeDetails) : TraceConstant.Empty;
 
-        return [trace.phase, trace.task, trace.id, message, details].join(this.valueDelimiter);
+        return [trace.phase, trace.task, trace.id, message, details].join(this.valueDelimiter) + this.newline;
     }
 
     // The return to the TraceManager.start function.
@@ -110,11 +115,11 @@ export class BenchmarkTraceManager extends ReportTraceManager {
     }
 
     public entry(phase: string, task: string, maybeDetails?: {}): Trace {
-        return super.entry(phase, task, { ...maybeDetails, timeStart: performanceNow() });
+        return super.entry(phase, task, { ...maybeDetails, [TraceConstant.TimeStart]: performanceNow() });
     }
 
     public exit(trace: BenchmarkTrace, maybeDetails?: {}): void {
-        return super.exit(trace, { ...maybeDetails, timeEnd: performanceNow() });
+        return super.exit(trace, { ...maybeDetails, [TraceConstant.TimeEnd]: performanceNow() });
     }
 
     protected create(phase: string, task: string): BenchmarkTrace {
@@ -163,11 +168,6 @@ export class BenchmarkTrace extends Trace {
 
 export class NoOpTrace extends Trace {
     public trace(_message: string, _maybeDetails?: {}) {}
-}
-
-const enum Message {
-    entry = "entry",
-    TraceExit = "TraceExit",
 }
 
 function createAutoIncrementId(): () => string {
