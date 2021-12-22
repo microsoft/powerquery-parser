@@ -10,11 +10,10 @@ import performanceNow = require("performance-now");
 // task:
 //      Static string.
 //      Something that falls under the given phase. Recommended to be the name of a function.
-//      Examples: 'readNumericLiteral' for 'Lex', or 'parseRecord' for 'Parse'.
+//      Examples: 'readNumericLiteral' for the phase 'Lex', or 'parseRecord' for the phase 'Parse'.
 // id:
 //      Dynamic string.
-//      Used to guarantee uniqueness on a (phase, task, id) trio.
-//      An auto incrementing integer.
+//      Used to guarantee uniqueness, defaults to an auto incrementing integer.
 //      If we ever run into an integer overflow issue then we could look into a GUID generating library.
 // message:
 //      Static string.
@@ -22,7 +21,7 @@ import performanceNow = require("performance-now");
 //      Examples: 'entry', 'partialEvaluation', 'traceExit'.
 // maybeDetails:
 //      Nullable object that is JSON serializable.
-//      Contains dynamic data, such as arguments to functions.
+//      Contains dynamic data, such as function arguments.
 //
 // Example where each time the tracer emits a value it'll append to the local message.
 // let message = "";
@@ -36,6 +35,21 @@ import performanceNow = require("performance-now");
 //
 // foobar(10);
 
+// Used for either the phase or as a key in the details record.
+export const enum TraceConstant {
+    ArrayContents = "ArrayContents",
+    ArrayLength = "ArrayLength",
+    Disambiguation = "Disambiguation",
+    IsError = "IsError",
+    IsFieldTypeSpecification = "isFieldTypeSpecification",
+    IsOperatorPresent = "IsOperatorPresent",
+    IsRecursive = "IsRecursive",
+    IsThrowing = "IsThrowing",
+    Parse = "Parse",
+    Result = "Result",
+    TokenIndex = "TokenIndex",
+}
+
 export abstract class TraceManager {
     protected readonly createIdFn: () => string = createAutoIncrementId();
 
@@ -45,7 +59,7 @@ export abstract class TraceManager {
 
     // Creates a new instance of Trace.
     // Should be called at the start of a function.
-    public start(phase: string, task: string, maybeDetails?: {}): Trace {
+    public entry(phase: string, task: string, maybeDetails?: {}): Trace {
         const trace: Trace = this.create(phase, task);
         this.emit(trace, Message.entry, maybeDetails);
 
@@ -95,8 +109,8 @@ export class BenchmarkTraceManager extends ReportTraceManager {
         super(outputFn, valueDelimiter);
     }
 
-    public start(phase: string, task: string, maybeDetails?: {}): Trace {
-        return super.start(phase, task, { ...maybeDetails, timeStart: performanceNow() });
+    public entry(phase: string, task: string, maybeDetails?: {}): Trace {
+        return super.entry(phase, task, { ...maybeDetails, timeStart: performanceNow() });
     }
 
     public exit(trace: BenchmarkTrace, maybeDetails?: {}): void {

@@ -2,14 +2,16 @@
 // Licensed under the MIT license.
 
 import { ICancellationToken } from "../common";
+import { NoOpTraceManager, TraceManager } from "../common/trace";
 import { Ast } from "../language";
 import { LexerSnapshot } from "../lexer";
 import { DefaultLocale } from "../localization";
 import { CombinatorialParser, Parser, ParseState, ParseStateUtils } from "../parser";
 
 export interface CommonSettings {
-    readonly maybeCancellationToken: ICancellationToken | undefined;
     readonly locale: string;
+    readonly maybeCancellationToken: ICancellationToken | undefined;
+    readonly traceManager: TraceManager;
 }
 
 export type LexSettings = CommonSettings;
@@ -26,10 +28,11 @@ export interface ParseSettings extends CommonSettings {
 export type Settings = LexSettings & ParseSettings;
 
 export const DefaultSettings: Settings = {
-    maybeCancellationToken: undefined,
-    locale: DefaultLocale,
-    parser: CombinatorialParser,
     createParseState: (lexerSnapshot: LexerSnapshot, maybeOverrides: Partial<ParseState> | undefined) =>
         ParseStateUtils.createState(lexerSnapshot, maybeOverrides),
+    locale: DefaultLocale,
+    maybeCancellationToken: undefined,
     maybeParserEntryPointFn: undefined,
+    parser: CombinatorialParser,
+    traceManager: new NoOpTraceManager(),
 };
