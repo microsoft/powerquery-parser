@@ -35,24 +35,18 @@ import performanceNow = require("performance-now");
 //
 // foobar(10);
 
-// Used for either the phase or as a key in the details record.
+// Constants used in multiple files as part of a trace's phase/task/message/details.
 export const enum TraceConstant {
     ArrayContents = "ArrayContents",
     ArrayLength = "ArrayLength",
-    Disambiguation = "Disambiguation",
     Empty = "[Empty]",
     Entry = "Entry",
     Exit = "Exit",
     IsError = "IsError",
-    IsFieldTypeSpecification = "isFieldTypeSpecification",
-    IsOperatorPresent = "IsOperatorPresent",
-    IsRecursive = "IsRecursive",
     IsThrowing = "IsThrowing",
-    Parse = "Parse",
     Result = "Result",
-    TimeStart = "TimeStart",
     TimeEnd = "TimeEnd",
-    TokenIndex = "TokenIndex",
+    TimeStart = "TimeStart",
 }
 
 export abstract class TraceManager {

@@ -20,6 +20,14 @@ import { NodeIdMapUtils } from "../nodeIdMap";
 import { Parser, ParseStateCheckpoint } from "../parser";
 import { ParseState, ParseStateUtils } from "../parseState";
 
+const enum NaiveTraceConstant {
+    IsFieldTypeSpecification = "isFieldTypeSpecification",
+    IsOperatorPresent = "IsOperatorPresent",
+    IsRecursive = "IsRecursive",
+    Parse = "Parse",
+    TokenIndex = "TokenIndex",
+}
+
 type TriedReadPrimaryType = Result<
     Ast.TPrimaryType,
     ParseError.ExpectedAnyTokenKindError | ParseError.InvalidPrimitiveTypeError | CommonError.InvariantError
@@ -51,8 +59,8 @@ const GeneralizedIdentifierTerminatorTokenKinds: ReadonlyArray<Token.TokenKind> 
 
 export function readIdentifier(state: ParseState, _parser: Parser): Ast.Identifier {
     const nodeKind: Ast.NodeKind.Identifier = Ast.NodeKind.Identifier;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readIdentifier.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIdentifier.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     ParseStateUtils.startContext(state, nodeKind);
 
@@ -74,8 +82,8 @@ export function readIdentifier(state: ParseState, _parser: Parser): Ast.Identifi
 // This behavior matches the C# parser and not the language specification.
 export function readGeneralizedIdentifier(state: ParseState, _parser: Parser): Ast.GeneralizedIdentifier {
     const nodeKind: Ast.NodeKind.GeneralizedIdentifier = Ast.NodeKind.GeneralizedIdentifier;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readGeneralizedIdentifier.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readGeneralizedIdentifier.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     ParseStateUtils.startContext(state, nodeKind);
 
@@ -128,8 +136,8 @@ export function readGeneralizedIdentifier(state: ParseState, _parser: Parser): A
 
 export function readKeyword(state: ParseState, _parser: Parser): Ast.IdentifierExpression {
     const nodeKind: Ast.NodeKind.IdentifierExpression = Ast.NodeKind.IdentifierExpression;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readKeyword.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readKeyword.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     ParseStateUtils.startContext(state, nodeKind);
 
@@ -166,8 +174,8 @@ export function readKeyword(state: ParseState, _parser: Parser): Ast.IdentifierE
 // --------------------------------------
 
 export function readDocument(state: ParseState, parser: Parser): Ast.TDocument {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readDocument.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readDocument.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -224,8 +232,8 @@ export function readDocument(state: ParseState, parser: Parser): Ast.TDocument {
 
 export function readSectionDocument(state: ParseState, parser: Parser): Ast.Section {
     const nodeKind: Ast.NodeKind.Section = Ast.NodeKind.Section;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readSectionDocument.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readSectionDocument.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
@@ -269,8 +277,8 @@ export function readSectionDocument(state: ParseState, parser: Parser): Ast.Sect
 
 export function readSectionMembers(state: ParseState, parser: Parser): Ast.IArrayWrapper<Ast.SectionMember> {
     const nodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readSectionMembers.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readSectionMembers.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
@@ -295,8 +303,8 @@ export function readSectionMembers(state: ParseState, parser: Parser): Ast.IArra
 
 export function readSectionMember(state: ParseState, parser: Parser): Ast.SectionMember {
     const nodeKind: Ast.NodeKind.SectionMember = Ast.NodeKind.SectionMember;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readSectionMember.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readSectionMember.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
@@ -340,8 +348,8 @@ export function readSectionMember(state: ParseState, parser: Parser): Ast.Sectio
 // ------------------------------------
 
 export function readNullCoalescingExpression(state: ParseState, parser: Parser): Ast.TExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readNullCoalescingExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readNullCoalescingExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -366,8 +374,8 @@ export function readNullCoalescingExpression(state: ParseState, parser: Parser):
 }
 
 export function readExpression(state: ParseState, parser: Parser): Ast.TExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -412,8 +420,8 @@ export function readExpression(state: ParseState, parser: Parser): Ast.TExpressi
 // --------------------------------------------------
 
 export function readLogicalExpression(state: ParseState, parser: Parser): Ast.TLogicalExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readLogicalExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readLogicalExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -439,8 +447,8 @@ export function readLogicalExpression(state: ParseState, parser: Parser): Ast.TL
 // --------------------------------------------
 
 export function readIsExpression(state: ParseState, parser: Parser): Ast.TIsExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readIsExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIsExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -464,8 +472,8 @@ export function readIsExpression(state: ParseState, parser: Parser): Ast.TIsExpr
 
 // sub-item of 12.2.3.3 Is expression
 export function readNullablePrimitiveType(state: ParseState, parser: Parser): Ast.TNullablePrimitiveType {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readNullablePrimitiveType.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readNullablePrimitiveType.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -490,8 +498,8 @@ export function readNullablePrimitiveType(state: ParseState, parser: Parser): As
 // --------------------------------------------
 
 export function readAsExpression(state: ParseState, parser: Parser): Ast.TAsExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readAsExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readAsExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -518,8 +526,8 @@ export function readAsExpression(state: ParseState, parser: Parser): Ast.TAsExpr
 // --------------------------------------------------
 
 export function readEqualityExpression(state: ParseState, parser: Parser): Ast.TEqualityExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readEqualityExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readEqualityExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -545,8 +553,8 @@ export function readEqualityExpression(state: ParseState, parser: Parser): Ast.T
 // ----------------------------------------------------
 
 export function readRelationalExpression(state: ParseState, parser: Parser): Ast.TRelationalExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readRelationalExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readRelationalExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -572,8 +580,8 @@ export function readRelationalExpression(state: ParseState, parser: Parser): Ast
 // -----------------------------------------------------
 
 export function readArithmeticExpression(state: ParseState, parser: Parser): Ast.TArithmeticExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readArithmeticExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readArithmeticExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -600,8 +608,8 @@ export function readArithmeticExpression(state: ParseState, parser: Parser): Ast
 
 export function readMetadataExpression(state: ParseState, parser: Parser): Ast.TMetadataExpression {
     const nodeKind: Ast.NodeKind.MetadataExpression = Ast.NodeKind.MetadataExpression;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readMetadataExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readMetadataExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
@@ -627,14 +635,12 @@ export function readMetadataExpression(state: ParseState, parser: Parser): Ast.T
         };
 
         ParseStateUtils.endContext(state, metadataExpression);
-        state.traceManager.exit(trace, { [TraceConstant.IsOperatorPresent]: true,
-        });
+        state.traceManager.exit(trace, { [NaiveTraceConstant.IsOperatorPresent]: true });
 
         return metadataExpression;
     } else {
         ParseStateUtils.deleteContext(state, undefined);
-        state.traceManager.exit(trace, { [TraceConstant.IsOperatorPresent]: false,
-        });
+        state.traceManager.exit(trace, { [NaiveTraceConstant.IsOperatorPresent]: false });
 
         return left;
     }
@@ -645,8 +651,8 @@ export function readMetadataExpression(state: ParseState, parser: Parser): Ast.T
 // -----------------------------------------------
 
 export function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUnaryExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readUnaryExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readUnaryExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -654,8 +660,7 @@ export function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUna
         state.maybeCurrentTokenKind,
     );
     if (maybeOperator === undefined) {
-        state.traceManager.exit(trace, { [TraceConstant.IsOperatorPresent]: false,
-        });
+        state.traceManager.exit(trace, { [NaiveTraceConstant.IsOperatorPresent]: false });
         return parser.readTypeExpression(state, parser);
     }
 
@@ -690,8 +695,7 @@ export function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUna
         typeExpression,
     };
     ParseStateUtils.endContext(state, unaryExpression);
-    state.traceManager.exit(trace, { [TraceConstant.IsOperatorPresent]: true,
-    });
+    state.traceManager.exit(trace, { [NaiveTraceConstant.IsOperatorPresent]: true });
 
     return unaryExpression;
 }
@@ -701,8 +705,8 @@ export function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUna
 // --------------------------------------------------
 
 export function readPrimaryExpression(state: ParseState, parser: Parser): Ast.TPrimaryExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readPrimaryExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readPrimaryExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -753,13 +757,11 @@ export function readPrimaryExpression(state: ParseState, parser: Parser): Ast.TP
     }
 
     if (ParseStateUtils.isRecursivePrimaryExpressionNext(state)) {
-        state.traceManager.exit(trace, { [TraceConstant.IsRecursive]: true,
-        });
+        state.traceManager.exit(trace, { [NaiveTraceConstant.IsRecursive]: true });
 
         return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
     } else {
-        state.traceManager.exit(trace, { [TraceConstant.IsRecursive]: false,
-        });
+        state.traceManager.exit(trace, { [NaiveTraceConstant.IsRecursive]: false });
 
         return primaryExpression;
     }
@@ -771,8 +773,8 @@ export function readRecursivePrimaryExpression(
     head: Ast.TPrimaryExpression,
 ): Ast.RecursivePrimaryExpression {
     const nodeKind: Ast.NodeKind.RecursivePrimaryExpression = Ast.NodeKind.RecursivePrimaryExpression;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readRecursivePrimaryExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readRecursivePrimaryExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
@@ -871,8 +873,8 @@ export function readRecursivePrimaryExpression(
 
 export function readLiteralExpression(state: ParseState, _parser: Parser): Ast.LiteralExpression {
     const nodeKind: Ast.NodeKind.LiteralExpression = Ast.NodeKind.LiteralExpression;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readLiteralExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readLiteralExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
@@ -892,8 +894,7 @@ export function readLiteralExpression(state: ParseState, _parser: Parser): Ast.L
         expectedTokenKinds,
     );
     if (maybeErr) {
-        state.traceManager.exit(trace, { [TraceConstant.IsThrowing]: true,
-        });
+        state.traceManager.exit(trace, { [TraceConstant.IsThrowing]: true });
 
         throw maybeErr;
     }
@@ -924,8 +925,8 @@ export function readLiteralExpression(state: ParseState, _parser: Parser): Ast.L
 
 export function readIdentifierExpression(state: ParseState, parser: Parser): Ast.IdentifierExpression {
     const nodeKind: Ast.NodeKind.IdentifierExpression = Ast.NodeKind.IdentifierExpression;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readIdentifierExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIdentifierExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
@@ -953,8 +954,8 @@ export function readIdentifierExpression(state: ParseState, parser: Parser): Ast
 // --------------------------------------------------------
 
 export function readParenthesizedExpression(state: ParseState, parser: Parser): Ast.ParenthesizedExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readParenthesizedExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readParenthesizedExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -978,8 +979,8 @@ export function readParenthesizedExpression(state: ParseState, parser: Parser): 
 
 export function readNotImplementedExpression(state: ParseState, _parser: Parser): Ast.NotImplementedExpression {
     const nodeKind: Ast.NodeKind.NotImplementedExpression = Ast.NodeKind.NotImplementedExpression;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readNotImplementedExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readNotImplementedExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
@@ -1007,8 +1008,8 @@ export function readNotImplementedExpression(state: ParseState, _parser: Parser)
 // ---------------------------------------
 
 export function readInvokeExpression(state: ParseState, parser: Parser): Ast.InvokeExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readInvokeExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readInvokeExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1040,8 +1041,8 @@ export function readInvokeExpression(state: ParseState, parser: Parser): Ast.Inv
 // -----------------------------------------------
 
 export function readListExpression(state: ParseState, parser: Parser): Ast.ListExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readListExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readListExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1067,8 +1068,8 @@ export function readListExpression(state: ParseState, parser: Parser): Ast.ListE
 
 export function readListItem(state: ParseState, parser: Parser): Ast.TListItem {
     const nodeKind: Ast.NodeKind.RangeExpression = Ast.NodeKind.RangeExpression;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readListItem.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readListItem.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
@@ -1091,14 +1092,12 @@ export function readListItem(state: ParseState, parser: Parser): Ast.TListItem {
         };
 
         ParseStateUtils.endContext(state, rangeExpression);
-        state.traceManager.exit(trace, { [TraceConstant.IsOperatorPresent]: true,
-        });
+        state.traceManager.exit(trace, { [NaiveTraceConstant.IsOperatorPresent]: true });
 
         return rangeExpression;
     } else {
         ParseStateUtils.deleteContext(state, undefined);
-        state.traceManager.exit(trace, { [TraceConstant.IsOperatorPresent]: false,
-        });
+        state.traceManager.exit(trace, { [NaiveTraceConstant.IsOperatorPresent]: false });
 
         return left;
     }
@@ -1109,8 +1108,8 @@ export function readListItem(state: ParseState, parser: Parser): Ast.TListItem {
 // -------------------------------------------------
 
 export function readRecordExpression(state: ParseState, parser: Parser): Ast.RecordExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readRecordExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readRecordExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1139,8 +1138,8 @@ export function readRecordExpression(state: ParseState, parser: Parser): Ast.Rec
 // ------------------------------------------------------
 
 export function readItemAccessExpression(state: ParseState, parser: Parser): Ast.ItemAccessExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readItemAccessExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readItemAccessExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1162,8 +1161,8 @@ export function readItemAccessExpression(state: ParseState, parser: Parser): Ast
 // -------------------------------------------------------
 
 export function readFieldSelection(state: ParseState, parser: Parser): Ast.FieldSelector {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readFieldSelection.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFieldSelection.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1174,8 +1173,8 @@ export function readFieldSelection(state: ParseState, parser: Parser): Ast.Field
 }
 
 export function readFieldProjection(state: ParseState, parser: Parser): Ast.FieldProjection {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readFieldProjection.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFieldProjection.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1199,8 +1198,8 @@ export function readFieldProjection(state: ParseState, parser: Parser): Ast.Fiel
 }
 
 export function readFieldSelector(state: ParseState, parser: Parser, allowOptional: boolean): Ast.FieldSelector {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readFieldSelector.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFieldSelector.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1223,8 +1222,8 @@ export function readFieldSelector(state: ParseState, parser: Parser, allowOption
 
 export function readFunctionExpression(state: ParseState, parser: Parser): Ast.FunctionExpression {
     const nodeKind: Ast.NodeKind.FunctionExpression = Ast.NodeKind.FunctionExpression;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readFunctionExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFunctionExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
@@ -1263,8 +1262,8 @@ export function readParameterList(
     state: ParseState,
     parser: Parser,
 ): Ast.IParameterList<Ast.AsNullablePrimitiveType | undefined> {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readParameterList.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readParameterList.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1279,8 +1278,8 @@ export function readParameterList(
 }
 
 function maybeReadAsNullablePrimitiveType(state: ParseState, parser: Parser): Ast.AsNullablePrimitiveType | undefined {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, maybeReadAsNullablePrimitiveType.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, maybeReadAsNullablePrimitiveType.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1297,8 +1296,8 @@ function maybeReadAsNullablePrimitiveType(state: ParseState, parser: Parser): As
 }
 
 export function readAsType(state: ParseState, parser: Parser): Ast.AsType {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readAsType.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readAsType.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1318,8 +1317,8 @@ export function readAsType(state: ParseState, parser: Parser): Ast.AsType {
 // -----------------------------------------------
 
 export function readEachExpression(state: ParseState, parser: Parser): Ast.EachExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readEachExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readEachExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1340,8 +1339,8 @@ export function readEachExpression(state: ParseState, parser: Parser): Ast.EachE
 
 export function readLetExpression(state: ParseState, parser: Parser): Ast.LetExpression {
     const nodeKind: Ast.NodeKind.LetExpression = Ast.NodeKind.LetExpression;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readLetExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readLetExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
@@ -1385,8 +1384,8 @@ export function readLetExpression(state: ParseState, parser: Parser): Ast.LetExp
 
 export function readIfExpression(state: ParseState, parser: Parser): Ast.IfExpression {
     const nodeKind: Ast.NodeKind.IfExpression = Ast.NodeKind.IfExpression;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readIfExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIfExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
@@ -1434,8 +1433,8 @@ export function readIfExpression(state: ParseState, parser: Parser): Ast.IfExpre
 // -----------------------------------------------
 
 export function readTypeExpression(state: ParseState, parser: Parser): Ast.TTypeExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readTypeExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readTypeExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1456,8 +1455,8 @@ export function readTypeExpression(state: ParseState, parser: Parser): Ast.TType
 }
 
 export function readType(state: ParseState, parser: Parser): Ast.TType {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readType.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readType.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1474,8 +1473,8 @@ export function readType(state: ParseState, parser: Parser): Ast.TType {
 }
 
 export function readPrimaryType(state: ParseState, parser: Parser): Ast.TPrimaryType {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readPrimaryType.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readPrimaryType.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1493,8 +1492,8 @@ export function readPrimaryType(state: ParseState, parser: Parser): Ast.TPrimary
 
 export function readRecordType(state: ParseState, parser: Parser): Ast.RecordType {
     const nodeKind: Ast.NodeKind.RecordType = Ast.NodeKind.RecordType;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readRecordType.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readRecordType.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
@@ -1520,8 +1519,8 @@ export function readRecordType(state: ParseState, parser: Parser): Ast.RecordTyp
 
 export function readTableType(state: ParseState, parser: Parser): Ast.TableType {
     const nodeKind: Ast.NodeKind.TableType = Ast.NodeKind.TableType;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readTableType.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readTableType.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
@@ -1563,8 +1562,8 @@ export function readFieldSpecificationList(
     testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
 ): Ast.FieldSpecificationList {
     const nodeKind: Ast.NodeKind.FieldSpecificationList = Ast.NodeKind.FieldSpecificationList;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readFieldSpecificationList.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFieldSpecificationList.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
@@ -1692,8 +1691,8 @@ export function readFieldSpecificationList(
 
 function maybeReadFieldTypeSpecification(state: ParseState, parser: Parser): Ast.FieldTypeSpecification | undefined {
     const nodeKind: Ast.NodeKind.FieldTypeSpecification = Ast.NodeKind.FieldTypeSpecification;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, maybeReadFieldTypeSpecification.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, maybeReadFieldTypeSpecification.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
@@ -1714,13 +1713,13 @@ function maybeReadFieldTypeSpecification(state: ParseState, parser: Parser): Ast
             fieldType,
         };
         ParseStateUtils.endContext(state, fieldTypeSpecification);
-        state.traceManager.exit(trace, { [TraceConstant.IsFieldTypeSpecification]: true });
+        state.traceManager.exit(trace, { [NaiveTraceConstant.IsFieldTypeSpecification]: true });
 
         return fieldTypeSpecification;
     } else {
         ParseStateUtils.incrementAttributeCounter(state);
         ParseStateUtils.deleteContext(state, undefined);
-        state.traceManager.exit(trace, { [TraceConstant.IsFieldTypeSpecification]: false });
+        state.traceManager.exit(trace, { [NaiveTraceConstant.IsFieldTypeSpecification]: false });
 
         return undefined;
     }
@@ -1739,8 +1738,8 @@ function fieldSpecificationListReadError(state: ParseState, allowOpenMarker: boo
 }
 
 export function readListType(state: ParseState, parser: Parser): Ast.ListType {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readListType.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readListType.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1759,8 +1758,8 @@ export function readListType(state: ParseState, parser: Parser): Ast.ListType {
 
 export function readFunctionType(state: ParseState, parser: Parser): Ast.FunctionType {
     const nodeKind: Ast.NodeKind.FunctionType = Ast.NodeKind.FunctionType;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readFunctionType.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFunctionType.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
@@ -1787,8 +1786,8 @@ export function readFunctionType(state: ParseState, parser: Parser): Ast.Functio
 }
 
 function tryReadPrimaryType(state: ParseState, parser: Parser): TriedReadPrimaryType {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, tryReadPrimaryType.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, tryReadPrimaryType.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     const isTableTypeNext: boolean =
@@ -1827,8 +1826,8 @@ function tryReadPrimaryType(state: ParseState, parser: Parser): TriedReadPrimary
 }
 
 export function readParameterSpecificationList(state: ParseState, parser: Parser): Ast.IParameterList<Ast.AsType> {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readParameterSpecificationList.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readParameterSpecificationList.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1841,8 +1840,8 @@ export function readParameterSpecificationList(state: ParseState, parser: Parser
 }
 
 export function readNullableType(state: ParseState, parser: Parser): Ast.NullableType {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readNullableType.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readNullableType.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1862,8 +1861,8 @@ export function readNullableType(state: ParseState, parser: Parser): Ast.Nullabl
 // --------------------------------------------------------
 
 export function readErrorRaisingExpression(state: ParseState, parser: Parser): Ast.ErrorRaisingExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readErrorRaisingExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readErrorRaisingExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1884,8 +1883,8 @@ export function readErrorRaisingExpression(state: ParseState, parser: Parser): A
 
 export function readErrorHandlingExpression(state: ParseState, parser: Parser): Ast.ErrorHandlingExpression {
     const nodeKind: Ast.NodeKind.ErrorHandlingExpression = Ast.NodeKind.ErrorHandlingExpression;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readErrorHandlingExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readErrorHandlingExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
@@ -1925,8 +1924,8 @@ export function readErrorHandlingExpression(state: ParseState, parser: Parser): 
 // -----------------------------------------------
 
 export function readRecordLiteral(state: ParseState, parser: Parser): Ast.RecordLiteral {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readRecordLiteral.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readRecordLiteral.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1966,8 +1965,8 @@ export function readFieldNamePairedAnyLiterals(
     continueReadingValues: boolean,
     testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
 ): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral> {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readFieldNamePairedAnyLiterals.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFieldNamePairedAnyLiterals.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -1993,8 +1992,8 @@ export function readFieldNamePairedAnyLiterals(
 }
 
 export function readListLiteral(state: ParseState, parser: Parser): Ast.ListLiteral {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readListLiteral.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readListLiteral.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -2029,8 +2028,8 @@ export function readListLiteral(state: ParseState, parser: Parser): Ast.ListLite
 }
 
 export function readAnyLiteral(state: ParseState, parser: Parser): Ast.TAnyLiteral {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readAnyLiteral.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readAnyLiteral.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -2048,8 +2047,8 @@ export function readAnyLiteral(state: ParseState, parser: Parser): Ast.TAnyLiter
 }
 
 export function readPrimitiveType(state: ParseState, parser: Parser): Ast.PrimitiveType {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readPrimitiveType.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readPrimitiveType.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -2067,8 +2066,8 @@ export function readPrimitiveType(state: ParseState, parser: Parser): Ast.Primit
 
 function tryReadPrimitiveType(state: ParseState, parser: Parser): TriedReadPrimitiveType {
     const nodeKind: Ast.NodeKind.PrimitiveType = Ast.NodeKind.PrimitiveType;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, tryReadPrimitiveType.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, tryReadPrimitiveType.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     ParseStateUtils.startContext(state, nodeKind);
 
@@ -2165,8 +2164,8 @@ export function readIdentifierPairedExpressions(
     continueReadingValues: boolean,
     testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
 ): Ast.ICsvArray<Ast.IdentifierPairedExpression> {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readIdentifierPairedExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIdentifierPairedExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -2187,7 +2186,10 @@ export function readGeneralizedIdentifierPairedExpressions(
     continueReadingValues: boolean,
     testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
 ): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression> {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readGeneralizedIdentifierPairedExpressions.name);
+    const trace: Trace = state.traceManager.entry(
+        NaiveTraceConstant.Parse,
+        readGeneralizedIdentifierPairedExpressions.name,
+    );
     state.maybeCancellationToken?.throwIfCancelled();
 
     const csvArray: Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression> = readCsvArray(
@@ -2205,9 +2207,13 @@ export function readGeneralizedIdentifierPairedExpression(
     state: ParseState,
     parser: Parser,
 ): Ast.GeneralizedIdentifierPairedExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readGeneralizedIdentifierPairedExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
-    });
+    const trace: Trace = state.traceManager.entry(
+        NaiveTraceConstant.Parse,
+        readGeneralizedIdentifierPairedExpression.name,
+        {
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+        },
+    );
     state.maybeCancellationToken?.throwIfCancelled();
 
     const generalizedIdentifierPairedExpression: Ast.GeneralizedIdentifierPairedExpression = readKeyValuePair<
@@ -2226,8 +2232,8 @@ export function readGeneralizedIdentifierPairedExpression(
 }
 
 export function readIdentifierPairedExpression(state: ParseState, parser: Parser): Ast.IdentifierPairedExpression {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readIdentifierPairedExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIdentifierPairedExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
 
@@ -2267,8 +2273,8 @@ function recursiveReadBinOpExpression<
     maybeOperatorFrom: (tokenKind: Token.TokenKind | undefined) => Op | undefined,
     rightReader: () => Right,
 ): Left | Ast.IBinOpExpression<Kind, Left, Op, Right> {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, recursiveReadBinOpExpression.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, recursiveReadBinOpExpression.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     ParseStateUtils.startContext(state, nodeKind);
     const left: Left = leftReader();
@@ -2276,7 +2282,7 @@ function recursiveReadBinOpExpression<
     // If no operator, return Left
     const maybeOperator: Op | undefined = maybeOperatorFrom(state.maybeCurrentTokenKind);
     if (maybeOperator === undefined) {
-        state.traceManager.exit(trace, { [TraceConstant.IsOperatorPresent]: false });
+        state.traceManager.exit(trace, { [NaiveTraceConstant.IsOperatorPresent]: false });
         ParseStateUtils.deleteContext(state, undefined);
 
         return left;
@@ -2301,7 +2307,7 @@ function recursiveReadBinOpExpression<
         right,
     };
     ParseStateUtils.endContext(state, (binOpExpression as unknown) as Ast.TNode);
-    state.traceManager.exit(trace, { [TraceConstant.IsOperatorPresent]: true });
+    state.traceManager.exit(trace, { [NaiveTraceConstant.IsOperatorPresent]: true });
 
     return binOpExpression;
 }
@@ -2319,8 +2325,8 @@ function recursiveReadBinOpExpressionHelper<
     maybeOperatorFrom: (tokenKind: Token.TokenKind | undefined) => OperatorKind | undefined,
     rightReader: () => Right,
 ): Right | Ast.IBinOpExpression<Kind, Right, OperatorKind, Right> {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, recursiveReadBinOpExpressionHelper.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, recursiveReadBinOpExpressionHelper.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     ParseStateUtils.startContext(state, nodeKind);
     const rightAsLeft: Right = rightReader();
@@ -2328,7 +2334,7 @@ function recursiveReadBinOpExpressionHelper<
     const maybeOperator: OperatorKind | undefined = maybeOperatorFrom(state.maybeCurrentTokenKind);
     if (maybeOperator === undefined) {
         ParseStateUtils.deleteContext(state, undefined);
-        state.traceManager.exit(trace, { [TraceConstant.IsOperatorPresent]: false });
+        state.traceManager.exit(trace, { [NaiveTraceConstant.IsOperatorPresent]: false });
 
         return rightAsLeft;
     }
@@ -2352,7 +2358,7 @@ function recursiveReadBinOpExpressionHelper<
         right,
     };
     ParseStateUtils.endContext(state, (binOpExpression as unknown) as Ast.TNode);
-    state.traceManager.exit(trace, { [TraceConstant.IsOperatorPresent]: true });
+    state.traceManager.exit(trace, { [NaiveTraceConstant.IsOperatorPresent]: true });
 
     return binOpExpression;
 }
@@ -2364,8 +2370,8 @@ function readCsvArray<T extends Ast.TCsvType>(
     testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
 ): Ast.TCsvArray & Ast.ICsvArray<T> {
     const nodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readCsvArray.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readCsvArray.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     ParseStateUtils.startContext(state, nodeKind);
 
@@ -2421,8 +2427,8 @@ function readKeyValuePair<Kind extends Ast.TKeyValuePairNodeKind, Key, Value>(
     valueReader: () => Value,
 ): Ast.IKeyValuePair<Kind, Key, Value> {
     ParseStateUtils.startContext(state, nodeKind);
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readKeyValuePair.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readKeyValuePair.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     const key: Key = keyReader();
@@ -2453,8 +2459,8 @@ function readPairedConstant<Kind extends Ast.TPairedConstantNodeKind, ConstantKi
     constantReader: () => Ast.TConstant & Ast.IConstant<ConstantKind>,
     pairedReader: () => Paired,
 ): Ast.IPairedConstant<Kind, ConstantKind, Paired> {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readPairedConstant.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readPairedConstant.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     ParseStateUtils.startContext(state, nodeKind);
 
@@ -2485,8 +2491,8 @@ function maybeReadPairedConstant<
     constantReader: () => Ast.TConstant & Ast.IConstant<ConstantKind>,
     pairedReader: () => Paired,
 ): Ast.IPairedConstant<Kind, ConstantKind, Paired> | undefined {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, maybeReadPairedConstant.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, maybeReadPairedConstant.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     let pairedConstant: Ast.IPairedConstant<Kind, ConstantKind, Paired> | undefined;
@@ -2496,7 +2502,7 @@ function maybeReadPairedConstant<
         ParseStateUtils.incrementAttributeCounter(state);
         pairedConstant = undefined;
     }
-    state.traceManager.exit(trace, { [TraceConstant.IsOperatorPresent]: pairedConstant });
+    state.traceManager.exit(trace, { [NaiveTraceConstant.IsOperatorPresent]: pairedConstant });
 
     return pairedConstant;
 }
@@ -2507,8 +2513,8 @@ function genericReadParameterList<T extends Ast.TParameterType>(
     typeReader: () => T,
 ): Ast.IParameterList<T> {
     const nodeKind: Ast.NodeKind.ParameterList = Ast.NodeKind.ParameterList;
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, genericReadParameterList.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, genericReadParameterList.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     ParseStateUtils.startContext(state, nodeKind);
 
@@ -2625,8 +2631,8 @@ function readWrapped<
     closeConstantReader: () => Ast.IConstant<Close>,
     allowOptionalConstant: boolean,
 ): WrappedRead<Kind, Open, Content, Close> {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readWrapped.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readWrapped.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     ParseStateUtils.startContext(state, nodeKind);
 
@@ -2667,7 +2673,7 @@ export function readToken(state: ParseState): string {
 
     const tokens: ReadonlyArray<Token.Token> = state.lexerSnapshot.tokens;
     Assert.isFalse(state.tokenIndex >= tokens.length, `index is beyond tokens.length`, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         tokensLength: tokens.length,
     });
 
@@ -2696,8 +2702,8 @@ export function readTokenKindAsConstant<ConstantKind extends Constant.TConstant>
     tokenKind: Token.TokenKind,
     constantKind: ConstantKind,
 ): Ast.TConstant & Ast.IConstant<ConstantKind> {
-    const trace: Trace = state.traceManager.entry(TraceConstant.Parse, readTokenKindAsConstant.name, {
-        [TraceConstant.TokenIndex]: state.tokenIndex,
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readTokenKindAsConstant.name, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, Ast.NodeKind.Constant);
