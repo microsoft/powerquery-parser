@@ -28,9 +28,9 @@ import performanceNow = require("performance-now");
 // const benchmarkTraceManager = new BenchmarkTraceManager((entry: string) => (message += entry), "\t");
 //
 // function foobar(x: number): void {
-//     const trace: BenchmarkTrace = BenchmarkTraceManager.entry("Example", foobar.name, { x, messageLength: message.length });
+//     const trace: Trace = BenchmarkTraceManager.entry("Example", foobar.name, { x, messageLength: message.length });
 //     // ...
-//     benchmarkTraceManager.endTrace(trace);
+//     trace.exit();
 // }
 //
 // foobar(10);
@@ -46,6 +46,7 @@ export const enum TraceConstant {
     IsThrowing = "IsThrowing",
     Result = "Result",
     TimeEnd = "TimeEnd",
+    TimeNow = "TimeNow",
     TimeStart = "TimeStart",
 }
 
@@ -63,11 +64,6 @@ export abstract class TraceManager {
         this.emit(trace, TraceConstant.Entry, maybeDetails);
 
         return trace;
-    }
-
-    // Should be called at the end of a function.
-    public exit(trace: Trace, maybeDetails?: {}): void {
-        this.emit(trace, TraceConstant.Exit, maybeDetails);
     }
 
     protected formatMessage(trace: Trace, message: string, maybeDetails?: {}): string {
@@ -102,7 +98,7 @@ export class ReportTraceManager extends TraceManager {
     }
 }
 
-// Adds calls to performanceNow() in startTrace, trace, and endTrace
+// Add a call to performanceNow() on create, trace, and exit.
 export class BenchmarkTraceManager extends ReportTraceManager {
     constructor(outputFn: (message: string) => void, valueDelimiter: string = "\t") {
         super(outputFn, valueDelimiter);
@@ -110,10 +106,6 @@ export class BenchmarkTraceManager extends ReportTraceManager {
 
     public entry(phase: string, task: string, maybeDetails?: {}): Trace {
         return super.entry(phase, task, { ...maybeDetails, [TraceConstant.TimeStart]: performanceNow() });
-    }
-
-    public exit(trace: BenchmarkTrace, maybeDetails?: {}): void {
-        return super.exit(trace, { ...maybeDetails, [TraceConstant.TimeEnd]: performanceNow() });
     }
 
     protected create(phase: string, task: string): BenchmarkTrace {
@@ -140,6 +132,10 @@ export class Trace {
     public trace(message: string, maybeDetails?: {}) {
         this.emitTraceFn(this, message, maybeDetails);
     }
+
+    public exit(maybeDetails?: {}): void {
+        this.emitTraceFn(this, TraceConstant.Exit, maybeDetails);
+    }
 }
 
 export class BenchmarkTrace extends Trace {
@@ -153,9 +149,16 @@ export class BenchmarkTrace extends Trace {
     }
 
     public trace(message: string, maybeDetails?: {}) {
-        this.emitTraceFn(this, message, {
+        super.trace(message, {
             ...maybeDetails,
-            timeNow: performanceNow(),
+            [TraceConstant.TimeNow]: performanceNow(),
+        });
+    }
+
+    public exit(maybeDetails?: {}): void {
+        super.trace(TraceConstant.Exit, {
+            ...maybeDetails,
+            [TraceConstant.TimeEnd]: performanceNow(),
         });
     }
 }
