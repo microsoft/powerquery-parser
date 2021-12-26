@@ -45,6 +45,7 @@ export const enum TraceConstant {
     IsError = "IsError",
     IsThrowing = "IsThrowing",
     Result = "Result",
+    TimeDelta = "TimeDelta",
     TimeEnd = "TimeEnd",
     TimeNow = "TimeNow",
     TimeStart = "TimeStart",
@@ -61,7 +62,7 @@ export abstract class TraceManager {
     // Should be called at the start of a function.
     public entry(phase: string, task: string, maybeDetails?: {}): Trace {
         const trace: Trace = this.create(phase, task);
-        this.emit(trace, TraceConstant.Entry, maybeDetails);
+        trace.entry(maybeDetails);
 
         return trace;
     }
@@ -104,10 +105,6 @@ export class BenchmarkTraceManager extends ReportTraceManager {
         super(outputFn, valueDelimiter);
     }
 
-    public entry(phase: string, task: string, maybeDetails?: {}): Trace {
-        return super.entry(phase, task, { ...maybeDetails, [TraceConstant.TimeStart]: performanceNow() });
-    }
-
     protected create(phase: string, task: string): BenchmarkTrace {
         return new BenchmarkTrace(this.emit, phase, task, this.createIdFn());
     }
@@ -116,7 +113,7 @@ export class BenchmarkTraceManager extends ReportTraceManager {
 export class NoOpTraceManager extends TraceManager {
     emit(_tracer: Trace, _message: string, _maybeDetails?: {}): void {}
 
-    protected create(phase: string, task: string): BenchmarkTrace {
+    protected create(phase: string, task: string): Trace {
         return new NoOpTrace(this.emit, phase, task, this.createIdFn());
     }
 }
@@ -129,16 +126,22 @@ export class Trace {
         public readonly id: string,
     ) {}
 
+    public entry(maybeDetails?: {}): void {
+        this.trace(TraceConstant.Entry, maybeDetails);
+    }
+
     public trace(message: string, maybeDetails?: {}) {
         this.emitTraceFn(this, message, maybeDetails);
     }
 
     public exit(maybeDetails?: {}): void {
-        this.emitTraceFn(this, TraceConstant.Exit, maybeDetails);
+        this.trace(TraceConstant.Exit, maybeDetails);
     }
 }
 
 export class BenchmarkTrace extends Trace {
+    protected readonly timeStart: number = performanceNow();
+
     constructor(
         emitTraceFn: (trace: Trace, message: string, maybeDetails?: {}) => void,
         phase: string,
@@ -149,16 +152,12 @@ export class BenchmarkTrace extends Trace {
     }
 
     public trace(message: string, maybeDetails?: {}) {
+        const timeNow: number = performanceNow();
+
         super.trace(message, {
             ...maybeDetails,
-            [TraceConstant.TimeNow]: performanceNow(),
-        });
-    }
-
-    public exit(maybeDetails?: {}): void {
-        super.trace(TraceConstant.Exit, {
-            ...maybeDetails,
-            [TraceConstant.TimeEnd]: performanceNow(),
+            [TraceConstant.TimeNow]: timeNow,
+            [TraceConstant.TimeDelta]: timeNow - this.timeStart,
         });
     }
 }
