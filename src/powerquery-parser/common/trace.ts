@@ -22,13 +22,15 @@ import performanceNow = require("performance-now");
 // maybeDetails:
 //      Nullable object that is JSON serializable.
 //      Contains dynamic data, such as function arguments.
+//      If null, then `[Empty]` is used instead.
+//      If JSON.stringify throws an error, then `[JSON.stringify Error]` is used instead.
 //
 // Example where each time the tracer emits a value it'll append to the local message.
 // let message = "";
-// const benchmarkTraceManager = new BenchmarkTraceManager((entry: string) => (message += entry), "\t");
+// const traceManager = new TraceManager((entry: string) => (message += entry), "\t");
 //
 // function foobar(x: number): void {
-//     const trace: Trace = BenchmarkTraceManager.entry("Example", foobar.name, { x, messageLength: message.length });
+//     const trace: Trace = TraceManager.entry("Example", foobar.name, { x, messageLength: message.length });
 //     // ...
 //     trace.exit();
 // }
@@ -58,15 +60,13 @@ export abstract class TraceManager {
 
     abstract emit(trace: Trace, message: string, maybeDetails?: {}): void;
 
-    // Creates a new instance of Trace.
-    // Should be called at the start of a function.
+    // Creates a new Trace instance and call its entry method.
+    // Traces should be created at the start of a function, and further calls are made on Trace instance.
     public entry(phase: string, task: string, maybeDetails?: {}): Trace {
-        const trace: Trace = this.create(phase, task);
-        trace.entry(maybeDetails);
-
-        return trace;
+        return this.create(phase, task, maybeDetails);
     }
 
+    // Defaults to simple concatenation.
     protected formatMessage(trace: Trace, message: string, maybeDetails?: {}): string {
         const details: string = maybeDetails !== undefined ? this.safeJsonStringify(maybeDetails) : TraceConstant.Empty;
 
@@ -74,21 +74,24 @@ export abstract class TraceManager {
     }
 
     // The return to the TraceManager.start function.
-    // Subclass this when different values are needed in the tracer, eg. BenchmarkTraceManager/BenchmarkTrace.
-    protected create(phase: string, task: string): Trace {
-        return new Trace(this.emit.bind(this), phase, task, this.createIdFn());
+    // Subclass this when the TraceManager needs a different subclass of Trace.
+    // Eg. BenchmarkTraceManager returns a BenchmarkTrace instance.
+    protected create(phase: string, task: string, maybeDetails?: {}): Trace {
+        return new Trace(this.emit.bind(this), phase, task, this.createIdFn(), maybeDetails);
     }
 
-    protected safeJsonStringify(obj: {}): string {
+    // Copied signature from `JSON.stringify`.
+    // Subclass this by providing values for `replacer` and/or `space`. 
+    protected safeJsonStringify(obj: {},  replacer?: (this: any, key: string, value: any) => any, space?: string | number): string {
         try {
-            return JSON.stringify(obj);
+            return JSON.stringify(obj, replacer, space);
         } catch (e) {
-            return "[JSON.serialize exception]";
+            return "[JSON.stringify Error]";
         }
     }
 }
 
-// Formatted traces are sent to the given callback.
+// Each trace entry gets passed to a callback function.
 export class ReportTraceManager extends TraceManager {
     constructor(private readonly outputFn: (message: string) => void, valueDelimiter: string = "\t") {
         super(valueDelimiter);
@@ -99,17 +102,18 @@ export class ReportTraceManager extends TraceManager {
     }
 }
 
-// Add a call to performanceNow() on create, trace, and exit.
+// See BenchmarkTrace for details.
 export class BenchmarkTraceManager extends ReportTraceManager {
     constructor(outputFn: (message: string) => void, valueDelimiter: string = "\t") {
         super(outputFn, valueDelimiter);
     }
 
-    protected create(phase: string, task: string): BenchmarkTrace {
-        return new BenchmarkTrace(this.emit.bind(this), phase, task, this.createIdFn());
+    override create(phase: string, task: string, maybeDetails?: {}): BenchmarkTrace {
+        return new BenchmarkTrace(this.emit.bind(this), phase, task, this.createIdFn(), maybeDetails);
     }
 }
 
+// The TraceManager for DefaultSettings.
 export class NoOpTraceManager extends TraceManager {
     emit(_tracer: Trace, _message: string, _maybeDetails?: {}): void {}
 
@@ -124,7 +128,10 @@ export class Trace {
         public readonly phase: string,
         public readonly task: string,
         public readonly id: string,
-    ) {}
+        maybeDetails?: {},
+    ) {
+        this.entry(maybeDetails);
+    }
 
     public entry(maybeDetails?: {}): void {
         this.trace(TraceConstant.Entry, maybeDetails);
@@ -139,6 +146,8 @@ export class Trace {
     }
 }
 
+// Tracing entries add the current time to its details field,
+// and calculates the duration between the BenchmarkTrace's creation and now.
 export class BenchmarkTrace extends Trace {
     protected readonly timeStart: number = performanceNow();
 
@@ -147,8 +156,9 @@ export class BenchmarkTrace extends Trace {
         phase: string,
         task: string,
         id: string,
+        maybeDetails?: {},
     ) {
-        super(emitTraceFn, phase, task, id);
+        super(emitTraceFn, phase, task, id, maybeDetails);
     }
 
     public trace(message: string, maybeDetails?: {}) {
