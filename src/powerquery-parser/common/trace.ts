@@ -39,13 +39,12 @@ import performanceNow = require("performance-now");
 
 // Constants used in multiple files as part of a trace's phase/task/message/details.
 export const enum TraceConstant {
-    ArrayContents = "ArrayContents",
-    ArrayLength = "ArrayLength",
     Empty = "[Empty]",
     Entry = "Entry",
     Exit = "Exit",
     IsError = "IsError",
     IsThrowing = "IsThrowing",
+    Length = "Length",
     Result = "Result",
     TimeDelta = "TimeDelta",
     TimeEnd = "TimeEnd",

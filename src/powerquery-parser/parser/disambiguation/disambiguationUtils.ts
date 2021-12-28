@@ -26,7 +26,7 @@ export function readAmbiguous<T extends Ast.TNode>(
     parseFns: ReadonlyArray<(state: ParseState, parser: Parser) => T>,
 ): AmbiguousParse<T> {
     const trace: Trace = state.traceManager.entry(DisambiguationTraceConstant.Disambiguation, readAmbiguous.name, {
-        [TraceConstant.ArrayLength]: parseFns.length,
+        [TraceConstant.Length]: parseFns.length,
     });
     ArrayUtils.assertNonZeroLength(parseFns, "requires at least one parse function");
 
@@ -309,7 +309,7 @@ function thoroughReadAmbiguousBracket(
         bracketDisambiguationParseFunctions(parser, allowedVariants),
     );
 
-    trace.exit({ [TraceConstant.ArrayContents]: allowedVariants });
+    trace.exit({ allowedVariants });
 
     return ambiguousBracket;
 }
@@ -333,7 +333,7 @@ function thoroughReadAmbiguous<T extends TAmbiguousBracketNode | TAmbiguousParen
         DisambiguationTraceConstant.Disambiguation,
         thoroughReadAmbiguous.name,
         {
-            [TraceConstant.ArrayLength]: parseFns.length,
+            [TraceConstant.Length]: parseFns.length,
         },
     );
     const ambiguousParse: AmbiguousParse<T> = readAmbiguous(state, parser, parseFns);
