@@ -114,7 +114,7 @@ export class NoOpTraceManager extends TraceManager {
     emit(_tracer: Trace, _message: string, _maybeDetails?: {}): void {}
 
     protected create(phase: string, task: string): Trace {
-        return new NoOpTrace(this.emit, phase, task, this.createIdFn());
+        return new NoOpTrace(this.emit.bind(this), phase, task, this.createIdFn());
     }
 }
 
