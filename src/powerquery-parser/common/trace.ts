@@ -76,7 +76,7 @@ export abstract class TraceManager {
     // The return to the TraceManager.start function.
     // Subclass this when different values are needed in the tracer, eg. BenchmarkTraceManager/BenchmarkTrace.
     protected create(phase: string, task: string): Trace {
-        return new Trace(this.emit, phase, task, this.createIdFn());
+        return new Trace(this.emit.bind(this), phase, task, this.createIdFn());
     }
 
     protected safeJsonStringify(obj: {}): string {
@@ -106,7 +106,7 @@ export class BenchmarkTraceManager extends ReportTraceManager {
     }
 
     protected create(phase: string, task: string): BenchmarkTrace {
-        return new BenchmarkTrace(this.emit, phase, task, this.createIdFn());
+        return new BenchmarkTrace(this.emit.bind(this), phase, task, this.createIdFn());
     }
 }
 
