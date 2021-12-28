@@ -27,10 +27,10 @@ import performanceNow = require("performance-now");
 //
 // Example where each time the tracer emits a value it'll append to the local message.
 // let message = "";
-// const traceManager = new TraceManager((entry: string) => (message += entry), "\t");
+// const traceManager = new TraceManager((entry: string) => (message += (entry + "\n")), "\t");
 //
 // function foobar(x: number): void {
-//     const trace: Trace = TraceManager.entry("Example", foobar.name, { x, messageLength: message.length });
+//     const trace: Trace = traceManager.entry("Example", foobar.name, { x, messageLength: message.length });
 //     // ...
 //     trace.exit();
 // }
