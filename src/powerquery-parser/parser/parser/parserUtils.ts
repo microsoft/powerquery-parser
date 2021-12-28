@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ParseError } from "..";
-import { CommonError, ResultUtils } from "../../common";
+import { Assert, CommonError, ResultUtils } from "../../common";
 import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { ParseSettings } from "../../settings";
@@ -23,12 +23,15 @@ export function tryParse(parseSettings: ParseSettings, lexerSnapshot: LexerSnaps
     try {
         const root: Ast.TNode = maybeParserEntryPointFn(parseState, parseSettings.parser);
         ParseStateUtils.assertIsDoneParsing(parseState);
+
         return ResultUtils.boxOk({
             lexerSnapshot,
             root,
             state: parseState,
         });
     } catch (error) {
+        Assert.isInstanceofError(error);
+
         return ResultUtils.boxError(ensureParseError(parseState, error, parseSettings.locale));
     }
 }
@@ -49,6 +52,8 @@ export function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: Le
             state: expressionDocumentState,
         });
     } catch (expressionDocumentError) {
+        Assert.isInstanceofError(expressionDocumentError);
+
         const sectionDocumentState: ParseState = parseSettings.createParseState(
             lexerSnapshot,
             defaultOverrides(parseSettings),
@@ -62,6 +67,8 @@ export function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: Le
                 state: sectionDocumentState,
             });
         } catch (sectionDocumentError) {
+            Assert.isInstanceofError(sectionDocumentError);
+
             let betterParsedState: ParseState;
             let betterParsedError: Error;
 

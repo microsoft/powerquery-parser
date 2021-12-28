@@ -41,11 +41,11 @@ export function readAmbiguous<T extends Ast.TNode>(
         try {
             maybeNode = parseFn(variantState, parser);
             variantResult = ResultUtils.boxOk(maybeNode);
-        } catch (err) {
-            if (!ParseError.isTInnerParseError(err)) {
-                throw err;
+        } catch (error) {
+            if (!ParseError.isTInnerParseError(error)) {
+                throw error;
             }
-            variantResult = ResultUtils.boxError(new ParseError.ParseError(err, variantState));
+            variantResult = ResultUtils.boxError(new ParseError.ParseError(error, variantState));
         }
 
         const candiate: AmbiguousParse<T> = {

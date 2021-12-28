@@ -13,13 +13,13 @@ export function all<T>(
     return true;
 }
 
-export function assertIn<T>(collection: ReadonlyArray<T>, item: T, maybeMessage?: string, maybeDetails?: {}): number {
+export function assertIn<T>(collection: ReadonlyArray<T>, item: T, maybeMessage?: string, maybeDetails?: object): number {
     const index: number = collection.indexOf(item);
     Assert.isTrue(index !== -1, maybeMessage, maybeDetails ?? { item });
     return index;
 }
 
-export function assertGet<T>(collection: ReadonlyArray<T>, index: number, maybeMessage?: string, maybeDetails?: {}): T {
+export function assertGet<T>(collection: ReadonlyArray<T>, index: number, maybeMessage?: string, maybeDetails?: object): T {
     return Assert.asDefined(collection[index], maybeMessage, maybeDetails);
 }
 
@@ -27,14 +27,14 @@ export function assertIndexOfPredicate<T>(
     collection: ReadonlyArray<T>,
     predicateFn: (element: T) => boolean,
     maybeMessage?: string,
-    maybeDetails?: {},
+    maybeDetails?: object,
 ): number {
     const index: number = indexOfPredicate(collection, predicateFn);
     Assert.isTrue(index !== -1, maybeMessage, maybeDetails);
     return index;
 }
 
-export function assertNonZeroLength<T>(collection: ReadonlyArray<T>, maybeMessage?: string, maybeDetails?: {}): void {
+export function assertNonZeroLength<T>(collection: ReadonlyArray<T>, maybeMessage?: string, maybeDetails?: object): void {
     Assert.isTrue(
         collection.length > 0,
         maybeMessage ?? `collection should have at least one element in it`,

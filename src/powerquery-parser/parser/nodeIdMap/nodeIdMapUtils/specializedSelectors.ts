@@ -82,9 +82,13 @@ export function maybeInvokeExpressionIdentifier(
     // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
     const recursiveArrayXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, invokeExprXorNode.node.id);
     const recursiveExprXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, recursiveArrayXorNode.node.id);
-    const maybeHeadXorNode: XorNode<Ast.IdentifierExpression> | undefined = maybeNthChildChecked<
-        Ast.IdentifierExpression
-    >(nodeIdMapCollection, recursiveExprXorNode.node.id, 0, Ast.NodeKind.IdentifierExpression);
+    const maybeHeadXorNode: XorNode<Ast.IdentifierExpression> | undefined =
+        maybeNthChildChecked<Ast.IdentifierExpression>(
+            nodeIdMapCollection,
+            recursiveExprXorNode.node.id,
+            0,
+            Ast.NodeKind.IdentifierExpression,
+        );
 
     // It's not an identifier expression so there's nothing we can do.
     if (maybeHeadXorNode === undefined) {
@@ -135,9 +139,8 @@ export function maybeInvokeExpressionIdentifierLiteral(
 ): string | undefined {
     assertGetXorChecked(nodeIdMapCollection, nodeId, Ast.NodeKind.InvokeExpression);
 
-    const maybeIdentifierExpressionXorNode:
-        | XorNode<Ast.IdentifierExpression>
-        | undefined = maybeInvokeExpressionIdentifier(nodeIdMapCollection, nodeId);
+    const maybeIdentifierExpressionXorNode: XorNode<Ast.IdentifierExpression> | undefined =
+        maybeInvokeExpressionIdentifier(nodeIdMapCollection, nodeId);
     if (maybeIdentifierExpressionXorNode === undefined || XorNodeUtils.isContextXor(maybeIdentifierExpressionXorNode)) {
         return undefined;
     }

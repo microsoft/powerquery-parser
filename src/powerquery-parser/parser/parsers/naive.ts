@@ -42,7 +42,7 @@ interface WrappedRead<
     Kind extends Ast.TWrappedNodeKind,
     Open extends Constant.WrapperConstant,
     Content,
-    Close extends Constant.WrapperConstant
+    Close extends Constant.WrapperConstant,
 > extends Ast.IWrapped<Kind, Open, Content, Close> {
     readonly maybeOptionalConstant: Ast.IConstant<Constant.MiscConstant.QuestionMark> | undefined;
 }
@@ -196,6 +196,8 @@ export function readDocument(state: ParseState, parser: Parser): Ast.TDocument {
         document = parser.readExpression(state, parser);
         ParseStateUtils.assertIsDoneParsing(state);
     } catch (expressionError) {
+        Assert.isInstanceofError(expressionError);
+
         // Fast backup deletes context state, but we want to preserve it for the case
         // where both parsing an expression and section document error out.
         const expressionCheckpoint: ParseStateCheckpoint = parser.createCheckpoint(state);
@@ -215,6 +217,8 @@ export function readDocument(state: ParseState, parser: Parser): Ast.TDocument {
             document = readSectionDocument(state, parser);
             ParseStateUtils.assertIsDoneParsing(state);
         } catch (sectionError) {
+            Assert.isInstanceofError(sectionError);
+
             let triedError: Error;
             if (expressionCheckpoint.tokenIndex > /* sectionErrorState */ state.tokenIndex) {
                 triedError = expressionError;
@@ -325,13 +329,8 @@ export function readSectionMember(state: ParseState, parser: Parser): Ast.Sectio
     ParseStateUtils.startContext(state, nodeKind);
 
     const maybeLiteralAttributes: Ast.RecordLiteral | undefined = maybeReadLiteralAttributes(state, parser);
-    const maybeSharedConstant:
-        | Ast.IConstant<Constant.KeywordConstant.Shared>
-        | undefined = maybeReadTokenKindAsConstant(
-        state,
-        Token.TokenKind.KeywordShared,
-        Constant.KeywordConstant.Shared,
-    );
+    const maybeSharedConstant: Ast.IConstant<Constant.KeywordConstant.Shared> | undefined =
+        maybeReadTokenKindAsConstant(state, Token.TokenKind.KeywordShared, Constant.KeywordConstant.Shared);
     const namePairedExpression: Ast.IdentifierPairedExpression = parser.readIdentifierPairedExpression(state, parser);
     const semicolonConstant: Ast.IConstant<Constant.MiscConstant.Semicolon> = readTokenKindAsConstant(
         state,
@@ -922,17 +921,17 @@ export function readLiteralExpression(state: ParseState, _parser: Parser): Ast.L
         Token.TokenKind.NullLiteral,
         Token.TokenKind.TextLiteral,
     ];
-    const maybeErr: ParseError.ExpectedAnyTokenKindError | undefined = ParseStateUtils.testIsOnAnyTokenKind(
+    const maybeError: ParseError.ExpectedAnyTokenKindError | undefined = ParseStateUtils.testIsOnAnyTokenKind(
         state,
         expectedTokenKinds,
     );
-    if (maybeErr) {
+    if (maybeError) {
         trace.exit({
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
             [TraceConstant.IsThrowing]: true,
         });
 
-        throw maybeErr;
+        throw maybeError;
     }
 
     const literalKind: Ast.LiteralKind = Assert.asDefined(
@@ -970,9 +969,8 @@ export function readIdentifierExpression(state: ParseState, parser: Parser): Ast
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
-    const maybeInclusiveConstant:
-        | Ast.IConstant<Constant.MiscConstant.AtSign>
-        | undefined = maybeReadTokenKindAsConstant(state, Token.TokenKind.AtSign, Constant.MiscConstant.AtSign);
+    const maybeInclusiveConstant: Ast.IConstant<Constant.MiscConstant.AtSign> | undefined =
+        maybeReadTokenKindAsConstant(state, Token.TokenKind.AtSign, Constant.MiscConstant.AtSign);
     const identifier: Ast.Identifier = parser.readIdentifier(state, parser);
 
     const identifierExpression: Ast.IdentifierExpression = {
@@ -1395,12 +1393,13 @@ export function readLetExpression(state: ParseState, parser: Parser): Ast.LetExp
         Token.TokenKind.KeywordLet,
         Constant.KeywordConstant.Let,
     );
-    const identifierPairedExpression: Ast.ICsvArray<Ast.IdentifierPairedExpression> = parser.readIdentifierPairedExpressions(
-        state,
-        parser,
-        !ParseStateUtils.isNextTokenKind(state, Token.TokenKind.KeywordIn),
-        ParseStateUtils.testCsvContinuationLetExpression,
-    );
+    const identifierPairedExpression: Ast.ICsvArray<Ast.IdentifierPairedExpression> =
+        parser.readIdentifierPairedExpressions(
+            state,
+            parser,
+            !ParseStateUtils.isNextTokenKind(state, Token.TokenKind.KeywordIn),
+            ParseStateUtils.testCsvContinuationLetExpression,
+        );
     const inConstant: Ast.IConstant<Constant.KeywordConstant.In> = readTokenKindAsConstant(
         state,
         Token.TokenKind.KeywordIn,
@@ -1638,13 +1637,13 @@ export function readFieldSpecificationList(
     ParseStateUtils.startContext(state, fieldArrayNodeKind);
 
     while (continueReadingValues) {
-        const maybeErr: ParseError.TInnerParseError | undefined = testPostCommaError(state);
-        if (maybeErr) {
+        const maybeError: ParseError.TInnerParseError | undefined = testPostCommaError(state);
+        if (maybeError) {
             trace.exit({
                 [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
                 [TraceConstant.IsThrowing]: true,
             });
-            throw maybeErr;
+            throw maybeError;
         }
 
         if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.Ellipsis)) {
@@ -1675,9 +1674,8 @@ export function readFieldSpecificationList(
             const fieldSpecificationNodeKind: Ast.NodeKind.FieldSpecification = Ast.NodeKind.FieldSpecification;
             ParseStateUtils.startContext(state, fieldSpecificationNodeKind);
 
-            const maybeOptionalConstant:
-                | Ast.IConstant<Constant.LanguageConstant.Optional>
-                | undefined = maybeReadConstantKind(state, Constant.LanguageConstant.Optional);
+            const maybeOptionalConstant: Ast.IConstant<Constant.LanguageConstant.Optional> | undefined =
+                maybeReadConstantKind(state, Constant.LanguageConstant.Optional);
 
             const name: Ast.GeneralizedIdentifier = parser.readGeneralizedIdentifier(state, parser);
 
@@ -1696,9 +1694,8 @@ export function readFieldSpecificationList(
             };
             ParseStateUtils.endContext(state, field);
 
-            const maybeCommaConstant:
-                | Ast.IConstant<Constant.MiscConstant.Comma>
-                | undefined = maybeReadTokenKindAsConstant(state, Token.TokenKind.Comma, Constant.MiscConstant.Comma);
+            const maybeCommaConstant: Ast.IConstant<Constant.MiscConstant.Comma> | undefined =
+                maybeReadTokenKindAsConstant(state, Token.TokenKind.Comma, Constant.MiscConstant.Comma);
             continueReadingValues = maybeCommaConstant !== undefined;
 
             const csv: Ast.ICsv<Ast.FieldSpecification> = {
@@ -2158,12 +2155,12 @@ function tryReadPrimitiveType(state: ParseState, parser: Parser): TriedReadPrimi
         Token.TokenKind.KeywordType,
         Token.TokenKind.NullLiteral,
     ];
-    const maybeErr: ParseError.ExpectedAnyTokenKindError | undefined = ParseStateUtils.testIsOnAnyTokenKind(
+    const maybeError: ParseError.ExpectedAnyTokenKindError | undefined = ParseStateUtils.testIsOnAnyTokenKind(
         state,
         expectedTokenKinds,
     );
-    if (maybeErr) {
-        const error: ParseError.ExpectedAnyTokenKindError = maybeErr;
+    if (maybeError) {
+        const error: ParseError.ExpectedAnyTokenKindError = maybeError;
         trace.exit({
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
             [TraceConstant.IsError]: true,
@@ -2355,7 +2352,7 @@ function recursiveReadBinOpExpression<
     Kind extends Ast.TBinOpExpressionNodeKind,
     Left,
     Op extends Constant.TBinOpExpressionOperator,
-    Right
+    Right,
 >(
     state: ParseState,
     nodeKind: Kind,
@@ -2399,7 +2396,7 @@ function recursiveReadBinOpExpression<
         operatorConstant,
         right,
     };
-    ParseStateUtils.endContext(state, (binOpExpression as unknown) as Ast.TNode);
+    ParseStateUtils.endContext(state, binOpExpression as unknown as Ast.TNode);
     trace.exit({
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         [NaiveTraceConstant.IsOperatorPresent]: true,
@@ -2414,7 +2411,7 @@ function recursiveReadBinOpExpression<
 function recursiveReadBinOpExpressionHelper<
     Kind extends Ast.TBinOpExpressionNodeKind,
     OperatorKind extends Constant.TBinOpExpressionOperator,
-    Right
+    Right,
 >(
     state: ParseState,
     nodeKind: Kind,
@@ -2456,7 +2453,7 @@ function recursiveReadBinOpExpressionHelper<
         operatorConstant,
         right,
     };
-    ParseStateUtils.endContext(state, (binOpExpression as unknown) as Ast.TNode);
+    ParseStateUtils.endContext(state, binOpExpression as unknown as Ast.TNode);
     trace.exit({
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         [NaiveTraceConstant.IsOperatorPresent]: true,
@@ -2483,14 +2480,14 @@ function readCsvArray<T extends Ast.TCsvType>(
         const csvNodeKind: Ast.NodeKind.Csv = Ast.NodeKind.Csv;
         ParseStateUtils.startContext(state, csvNodeKind);
 
-        const maybeErr: ParseError.TInnerParseError | undefined = testPostCommaError(state);
-        if (maybeErr) {
+        const maybeError: ParseError.TInnerParseError | undefined = testPostCommaError(state);
+        if (maybeError) {
             trace.exit({
                 [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
                 [TraceConstant.IsThrowing]: true,
             });
 
-            throw maybeErr;
+            throw maybeError;
         }
 
         const node: T = valueReader();
@@ -2555,7 +2552,7 @@ function readKeyValuePair<Kind extends Ast.TKeyValuePairNodeKind, Key, Value>(
         equalConstant,
         value,
     };
-    ParseStateUtils.endContext(state, (keyValuePair as unknown) as Ast.TKeyValuePair);
+    ParseStateUtils.endContext(state, keyValuePair as unknown as Ast.TKeyValuePair);
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return keyValuePair;
@@ -2582,7 +2579,7 @@ function readPairedConstant<Kind extends Ast.TPairedConstantNodeKind, ConstantKi
         constant,
         paired,
     };
-    ParseStateUtils.endContext(state, (pairedConstant as unknown) as Ast.TPairedConstant);
+    ParseStateUtils.endContext(state, pairedConstant as unknown as Ast.TPairedConstant);
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return pairedConstant;
@@ -2591,7 +2588,7 @@ function readPairedConstant<Kind extends Ast.TPairedConstantNodeKind, ConstantKi
 function maybeReadPairedConstant<
     Kind extends Ast.TPairedConstantNodeKind,
     ConstantKind extends Constant.TConstant,
-    Paired
+    Paired,
 >(
     state: ParseState,
     nodeKind: Kind,
@@ -2645,19 +2642,19 @@ function genericReadParameterList<T extends Ast.TParameterType>(
         ParseStateUtils.startContext(state, Ast.NodeKind.Csv);
         ParseStateUtils.startContext(state, Ast.NodeKind.Parameter);
 
-        const maybeErr: ParseError.TInnerParseError | undefined = testCsvContinuationDanglingCommaForParenthesis(state);
-        if (maybeErr) {
+        const maybeError: ParseError.TInnerParseError | undefined =
+            testCsvContinuationDanglingCommaForParenthesis(state);
+        if (maybeError) {
             trace.exit({
                 [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
                 [TraceConstant.IsThrowing]: true,
             });
 
-            throw maybeErr;
+            throw maybeError;
         }
 
-        const maybeOptionalConstant:
-            | Ast.IConstant<Constant.LanguageConstant.Optional>
-            | undefined = maybeReadConstantKind(state, Constant.LanguageConstant.Optional);
+        const maybeOptionalConstant: Ast.IConstant<Constant.LanguageConstant.Optional> | undefined =
+            maybeReadConstantKind(state, Constant.LanguageConstant.Optional);
 
         if (reachedOptionalParameter && !maybeOptionalConstant) {
             const token: Token.Token = ParseStateUtils.assertGetTokenAt(state, state.tokenIndex);
@@ -2742,7 +2739,7 @@ function readWrapped<
     Kind extends Ast.TWrappedNodeKind,
     Open extends Constant.WrapperConstant,
     Content,
-    Close extends Constant.WrapperConstant
+    Close extends Constant.WrapperConstant,
 >(
     state: ParseState,
     nodeKind: Kind,
@@ -2778,7 +2775,7 @@ function readWrapped<
         closeWrapperConstant,
         maybeOptionalConstant,
     };
-    ParseStateUtils.endContext(state, (wrapped as unknown) as Ast.TWrapped);
+    ParseStateUtils.endContext(state, wrapped as unknown as Ast.TWrapped);
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return wrapped;
@@ -2828,14 +2825,17 @@ export function readTokenKindAsConstant<ConstantKind extends Constant.TConstant>
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, Ast.NodeKind.Constant);
 
-    const maybeErr: ParseError.ExpectedTokenKindError | undefined = ParseStateUtils.testIsOnTokenKind(state, tokenKind);
-    if (maybeErr !== undefined) {
+    const maybeError: ParseError.ExpectedTokenKindError | undefined = ParseStateUtils.testIsOnTokenKind(
+        state,
+        tokenKind,
+    );
+    if (maybeError !== undefined) {
         trace.exit({
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
             [TraceConstant.IsError]: true,
         });
 
-        throw maybeErr;
+        throw maybeError;
     }
 
     const tokenData: string = readToken(state);
@@ -2892,9 +2892,12 @@ export function maybeReadTokenKindAsConstant<ConstantKind extends Constant.TCons
 }
 
 function readTokenKind(state: ParseState, tokenKind: Token.TokenKind): string {
-    const maybeErr: ParseError.ExpectedTokenKindError | undefined = ParseStateUtils.testIsOnTokenKind(state, tokenKind);
-    if (maybeErr) {
-        throw maybeErr;
+    const maybeError: ParseError.ExpectedTokenKindError | undefined = ParseStateUtils.testIsOnTokenKind(
+        state,
+        tokenKind,
+    );
+    if (maybeError) {
+        throw maybeError;
     }
 
     return readToken(state);

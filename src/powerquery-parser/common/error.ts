@@ -48,12 +48,12 @@ export function isTInnerCommonError(x: any): x is TInnerCommonError {
     return x instanceof CancellationError || x instanceof InvariantError || x instanceof UnknownError;
 }
 
-export function ensureCommonError(locale: string, err: Error): CommonError {
-    if (err instanceof CommonError) {
-        return err;
-    } else if (isTInnerCommonError(err)) {
-        return new CommonError(err);
+export function ensureCommonError(locale: string, error: Error): CommonError {
+    if (error instanceof CommonError) {
+        return error;
+    } else if (isTInnerCommonError(error)) {
+        return new CommonError(error);
     } else {
-        return new CommonError(new UnknownError(locale, err));
+        return new CommonError(new UnknownError(locale, error));
     }
 }

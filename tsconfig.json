@@ -8,6 +8,7 @@
         "downlevelIteration": true,
         "noFallthroughCasesInSwitch": true,
         "noEmitOnError": true,
+        "noImplicitOverride": true,
         "noImplicitReturns": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,

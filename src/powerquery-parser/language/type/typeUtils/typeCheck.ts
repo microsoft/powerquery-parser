@@ -163,7 +163,7 @@ export function typeCheckTable(valueType: Type.DefinedTable, schemaType: Type.Ta
 
 function typeCheckGenericNumber<
     Value extends Type.TPowerQueryType | Type.FunctionParameter | undefined,
-    Schema extends Type.TPowerQueryType | Type.FunctionParameter
+    Schema extends Type.TPowerQueryType | Type.FunctionParameter,
 >(
     valueElements: ReadonlyArray<Value>,
     schemaItemTypes: ReadonlyArray<Schema>,

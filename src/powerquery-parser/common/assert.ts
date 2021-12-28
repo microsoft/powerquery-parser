@@ -9,6 +9,11 @@ export function asDefined<T>(maybeValue: T | undefined, maybeMessage?: string, m
     return maybeValue;
 }
 
+export function asInstanceofError<T>(value: T): Error {
+    isInstanceofError(value);
+    return value;
+}
+
 export function isTrue(value: boolean, maybeMessage?: string, maybeDetails?: {}): asserts value is true {
     if (value !== true) {
         throw new CommonError.InvariantError(maybeMessage ?? `assert failed, expected value to be true`, maybeDetails);
@@ -23,6 +28,12 @@ export function isFalse(value: boolean, maybeMessage?: string, maybeDetails?: {}
 
 export function isNever(_: never): never {
     throw new CommonError.InvariantError(`Should never be reached. Stack trace: ${new Error().stack}`);
+}
+
+export function isInstanceofError<T>(value: T | Error): asserts value is Error {
+    if (!(value instanceof Error)) {
+        throw new CommonError.InvariantError(`Expected value to be instanceof Error`, { typeof: typeof value });
+    }
 }
 
 export function isDefined<T>(

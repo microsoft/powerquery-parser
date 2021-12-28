@@ -107,7 +107,7 @@ export class BenchmarkTraceManager extends ReportTraceManager {
         super(outputFn, valueDelimiter);
     }
 
-    override create(phase: string, task: string, maybeDetails?: {}): BenchmarkTrace {
+    protected override create(phase: string, task: string, maybeDetails?: {}): BenchmarkTrace {
         return new BenchmarkTrace(this.emit.bind(this), phase, task, this.createIdFn(), maybeDetails);
     }
 }
@@ -116,8 +116,8 @@ export class BenchmarkTraceManager extends ReportTraceManager {
 export class NoOpTraceManager extends TraceManager {
     emit(_tracer: Trace, _message: string, _maybeDetails?: {}): void {}
 
-    protected create(phase: string, task: string): Trace {
-        return new NoOpTrace(this.emit.bind(this), phase, task, this.createIdFn());
+    protected override create(phase: string, task: string, maybeDetails?: {}): Trace {
+        return new NoOpTrace(this.emit.bind(this), phase, task, this.createIdFn(), maybeDetails);
     }
 }
 
@@ -160,7 +160,7 @@ export class BenchmarkTrace extends Trace {
         super(emitTraceFn, phase, task, id, maybeDetails);
     }
 
-    public trace(message: string, maybeDetails?: {}) {
+    public override trace(message: string, maybeDetails?: {}) {
         const timeNow: number = performanceNow();
 
         super.trace(message, {
@@ -172,7 +172,7 @@ export class BenchmarkTrace extends Trace {
 }
 
 export class NoOpTrace extends Trace {
-    public trace(_message: string, _maybeDetails?: {}) {}
+    public override trace(_message: string, _maybeDetails?: {}) {}
 }
 
 function createAutoIncrementId(): () => string {

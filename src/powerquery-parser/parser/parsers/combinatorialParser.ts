@@ -78,9 +78,8 @@ function readBinOpExpression(
         parser.readUnaryExpression(state, parser),
     ];
 
-    let maybeOperator:
-        | Constant.TBinOpExpressionOperator
-        | undefined = ConstantUtils.maybeBinOpExpressionOperatorKindFrom(state.maybeCurrentTokenKind);
+    let maybeOperator: Constant.TBinOpExpressionOperator | undefined =
+        ConstantUtils.maybeBinOpExpressionOperatorKindFrom(state.maybeCurrentTokenKind);
     while (maybeOperator !== undefined) {
         const operator: Constant.TBinOpExpressionOperator = maybeOperator;
         operators.push(operator);
