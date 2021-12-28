@@ -3,6 +3,7 @@
 
 import { ParseContext, ParseContextUtils, ParseError } from "..";
 import { Assert, CommonError, MapUtils } from "../../common";
+import { NoOpTraceManager } from "../../common/trace";
 import { Ast, Constant, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { DefaultLocale } from "../../localization";
@@ -28,16 +29,18 @@ export function createState(lexerSnapshot: LexerSnapshot, maybeOverrides: Partia
 
     return {
         ...maybeOverrides,
-        lexerSnapshot,
-        maybeCancellationToken: maybeOverrides?.maybeCancellationToken,
-        locale: maybeOverrides?.locale ?? DefaultLocale,
         disambiguationBehavior:
             maybeOverrides?.disambiguationBehavior ?? Disambiguation.DismabiguationBehavior.Thorough,
-        tokenIndex,
-        maybeCurrentToken,
-        maybeCurrentTokenKind,
+        lexerSnapshot,
+        locale: maybeOverrides?.locale ?? DefaultLocale,
+        maybeCancellationToken: maybeOverrides?.maybeCancellationToken,
+        traceManager: maybeOverrides?.traceManager ?? new NoOpTraceManager(),
+
         contextState: maybeOverrides?.contextState ?? ParseContextUtils.createState(),
+        maybeCurrentToken,
         maybeCurrentContextNode,
+        maybeCurrentTokenKind,
+        tokenIndex,
     };
 }
 

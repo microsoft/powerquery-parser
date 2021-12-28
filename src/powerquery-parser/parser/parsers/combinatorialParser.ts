@@ -31,31 +31,31 @@ export const CombinatorialParser: Parser = {
 
     // 12.2.3.2 Logical expressions
     readLogicalExpression: (state: ParseState, parser: Parser) =>
-        (readBinOpExpression(state, parser, Ast.NodeKind.LogicalExpression) as unknown) as Ast.LogicalExpression,
+        readBinOpExpression(state, parser, Ast.NodeKind.LogicalExpression) as Ast.TLogicalExpression,
 
     // 12.2.3.3 Is expression
     readIsExpression: (state: ParseState, parser: Parser) =>
-        (readBinOpExpression(state, parser, Ast.NodeKind.IsExpression) as unknown) as Ast.IsExpression,
+        readBinOpExpression(state, parser, Ast.NodeKind.IsExpression) as Ast.TIsExpression,
 
     // 12.2.3.4 As expression
     readAsExpression: (state: ParseState, parser: Parser) =>
-        (readBinOpExpression(state, parser, Ast.NodeKind.AsExpression) as unknown) as Ast.AsExpression,
+        readBinOpExpression(state, parser, Ast.NodeKind.AsExpression) as Ast.TAsExpression,
 
     // 12.2.3.5 Equality expression
     readEqualityExpression: (state: ParseState, parser: Parser) =>
-        (readBinOpExpression(state, parser, Ast.NodeKind.EqualityExpression) as unknown) as Ast.EqualityExpression,
+        readBinOpExpression(state, parser, Ast.NodeKind.EqualityExpression) as Ast.TEqualityExpression,
 
     // 12.2.3.6 Relational expression
     readRelationalExpression: (state: ParseState, parser: Parser) =>
-        (readBinOpExpression(state, parser, Ast.NodeKind.RelationalExpression) as unknown) as Ast.RelationalExpression,
+        readBinOpExpression(state, parser, Ast.NodeKind.RelationalExpression) as Ast.TRelationalExpression,
 
     // 12.2.3.7 Arithmetic expressions
     readArithmeticExpression: (state: ParseState, parser: Parser) =>
-        (readBinOpExpression(state, parser, Ast.NodeKind.ArithmeticExpression) as unknown) as Ast.ArithmeticExpression,
+        readBinOpExpression(state, parser, Ast.NodeKind.ArithmeticExpression) as Ast.TArithmeticExpression,
 
     // 12.2.3.8 Metadata expression
     readMetadataExpression: (state: ParseState, parser: Parser) =>
-        (readBinOpExpression(state, parser, Ast.NodeKind.MetadataExpression) as unknown) as Ast.MetadataExpression,
+        readBinOpExpression(state, parser, Ast.NodeKind.MetadataExpression) as Ast.TMetadataExpression,
 
     // 12.2.3.9 Unary expression
     readUnaryExpression,

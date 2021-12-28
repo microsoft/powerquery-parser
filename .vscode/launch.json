@@ -1,48 +1,53 @@
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Debug Library Tests",
-      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-      "args": [
-        "--inspect",
-        "--colors",
-        "--timeout",
-        "999999",
-        "${workspaceFolder}/lib/test/libraryTest/**/*.js",
-      ],
-      "preLaunchTask": "watch",
-      "internalConsoleOptions": "openOnSessionStart"
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Debug Resource Tests",
-      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-      "args": [
-        "--inspect",
-        "--colors",
-        "--timeout",
-        "999999",
-        "-r",
-        "ts-node/register",
-        "${workspaceFolder}/src/test/resourceTest/**/*.ts"
-      ],
-      "preLaunchTask": "build",
-      "internalConsoleOptions": "openOnSessionStart"
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Launch Example",
-      "program": "${workspaceFolder}\\src\\example.ts",
-      "outFiles": ["${workspaceFolder}/**/*.js"],
-      "preLaunchTask": "build"
-    }
-  ]
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Library Tests",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": ["--inspect", "--colors", "--timeout", "999999", "${workspaceFolder}/lib/test/libraryTest/**/*.js"],
+            "preLaunchTask": "watch",
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Resource Tests",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "--inspect",
+                "--colors",
+                "--timeout",
+                "999999",
+                "-r",
+                "ts-node/register",
+                "${workspaceFolder}/src/test/resourceTest/**/*.ts"
+            ],
+            "preLaunchTask": "build",
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Example",
+            "program": "${workspaceFolder}\\src\\example.ts",
+            "outFiles": ["${workspaceFolder}/**/*.js"],
+            "preLaunchTask": "build"
+        },
+        {
+            "name": "Launch Benchmark",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "node",
+            "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"],
+            "args": ["src/test/resourceTest/benchmark/createBenchmarks.ts"],
+            "cwd": "${workspaceRoot}",
+            "internalConsoleOptions": "openOnSessionStart",
+            "skipFiles": ["<node_internals>/**", "node_modules/**"]
+        }
+    ]
 }

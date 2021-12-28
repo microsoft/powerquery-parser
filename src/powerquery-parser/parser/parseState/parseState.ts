@@ -3,18 +3,20 @@
 
 import { ParseContext } from "..";
 import { ICancellationToken } from "../../common";
+import { TraceManager } from "../../common/trace";
 import { Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { Disambiguation } from "../disambiguation";
 
 export interface ParseState {
-    readonly lexerSnapshot: LexerSnapshot;
-    readonly maybeCancellationToken: ICancellationToken | undefined;
-    readonly locale: string;
     readonly disambiguationBehavior: Disambiguation.DismabiguationBehavior;
-    tokenIndex: number;
-    maybeCurrentToken: Token.Token | undefined;
-    maybeCurrentTokenKind: Token.TokenKind | undefined;
+    readonly lexerSnapshot: LexerSnapshot;
+    readonly locale: string;
+    readonly maybeCancellationToken: ICancellationToken | undefined;
+    readonly traceManager: TraceManager;
     contextState: ParseContext.State;
+    maybeCurrentToken: Token.Token | undefined;
     maybeCurrentContextNode: ParseContext.TNode | undefined;
+    maybeCurrentTokenKind: Token.TokenKind | undefined;
+    tokenIndex: number;
 }

@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/powerquery-parser",
-    "version": "0.4.18",
+    "version": "0.4.19",
     "description": "A parser for the Power Query/M formula language.",
     "author": "Microsoft",
     "license": "MIT",
@@ -11,6 +11,7 @@
     "scripts": {
         "build": "node_modules\\.bin\\tsc",
         "test": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -r ts-node/register src/test/libraryTest/**/*.ts",
+        "test:benchmark": "npx ts-node src\\test\\resourceTest\\benchmark\\createBenchmarks.ts",
         "test:resources": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -r ts-node/register src/test/resourceTest/**/*.ts",
         "lint": "npm run lint:prettier && npm run lint:tslint",
         "lint:prettier": ".\\node_modules\\.bin\\prettier --config \".prettierrc\" --list-different src\\**\\*.ts",

@@ -16,13 +16,10 @@ export function tryParse(parseSettings: ParseSettings, lexerSnapshot: LexerSnaps
         parseSettings?.maybeParserEntryPointFn;
 
     if (maybeParserEntryPointFn === undefined) {
-        return tryParseDocument(parseSettings, lexerSnapshot) as TriedParse;
+        return tryParseDocument(parseSettings, lexerSnapshot);
     }
 
-    const parseState: ParseState = parseSettings.createParseState(lexerSnapshot, {
-        maybeCancellationToken: parseSettings.maybeCancellationToken,
-        locale: parseSettings.locale,
-    });
+    const parseState: ParseState = parseSettings.createParseState(lexerSnapshot, defaultOverrides(parseSettings));
     try {
         const root: Ast.TNode = maybeParserEntryPointFn(parseState, parseSettings.parser);
         ParseStateUtils.assertIsDoneParsing(parseState);
@@ -39,10 +36,10 @@ export function tryParse(parseSettings: ParseSettings, lexerSnapshot: LexerSnaps
 export function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: LexerSnapshot): TriedParse {
     let root: Ast.TNode;
 
-    const expressionDocumentState: ParseState = parseSettings.createParseState(lexerSnapshot, {
-        maybeCancellationToken: parseSettings.maybeCancellationToken,
-        locale: parseSettings.locale,
-    });
+    const expressionDocumentState: ParseState = parseSettings.createParseState(
+        lexerSnapshot,
+        defaultOverrides(parseSettings),
+    );
     try {
         root = parseSettings.parser.readExpression(expressionDocumentState, parseSettings.parser);
         ParseStateUtils.assertIsDoneParsing(expressionDocumentState);
@@ -52,10 +49,10 @@ export function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: Le
             state: expressionDocumentState,
         });
     } catch (expressionDocumentError) {
-        const sectionDocumentState: ParseState = parseSettings.createParseState(lexerSnapshot, {
-            maybeCancellationToken: parseSettings.maybeCancellationToken,
-            locale: parseSettings.locale,
-        });
+        const sectionDocumentState: ParseState = parseSettings.createParseState(
+            lexerSnapshot,
+            defaultOverrides(parseSettings),
+        );
         try {
             root = parseSettings.parser.readSectionDocument(sectionDocumentState, parseSettings.parser);
             ParseStateUtils.assertIsDoneParsing(sectionDocumentState);
@@ -155,4 +152,12 @@ function ensureParseError(state: ParseState, error: Error, locale: string): Pars
     } else {
         return CommonError.ensureCommonError(locale, error);
     }
+}
+
+function defaultOverrides(parseSettings: ParseSettings): Partial<ParseState> {
+    return {
+        locale: parseSettings.locale,
+        maybeCancellationToken: parseSettings.maybeCancellationToken,
+        traceManager: parseSettings.traceManager,
+    };
 }
