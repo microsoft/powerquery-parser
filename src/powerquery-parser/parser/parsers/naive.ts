@@ -74,7 +74,7 @@ export function readIdentifier(state: ParseState, _parser: Parser): Ast.Identifi
     };
 
     ParseStateUtils.endContext(state, identifier);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return identifier;
 }
@@ -98,7 +98,10 @@ export function readGeneralizedIdentifier(state: ParseState, _parser: Parser): A
     }
 
     if (tokenRangeStartIndex === tokenRangeEndIndex) {
-        trace.exit({ [TraceConstant.IsThrowing]: true });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [TraceConstant.IsThrowing]: true,
+        });
 
         throw new ParseError.ExpectedGeneralizedIdentifierError(
             state.locale,
@@ -114,7 +117,10 @@ export function readGeneralizedIdentifier(state: ParseState, _parser: Parser): A
     const literalKind: StringUtils.IdentifierKind = StringUtils.identifierKind(literal, true);
 
     if (literalKind === StringUtils.IdentifierKind.Invalid) {
-        trace.exit({ [TraceConstant.IsThrowing]: true });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [TraceConstant.IsThrowing]: true,
+        });
 
         throw new ParseError.ExpectedGeneralizedIdentifierError(
             state.locale,
@@ -129,7 +135,10 @@ export function readGeneralizedIdentifier(state: ParseState, _parser: Parser): A
         literal,
     };
     ParseStateUtils.endContext(state, generalizedIdentifier);
-    trace.exit({ [TraceConstant.IsThrowing]: false });
+    trace.exit({
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+        [TraceConstant.IsThrowing]: false,
+    });
 
     return generalizedIdentifier;
 }
@@ -164,7 +173,7 @@ export function readKeyword(state: ParseState, _parser: Parser): Ast.IdentifierE
         identifier,
     };
     ParseStateUtils.endContext(state, identifierExpression);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return identifierExpression;
 }
@@ -215,13 +224,19 @@ export function readDocument(state: ParseState, parser: Parser): Ast.TDocument {
                 triedError = sectionError;
             }
 
-            trace.exit({ [TraceConstant.IsThrowing]: true });
+            trace.exit({
+                [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+                [TraceConstant.IsThrowing]: true,
+            });
 
             throw triedError;
         }
     }
 
-    trace.exit({ [TraceConstant.IsThrowing]: false });
+    trace.exit({
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+        [TraceConstant.IsThrowing]: false,
+    });
 
     return document;
 }
@@ -270,7 +285,7 @@ export function readSectionDocument(state: ParseState, parser: Parser): Ast.Sect
         sectionMembers,
     };
     ParseStateUtils.endContext(state, section);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return section;
 }
@@ -296,7 +311,7 @@ export function readSectionMembers(state: ParseState, parser: Parser): Ast.IArra
         elements: sectionMembers,
     };
     ParseStateUtils.endContext(state, sectionMemberArray);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return sectionMemberArray;
 }
@@ -334,7 +349,7 @@ export function readSectionMember(state: ParseState, parser: Parser): Ast.Sectio
         semicolonConstant,
     };
     ParseStateUtils.endContext(state, sectionMember);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return sectionMember;
 }
@@ -368,7 +383,7 @@ export function readNullCoalescingExpression(state: ParseState, parser: Parser):
                 : undefined,
         () => parser.readLogicalExpression(state, parser),
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return expression;
 }
@@ -410,7 +425,7 @@ export function readExpression(state: ParseState, parser: Parser): Ast.TExpressi
             break;
     }
 
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return expression;
 }
@@ -437,7 +452,7 @@ export function readLogicalExpression(state: ParseState, parser: Parser): Ast.TL
         maybeCurrentTokenKind => ConstantUtils.maybeLogicalOperatorKindFrom(maybeCurrentTokenKind),
         () => parser.readIsExpression(state, parser),
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return logicalExpression;
 }
@@ -465,7 +480,7 @@ export function readIsExpression(state: ParseState, parser: Parser): Ast.TIsExpr
             maybeCurrentTokenKind === Token.TokenKind.KeywordIs ? Constant.KeywordConstant.Is : undefined,
         () => parser.readNullablePrimitiveType(state, parser),
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return isExpression;
 }
@@ -488,7 +503,7 @@ export function readNullablePrimitiveType(state: ParseState, parser: Parser): As
     } else {
         nullablePrimitiveType = parser.readPrimitiveType(state, parser);
     }
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return nullablePrimitiveType;
 }
@@ -516,7 +531,7 @@ export function readAsExpression(state: ParseState, parser: Parser): Ast.TAsExpr
             maybeCurrentTokenKind === Token.TokenKind.KeywordAs ? Constant.KeywordConstant.As : undefined,
         () => parser.readNullablePrimitiveType(state, parser),
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return asExpression;
 }
@@ -543,7 +558,7 @@ export function readEqualityExpression(state: ParseState, parser: Parser): Ast.T
         maybeCurrentTokenKind => ConstantUtils.maybeEqualityOperatorKindFrom(maybeCurrentTokenKind),
         () => parser.readRelationalExpression(state, parser),
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return equalityExpression;
 }
@@ -570,7 +585,7 @@ export function readRelationalExpression(state: ParseState, parser: Parser): Ast
         maybeCurrentTokenKind => ConstantUtils.maybeRelationalOperatorKindFrom(maybeCurrentTokenKind),
         () => parser.readArithmeticExpression(state, parser),
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return relationalExpression;
 }
@@ -597,7 +612,7 @@ export function readArithmeticExpression(state: ParseState, parser: Parser): Ast
         maybeCurrentTokenKind => ConstantUtils.maybeArithmeticOperatorKindFrom(maybeCurrentTokenKind),
         () => parser.readMetadataExpression(state, parser),
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return arithmeticExpression;
 }
@@ -635,12 +650,18 @@ export function readMetadataExpression(state: ParseState, parser: Parser): Ast.T
         };
 
         ParseStateUtils.endContext(state, metadataExpression);
-        trace.exit({ [NaiveTraceConstant.IsOperatorPresent]: true });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [NaiveTraceConstant.IsOperatorPresent]: true,
+        });
 
         return metadataExpression;
     } else {
         ParseStateUtils.deleteContext(state, undefined);
-        trace.exit({ [NaiveTraceConstant.IsOperatorPresent]: false });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [NaiveTraceConstant.IsOperatorPresent]: false,
+        });
 
         return left;
     }
@@ -660,7 +681,10 @@ export function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUna
         state.maybeCurrentTokenKind,
     );
     if (maybeOperator === undefined) {
-        trace.exit({ [NaiveTraceConstant.IsOperatorPresent]: false });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [NaiveTraceConstant.IsOperatorPresent]: false,
+        });
         return parser.readTypeExpression(state, parser);
     }
 
@@ -695,7 +719,10 @@ export function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUna
         typeExpression,
     };
     ParseStateUtils.endContext(state, unaryExpression);
-    trace.exit({ [NaiveTraceConstant.IsOperatorPresent]: true });
+    trace.exit({
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+        [NaiveTraceConstant.IsOperatorPresent]: true,
+    });
 
     return unaryExpression;
 }
@@ -757,11 +784,17 @@ export function readPrimaryExpression(state: ParseState, parser: Parser): Ast.TP
     }
 
     if (ParseStateUtils.isRecursivePrimaryExpressionNext(state)) {
-        trace.exit({ [NaiveTraceConstant.IsRecursive]: true });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [NaiveTraceConstant.IsRecursive]: true,
+        });
 
         return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
     } else {
-        trace.exit({ [NaiveTraceConstant.IsRecursive]: false });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [NaiveTraceConstant.IsRecursive]: false,
+        });
 
         return primaryExpression;
     }
@@ -862,7 +895,7 @@ export function readRecursivePrimaryExpression(
         recursiveExpressions: recursiveArray,
     };
     ParseStateUtils.endContext(state, recursivePrimaryExpression);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return recursivePrimaryExpression;
 }
@@ -894,7 +927,10 @@ export function readLiteralExpression(state: ParseState, _parser: Parser): Ast.L
         expectedTokenKinds,
     );
     if (maybeErr) {
-        trace.exit({ [TraceConstant.IsThrowing]: true });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [TraceConstant.IsThrowing]: true,
+        });
 
         throw maybeErr;
     }
@@ -914,7 +950,10 @@ export function readLiteralExpression(state: ParseState, _parser: Parser): Ast.L
         literalKind,
     };
     ParseStateUtils.endContext(state, literalExpression);
-    trace.exit({ [TraceConstant.IsThrowing]: false });
+    trace.exit({
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+        [TraceConstant.IsThrowing]: false,
+    });
 
     return literalExpression;
 }
@@ -944,7 +983,7 @@ export function readIdentifierExpression(state: ParseState, parser: Parser): Ast
         identifier,
     };
     ParseStateUtils.endContext(state, identifierExpression);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return identifierExpression;
 }
@@ -968,7 +1007,7 @@ export function readParenthesizedExpression(state: ParseState, parser: Parser): 
             readTokenKindAsConstant(state, Token.TokenKind.RightParenthesis, Constant.WrapperConstant.RightParenthesis),
         false,
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return parenthesizedExpression;
 }
@@ -998,7 +1037,7 @@ export function readNotImplementedExpression(state: ParseState, _parser: Parser)
         ellipsisConstant,
     };
     ParseStateUtils.endContext(state, notImplementedExpression);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return notImplementedExpression;
 }
@@ -1031,7 +1070,7 @@ export function readInvokeExpression(state: ParseState, parser: Parser): Ast.Inv
             readTokenKindAsConstant(state, Token.TokenKind.RightParenthesis, Constant.WrapperConstant.RightParenthesis),
         false,
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return invokeExpression;
 }
@@ -1061,7 +1100,7 @@ export function readListExpression(state: ParseState, parser: Parser): Ast.ListE
         () => readTokenKindAsConstant(state, Token.TokenKind.RightBrace, Constant.WrapperConstant.RightBrace),
         false,
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return listExpression;
 }
@@ -1092,12 +1131,18 @@ export function readListItem(state: ParseState, parser: Parser): Ast.TListItem {
         };
 
         ParseStateUtils.endContext(state, rangeExpression);
-        trace.exit({ [NaiveTraceConstant.IsOperatorPresent]: true });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [NaiveTraceConstant.IsOperatorPresent]: true,
+        });
 
         return rangeExpression;
     } else {
         ParseStateUtils.deleteContext(state, undefined);
-        trace.exit({ [NaiveTraceConstant.IsOperatorPresent]: false });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [NaiveTraceConstant.IsOperatorPresent]: false,
+        });
 
         return left;
     }
@@ -1128,7 +1173,7 @@ export function readRecordExpression(state: ParseState, parser: Parser): Ast.Rec
         () => readTokenKindAsConstant(state, Token.TokenKind.RightBracket, Constant.WrapperConstant.RightBracket),
         false,
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return recordExpression;
 }
@@ -1151,7 +1196,7 @@ export function readItemAccessExpression(state: ParseState, parser: Parser): Ast
         () => readTokenKindAsConstant(state, Token.TokenKind.RightBrace, Constant.WrapperConstant.RightBrace),
         true,
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return itemAccessExpression;
 }
@@ -1167,7 +1212,7 @@ export function readFieldSelection(state: ParseState, parser: Parser): Ast.Field
     state.maybeCancellationToken?.throwIfCancelled();
 
     const fieldSelector: Ast.FieldSelector = readFieldSelector(state, parser, true);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return fieldSelector;
 }
@@ -1192,7 +1237,7 @@ export function readFieldProjection(state: ParseState, parser: Parser): Ast.Fiel
         () => readTokenKindAsConstant(state, Token.TokenKind.RightBracket, Constant.WrapperConstant.RightBracket),
         true,
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return fieldProjection;
 }
@@ -1211,7 +1256,7 @@ export function readFieldSelector(state: ParseState, parser: Parser, allowOption
         () => readTokenKindAsConstant(state, Token.TokenKind.RightBracket, Constant.WrapperConstant.RightBracket),
         allowOptional,
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return fieldSelector;
 }
@@ -1253,7 +1298,7 @@ export function readFunctionExpression(state: ParseState, parser: Parser): Ast.F
         expression,
     };
     ParseStateUtils.endContext(state, functionExpression);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return functionExpression;
 }
@@ -1272,7 +1317,7 @@ export function readParameterList(
         parser,
         () => maybeReadAsNullablePrimitiveType(state, parser),
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return parameterList;
 }
@@ -1290,7 +1335,7 @@ function maybeReadAsNullablePrimitiveType(state: ParseState, parser: Parser): As
         () => readTokenKindAsConstant(state, Token.TokenKind.KeywordAs, Constant.KeywordConstant.As),
         () => parser.readNullablePrimitiveType(state, parser),
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return maybeAsNullablePrimitiveType;
 }
@@ -1307,7 +1352,7 @@ export function readAsType(state: ParseState, parser: Parser): Ast.AsType {
         () => readTokenKindAsConstant(state, Token.TokenKind.KeywordAs, Constant.KeywordConstant.As),
         () => parser.readType(state, parser),
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return asType;
 }
@@ -1328,7 +1373,7 @@ export function readEachExpression(state: ParseState, parser: Parser): Ast.EachE
         () => readTokenKindAsConstant(state, Token.TokenKind.KeywordEach, Constant.KeywordConstant.Each),
         () => parser.readExpression(state, parser),
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return eachExpression;
 }
@@ -1373,7 +1418,7 @@ export function readLetExpression(state: ParseState, parser: Parser): Ast.LetExp
         expression,
     };
     ParseStateUtils.endContext(state, letExpression);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return letExpression;
 }
@@ -1423,7 +1468,7 @@ export function readIfExpression(state: ParseState, parser: Parser): Ast.IfExpre
         falseExpression,
     };
     ParseStateUtils.endContext(state, ifExpression);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return ifExpression;
 }
@@ -1449,7 +1494,7 @@ export function readTypeExpression(state: ParseState, parser: Parser): Ast.TType
     } else {
         typeExpression = parser.readPrimaryExpression(state, parser);
     }
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return typeExpression;
 }
@@ -1462,11 +1507,17 @@ export function readType(state: ParseState, parser: Parser): Ast.TType {
 
     const triedReadPrimaryType: TriedReadPrimaryType = tryReadPrimaryType(state, parser);
     if (ResultUtils.isOk(triedReadPrimaryType)) {
-        trace.exit({ [TraceConstant.IsError]: false });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [TraceConstant.IsError]: false,
+        });
 
         return triedReadPrimaryType.value;
     } else {
-        trace.exit({ [TraceConstant.IsError]: true });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [TraceConstant.IsError]: true,
+        });
 
         return parser.readPrimaryExpression(state, parser);
     }
@@ -1480,11 +1531,17 @@ export function readPrimaryType(state: ParseState, parser: Parser): Ast.TPrimary
 
     const triedReadPrimaryType: TriedReadPrimaryType = tryReadPrimaryType(state, parser);
     if (ResultUtils.isOk(triedReadPrimaryType)) {
-        trace.exit({ [TraceConstant.IsError]: false });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [TraceConstant.IsError]: false,
+        });
 
         return triedReadPrimaryType.value;
     } else {
-        trace.exit({ [TraceConstant.IsError]: true });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [TraceConstant.IsError]: true,
+        });
 
         throw triedReadPrimaryType.error;
     }
@@ -1512,7 +1569,7 @@ export function readRecordType(state: ParseState, parser: Parser): Ast.RecordTyp
         fields,
     };
     ParseStateUtils.endContext(state, recordType);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return recordType;
 }
@@ -1550,7 +1607,7 @@ export function readTableType(state: ParseState, parser: Parser): Ast.TableType 
         rowType,
     };
     ParseStateUtils.endContext(state, tableType);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return tableType;
 }
@@ -1583,14 +1640,20 @@ export function readFieldSpecificationList(
     while (continueReadingValues) {
         const maybeErr: ParseError.TInnerParseError | undefined = testPostCommaError(state);
         if (maybeErr) {
-            trace.exit({ [TraceConstant.IsThrowing]: true });
+            trace.exit({
+                [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+                [TraceConstant.IsThrowing]: true,
+            });
             throw maybeErr;
         }
 
         if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.Ellipsis)) {
             if (allowOpenMarker) {
                 if (isOnOpenRecordMarker) {
-                    trace.exit({ [TraceConstant.IsThrowing]: true });
+                    trace.exit({
+                        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+                        [TraceConstant.IsThrowing]: true,
+                    });
 
                     throw fieldSpecificationListReadError(state, false);
                 } else {
@@ -1598,7 +1661,10 @@ export function readFieldSpecificationList(
                     continueReadingValues = false;
                 }
             } else {
-                trace.exit({ [TraceConstant.IsThrowing]: true });
+                trace.exit({
+                    [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+                    [TraceConstant.IsThrowing]: true,
+                });
 
                 throw fieldSpecificationListReadError(state, allowOpenMarker);
             }
@@ -1645,7 +1711,10 @@ export function readFieldSpecificationList(
             ParseStateUtils.endContext(state, csv);
             fields.push(csv);
         } else {
-            trace.exit({ [TraceConstant.IsThrowing]: true });
+            trace.exit({
+                [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+                [TraceConstant.IsThrowing]: true,
+            });
 
             throw fieldSpecificationListReadError(state, allowOpenMarker);
         }
@@ -1684,7 +1753,7 @@ export function readFieldSpecificationList(
         closeWrapperConstant: rightBracketConstant,
     };
     ParseStateUtils.endContext(state, fieldSpecificationList);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return fieldSpecificationList;
 }
@@ -1713,13 +1782,19 @@ function maybeReadFieldTypeSpecification(state: ParseState, parser: Parser): Ast
             fieldType,
         };
         ParseStateUtils.endContext(state, fieldTypeSpecification);
-        trace.exit({ [NaiveTraceConstant.IsFieldTypeSpecification]: true });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [NaiveTraceConstant.IsFieldTypeSpecification]: true,
+        });
 
         return fieldTypeSpecification;
     } else {
         ParseStateUtils.incrementAttributeCounter(state);
         ParseStateUtils.deleteContext(state, undefined);
-        trace.exit({ [NaiveTraceConstant.IsFieldTypeSpecification]: false });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [NaiveTraceConstant.IsFieldTypeSpecification]: false,
+        });
 
         return undefined;
     }
@@ -1751,7 +1826,7 @@ export function readListType(state: ParseState, parser: Parser): Ast.ListType {
         () => readTokenKindAsConstant(state, Token.TokenKind.RightBrace, Constant.WrapperConstant.RightBrace),
         false,
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return listType;
 }
@@ -1780,7 +1855,7 @@ export function readFunctionType(state: ParseState, parser: Parser): Ast.Functio
         functionReturnType,
     };
     ParseStateUtils.endContext(state, functionType);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return functionType;
 }
@@ -1820,7 +1895,7 @@ function tryReadPrimaryType(state: ParseState, parser: Parser): TriedReadPrimary
         }
         attempt = triedReadPrimitiveType;
     }
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return attempt;
 }
@@ -1834,7 +1909,7 @@ export function readParameterSpecificationList(state: ParseState, parser: Parser
     const parameterList: Ast.IParameterList<Ast.AsType> = genericReadParameterList(state, parser, () =>
         parser.readAsType(state, parser),
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return parameterList;
 }
@@ -1851,7 +1926,7 @@ export function readNullableType(state: ParseState, parser: Parser): Ast.Nullabl
         () => readConstantKind(state, Constant.LanguageConstant.Nullable),
         () => parser.readType(state, parser),
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return nullableType;
 }
@@ -1872,7 +1947,7 @@ export function readErrorRaisingExpression(state: ParseState, parser: Parser): A
         () => readTokenKindAsConstant(state, Token.TokenKind.KeywordError, Constant.KeywordConstant.Error),
         () => parser.readExpression(state, parser),
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return errorRaisingExpression;
 }
@@ -1914,7 +1989,7 @@ export function readErrorHandlingExpression(state: ParseState, parser: Parser): 
         maybeOtherwiseExpression,
     };
     ParseStateUtils.endContext(state, errorHandlingExpression);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return errorHandlingExpression;
 }
@@ -1954,7 +2029,7 @@ export function readRecordLiteral(state: ParseState, parser: Parser): Ast.Record
         literalKind: Ast.LiteralKind.Record,
         ...wrappedRead,
     };
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return recordLiteral;
 }
@@ -1986,7 +2061,7 @@ export function readFieldNamePairedAnyLiterals(
         continueReadingValues,
         testPostCommaError,
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return csvArray;
 }
@@ -2022,7 +2097,7 @@ export function readListLiteral(state: ParseState, parser: Parser): Ast.ListLite
         literalKind: Ast.LiteralKind.List,
         ...wrappedRead,
     };
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return listLiteral;
 }
@@ -2041,7 +2116,7 @@ export function readAnyLiteral(state: ParseState, parser: Parser): Ast.TAnyLiter
     } else {
         anyLiteral = parser.readLiteralExpression(state, parser);
     }
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return anyLiteral;
 }
@@ -2054,11 +2129,17 @@ export function readPrimitiveType(state: ParseState, parser: Parser): Ast.Primit
 
     const triedReadPrimitiveType: TriedReadPrimitiveType = tryReadPrimitiveType(state, parser);
     if (ResultUtils.isOk(triedReadPrimitiveType)) {
-        trace.exit({ [TraceConstant.IsError]: false });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [TraceConstant.IsError]: false,
+        });
 
         return triedReadPrimitiveType.value;
     } else {
-        trace.exit({ [TraceConstant.IsError]: true });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [TraceConstant.IsError]: true,
+        });
 
         throw triedReadPrimitiveType.error;
     }
@@ -2083,7 +2164,10 @@ function tryReadPrimitiveType(state: ParseState, parser: Parser): TriedReadPrimi
     );
     if (maybeErr) {
         const error: ParseError.ExpectedAnyTokenKindError = maybeErr;
-        trace.exit({ [TraceConstant.IsError]: true });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [TraceConstant.IsError]: true,
+        });
 
         return ResultUtils.boxError(error);
     }
@@ -2135,7 +2219,10 @@ function tryReadPrimitiveType(state: ParseState, parser: Parser): TriedReadPrimi
     } else {
         const details: {} = { tokenKind: state.maybeCurrentTokenKind };
         parser.restoreCheckpoint(state, checkpoint);
-        trace.exit({ [TraceConstant.IsError]: true });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [TraceConstant.IsError]: true,
+        });
 
         return ResultUtils.boxError(
             new CommonError.InvariantError(`unknown currentTokenKind, not found in [${expectedTokenKinds}]`, details),
@@ -2149,7 +2236,10 @@ function tryReadPrimitiveType(state: ParseState, parser: Parser): TriedReadPrimi
         primitiveTypeKind,
     };
     ParseStateUtils.endContext(state, primitiveType);
-    trace.exit({ [TraceConstant.IsError]: false });
+    trace.exit({
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+        [TraceConstant.IsError]: false,
+    });
 
     return ResultUtils.boxOk(primitiveType);
 }
@@ -2175,7 +2265,7 @@ export function readIdentifierPairedExpressions(
         continueReadingValues,
         testPostCommaError,
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return csvArray;
 }
@@ -2198,7 +2288,7 @@ export function readGeneralizedIdentifierPairedExpressions(
         continueReadingValues,
         testPostCommaError,
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return csvArray;
 }
@@ -2226,7 +2316,7 @@ export function readGeneralizedIdentifierPairedExpression(
         () => parser.readGeneralizedIdentifier(state, parser),
         () => parser.readExpression(state, parser),
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return generalizedIdentifierPairedExpression;
 }
@@ -2247,7 +2337,7 @@ export function readIdentifierPairedExpression(state: ParseState, parser: Parser
         () => parser.readIdentifier(state, parser),
         () => parser.readExpression(state, parser),
     );
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return identifierPairedExpression;
 }
@@ -2282,7 +2372,10 @@ function recursiveReadBinOpExpression<
     // If no operator, return Left
     const maybeOperator: Op | undefined = maybeOperatorFrom(state.maybeCurrentTokenKind);
     if (maybeOperator === undefined) {
-        trace.exit({ [NaiveTraceConstant.IsOperatorPresent]: false });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [NaiveTraceConstant.IsOperatorPresent]: false,
+        });
         ParseStateUtils.deleteContext(state, undefined);
 
         return left;
@@ -2307,7 +2400,10 @@ function recursiveReadBinOpExpression<
         right,
     };
     ParseStateUtils.endContext(state, (binOpExpression as unknown) as Ast.TNode);
-    trace.exit({ [NaiveTraceConstant.IsOperatorPresent]: true });
+    trace.exit({
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+        [NaiveTraceConstant.IsOperatorPresent]: true,
+    });
 
     return binOpExpression;
 }
@@ -2334,7 +2430,10 @@ function recursiveReadBinOpExpressionHelper<
     const maybeOperator: OperatorKind | undefined = maybeOperatorFrom(state.maybeCurrentTokenKind);
     if (maybeOperator === undefined) {
         ParseStateUtils.deleteContext(state, undefined);
-        trace.exit({ [NaiveTraceConstant.IsOperatorPresent]: false });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [NaiveTraceConstant.IsOperatorPresent]: false,
+        });
 
         return rightAsLeft;
     }
@@ -2358,7 +2457,10 @@ function recursiveReadBinOpExpressionHelper<
         right,
     };
     ParseStateUtils.endContext(state, (binOpExpression as unknown) as Ast.TNode);
-    trace.exit({ [NaiveTraceConstant.IsOperatorPresent]: true });
+    trace.exit({
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+        [NaiveTraceConstant.IsOperatorPresent]: true,
+    });
 
     return binOpExpression;
 }
@@ -2383,7 +2485,10 @@ function readCsvArray<T extends Ast.TCsvType>(
 
         const maybeErr: ParseError.TInnerParseError | undefined = testPostCommaError(state);
         if (maybeErr) {
-            trace.exit({ [TraceConstant.IsThrowing]: true });
+            trace.exit({
+                [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+                [TraceConstant.IsThrowing]: true,
+            });
 
             throw maybeErr;
         }
@@ -2415,7 +2520,10 @@ function readCsvArray<T extends Ast.TCsvType>(
         elements,
     };
     ParseStateUtils.endContext(state, csvArray);
-    trace.exit({ [TraceConstant.IsThrowing]: false });
+    trace.exit({
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+        [TraceConstant.IsThrowing]: false,
+    });
 
     return csvArray;
 }
@@ -2448,7 +2556,7 @@ function readKeyValuePair<Kind extends Ast.TKeyValuePairNodeKind, Key, Value>(
         value,
     };
     ParseStateUtils.endContext(state, (keyValuePair as unknown) as Ast.TKeyValuePair);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return keyValuePair;
 }
@@ -2475,7 +2583,7 @@ function readPairedConstant<Kind extends Ast.TPairedConstantNodeKind, ConstantKi
         paired,
     };
     ParseStateUtils.endContext(state, (pairedConstant as unknown) as Ast.TPairedConstant);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return pairedConstant;
 }
@@ -2502,7 +2610,10 @@ function maybeReadPairedConstant<
         ParseStateUtils.incrementAttributeCounter(state);
         pairedConstant = undefined;
     }
-    trace.exit({ [NaiveTraceConstant.IsOperatorPresent]: pairedConstant });
+    trace.exit({
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+        [NaiveTraceConstant.IsOperatorPresent]: pairedConstant !== undefined,
+    });
 
     return pairedConstant;
 }
@@ -2536,7 +2647,10 @@ function genericReadParameterList<T extends Ast.TParameterType>(
 
         const maybeErr: ParseError.TInnerParseError | undefined = testCsvContinuationDanglingCommaForParenthesis(state);
         if (maybeErr) {
-            trace.exit({ [TraceConstant.IsThrowing]: true });
+            trace.exit({
+                [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+                [TraceConstant.IsThrowing]: true,
+            });
 
             throw maybeErr;
         }
@@ -2547,7 +2661,10 @@ function genericReadParameterList<T extends Ast.TParameterType>(
 
         if (reachedOptionalParameter && !maybeOptionalConstant) {
             const token: Token.Token = ParseStateUtils.assertGetTokenAt(state, state.tokenIndex);
-            trace.exit({ [TraceConstant.IsThrowing]: true });
+            trace.exit({
+                [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+                [TraceConstant.IsThrowing]: true,
+            });
 
             throw new ParseError.RequiredParameterAfterOptionalParameterError(
                 state.locale,
@@ -2613,7 +2730,10 @@ function genericReadParameterList<T extends Ast.TParameterType>(
         closeWrapperConstant: rightParenthesisConstant,
     };
     ParseStateUtils.endContext(state, parameterList);
-    trace.exit({ [TraceConstant.IsThrowing]: false });
+    trace.exit({
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+        [TraceConstant.IsThrowing]: false,
+    });
 
     return parameterList;
 }
@@ -2659,7 +2779,7 @@ function readWrapped<
         maybeOptionalConstant,
     };
     ParseStateUtils.endContext(state, (wrapped as unknown) as Ast.TWrapped);
-    trace.exit();
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return wrapped;
 }
@@ -2710,7 +2830,10 @@ export function readTokenKindAsConstant<ConstantKind extends Constant.TConstant>
 
     const maybeErr: ParseError.ExpectedTokenKindError | undefined = ParseStateUtils.testIsOnTokenKind(state, tokenKind);
     if (maybeErr !== undefined) {
-        trace.exit({ [TraceConstant.IsError]: true });
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [TraceConstant.IsError]: true,
+        });
 
         throw maybeErr;
     }
@@ -2725,7 +2848,10 @@ export function readTokenKindAsConstant<ConstantKind extends Constant.TConstant>
         constantKind,
     };
     ParseStateUtils.endContext(state, constant);
-    trace.exit({ [TraceConstant.IsError]: true });
+    trace.exit({
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+        [TraceConstant.IsError]: true,
+    });
 
     return constant;
 }
