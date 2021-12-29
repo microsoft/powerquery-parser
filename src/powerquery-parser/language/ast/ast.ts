@@ -399,7 +399,9 @@ export interface NotImplementedExpression extends INode {
 // ---------- 12.2.3.16 Invoke expression ----------
 // -------------------------------------------------
 
-export type InvokeExpression = IParenthesisWrapped<NodeKind.InvokeExpression, ICsvArray<TExpression>>;
+// Can't be a type as it'll be a recursive definition
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface InvokeExpression extends IParenthesisWrapped<NodeKind.InvokeExpression, ICsvArray<TExpression>> {}
 
 // -----------------------------------------------
 // ---------- 12.2.3.17 List expression ----------
@@ -637,20 +639,19 @@ export interface IWrapped<
 export interface IBraceWrapped<Kind extends TWrappedNodeKind, Content>
     extends IWrapped<Kind, Constant.WrapperConstant.LeftBrace, Content, Constant.WrapperConstant.RightBrace> {}
 
-// TODO: figure out why making this a type creates a recursive type definition.
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface IBracketWrapped<Kind extends TWrappedNodeKind, Content>
-    extends IWrapped<Kind, Constant.WrapperConstant.LeftBracket, Content, Constant.WrapperConstant.RightBracket> {}
+export type IBracketWrapped<Kind extends TWrappedNodeKind, Content> = IWrapped<
+    Kind,
+    Constant.WrapperConstant.LeftBracket,
+    Content,
+    Constant.WrapperConstant.RightBracket
+>;
 
-// TODO: figure out why making this a type creates a recursive type definition.
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface IParenthesisWrapped<Kind extends TWrappedNodeKind, Content>
-    extends IWrapped<
-        Kind,
-        Constant.WrapperConstant.LeftParenthesis,
-        Content,
-        Constant.WrapperConstant.RightParenthesis
-    > {}
+export type IParenthesisWrapped<Kind extends TWrappedNodeKind, Content> = IWrapped<
+    Kind,
+    Constant.WrapperConstant.LeftParenthesis,
+    Content,
+    Constant.WrapperConstant.RightParenthesis
+>;
 
 // --------------------------------------
 // ---------- IBinOpExpression ----------
