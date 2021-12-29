@@ -214,7 +214,7 @@ export function isErrorLine(line: TLine): line is TErrorLine {
 }
 
 export function maybeErrorLineMap(state: State): ErrorLineMap | undefined {
-    const errorLines: ErrorLineMap = state.lines.reduce((errorLineMap: ErrorLineMap, line, index: number) => {
+    const errorLines: ErrorLineMap = state.lines.reduce((errorLineMap: ErrorLineMap, line: TLine, index: number) => {
         if (isErrorLine(line)) {
             errorLineMap.set(index, line);
         }
@@ -295,12 +295,14 @@ function ensureCommonOrLexerResult<T>(
 ): Result<T, CommonError.CommonError | LexError.LexError> {
     try {
         return ResultUtils.boxOk(functionToWrap());
-    } catch (err) {
+    } catch (error) {
+        Assert.isInstanceofError(error);
+
         let convertedError: CommonError.CommonError | LexError.LexError;
-        if (LexError.isTInnerLexError(err)) {
-            convertedError = new LexError.LexError(err);
+        if (LexError.isTInnerLexError(error)) {
+            convertedError = new LexError.LexError(error);
         } else {
-            convertedError = CommonError.ensureCommonError(locale, err);
+            convertedError = CommonError.ensureCommonError(locale, error);
         }
         return ResultUtils.boxError(convertedError);
     }
@@ -620,8 +622,10 @@ function tokenize(
             if (LexError.isTInnerLexError(e)) {
                 error = new LexError.LexError(e);
             } else {
+                Assert.isInstanceofError(e);
                 error = CommonError.ensureCommonError(locale, e);
             }
+
             continueLexing = false;
             maybeError = error;
         }
@@ -743,10 +747,9 @@ function tokenizeQuotedIdentifierContentOrEnd(line: TLine, currentPosition: numb
             };
 
         default:
-            const details: {} = { read };
             throw new CommonError.InvariantError(
                 `expected the return to be either ${Token.LineTokenKind.TextLiteralContent} or ${Token.LineTokenKind.TextLiteralEnd}`,
-                details,
+                { read },
             );
     }
 }

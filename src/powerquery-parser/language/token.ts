@@ -165,9 +165,9 @@ export interface IToken<Kind, Position> {
     readonly data: string;
 }
 
-export interface LineToken extends IToken<LineTokenKind, number> {}
+export type LineToken = IToken<LineTokenKind, number>;
 
-export interface Token extends IToken<TokenKind, TokenPosition> {}
+export type Token = IToken<TokenKind, TokenPosition>;
 
 export interface TokenPosition {
     readonly lineCodeUnit: number;

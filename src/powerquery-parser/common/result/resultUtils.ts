@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError } from "..";
+import { Assert, CommonError } from "..";
 import { ErrorResult, OkResult, Result, ResultKind } from "./result";
 
 export function boxOk<T>(value: T): OkResult<T> {
@@ -29,7 +29,9 @@ export function isError<T, E>(result: Result<T, E>): result is ErrorResult<E> {
 export function ensureResult<T>(locale: string, callbackFn: () => T): Result<T, CommonError.CommonError> {
     try {
         return boxOk(callbackFn());
-    } catch (err) {
-        return boxError(CommonError.ensureCommonError(locale, err));
+    } catch (error) {
+        Assert.isInstanceofError(error);
+
+        return boxError(CommonError.ensureCommonError(locale, error));
     }
 }

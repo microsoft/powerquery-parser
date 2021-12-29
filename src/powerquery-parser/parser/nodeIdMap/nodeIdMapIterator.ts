@@ -53,7 +53,7 @@ export function assertIterChildrenAst(
     parentId: number,
 ): ReadonlyArray<Ast.TNode> {
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
-    return assertIterChildIds(nodeIdMapCollection.childIdsById, parentId).map(childId =>
+    return assertIterChildIds(nodeIdMapCollection.childIdsById, parentId).map((childId: number) =>
         NodeIdMapUtils.assertUnboxAst(astNodeById, childId),
     );
 }
@@ -78,7 +78,7 @@ export function assertIterXor(
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeIds: ReadonlyArray<number>,
 ): ReadonlyArray<TXorNode> {
-    return nodeIds.map(nodeId => NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId));
+    return nodeIds.map((nodeId: number) => NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId));
 }
 
 // If any exist, returns all Ast nodes under the given node.
@@ -93,7 +93,7 @@ export function maybeIterChildrenAst(
     const childIds: ReadonlyArray<number> = maybeChildIds;
 
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
-    return childIds.map(childId => NodeIdMapUtils.assertUnboxAst(astNodeById, childId));
+    return childIds.map((childId: number) => NodeIdMapUtils.assertUnboxAst(astNodeById, childId));
 }
 
 export function maybeNextSiblingXor(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): TXorNode | undefined {
@@ -192,13 +192,12 @@ export function iterFieldProjectionNames(
     const result: string[] = [];
 
     for (const selector of iterFieldProjection(nodeIdMapCollection, fieldProjection)) {
-        const maybeIdentifier:
-            | XorNode<Ast.GeneralizedIdentifier>
-            | undefined = NodeIdMapUtils.maybeUnboxWrappedContentChecked<Ast.GeneralizedIdentifier>(
-            nodeIdMapCollection,
-            selector.node.id,
-            Ast.NodeKind.GeneralizedIdentifier,
-        );
+        const maybeIdentifier: XorNode<Ast.GeneralizedIdentifier> | undefined =
+            NodeIdMapUtils.maybeUnboxWrappedContentChecked<Ast.GeneralizedIdentifier>(
+                nodeIdMapCollection,
+                selector.node.id,
+                Ast.NodeKind.GeneralizedIdentifier,
+            );
         if (maybeIdentifier && XorNodeUtils.isAstXor(maybeIdentifier)) {
             result.push(maybeIdentifier.node.literal);
         }
@@ -220,9 +219,13 @@ export function iterFunctionExpressionParameters(
         );
     }
 
-    const maybeParameterList: XorNode<Ast.TParameterList> | undefined = NodeIdMapUtils.maybeNthChildChecked<
-        Ast.TParameterList
-    >(nodeIdMapCollection, functionExpression.node.id, 0, Ast.NodeKind.ParameterList);
+    const maybeParameterList: XorNode<Ast.TParameterList> | undefined =
+        NodeIdMapUtils.maybeNthChildChecked<Ast.TParameterList>(
+            nodeIdMapCollection,
+            functionExpression.node.id,
+            0,
+            Ast.NodeKind.ParameterList,
+        );
     if (maybeParameterList === undefined) {
         return [];
     }
@@ -350,9 +353,13 @@ export function iterSection(
         });
     }
 
-    const maybeSectionMemberArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.maybeNthChildChecked<
-        Ast.TArrayWrapper
-    >(nodeIdMapCollection, section.node.id, 4, Ast.NodeKind.ArrayWrapper);
+    const maybeSectionMemberArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined =
+        NodeIdMapUtils.maybeNthChildChecked<Ast.TArrayWrapper>(
+            nodeIdMapCollection,
+            section.node.id,
+            4,
+            Ast.NodeKind.ArrayWrapper,
+        );
     if (maybeSectionMemberArrayWrapper === undefined) {
         return [];
     }
@@ -360,14 +367,13 @@ export function iterSection(
 
     const partial: SectionKeyValuePair[] = [];
     for (const sectionMember of assertIterChildrenXor(nodeIdMapCollection, sectionMemberArrayWrapper.node.id)) {
-        const maybeKeyValuePair:
-            | XorNode<Ast.IdentifierPairedExpression>
-            | undefined = NodeIdMapUtils.maybeNthChildChecked<Ast.IdentifierPairedExpression>(
-            nodeIdMapCollection,
-            sectionMember.node.id,
-            2,
-            Ast.NodeKind.IdentifierPairedExpression,
-        );
+        const maybeKeyValuePair: XorNode<Ast.IdentifierPairedExpression> | undefined =
+            NodeIdMapUtils.maybeNthChildChecked<Ast.IdentifierPairedExpression>(
+                nodeIdMapCollection,
+                sectionMember.node.id,
+                2,
+                Ast.NodeKind.IdentifierPairedExpression,
+            );
         if (maybeKeyValuePair === undefined) {
             continue;
         }
@@ -401,7 +407,7 @@ export function iterSection(
 
 function iterKeyValuePairs<
     Key extends Ast.GeneralizedIdentifier | Ast.Identifier,
-    KVP extends TKeyValuePair & IKeyValuePair<Key>
+    KVP extends TKeyValuePair & IKeyValuePair<Key>,
 >(nodeIdMapCollection: NodeIdMap.Collection, arrayWrapper: TXorNode, pairKind: KVP["pairKind"]): ReadonlyArray<KVP> {
     const partial: KVP[] = [];
     for (const keyValuePair of iterArrayWrapper(nodeIdMapCollection, arrayWrapper)) {

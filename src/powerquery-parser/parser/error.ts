@@ -140,19 +140,23 @@ export interface TokenWithColumnNumber {
     readonly columnNumber: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function assertIsParseError(error: any): error is ParseError {
     Assert.isTrue(isParseError(error), "isParseError(error)");
     return true;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isParseError(error: any): error is ParseError {
     return error instanceof ParseError;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isTParseError(error: any): error is TParseError {
     return isParseError(error) || CommonError.isCommonError(error);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isTInnerParseError(x: any): x is TInnerParseError {
     return (
         x instanceof ExpectedAnyTokenKindError ||

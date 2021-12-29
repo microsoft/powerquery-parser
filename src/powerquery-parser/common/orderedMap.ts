@@ -21,7 +21,7 @@ export class OrderedMap<K, V> implements Map<K, V> {
                 this.order = [...entries.keys()];
                 this.size = entries.size;
             } else {
-                this.order = entries.map(pair => pair[0]);
+                this.order = entries.map((pair: readonly [K, V]) => pair[0]);
                 this.size = entries.length;
             }
         }

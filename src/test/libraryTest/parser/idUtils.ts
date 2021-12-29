@@ -135,10 +135,8 @@ function expectLinksMatch(triedLexParse: Task.TriedLexParseTask, expected: Abrid
         "mismatch between expected and actual for childIdsById",
     );
 
-    const actualIdsByNodeKind: ReadonlyArray<[
-        Language.Ast.NodeKind,
-        ReadonlyArray<number>,
-    ]> = createSimplifiedIdsByNodeKind(nodeIdMapCollection.idsByNodeKind);
+    const actualIdsByNodeKind: ReadonlyArray<[Language.Ast.NodeKind, ReadonlyArray<number>]> =
+        createSimplifiedIdsByNodeKind(nodeIdMapCollection.idsByNodeKind);
     expect(actualIdsByNodeKind).to.deep.equal(
         expected.idsByNodeKind,
         "mismatch between expected and actual for idsByNodeKind",

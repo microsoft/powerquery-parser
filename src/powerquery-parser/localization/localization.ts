@@ -14,9 +14,9 @@ interface ILocalization {
     readonly error_common_invariantError: (
         templates: ILocalizationTemplates,
         reason: string,
-        maybeJsonifyableDetails: any | undefined,
+        maybeJsonifyableDetails: object | undefined,
     ) => string;
-    readonly error_common_unknown: (templates: ILocalizationTemplates, message: any) => string;
+    readonly error_common_unknown: (templates: ILocalizationTemplates, message: string) => string;
     readonly error_lex_badLineNumber: (templates: ILocalizationTemplates, kind: LexError.BadLineNumberKind) => string;
     readonly error_lex_badRange: (templates: ILocalizationTemplates, kind: LexError.BadRangeKind) => string;
     readonly error_lex_badState: (templates: ILocalizationTemplates) => string;
@@ -196,7 +196,7 @@ export const Localization: ILocalization = {
     error_common_invariantError: (
         templates: ILocalizationTemplates,
         invariantBroken: string,
-        maybeJsonifyableDetails: any | undefined,
+        maybeJsonifyableDetails: object | undefined,
     ) => {
         if (maybeJsonifyableDetails !== undefined) {
             return StringUtils.assertGetFormatted(
@@ -214,7 +214,7 @@ export const Localization: ILocalization = {
         }
     },
 
-    error_common_unknown: (templates: ILocalizationTemplates, innerError: any) => {
+    error_common_unknown: (templates: ILocalizationTemplates, innerError: string) => {
         return StringUtils.assertGetFormatted(templates.error_common_unknown, new Map([["innerError", innerError]]));
     },
 

@@ -523,9 +523,9 @@ function isCompatibleWithType(
 }
 
 function isDefinedListTypeCompatibleWithListType(definedList: Type.DefinedListType, listType: Type.ListType): boolean {
-    const itemTypeCompatabilities: ReadonlyArray<boolean | undefined> = definedList.itemTypes.map(itemType =>
-        isCompatible(itemType, listType.itemType),
+    const itemTypeCompatabilities: ReadonlyArray<boolean | undefined> = definedList.itemTypes.map(
+        (itemType: Type.TPowerQueryType) => isCompatible(itemType, listType.itemType),
     );
 
-    return itemTypeCompatabilities.find(value => value === undefined || value === false) !== undefined;
+    return !!itemTypeCompatabilities.find((value: boolean | undefined) => value === undefined || value === false);
 }

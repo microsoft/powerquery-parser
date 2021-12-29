@@ -3,7 +3,7 @@
 
 import { NaiveParseSteps } from ".";
 import { NodeIdMap, ParseContextUtils } from "..";
-import { ArrayUtils, Assert, TypeScriptUtils } from "../../common";
+import { ArrayUtils, Assert, MapUtils, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../language";
 import { Disambiguation, DisambiguationUtils } from "../disambiguation";
 import { Parser, ParserUtils } from "../parser";
@@ -68,7 +68,7 @@ function readBinOpExpression(
 ): Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType {
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
-    const placeholderContextId: number = state.maybeCurrentContextNode!.id;
+    const placeholderContextId: number = Assert.asDefined(state.maybeCurrentContextNode).id;
 
     // operators/operatorConstants are of length N
     // expressions are of length N + 1
@@ -78,16 +78,15 @@ function readBinOpExpression(
         parser.readUnaryExpression(state, parser),
     ];
 
-    let maybeOperator:
-        | Constant.TBinOpExpressionOperator
-        | undefined = ConstantUtils.maybeBinOpExpressionOperatorKindFrom(state.maybeCurrentTokenKind);
+    let maybeOperator: Constant.TBinOpExpressionOperator | undefined =
+        ConstantUtils.maybeBinOpExpressionOperatorKindFrom(state.maybeCurrentTokenKind);
     while (maybeOperator !== undefined) {
         const operator: Constant.TBinOpExpressionOperator = maybeOperator;
         operators.push(operator);
         operatorConstants.push(
             NaiveParseSteps.readTokenKindAsConstant<Constant.TBinOpExpressionOperator>(
                 state,
-                state.maybeCurrentTokenKind!,
+                Assert.asDefined(state.maybeCurrentTokenKind),
                 maybeOperator,
             ),
         );
@@ -115,7 +114,11 @@ function readBinOpExpression(
     // which might be previously built TBinOpExpression nodes.
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
     const newNodeThreshold: number = state.contextState.idCounter;
-    let placeholderContextChildren: ReadonlyArray<number> = nodeIdMapCollection.childIdsById.get(placeholderContextId)!;
+    let placeholderContextChildren: ReadonlyArray<number> = MapUtils.assertGet(
+        nodeIdMapCollection.childIdsById,
+        placeholderContextId,
+    );
+
     while (operators.length) {
         let minPrecedenceIndex: number = -1;
         let minPrecedence: number = Number.MAX_SAFE_INTEGER;

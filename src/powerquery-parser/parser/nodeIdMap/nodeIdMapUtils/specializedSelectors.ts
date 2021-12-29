@@ -33,7 +33,11 @@ export function assertGetRecursiveExpressionPreviousSibling<T extends Ast.TNode>
         );
         const indexOfPrimaryExpressionId: number = childIds.indexOf(xorNode.node.id);
         if (indexOfPrimaryExpressionId === -1 || indexOfPrimaryExpressionId === 0) {
-            const details: {} = {
+            const details: {
+                xorNodeId: number;
+                arrayWrapperId: number;
+                indexOfPrimaryExpressionId: number;
+            } = {
                 xorNodeId: xorNode.node.id,
                 arrayWrapperId: arrayWrapper.node.id,
                 indexOfPrimaryExpressionId,
@@ -82,9 +86,13 @@ export function maybeInvokeExpressionIdentifier(
     // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
     const recursiveArrayXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, invokeExprXorNode.node.id);
     const recursiveExprXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, recursiveArrayXorNode.node.id);
-    const maybeHeadXorNode: XorNode<Ast.IdentifierExpression> | undefined = maybeNthChildChecked<
-        Ast.IdentifierExpression
-    >(nodeIdMapCollection, recursiveExprXorNode.node.id, 0, Ast.NodeKind.IdentifierExpression);
+    const maybeHeadXorNode: XorNode<Ast.IdentifierExpression> | undefined =
+        maybeNthChildChecked<Ast.IdentifierExpression>(
+            nodeIdMapCollection,
+            recursiveExprXorNode.node.id,
+            0,
+            Ast.NodeKind.IdentifierExpression,
+        );
 
     // It's not an identifier expression so there's nothing we can do.
     if (maybeHeadXorNode === undefined) {
@@ -95,7 +103,10 @@ export function maybeInvokeExpressionIdentifier(
     // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
     // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
     if (XorNodeUtils.isContextXor(headXorNode)) {
-        const details: {} = {
+        const details: {
+            identifierExpressionNodeId: number;
+            invokeExpressionNodeId: number;
+        } = {
             identifierExpressionNodeId: headXorNode.node.id,
             invokeExpressionNodeId: invokeExprXorNode.node.id,
         };
@@ -135,9 +146,8 @@ export function maybeInvokeExpressionIdentifierLiteral(
 ): string | undefined {
     assertGetXorChecked(nodeIdMapCollection, nodeId, Ast.NodeKind.InvokeExpression);
 
-    const maybeIdentifierExpressionXorNode:
-        | XorNode<Ast.IdentifierExpression>
-        | undefined = maybeInvokeExpressionIdentifier(nodeIdMapCollection, nodeId);
+    const maybeIdentifierExpressionXorNode: XorNode<Ast.IdentifierExpression> | undefined =
+        maybeInvokeExpressionIdentifier(nodeIdMapCollection, nodeId);
     if (maybeIdentifierExpressionXorNode === undefined || XorNodeUtils.isContextXor(maybeIdentifierExpressionXorNode)) {
         return undefined;
     }

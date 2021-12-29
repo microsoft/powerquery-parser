@@ -9,8 +9,10 @@ const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"
 export function getPowerQueryFilesRecursively(rootDirectory: string): ReadonlyArray<string> {
     const dirs: ReadonlyArray<string> = getDirectoryPaths(rootDirectory);
     let files: ReadonlyArray<string> = dirs
-        .map(getPowerQueryFilesRecursively) // go through each directory
-        .reduce((a, b) => a.concat(b), []); // map returns a 2d array (array of file arrays) so flatten
+        // go through each directory
+        .map(getPowerQueryFilesRecursively)
+        // map returns a 2d array (array of file arrays) so flatten
+        .reduce((a: ReadonlyArray<string>, b: ReadonlyArray<string>) => a.concat(b), []);
 
     // Get files in root folder
     files = files.concat(getPowerQueryFilePaths(rootDirectory));
@@ -70,7 +72,7 @@ function getDirectoryPaths(rootDirectory: string): ReadonlyArray<string> {
         fs
             // tslint:disable-next-line: non-literal-fs-path
             .readdirSync(rootDirectory)
-            .map(name => path.join(rootDirectory, name))
+            .map((name: string) => path.join(rootDirectory, name))
             .filter(isDirectory)
     );
 }
@@ -81,7 +83,7 @@ function getPowerQueryFilePaths(filePath: string): ReadonlyArray<string> {
         fs
             // tslint:disable-next-line: non-literal-fs-path
             .readdirSync(filePath)
-            .map(name => path.join(filePath, name))
+            .map((name: string) => path.join(filePath, name))
             .filter(isPowerQueryFile)
     );
 }

@@ -87,7 +87,8 @@ function simplifyAnyCategory(maybeCategory: AnyCategory | undefined): ReadonlyAr
     if (!maybeCategory?.flattenedAnyUnions) {
         return [];
     } else {
-        return [...maybeCategory?.flattenedAnyUnions.values()];
+        const flattnedAnyUnions: ImmutableSet<Type.TPowerQueryType> = maybeCategory?.flattenedAnyUnions;
+        return [...flattnedAnyUnions.values()];
     }
 }
 

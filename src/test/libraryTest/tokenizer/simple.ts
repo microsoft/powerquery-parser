@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { ILineTokens, IState, Tokenizer, TokenizerState } from "./common";
+import { ILineTokens, IState, IToken, Tokenizer, TokenizerState } from "./common";
 
 const tokenizer: Tokenizer = new Tokenizer(`\n`);
 const initialState: TokenizerState = tokenizer.getInitialState() as TokenizerState;
@@ -21,7 +21,7 @@ function tokenizeLines(query: string, expectedTokenCounts: number[]): void {
 
         state = r.endState as TokenizerState;
 
-        r.tokens.forEach(token => {
+        r.tokens.forEach((token: IToken) => {
             expect(token.startIndex).is.lessThan(lines[index].length);
         });
     }

@@ -3,7 +3,7 @@
 
 import { LexError } from ".";
 import { Lexer } from "..";
-import { CommonError, ICancellationToken, Result, ResultUtils, StringUtils } from "../common";
+import { Assert, CommonError, ICancellationToken, Result, ResultUtils, StringUtils } from "../common";
 import { Comment, Token } from "../language";
 
 // The lexer is a multiline aware lexer.
@@ -69,6 +69,7 @@ export function trySnapshot(state: Lexer.State): TriedLexerSnapshot {
         if (LexError.isTInnerLexError(e)) {
             error = new LexError.LexError(e);
         } else {
+            Assert.isInstanceofError(e);
             error = CommonError.ensureCommonError(state.locale, e);
         }
         return ResultUtils.boxError(error);
@@ -135,15 +136,16 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
                 break;
             }
 
-            default:
+            default: {
                 const positionStart: Token.TokenPosition = flatToken.positionStart;
                 const positionEnd: Token.TokenPosition = flatToken.positionEnd;
                 tokens.push({
-                    kind: (flatToken.kind as unknown) as Token.TokenKind,
+                    kind: flatToken.kind as unknown as Token.TokenKind,
                     data: flatToken.data,
                     positionStart,
                     positionEnd,
                 });
+            }
         }
 
         flatIndex += 1;
@@ -199,7 +201,7 @@ function readMultilineComment(
             LexError.UnterminatedMultilineTokenKind.MultilineComment,
         );
     } else if (maybeTokenEnd.kind !== Token.LineTokenKind.MultilineCommentEnd) {
-        const details: {} = { foundTokenEnd: maybeTokenEnd };
+        const details: { foundTokenEnd: FlatLineToken | undefined } = { foundTokenEnd: maybeTokenEnd };
         const message: string = `once a multiline token starts it should either reach a paired end token, or eof`;
         throw new CommonError.InvariantError(message, details);
     } else {
@@ -240,7 +242,7 @@ function readQuotedIdentifier(
             LexError.UnterminatedMultilineTokenKind.QuotedIdentifier,
         );
     } else if (maybeTokenEnd.kind !== Token.LineTokenKind.QuotedIdentifierEnd) {
-        const details: {} = { foundTokenEnd: maybeTokenEnd };
+        const details: { foundTokenEnd: FlatLineToken } = { foundTokenEnd: maybeTokenEnd };
         const message: string = `once a multiline token starts it should either reach a paired end token, or eof`;
         throw new CommonError.InvariantError(message, details);
     } else {
@@ -280,7 +282,7 @@ function readTextLiteral(
             LexError.UnterminatedMultilineTokenKind.Text,
         );
     } else if (maybeTokenEnd.kind !== Token.LineTokenKind.TextLiteralEnd) {
-        const details: {} = { foundTokenEnd: maybeTokenEnd };
+        const details: { foundTokenEnd: FlatLineToken } = { foundTokenEnd: maybeTokenEnd };
         const message: string = `once a multiline token starts it should either reach a paired end token, or eof`;
         throw new CommonError.InvariantError(message, details);
     } else {

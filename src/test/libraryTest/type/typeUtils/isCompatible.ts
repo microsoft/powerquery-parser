@@ -5,6 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { OrderedMap } from "../../../../powerquery-parser";
 import { Type, TypeUtils } from "../../../../powerquery-parser/language";
+import { TypeKind } from "../../../../powerquery-parser/language/type/type";
 
 describe(`TypeUtils.isCompatible`, () => {
     describe(`${Type.TypeKind.AnyNonNull}`, () => {
@@ -55,8 +56,11 @@ describe(`TypeUtils.isCompatible`, () => {
                 Type.TypeKind.Time,
                 Type.TypeKind.Type,
             ];
-            const expected: ReadonlyArray<[Type.TypeKind, boolean]> = typeKinds.map(typeKind => [typeKind, true]);
-            const actual: ReadonlyArray<[Type.TypeKind, boolean | undefined]> = typeKinds.map(typeKind => [
+            const expected: ReadonlyArray<[Type.TypeKind, boolean]> = typeKinds.map((typeKind: TypeKind) => [
+                typeKind,
+                true,
+            ]);
+            const actual: ReadonlyArray<[Type.TypeKind, boolean | undefined]> = typeKinds.map((typeKind: TypeKind) => [
                 typeKind,
                 TypeUtils.isCompatible(TypeUtils.createPrimitiveType(false, typeKind), Type.AnyInstance),
             ]);

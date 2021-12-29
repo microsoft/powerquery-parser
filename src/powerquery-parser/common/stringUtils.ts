@@ -55,7 +55,10 @@ export function columnNumberFrom(text: string, requiredCodeUnit: number): number
         }
     }
 
-    const details: {} = {
+    const details: {
+        text: string;
+        requiredCodeUnit: number;
+    } = {
         text,
         requiredCodeUnit,
     };

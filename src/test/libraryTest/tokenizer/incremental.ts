@@ -174,7 +174,7 @@ describe("Incremental updates", () => {
 
         for (let index: number = lineNumber + 1; index < document.lineTokens.length; index += 1) {
             const lineTokens: ReadonlyArray<IToken> = document.lineTokens[index];
-            lineTokens.forEach(token => {
+            lineTokens.forEach((token: IToken) => {
                 expect(token.scopes).equals("TextContent", "expecting remaining tokens to be strings");
             });
         }
@@ -189,7 +189,7 @@ describe("Incremental updates", () => {
 
         for (let index: number = lineNumber + 1; index < document.lineTokens.length; index += 1) {
             const lineTokens: ReadonlyArray<IToken> = document.lineTokens[index];
-            lineTokens.forEach(token => {
+            lineTokens.forEach((token: IToken) => {
                 expect(token.scopes).equals("MultilineCommentContent", "expecting remaining tokens to be comments");
             });
         }

@@ -263,11 +263,17 @@ export type TIsExpression = IsExpression | TAsExpression;
 
 export type TNullablePrimitiveType = NullablePrimitiveType | PrimitiveType;
 
-export interface NullablePrimitiveType
-    extends IPairedConstant<NodeKind.NullablePrimitiveType, Constant.LanguageConstant.Nullable, PrimitiveType> {}
+export type NullablePrimitiveType = IPairedConstant<
+    NodeKind.NullablePrimitiveType,
+    Constant.LanguageConstant.Nullable,
+    PrimitiveType
+>;
 
-export interface IsNullablePrimitiveType
-    extends IPairedConstant<NodeKind.IsNullablePrimitiveType, Constant.KeywordConstant.Is, TNullablePrimitiveType> {}
+export type IsNullablePrimitiveType = IPairedConstant<
+    NodeKind.IsNullablePrimitiveType,
+    Constant.KeywordConstant.Is,
+    TNullablePrimitiveType
+>;
 
 export interface PrimitiveType extends INode {
     readonly kind: NodeKind.PrimitiveType;
@@ -305,13 +311,12 @@ export type TArithmeticExpression = ArithmeticExpression | TMetadataExpression;
 
 export type TMetadataExpression = MetadataExpression | TUnaryExpression;
 
-export interface MetadataExpression
-    extends IBinOpExpression<
-        NodeKind.MetadataExpression,
-        TUnaryExpression,
-        Constant.KeywordConstant.Meta,
-        TUnaryExpression
-    > {}
+export type MetadataExpression = IBinOpExpression<
+    NodeKind.MetadataExpression,
+    TUnaryExpression,
+    Constant.KeywordConstant.Meta,
+    TUnaryExpression
+>;
 
 // -----------------------------------------------
 // ---------- 12.2.3.9 Unary expression ----------
@@ -376,6 +381,8 @@ export interface IdentifierExpression extends INode {
 // ---------- 12.2.3.14 Parenthesized expression ----------
 // --------------------------------------------------------
 
+// Can't be a type as it'll be a recursive definition
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ParenthesizedExpression extends IParenthesisWrapped<NodeKind.ParenthesizedExpression, TExpression> {}
 
 // ----------------------------------------------------------
@@ -392,6 +399,8 @@ export interface NotImplementedExpression extends INode {
 // ---------- 12.2.3.16 Invoke expression ----------
 // -------------------------------------------------
 
+// Can't be a type as it'll be a recursive definition
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface InvokeExpression extends IParenthesisWrapped<NodeKind.InvokeExpression, ICsvArray<TExpression>> {}
 
 // -----------------------------------------------
@@ -400,6 +409,8 @@ export interface InvokeExpression extends IParenthesisWrapped<NodeKind.InvokeExp
 
 export type TListItem = TExpression | RangeExpression;
 
+// Can't be a type as it'll be a recursive definition
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ListExpression extends IBraceWrapped<NodeKind.ListExpression, ICsvArray<TListItem>> {}
 
 export interface RangeExpression extends INode {
@@ -414,8 +425,10 @@ export interface RangeExpression extends INode {
 // ---------- 12.2.3.18 Record expression ----------
 // -------------------------------------------------
 
-export interface RecordExpression
-    extends IBracketWrapped<NodeKind.RecordExpression, ICsvArray<GeneralizedIdentifierPairedExpression>> {}
+export type RecordExpression = IBracketWrapped<
+    NodeKind.RecordExpression,
+    ICsvArray<GeneralizedIdentifierPairedExpression>
+>;
 
 // ------------------------------------------------------
 // ---------- 12.2.3.19 Item access expression ----------
@@ -459,8 +472,7 @@ export interface FunctionExpression extends INode {
 // ---------- 12.2.3.22 Each expression ----------
 // -----------------------------------------------
 
-export interface EachExpression
-    extends IPairedConstant<NodeKind.EachExpression, Constant.KeywordConstant.Each, TExpression> {}
+export type EachExpression = IPairedConstant<NodeKind.EachExpression, Constant.KeywordConstant.Each, TExpression>;
 
 // ----------------------------------------------
 // ---------- 12.2.3.23 Let expression ----------
@@ -508,10 +520,11 @@ export interface FunctionType extends INode {
     readonly functionReturnType: AsType;
 }
 
+// Can't be a type as it'll be a recursive definition
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ListType extends IBraceWrapped<NodeKind.ListType, TType> {}
 
-export interface NullableType
-    extends IPairedConstant<NodeKind.NullableType, Constant.LanguageConstant.Nullable, TType> {}
+export type NullableType = IPairedConstant<NodeKind.NullableType, Constant.LanguageConstant.Nullable, TType>;
 
 export interface RecordType extends INode {
     readonly kind: NodeKind.RecordType;
@@ -530,8 +543,11 @@ export interface TableType extends INode {
 // ---------- 12.2.3.26 Error raising expression ----------
 // --------------------------------------------------------
 
-export interface ErrorRaisingExpression
-    extends IPairedConstant<NodeKind.ErrorRaisingExpression, Constant.KeywordConstant.Error, TExpression> {}
+export type ErrorRaisingExpression = IPairedConstant<
+    NodeKind.ErrorRaisingExpression,
+    Constant.KeywordConstant.Error,
+    TExpression
+>;
 
 // ---------------------------------------------------------
 // ---------- 12.2.3.27 Error handling expression ----------
@@ -545,8 +561,11 @@ export interface ErrorHandlingExpression extends INode {
     readonly maybeOtherwiseExpression: OtherwiseExpression | undefined;
 }
 
-export interface OtherwiseExpression
-    extends IPairedConstant<NodeKind.OtherwiseExpression, Constant.KeywordConstant.Otherwise, TExpression> {}
+export type OtherwiseExpression = IPairedConstant<
+    NodeKind.OtherwiseExpression,
+    Constant.KeywordConstant.Otherwise,
+    TExpression
+>;
 
 export interface RecursivePrimaryExpression extends INode {
     readonly kind: NodeKind.RecursivePrimaryExpression;
@@ -555,8 +574,7 @@ export interface RecursivePrimaryExpression extends INode {
     readonly recursiveExpressions: IArrayWrapper<InvokeExpression | ItemAccessExpression | TFieldAccessExpression>;
 }
 
-export interface TypePrimaryType
-    extends IPairedConstant<NodeKind.TypePrimaryType, Constant.KeywordConstant.Type, TPrimaryType> {}
+export type TypePrimaryType = IPairedConstant<NodeKind.TypePrimaryType, Constant.KeywordConstant.Type, TPrimaryType>;
 
 // -----------------------------------------------
 // ---------- 12.2.4 Literal Attributes ----------
@@ -584,7 +602,7 @@ export interface IArrayWrapper<T> extends INode {
     readonly elements: ReadonlyArray<T>;
 }
 
-export interface ICsvArray<T extends TCsvType> extends IArrayWrapper<ICsv<T>> {}
+export type ICsvArray<T extends TCsvType> = IArrayWrapper<ICsv<T>>;
 
 export interface ICsv<T> extends INode {
     readonly kind: NodeKind.Csv;
@@ -612,7 +630,7 @@ export interface IWrapped<
     Kind extends TWrappedNodeKind,
     Open extends Constant.WrapperConstant,
     Content,
-    Close extends Constant.WrapperConstant
+    Close extends Constant.WrapperConstant,
 > extends INode {
     readonly kind: Kind;
     readonly openWrapperConstant: IConstant<Open>;
@@ -620,19 +638,26 @@ export interface IWrapped<
     readonly closeWrapperConstant: IConstant<Close>;
 }
 
-export interface IBraceWrapped<Kind extends TWrappedNodeKind, Content>
-    extends IWrapped<Kind, Constant.WrapperConstant.LeftBrace, Content, Constant.WrapperConstant.RightBrace> {}
+export type IBraceWrapped<Kind extends TWrappedNodeKind, Content> = IWrapped<
+    Kind,
+    Constant.WrapperConstant.LeftBrace,
+    Content,
+    Constant.WrapperConstant.RightBrace
+>;
 
-export interface IBracketWrapped<Kind extends TWrappedNodeKind, Content>
-    extends IWrapped<Kind, Constant.WrapperConstant.LeftBracket, Content, Constant.WrapperConstant.RightBracket> {}
+export type IBracketWrapped<Kind extends TWrappedNodeKind, Content> = IWrapped<
+    Kind,
+    Constant.WrapperConstant.LeftBracket,
+    Content,
+    Constant.WrapperConstant.RightBracket
+>;
 
-export interface IParenthesisWrapped<Kind extends TWrappedNodeKind, Content>
-    extends IWrapped<
-        Kind,
-        Constant.WrapperConstant.LeftParenthesis,
-        Content,
-        Constant.WrapperConstant.RightParenthesis
-    > {}
+export type IParenthesisWrapped<Kind extends TWrappedNodeKind, Content> = IWrapped<
+    Kind,
+    Constant.WrapperConstant.LeftParenthesis,
+    Content,
+    Constant.WrapperConstant.RightParenthesis
+>;
 
 // --------------------------------------
 // ---------- IBinOpExpression ----------
@@ -669,7 +694,7 @@ export interface IBinOpExpression<
     Kind extends TBinOpExpressionNodeKind,
     Left,
     OperatorKind extends Constant.TBinOpExpressionOperator,
-    Right
+    Right,
 > extends INode {
     readonly kind: Kind;
     readonly left: Left;
@@ -681,66 +706,64 @@ export interface IBinOpExpression<
         | IBinOpExpression<Kind, Right, OperatorKind, Right>;
 }
 
-export interface ArithmeticExpression
-    extends IBinOpExpression<
-        NodeKind.ArithmeticExpression,
-        TArithmeticExpression,
-        Constant.ArithmeticOperator,
-        TArithmeticExpression
-    > {}
+export type ArithmeticExpression = IBinOpExpression<
+    NodeKind.ArithmeticExpression,
+    TArithmeticExpression,
+    Constant.ArithmeticOperator,
+    TArithmeticExpression
+>;
 
-export interface AsExpression
-    extends IBinOpExpression<
-        NodeKind.AsExpression,
-        TEqualityExpression,
-        Constant.KeywordConstant.As,
-        TNullablePrimitiveType
-    > {}
+export type AsExpression = IBinOpExpression<
+    NodeKind.AsExpression,
+    TEqualityExpression,
+    Constant.KeywordConstant.As,
+    TNullablePrimitiveType
+>;
 
-export interface EqualityExpression
-    extends IBinOpExpression<
-        NodeKind.EqualityExpression,
-        TEqualityExpression,
-        Constant.EqualityOperator,
-        TEqualityExpression
-    > {}
+export type EqualityExpression = IBinOpExpression<
+    NodeKind.EqualityExpression,
+    TEqualityExpression,
+    Constant.EqualityOperator,
+    TEqualityExpression
+>;
 
-export interface IsExpression
-    extends IBinOpExpression<
-        NodeKind.IsExpression,
-        TAsExpression,
-        Constant.KeywordConstant.Is,
-        TNullablePrimitiveType
-    > {}
+export type IsExpression = IBinOpExpression<
+    NodeKind.IsExpression,
+    TAsExpression,
+    Constant.KeywordConstant.Is,
+    TNullablePrimitiveType
+>;
 
-export interface LogicalExpression
-    extends IBinOpExpression<
-        NodeKind.LogicalExpression,
-        TLogicalExpression,
-        Constant.LogicalOperator,
-        TLogicalExpression
-    > {}
+export type LogicalExpression = IBinOpExpression<
+    NodeKind.LogicalExpression,
+    TLogicalExpression,
+    Constant.LogicalOperator,
+    TLogicalExpression
+>;
 
-export interface RelationalExpression
-    extends IBinOpExpression<
-        NodeKind.RelationalExpression,
-        TRelationalExpression,
-        Constant.RelationalOperator,
-        TRelationalExpression
-    > {}
+export type RelationalExpression = IBinOpExpression<
+    NodeKind.RelationalExpression,
+    TRelationalExpression,
+    Constant.RelationalOperator,
+    TRelationalExpression
+>;
 
 // ------------------------------------------
 // ---------- Key value pair nodes ----------
 // ------------------------------------------
 
-export interface GeneralizedIdentifierPairedAnyLiteral
-    extends IKeyValuePair<NodeKind.GeneralizedIdentifierPairedAnyLiteral, GeneralizedIdentifier, TAnyLiteral> {}
+export type GeneralizedIdentifierPairedAnyLiteral = IKeyValuePair<
+    NodeKind.GeneralizedIdentifierPairedAnyLiteral,
+    GeneralizedIdentifier,
+    TAnyLiteral
+>;
 
+// Can't be a type as it'll be a recursive definition
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface GeneralizedIdentifierPairedExpression
     extends IKeyValuePair<NodeKind.GeneralizedIdentifierPairedExpression, GeneralizedIdentifier, TExpression> {}
 
-export interface IdentifierPairedExpression
-    extends IKeyValuePair<NodeKind.IdentifierPairedExpression, Identifier, TExpression> {}
+export type IdentifierPairedExpression = IKeyValuePair<NodeKind.IdentifierPairedExpression, Identifier, TExpression>;
 
 // ---------------------------------------
 // ---------- Parameter related ----------
@@ -748,8 +771,10 @@ export interface IdentifierPairedExpression
 
 export type TParameterType = AsType | AsNullablePrimitiveType | undefined;
 
-export interface IParameterList<T extends TParameterType>
-    extends IParenthesisWrapped<NodeKind.ParameterList, ICsvArray<IParameter<T>>> {}
+export type IParameterList<T extends TParameterType> = IParenthesisWrapped<
+    NodeKind.ParameterList,
+    ICsvArray<IParameter<T>>
+>;
 
 export interface IParameter<T extends TParameterType> extends INode {
     readonly kind: NodeKind.Parameter;
@@ -759,10 +784,13 @@ export interface IParameter<T extends TParameterType> extends INode {
     readonly maybeParameterType: T;
 }
 
-export interface AsNullablePrimitiveType
-    extends IPairedConstant<NodeKind.AsNullablePrimitiveType, Constant.KeywordConstant.As, TNullablePrimitiveType> {}
+export type AsNullablePrimitiveType = IPairedConstant<
+    NodeKind.AsNullablePrimitiveType,
+    Constant.KeywordConstant.As,
+    TNullablePrimitiveType
+>;
 
-export interface AsType extends IPairedConstant<NodeKind.AsType, Constant.KeywordConstant.As, TType> {}
+export type AsType = IPairedConstant<NodeKind.AsType, Constant.KeywordConstant.As, TType>;
 
 // ------------------------------
 // ---------- Constant ----------
@@ -786,13 +814,12 @@ export type TConstant = IConstant<Constant.TConstant>;
 
 export type TNullCoalescingExpression = NullCoalescingExpression | TLogicalExpression;
 
-export interface NullCoalescingExpression
-    extends IBinOpExpression<
-        NodeKind.NullCoalescingExpression,
-        TLogicalExpression,
-        Constant.MiscConstant.NullCoalescingOperator,
-        TLogicalExpression
-    > {}
+export type NullCoalescingExpression = IBinOpExpression<
+    NodeKind.NullCoalescingExpression,
+    TLogicalExpression,
+    Constant.MiscConstant.NullCoalescingOperator,
+    TLogicalExpression
+>;
 
 // ----------------------------------------
 // ---------- Re-used interfaces ----------
