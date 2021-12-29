@@ -13,13 +13,23 @@ export function all<T>(
     return true;
 }
 
-export function assertIn<T>(collection: ReadonlyArray<T>, item: T, maybeMessage?: string, maybeDetails?: object): number {
+export function assertIn<T>(
+    collection: ReadonlyArray<T>,
+    item: T,
+    maybeMessage?: string,
+    maybeDetails?: object,
+): number {
     const index: number = collection.indexOf(item);
     Assert.isTrue(index !== -1, maybeMessage, maybeDetails ?? { item });
     return index;
 }
 
-export function assertGet<T>(collection: ReadonlyArray<T>, index: number, maybeMessage?: string, maybeDetails?: object): T {
+export function assertGet<T>(
+    collection: ReadonlyArray<T>,
+    index: number,
+    maybeMessage?: string,
+    maybeDetails?: object,
+): T {
     return Assert.asDefined(collection[index], maybeMessage, maybeDetails);
 }
 
@@ -34,7 +44,11 @@ export function assertIndexOfPredicate<T>(
     return index;
 }
 
-export function assertNonZeroLength<T>(collection: ReadonlyArray<T>, maybeMessage?: string, maybeDetails?: object): void {
+export function assertNonZeroLength<T>(
+    collection: ReadonlyArray<T>,
+    maybeMessage?: string,
+    maybeDetails?: object,
+): void {
     Assert.isTrue(
         collection.length > 0,
         maybeMessage ?? `collection should have at least one element in it`,
@@ -131,7 +145,7 @@ export function isSubset<T>(
 
 export function range(size: number, startAt: number = 0): ReadonlyArray<number> {
     // tslint:disable-next-line: prefer-array-literal
-    return [...Array(size).keys()].map(i => i + startAt);
+    return [...Array(size).keys()].map((index: number) => index + startAt);
 }
 
 export function replaceAtIndex<T>(collection: ReadonlyArray<T>, value: T, index: number): T[] {

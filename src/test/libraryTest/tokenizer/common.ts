@@ -21,7 +21,7 @@ export class Tokenizer implements TokensProvider {
         //      All variants of LineNodeKind are strings.
         return {
             startIndex: lineToken.positionStart,
-            scopes: (lineToken.kind as unknown) as string,
+            scopes: lineToken.kind as unknown as string,
         };
     }
 

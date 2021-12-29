@@ -214,7 +214,7 @@ export function isErrorLine(line: TLine): line is TErrorLine {
 }
 
 export function maybeErrorLineMap(state: State): ErrorLineMap | undefined {
-    const errorLines: ErrorLineMap = state.lines.reduce((errorLineMap: ErrorLineMap, line, index: number) => {
+    const errorLines: ErrorLineMap = state.lines.reduce((errorLineMap: ErrorLineMap, line: TLine, index: number) => {
         if (isErrorLine(line)) {
             errorLineMap.set(index, line);
         }
@@ -747,10 +747,9 @@ function tokenizeQuotedIdentifierContentOrEnd(line: TLine, currentPosition: numb
             };
 
         default:
-            const details: { read: LineModeAlteringRead } = { read };
             throw new CommonError.InvariantError(
                 `expected the return to be either ${Token.LineTokenKind.TextLiteralContent} or ${Token.LineTokenKind.TextLiteralEnd}`,
-                details,
+                { read },
             );
     }
 }

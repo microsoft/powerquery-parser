@@ -18,7 +18,7 @@ import { TestAssertUtils } from "../../testUtils";
 
 type AbridgedNode = [Language.Ast.NodeKind, number | undefined];
 
-interface CollectAbridgeNodeState extends Traverse.ITraversalState<AbridgedNode[]> {}
+type CollectAbridgeNodeState = Traverse.ITraversalState<AbridgedNode[]>;
 
 interface NthNodeOfKindState extends Traverse.ITraversalState<Language.Ast.TNode | undefined> {
     readonly nodeKind: Language.Ast.NodeKind;

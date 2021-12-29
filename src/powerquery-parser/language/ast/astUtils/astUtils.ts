@@ -69,11 +69,10 @@ export function simplifyType(type: Ast.TType): SimplifiedType {
             break;
 
         default:
-            const details: {} = {
+            throw new CommonError.InvariantError("this should never be reached", {
                 nodeId: type.id,
                 nodeKind: type.kind,
-            };
-            throw new CommonError.InvariantError("this should never be reached", details);
+            });
     }
 
     return {

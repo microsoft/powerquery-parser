@@ -33,7 +33,11 @@ export function assertGetRecursiveExpressionPreviousSibling<T extends Ast.TNode>
         );
         const indexOfPrimaryExpressionId: number = childIds.indexOf(xorNode.node.id);
         if (indexOfPrimaryExpressionId === -1 || indexOfPrimaryExpressionId === 0) {
-            const details: {} = {
+            const details: {
+                xorNodeId: number;
+                arrayWrapperId: number;
+                indexOfPrimaryExpressionId: number;
+            } = {
                 xorNodeId: xorNode.node.id,
                 arrayWrapperId: arrayWrapper.node.id,
                 indexOfPrimaryExpressionId,
@@ -99,7 +103,10 @@ export function maybeInvokeExpressionIdentifier(
     // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
     // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
     if (XorNodeUtils.isContextXor(headXorNode)) {
-        const details: {} = {
+        const details: {
+            identifierExpressionNodeId: number;
+            invokeExpressionNodeId: number;
+        } = {
             identifierExpressionNodeId: headXorNode.node.id,
             invokeExpressionNodeId: invokeExprXorNode.node.id,
         };

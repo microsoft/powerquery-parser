@@ -36,8 +36,11 @@ export function assertGetAbridgedSnapshotMatch(
     const snapshot: Lexer.LexerSnapshot = assertGetLexerSnapshot(text);
     const expectedTokens: AbridgedTokens = expected.tokens;
     const expectedComments: AbridgedComments = expected.comments;
-    const actualTokens: AbridgedTokens = snapshot.tokens.map(token => [token.kind, token.data]);
-    const actualComments: AbridgedComments = snapshot.comments.map(comment => [comment.kind, comment.data]);
+    const actualTokens: AbridgedTokens = snapshot.tokens.map((token: Language.Token.Token) => [token.kind, token.data]);
+    const actualComments: AbridgedComments = snapshot.comments.map((comment: Language.Comment.TComment) => [
+        comment.kind,
+        comment.data,
+    ]);
 
     expect(actualTokens).deep.equal(expectedTokens);
     expect(actualComments).deep.equal(expectedComments);
@@ -65,7 +68,10 @@ export function assertGetLineTokenMatch(text: string, expected: AbridgedLineToke
         }
     }
     const actual: AbridgedLineTokens = tmp;
-    const tokenDetails: {} = {
+    const tokenDetails: {
+        actual: AbridgedLineTokens;
+        expected: AbridgedLineTokens;
+    } = {
         actual,
         expected,
     };
@@ -113,7 +119,7 @@ export function assertGetLexOk(text: string): Lexer.State {
         const errorLineMap: Lexer.ErrorLineMap = Assert.asDefined(Lexer.maybeErrorLineMap(lexerState));
         const errorLines: ReadonlyArray<number> = [...errorLineMap.keys()];
 
-        const details: {} = { errorLines };
+        const details: { errorLines: ReadonlyArray<number> } = { errorLines };
         throw new Error(`AssertFailed: Lexer.isErrorState(state) ${JSON.stringify(details, undefined, 4)}`);
     }
 

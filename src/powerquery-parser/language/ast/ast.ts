@@ -737,14 +737,19 @@ export type RelationalExpression = IBinOpExpression<
 // ---------- Key value pair nodes ----------
 // ------------------------------------------
 
-export interface GeneralizedIdentifierPairedAnyLiteral
-    extends IKeyValuePair<NodeKind.GeneralizedIdentifierPairedAnyLiteral, GeneralizedIdentifier, TAnyLiteral> {}
+export type GeneralizedIdentifierPairedAnyLiteral = IKeyValuePair<
+    NodeKind.GeneralizedIdentifierPairedAnyLiteral,
+    GeneralizedIdentifier,
+    TAnyLiteral
+>;
 
-export interface GeneralizedIdentifierPairedExpression
-    extends IKeyValuePair<NodeKind.GeneralizedIdentifierPairedExpression, GeneralizedIdentifier, TExpression> {}
+export type GeneralizedIdentifierPairedExpression = IKeyValuePair<
+    NodeKind.GeneralizedIdentifierPairedExpression,
+    GeneralizedIdentifier,
+    TExpression
+>;
 
-export interface IdentifierPairedExpression
-    extends IKeyValuePair<NodeKind.IdentifierPairedExpression, Identifier, TExpression> {}
+export type IdentifierPairedExpression = IKeyValuePair<NodeKind.IdentifierPairedExpression, Identifier, TExpression>;
 
 // ---------------------------------------
 // ---------- Parameter related ----------
@@ -752,8 +757,10 @@ export interface IdentifierPairedExpression
 
 export type TParameterType = AsType | AsNullablePrimitiveType | undefined;
 
-export interface IParameterList<T extends TParameterType>
-    extends IParenthesisWrapped<NodeKind.ParameterList, ICsvArray<IParameter<T>>> {}
+export type IParameterList<T extends TParameterType> = IParenthesisWrapped<
+    NodeKind.ParameterList,
+    ICsvArray<IParameter<T>>
+>;
 
 export interface IParameter<T extends TParameterType> extends INode {
     readonly kind: NodeKind.Parameter;
@@ -763,10 +770,13 @@ export interface IParameter<T extends TParameterType> extends INode {
     readonly maybeParameterType: T;
 }
 
-export interface AsNullablePrimitiveType
-    extends IPairedConstant<NodeKind.AsNullablePrimitiveType, Constant.KeywordConstant.As, TNullablePrimitiveType> {}
+export type AsNullablePrimitiveType = IPairedConstant<
+    NodeKind.AsNullablePrimitiveType,
+    Constant.KeywordConstant.As,
+    TNullablePrimitiveType
+>;
 
-export interface AsType extends IPairedConstant<NodeKind.AsType, Constant.KeywordConstant.As, TType> {}
+export type AsType = IPairedConstant<NodeKind.AsType, Constant.KeywordConstant.As, TType>;
 
 // ------------------------------
 // ---------- Constant ----------
@@ -790,13 +800,12 @@ export type TConstant = IConstant<Constant.TConstant>;
 
 export type TNullCoalescingExpression = NullCoalescingExpression | TLogicalExpression;
 
-export interface NullCoalescingExpression
-    extends IBinOpExpression<
-        NodeKind.NullCoalescingExpression,
-        TLogicalExpression,
-        Constant.MiscConstant.NullCoalescingOperator,
-        TLogicalExpression
-    > {}
+export type NullCoalescingExpression = IBinOpExpression<
+    NodeKind.NullCoalescingExpression,
+    TLogicalExpression,
+    Constant.MiscConstant.NullCoalescingOperator,
+    TLogicalExpression
+>;
 
 // ----------------------------------------
 // ---------- Re-used interfaces ----------

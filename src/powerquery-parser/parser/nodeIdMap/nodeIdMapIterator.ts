@@ -53,7 +53,7 @@ export function assertIterChildrenAst(
     parentId: number,
 ): ReadonlyArray<Ast.TNode> {
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
-    return assertIterChildIds(nodeIdMapCollection.childIdsById, parentId).map(childId =>
+    return assertIterChildIds(nodeIdMapCollection.childIdsById, parentId).map((childId: number) =>
         NodeIdMapUtils.assertUnboxAst(astNodeById, childId),
     );
 }
@@ -78,7 +78,7 @@ export function assertIterXor(
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeIds: ReadonlyArray<number>,
 ): ReadonlyArray<TXorNode> {
-    return nodeIds.map(nodeId => NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId));
+    return nodeIds.map((nodeId: number) => NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId));
 }
 
 // If any exist, returns all Ast nodes under the given node.
@@ -93,7 +93,7 @@ export function maybeIterChildrenAst(
     const childIds: ReadonlyArray<number> = maybeChildIds;
 
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
-    return childIds.map(childId => NodeIdMapUtils.assertUnboxAst(astNodeById, childId));
+    return childIds.map((childId: number) => NodeIdMapUtils.assertUnboxAst(astNodeById, childId));
 }
 
 export function maybeNextSiblingXor(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): TXorNode | undefined {

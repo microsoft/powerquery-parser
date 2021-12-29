@@ -4,7 +4,7 @@
 import { CommonError } from ".";
 import { ErrorResult, OkResult, Result, ResultUtils } from "./result";
 
-export function asDefined<T>(maybeValue: T | undefined, maybeMessage?: string, maybeDetails?: {}): NonNullable<T> {
+export function asDefined<T>(maybeValue: T | undefined, maybeMessage?: string, maybeDetails?: object): NonNullable<T> {
     isDefined(maybeValue, maybeMessage, maybeDetails);
     return maybeValue;
 }
@@ -14,13 +14,13 @@ export function asInstanceofError<T>(value: T): Error {
     return value;
 }
 
-export function isTrue(value: boolean, maybeMessage?: string, maybeDetails?: {}): asserts value is true {
+export function isTrue(value: boolean, maybeMessage?: string, maybeDetails?: object): asserts value is true {
     if (value !== true) {
         throw new CommonError.InvariantError(maybeMessage ?? `assert failed, expected value to be true`, maybeDetails);
     }
 }
 
-export function isFalse(value: boolean, maybeMessage?: string, maybeDetails?: {}): asserts value is false {
+export function isFalse(value: boolean, maybeMessage?: string, maybeDetails?: object): asserts value is false {
     if (value !== false) {
         throw new CommonError.InvariantError(maybeMessage ?? `assert failed, expected value to be false`, maybeDetails);
     }
@@ -39,7 +39,7 @@ export function isInstanceofError<T>(value: T | Error): asserts value is Error {
 export function isDefined<T>(
     maybeValue: T | undefined,
     maybeMessage?: string,
-    maybeDetails?: {},
+    maybeDetails?: object,
 ): asserts maybeValue is NonNullable<T> {
     if (maybeValue === undefined) {
         throw new CommonError.InvariantError(
@@ -52,7 +52,7 @@ export function isDefined<T>(
 export function isUndefined<T>(
     maybeValue: T | undefined,
     maybeMessage?: string,
-    maybeDetails?: {},
+    maybeDetails?: object,
 ): asserts maybeValue is undefined {
     if (maybeValue !== undefined) {
         throw new CommonError.InvariantError(

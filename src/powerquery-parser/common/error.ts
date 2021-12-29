@@ -22,28 +22,32 @@ export class CancellationError extends Error {
 }
 
 export class InvariantError extends Error {
-    constructor(readonly invariantBroken: string, readonly maybeDetails: any | undefined = undefined) {
+    constructor(readonly invariantBroken: string, readonly maybeDetails?: object) {
         super(Localization.error_common_invariantError(Templates.DefaultTemplates, invariantBroken, maybeDetails));
         Object.setPrototypeOf(this, InvariantError.prototype);
     }
 }
 
 export class UnknownError extends Error {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(locale: string, readonly innerError: any) {
         super(Localization.error_common_unknown(LocalizationUtils.getLocalizationTemplates(locale), innerError));
         Object.setPrototypeOf(this, UnknownError.prototype);
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function assertIsCommonError(error: any): error is CommonError {
     Assert.isTrue(isCommonError(error), "isCommonError(error)");
     return true;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isCommonError(error: any): error is CommonError {
     return error instanceof CommonError;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isTInnerCommonError(x: any): x is TInnerCommonError {
     return x instanceof CancellationError || x instanceof InvariantError || x instanceof UnknownError;
 }

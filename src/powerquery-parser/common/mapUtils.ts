@@ -3,11 +3,11 @@
 
 import { Assert } from ".";
 
-export function assertDelete<K, V>(map: Map<K, V>, key: K, maybeMessage?: string, maybeDetails?: {}): void {
+export function assertDelete<K, V>(map: Map<K, V>, key: K, maybeMessage?: string, maybeDetails?: object): void {
     Assert.isTrue(map.delete(key), maybeMessage ?? `failed to delete, key is absent`, maybeDetails ?? { key });
 }
 
-export function assertGet<K, V>(map: Map<K, V>, key: K, maybeMessage?: string, maybeDetails?: {}): V {
+export function assertGet<K, V>(map: Map<K, V>, key: K, maybeMessage?: string, maybeDetails?: object): V {
     return Assert.asDefined(map.get(key), maybeMessage ?? `key not found in given map`, maybeDetails ?? { key });
 }
 

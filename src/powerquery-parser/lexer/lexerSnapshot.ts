@@ -136,7 +136,7 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
                 break;
             }
 
-            default:
+            default: {
                 const positionStart: Token.TokenPosition = flatToken.positionStart;
                 const positionEnd: Token.TokenPosition = flatToken.positionEnd;
                 tokens.push({
@@ -145,6 +145,7 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
                     positionStart,
                     positionEnd,
                 });
+            }
         }
 
         flatIndex += 1;
@@ -241,7 +242,7 @@ function readQuotedIdentifier(
             LexError.UnterminatedMultilineTokenKind.QuotedIdentifier,
         );
     } else if (maybeTokenEnd.kind !== Token.LineTokenKind.QuotedIdentifierEnd) {
-        const details: {} = { foundTokenEnd: maybeTokenEnd };
+        const details: { foundTokenEnd: FlatLineToken } = { foundTokenEnd: maybeTokenEnd };
         const message: string = `once a multiline token starts it should either reach a paired end token, or eof`;
         throw new CommonError.InvariantError(message, details);
     } else {
@@ -281,7 +282,7 @@ function readTextLiteral(
             LexError.UnterminatedMultilineTokenKind.Text,
         );
     } else if (maybeTokenEnd.kind !== Token.LineTokenKind.TextLiteralEnd) {
-        const details: {} = { foundTokenEnd: maybeTokenEnd };
+        const details: { foundTokenEnd: FlatLineToken } = { foundTokenEnd: maybeTokenEnd };
         const message: string = `once a multiline token starts it should either reach a paired end token, or eof`;
         throw new CommonError.InvariantError(message, details);
     } else {

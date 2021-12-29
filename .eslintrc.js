@@ -10,7 +10,7 @@ module.exports = {
     ],
     rules: {
         "@typescript-eslint/no-inferrable-types": "off",
-        "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+        "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
         "@typescript-eslint/typedef": [
             "error",
             {
@@ -23,8 +23,8 @@ module.exports = {
                 variableDeclaration: true
             },
         ],
-        "prettier/prettier": ["warn"],
+        "prettier/prettier": ["error"],
         "security/detect-non-literal-fs-filename": "off",
-        "security/detect-object-injection": "error",
+        "security/detect-object-injection": "off",
     },
 };

@@ -167,7 +167,6 @@ function inspectContextParameter(
     nodeIdMapCollection: NodeIdMap.Collection,
     parameter: ParseContext.Node<Ast.TParameter>,
 ): Type.FunctionParameter | undefined {
-    let isOptional: boolean;
     let isNullable: boolean;
     let maybeType: Type.TypeKind | undefined;
 
@@ -187,7 +186,7 @@ function inspectContextParameter(
         0,
         Ast.NodeKind.Constant,
     );
-    isOptional = maybeOptional !== undefined;
+    const isOptional: boolean = maybeOptional !== undefined;
 
     const maybeParameterType: Ast.AsNullablePrimitiveType | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
         nodeIdMapCollection,

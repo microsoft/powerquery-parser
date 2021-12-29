@@ -128,14 +128,17 @@ export class UnterminatedMultilineTokenError extends Error {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isLexError(x: any): x is LexError {
     return x instanceof LexError;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isTLexError(x: any): x is TLexError {
     return x instanceof LexError || x instanceof CommonError.CommonError;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isTInnerLexError(x: any): x is TInnerLexError {
     return (
         x instanceof BadLineNumberError ||

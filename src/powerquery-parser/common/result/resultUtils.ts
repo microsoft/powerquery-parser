@@ -31,7 +31,7 @@ export function ensureResult<T>(locale: string, callbackFn: () => T): Result<T, 
         return boxOk(callbackFn());
     } catch (error) {
         Assert.isInstanceofError(error);
-        
+
         return boxError(CommonError.ensureCommonError(locale, error));
     }
 }

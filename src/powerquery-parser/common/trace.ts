@@ -57,16 +57,16 @@ export abstract class TraceManager {
 
     constructor(protected readonly valueDelimiter: string = ",", protected readonly newline: "\n" | "\r\n" = "\r\n") {}
 
-    abstract emit(trace: Trace, message: string, maybeDetails?: {}): void;
+    abstract emit(trace: Trace, message: string, maybeDetails?: object): void;
 
     // Creates a new Trace instance and call its entry method.
     // Traces should be created at the start of a function, and further calls are made on Trace instance.
-    public entry(phase: string, task: string, maybeDetails?: {}): Trace {
+    public entry(phase: string, task: string, maybeDetails?: object): Trace {
         return this.create(phase, task, maybeDetails);
     }
 
     // Defaults to simple concatenation.
-    protected formatMessage(trace: Trace, message: string, maybeDetails?: {}): string {
+    protected formatMessage(trace: Trace, message: string, maybeDetails?: object): string {
         const details: string = maybeDetails !== undefined ? this.safeJsonStringify(maybeDetails) : TraceConstant.Empty;
 
         return [trace.phase, trace.task, trace.id, message, details].join(this.valueDelimiter) + this.newline;
@@ -75,13 +75,18 @@ export abstract class TraceManager {
     // The return to the TraceManager.start function.
     // Subclass this when the TraceManager needs a different subclass of Trace.
     // Eg. BenchmarkTraceManager returns a BenchmarkTrace instance.
-    protected create(phase: string, task: string, maybeDetails?: {}): Trace {
+    protected create(phase: string, task: string, maybeDetails?: object): Trace {
         return new Trace(this.emit.bind(this), phase, task, this.createIdFn(), maybeDetails);
     }
 
     // Copied signature from `JSON.stringify`.
-    // Subclass this by providing values for `replacer` and/or `space`. 
-    protected safeJsonStringify(obj: {},  replacer?: (this: any, key: string, value: any) => any, space?: string | number): string {
+    // Subclass this by providing values for `replacer` and/or `space`.
+    protected safeJsonStringify(
+        obj: object,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        replacer?: (this: any, key: string, value: any) => any,
+        space?: string | number,
+    ): string {
         try {
             return JSON.stringify(obj, replacer, space);
         } catch (e) {
@@ -96,7 +101,7 @@ export class ReportTraceManager extends TraceManager {
         super(valueDelimiter);
     }
 
-    emit(trace: Trace, message: string, maybeDetails?: {}): void {
+    emit(trace: Trace, message: string, maybeDetails?: object): void {
         this.outputFn(this.formatMessage(trace, message, maybeDetails));
     }
 }
@@ -107,40 +112,41 @@ export class BenchmarkTraceManager extends ReportTraceManager {
         super(outputFn, valueDelimiter);
     }
 
-    protected override create(phase: string, task: string, maybeDetails?: {}): BenchmarkTrace {
+    protected override create(phase: string, task: string, maybeDetails?: object): BenchmarkTrace {
         return new BenchmarkTrace(this.emit.bind(this), phase, task, this.createIdFn(), maybeDetails);
     }
 }
 
 // The TraceManager for DefaultSettings.
 export class NoOpTraceManager extends TraceManager {
-    emit(_tracer: Trace, _message: string, _maybeDetails?: {}): void {}
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    emit(_tracer: Trace, _message: string, _maybeDetails?: object): void {}
 
-    protected override create(phase: string, task: string, maybeDetails?: {}): Trace {
+    protected override create(phase: string, task: string, maybeDetails?: object): Trace {
         return new NoOpTrace(this.emit.bind(this), phase, task, this.createIdFn(), maybeDetails);
     }
 }
 
 export class Trace {
     constructor(
-        protected readonly emitTraceFn: (trace: Trace, message: string, maybeDetails?: {}) => void,
+        protected readonly emitTraceFn: (trace: Trace, message: string, maybeDetails?: object) => void,
         public readonly phase: string,
         public readonly task: string,
         public readonly id: string,
-        maybeDetails?: {},
+        maybeDetails?: object,
     ) {
         this.entry(maybeDetails);
     }
 
-    public entry(maybeDetails?: {}): void {
+    public entry(maybeDetails?: object): void {
         this.trace(TraceConstant.Entry, maybeDetails);
     }
 
-    public trace(message: string, maybeDetails?: {}) {
+    public trace(message: string, maybeDetails?: object) {
         this.emitTraceFn(this, message, maybeDetails);
     }
 
-    public exit(maybeDetails?: {}): void {
+    public exit(maybeDetails?: object): void {
         this.trace(TraceConstant.Exit, maybeDetails);
     }
 }
@@ -151,16 +157,16 @@ export class BenchmarkTrace extends Trace {
     protected readonly timeStart: number = performanceNow();
 
     constructor(
-        emitTraceFn: (trace: Trace, message: string, maybeDetails?: {}) => void,
+        emitTraceFn: (trace: Trace, message: string, maybeDetails?: object) => void,
         phase: string,
         task: string,
         id: string,
-        maybeDetails?: {},
+        maybeDetails?: object,
     ) {
         super(emitTraceFn, phase, task, id, maybeDetails);
     }
 
-    public override trace(message: string, maybeDetails?: {}) {
+    public override trace(message: string, maybeDetails?: object) {
         const timeNow: number = performanceNow();
 
         super.trace(message, {
@@ -172,7 +178,8 @@ export class BenchmarkTrace extends Trace {
 }
 
 export class NoOpTrace extends Trace {
-    public override trace(_message: string, _maybeDetails?: {}) {}
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    public override trace(_message: string, _maybeDetails?: object) {}
 }
 
 function createAutoIncrementId(): () => string {

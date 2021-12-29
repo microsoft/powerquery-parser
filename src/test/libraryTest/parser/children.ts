@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { DefaultSettings, Language, Parser, Task } from "../../..";
+import { Assert, DefaultSettings, Language, Parser, Task } from "../../..";
 import { TestAssertUtils } from "../../testUtils";
 
 interface ChildIdsByIdEntry {
@@ -20,7 +20,7 @@ function createActual(lexParseOk: Task.ParseTaskOk): ChildIdsByIdEntry[] {
         actual.push({
             childNodeIds: value,
             id: key,
-            kind: astNodeById.get(key)!.kind,
+            kind: Assert.asDefined(astNodeById.get(key)).kind,
         });
     }
 

@@ -7,7 +7,6 @@ import { Assert, DefaultSettings, Lexer, ResultUtils, Task, TaskUtils } from "."
 
 parseText(`let x = 1 in try x otherwise 2`);
 
-// @ts-ignore
 function parseText(text: string): void {
     // Try lexing and parsing the argument which returns a Result object.
     // A Result<T, E> is the union (Ok<T> | Error<E>).
@@ -34,7 +33,7 @@ function parseText(text: string): void {
     }
 }
 
-// @ts-ignore
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function lexText(text: string): void {
     // Notice that the Lexer.State variable is declared using let instead of const.
     // This is because calling Lexer functions return a new state object.

@@ -5,7 +5,7 @@ import { NaiveParseSteps } from ".";
 import { Parser, ParserUtils } from "../parser";
 import { ParseStateUtils } from "../parseState";
 
-export let RecursiveDescentParser: Parser = {
+export const RecursiveDescentParser: Parser = {
     ...NaiveParseSteps,
     applyState: ParseStateUtils.applyState,
     copyState: ParseStateUtils.copyState,

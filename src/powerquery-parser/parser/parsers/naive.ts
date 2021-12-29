@@ -448,7 +448,8 @@ export function readLogicalExpression(state: ParseState, parser: Parser): Ast.TL
         state,
         Ast.NodeKind.LogicalExpression,
         () => parser.readIsExpression(state, parser),
-        maybeCurrentTokenKind => ConstantUtils.maybeLogicalOperatorKindFrom(maybeCurrentTokenKind),
+        (maybeCurrentTokenKind: Token.TokenKind | undefined) =>
+            ConstantUtils.maybeLogicalOperatorKindFrom(maybeCurrentTokenKind),
         () => parser.readIsExpression(state, parser),
     );
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
@@ -475,7 +476,7 @@ export function readIsExpression(state: ParseState, parser: Parser): Ast.TIsExpr
         state,
         Ast.NodeKind.IsExpression,
         () => parser.readAsExpression(state, parser),
-        maybeCurrentTokenKind =>
+        (maybeCurrentTokenKind: Token.TokenKind | undefined) =>
             maybeCurrentTokenKind === Token.TokenKind.KeywordIs ? Constant.KeywordConstant.Is : undefined,
         () => parser.readNullablePrimitiveType(state, parser),
     );
@@ -526,7 +527,7 @@ export function readAsExpression(state: ParseState, parser: Parser): Ast.TAsExpr
         state,
         Ast.NodeKind.AsExpression,
         () => parser.readEqualityExpression(state, parser),
-        maybeCurrentTokenKind =>
+        (maybeCurrentTokenKind: Token.TokenKind | undefined) =>
             maybeCurrentTokenKind === Token.TokenKind.KeywordAs ? Constant.KeywordConstant.As : undefined,
         () => parser.readNullablePrimitiveType(state, parser),
     );
@@ -554,7 +555,8 @@ export function readEqualityExpression(state: ParseState, parser: Parser): Ast.T
         state,
         Ast.NodeKind.EqualityExpression,
         () => parser.readRelationalExpression(state, parser),
-        maybeCurrentTokenKind => ConstantUtils.maybeEqualityOperatorKindFrom(maybeCurrentTokenKind),
+        (maybeCurrentTokenKind: Token.TokenKind | undefined) =>
+            ConstantUtils.maybeEqualityOperatorKindFrom(maybeCurrentTokenKind),
         () => parser.readRelationalExpression(state, parser),
     );
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
@@ -581,7 +583,8 @@ export function readRelationalExpression(state: ParseState, parser: Parser): Ast
         state,
         Ast.NodeKind.RelationalExpression,
         () => parser.readArithmeticExpression(state, parser),
-        maybeCurrentTokenKind => ConstantUtils.maybeRelationalOperatorKindFrom(maybeCurrentTokenKind),
+        (maybeCurrentTokenKind: Token.TokenKind | undefined) =>
+            ConstantUtils.maybeRelationalOperatorKindFrom(maybeCurrentTokenKind),
         () => parser.readArithmeticExpression(state, parser),
     );
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
@@ -608,7 +611,8 @@ export function readArithmeticExpression(state: ParseState, parser: Parser): Ast
         state,
         Ast.NodeKind.ArithmeticExpression,
         () => parser.readMetadataExpression(state, parser),
-        maybeCurrentTokenKind => ConstantUtils.maybeArithmeticOperatorKindFrom(maybeCurrentTokenKind),
+        (maybeCurrentTokenKind: Token.TokenKind | undefined) =>
+            ConstantUtils.maybeArithmeticOperatorKindFrom(maybeCurrentTokenKind),
         () => parser.readMetadataExpression(state, parser),
     );
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
@@ -2195,7 +2199,7 @@ function tryReadPrimitiveType(state: ParseState, parser: Parser): TriedReadPrimi
                 readToken(state);
                 break;
 
-            default:
+            default: {
                 const token: Token.Token = ParseStateUtils.assertGetTokenAt(state, state.tokenIndex);
                 parser.restoreCheckpoint(state, checkpoint);
 
@@ -2206,6 +2210,7 @@ function tryReadPrimitiveType(state: ParseState, parser: Parser): TriedReadPrimi
                         state.lexerSnapshot.graphemePositionStartFrom(token),
                     ),
                 );
+            }
         }
     } else if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.KeywordType)) {
         primitiveTypeKind = Constant.PrimitiveTypeConstant.Type;
@@ -2214,7 +2219,7 @@ function tryReadPrimitiveType(state: ParseState, parser: Parser): TriedReadPrimi
         primitiveTypeKind = Constant.PrimitiveTypeConstant.Null;
         readToken(state);
     } else {
-        const details: {} = { tokenKind: state.maybeCurrentTokenKind };
+        const details: { tokenKind: Token.TokenKind | undefined } = { tokenKind: state.maybeCurrentTokenKind };
         parser.restoreCheckpoint(state, checkpoint);
         trace.exit({
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
