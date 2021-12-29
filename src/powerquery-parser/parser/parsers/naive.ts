@@ -2384,7 +2384,7 @@ function recursiveReadBinOpExpression<
     }
     const operatorConstant: Ast.TConstant & Ast.IConstant<Op> = readTokenKindAsConstant(
         state,
-        state.maybeCurrentTokenKind!,
+        Assert.asDefined(state.maybeCurrentTokenKind),
         maybeOperator,
     );
     const right: Right | Ast.IBinOpExpression<Kind, Right, Op, Right> = recursiveReadBinOpExpressionHelper<
@@ -2441,7 +2441,7 @@ function recursiveReadBinOpExpressionHelper<
     }
     const operatorConstant: Ast.TConstant & Ast.IConstant<OperatorKind> = readTokenKindAsConstant(
         state,
-        state.maybeCurrentTokenKind!,
+        Assert.asDefined(state.maybeCurrentTokenKind),
         maybeOperator,
     );
     const right: Right | Ast.IBinOpExpression<Kind, Right, OperatorKind, Right> = recursiveReadBinOpExpressionHelper<

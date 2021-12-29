@@ -61,7 +61,7 @@ export function maybeRightMostLeaf(
     let maybeRightMost: Ast.TNode | undefined;
 
     while (nodeIdsToExplore.length) {
-        const nodeId: number = nodeIdsToExplore.pop()!;
+        const nodeId: number = Assert.asDefined(nodeIdsToExplore.pop());
         const maybeAstNode: Ast.TNode | undefined = astNodeById.get(nodeId);
 
         let addChildren: boolean = false;

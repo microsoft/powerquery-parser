@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, XorNodeUtils } from "..";
-import { MapUtils, TypeScriptUtils } from "../../../common";
+import { Assert, MapUtils, TypeScriptUtils } from "../../../common";
 import { Ast } from "../../../language";
 import { ParseContext } from "../../context";
 import { Collection } from "../nodeIdMap";
@@ -78,7 +78,7 @@ function createDelta(
     // Build up the change delta.
     for (const xorNode of xorNodes) {
         const oldId: number = xorNode.node.id;
-        const newId: number = newIdByOldId.get(oldId)!;
+        const newId: number = Assert.asDefined(newIdByOldId.get(oldId));
 
         if (XorNodeUtils.isAstXor(xorNode)) {
             partialCollection.astNodeById.set(newId, xorNode.node);
