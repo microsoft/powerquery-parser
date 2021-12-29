@@ -1,6 +1,9 @@
 module.exports = {
     root: true,
     parser: "@typescript-eslint/parser",
+    parserOptions: {
+        project: "./tsconfig.json",
+    },
     plugins: ["@typescript-eslint", "security", "prettier"],
     extends: [
         "eslint:recommended",
@@ -11,6 +14,8 @@ module.exports = {
     rules: {
         "@typescript-eslint/no-inferrable-types": "off",
         "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+        "@typescript-eslint/space-infix-ops": "error",
+        "@typescript-eslint/switch-exhaustiveness-check": "error",
         "@typescript-eslint/typedef": [
             "error",
             {
@@ -20,9 +25,10 @@ module.exports = {
                 objectDestructuring: true,
                 parameter: true,
                 propertyDeclaration: true,
-                variableDeclaration: true
+                variableDeclaration: true,
             },
         ],
+        "@typescript-eslint/unified-signatures": "error",
         "prettier/prettier": ["error"],
         "security/detect-non-literal-fs-filename": "off",
         "security/detect-object-injection": "off",
