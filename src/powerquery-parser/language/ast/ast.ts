@@ -381,7 +381,9 @@ export interface IdentifierExpression extends INode {
 // ---------- 12.2.3.14 Parenthesized expression ----------
 // --------------------------------------------------------
 
-export type ParenthesizedExpression = IParenthesisWrapped<NodeKind.ParenthesizedExpression, TExpression>;
+// Can't be a type as it'll be a recursive definition
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface ParenthesizedExpression extends IParenthesisWrapped<NodeKind.ParenthesizedExpression, TExpression> {}
 
 // ----------------------------------------------------------
 // ---------- 12.2.3.15 Not-implemented expression ----------
@@ -630,12 +632,18 @@ export interface IWrapped<
     readonly closeWrapperConstant: IConstant<Close>;
 }
 
+// TODO: figure out why making this a type creates a recursive type definition.
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface IBraceWrapped<Kind extends TWrappedNodeKind, Content>
     extends IWrapped<Kind, Constant.WrapperConstant.LeftBrace, Content, Constant.WrapperConstant.RightBrace> {}
 
+// TODO: figure out why making this a type creates a recursive type definition.
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface IBracketWrapped<Kind extends TWrappedNodeKind, Content>
     extends IWrapped<Kind, Constant.WrapperConstant.LeftBracket, Content, Constant.WrapperConstant.RightBracket> {}
 
+// TODO: figure out why making this a type creates a recursive type definition.
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface IParenthesisWrapped<Kind extends TWrappedNodeKind, Content>
     extends IWrapped<
         Kind,
