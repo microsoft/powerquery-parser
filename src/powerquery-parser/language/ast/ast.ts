@@ -409,7 +409,9 @@ export interface InvokeExpression extends IParenthesisWrapped<NodeKind.InvokeExp
 
 export type TListItem = TExpression | RangeExpression;
 
-export type ListExpression = IBraceWrapped<NodeKind.ListExpression, ICsvArray<TListItem>>;
+// Can't be a type as it'll be a recursive definition
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface ListExpression extends IBraceWrapped<NodeKind.ListExpression, ICsvArray<TListItem>> {}
 
 export interface RangeExpression extends INode {
     readonly kind: NodeKind.RangeExpression;
@@ -518,7 +520,9 @@ export interface FunctionType extends INode {
     readonly functionReturnType: AsType;
 }
 
-export type ListType = IBraceWrapped<NodeKind.ListType, TType>;
+// Can't be a type as it'll be a recursive definition
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface ListType extends IBraceWrapped<NodeKind.ListType, TType> {}
 
 export type NullableType = IPairedConstant<NodeKind.NullableType, Constant.LanguageConstant.Nullable, TType>;
 
@@ -634,10 +638,12 @@ export interface IWrapped<
     readonly closeWrapperConstant: IConstant<Close>;
 }
 
-// TODO: figure out why making this a type creates a recursive type definition.
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface IBraceWrapped<Kind extends TWrappedNodeKind, Content>
-    extends IWrapped<Kind, Constant.WrapperConstant.LeftBrace, Content, Constant.WrapperConstant.RightBrace> {}
+export type IBraceWrapped<Kind extends TWrappedNodeKind, Content> = IWrapped<
+    Kind,
+    Constant.WrapperConstant.LeftBrace,
+    Content,
+    Constant.WrapperConstant.RightBrace
+>;
 
 export type IBracketWrapped<Kind extends TWrappedNodeKind, Content> = IWrapped<
     Kind,
@@ -752,11 +758,10 @@ export type GeneralizedIdentifierPairedAnyLiteral = IKeyValuePair<
     TAnyLiteral
 >;
 
-export type GeneralizedIdentifierPairedExpression = IKeyValuePair<
-    NodeKind.GeneralizedIdentifierPairedExpression,
-    GeneralizedIdentifier,
-    TExpression
->;
+// Can't be a type as it'll be a recursive definition
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface GeneralizedIdentifierPairedExpression
+    extends IKeyValuePair<NodeKind.GeneralizedIdentifierPairedExpression, GeneralizedIdentifier, TExpression> {}
 
 export type IdentifierPairedExpression = IKeyValuePair<NodeKind.IdentifierPairedExpression, Identifier, TExpression>;
 
