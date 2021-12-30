@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Type } from "..";
 import { ArrayUtils, Assert, MapUtils } from "../../../common";
 import { isTypeInArray } from "./typeUtils";
+import { Type } from "..";
 
 export function isEqualType(left: Type.TPowerQueryType, right: Type.TPowerQueryType): boolean {
     if (left === right) {

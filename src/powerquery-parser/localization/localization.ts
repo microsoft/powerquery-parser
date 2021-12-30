@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Lexer } from "..";
 import { Assert, StringUtils } from "../common";
-import { Token } from "../language";
-import { LexError } from "../lexer";
-import { ParseError } from "../parser";
 import { SequenceKind, TokenWithColumnNumber } from "../parser/error";
 import { ILocalizationTemplates } from "./templates";
+import { Lexer } from "..";
+import { LexError } from "../lexer";
+import { ParseError } from "../parser";
+import { Token } from "../language";
 
 interface ILocalization {
     readonly error_common_cancellationError: (templates: ILocalizationTemplates) => string;

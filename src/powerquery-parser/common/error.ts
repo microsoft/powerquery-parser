@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert } from ".";
 import { Localization, LocalizationUtils, Templates } from "../localization";
+import { Assert } from ".";
 import { ICancellationToken } from "./cancellationToken/ICancellationToken";
 
 export type TInnerCommonError = CancellationError | InvariantError | UnknownError;

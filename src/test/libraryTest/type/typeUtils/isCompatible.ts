@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { expect } from "chai";
 import "mocha";
-import { OrderedMap } from "../../../../powerquery-parser";
+import { expect } from "chai";
+
 import { Type, TypeUtils } from "../../../../powerquery-parser/language";
+import { OrderedMap } from "../../../../powerquery-parser";
 import { TypeKind } from "../../../../powerquery-parser/language/type/type";
 
 describe(`TypeUtils.isCompatible`, () => {

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ParseContext } from "..";
 import { Ast } from "../../language";
+import { ParseContext } from "..";
 
 export type AstNodeById = NumberMap<Ast.TNode>;
 export type ChildIdsById = NumberMap<ReadonlyArray<number>>;

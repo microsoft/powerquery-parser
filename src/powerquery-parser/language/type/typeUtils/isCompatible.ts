@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Type } from "..";
 import { Assert, CommonError, MapUtils } from "../../../common";
 import { isEqualFunctionSignature, isEqualType } from "./isEqualType";
 import { isFieldSpecificationList, isFunctionSignature } from "./isType";
+import { Type } from "..";
 
 // Returns `${left} is compatible with ${right}. Eg.
 // `Type.TextInstance is compatible with Type.AnyInstance` -> true

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError } from ".";
 import { ErrorResult, OkResult, Result, ResultUtils } from "./result";
+import { CommonError } from ".";
 
 export function asDefined<T>(maybeValue: T | undefined, maybeMessage?: string, maybeDetails?: object): NonNullable<T> {
     isDefined(maybeValue, maybeMessage, maybeDetails);

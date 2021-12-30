@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { LexError } from ".";
-import { Lexer } from "..";
 import { Assert, CommonError, ICancellationToken, Result, ResultUtils, StringUtils } from "../common";
 import { Comment, Token } from "../language";
+import { Lexer } from "..";
+import { LexError } from ".";
 
 // The lexer is a multiline aware lexer.
 // That in part means multiline tokens are split up into <begin>, <content>, and <end> components.

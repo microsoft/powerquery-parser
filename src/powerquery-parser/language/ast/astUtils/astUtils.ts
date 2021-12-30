@@ -1,5 +1,5 @@
-import { Ast } from "..";
 import { Assert, CommonError } from "../../../common";
+import { Ast } from "..";
 import { Constant } from "../../constant";
 import { TokenKind } from "../../token";
 

@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ParseContext } from "..";
-import { ICancellationToken } from "../../common";
-import { TraceManager } from "../../common/trace";
-import { Token } from "../../language";
-import { LexerSnapshot } from "../../lexer";
 import { Disambiguation } from "../disambiguation";
+import { ICancellationToken } from "../../common";
+import { LexerSnapshot } from "../../lexer";
+import { ParseContext } from "..";
+import { Token } from "../../language";
+import { TraceManager } from "../../common/trace";
 
 export interface ParseState {
     readonly disambiguationBehavior: Disambiguation.DismabiguationBehavior;

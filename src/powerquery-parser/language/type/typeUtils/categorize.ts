@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Type } from "..";
 import { Assert, CommonError, ImmutableSet } from "../../../common";
 import {
     isEqualAnyUnion,
@@ -21,6 +20,7 @@ import {
     isEqualTextLiteral,
     isEqualType,
 } from "./isEqualType";
+import { Type } from "..";
 
 export type TCategory = TExtendedCategory | NonExtendedCategory;
 export type TExtendedCategory =

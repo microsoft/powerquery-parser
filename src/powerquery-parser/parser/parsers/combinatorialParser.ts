@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NaiveParseSteps } from ".";
-import { NodeIdMap, ParseContextUtils } from "..";
 import { ArrayUtils, Assert, MapUtils, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../language";
 import { Disambiguation, DisambiguationUtils } from "../disambiguation";
+import { NodeIdMap, ParseContextUtils } from "..";
 import { Parser, ParserUtils } from "../parser";
 import { ParseState, ParseStateUtils } from "../parseState";
+import { NaiveParseSteps } from ".";
 
 // If the Naive parser were to parse the expression '1' it would need to recurse down a dozen or so constructs,
 // which at each step would create a new context node, parse LiteralExpression, then traverse back up while

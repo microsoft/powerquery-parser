@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { XorNodeUtils } from "..";
-import { Assert } from "../../../common";
 import { Ast, AstUtils } from "../../../language";
-import { ParseContext, ParseContextUtils } from "../../context";
-import { Collection } from "../nodeIdMap";
-import { TXorNode, XorNode } from "../xorNode";
 import { boxAst, boxContext } from "../xorNodeUtils";
+import { ParseContext, ParseContextUtils } from "../../context";
+import { TXorNode, XorNode } from "../xorNode";
+import { Assert } from "../../../common";
+import { Collection } from "../nodeIdMap";
+import { XorNodeUtils } from "..";
 
 export function assertUnboxParentAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
     return Assert.asDefined(

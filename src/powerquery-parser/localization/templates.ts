@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Locale } from "./locale";
 import * as bg_BG from "./templates/template.bg-BG.json";
 import * as ca_ES from "./templates/template.ca-ES.json";
 import * as cs_CZ from "./templates/template.cs-CZ.json";
 import * as da_DK from "./templates/template.da-DK.json";
 import * as de_DE from "./templates/template.de-DE.json";
 import * as el_GR from "./templates/template.el-GR.json";
+import * as en_US from "./templates/template.json";
 import * as es_ES from "./templates/template.es-ES.json";
 import * as et_EE from "./templates/template.et-EE.json";
 import * as eu_ES from "./templates/template.eu-ES.json";
@@ -20,7 +20,6 @@ import * as hu_HU from "./templates/template.hu-HU.json";
 import * as id_ID from "./templates/template.id-ID.json";
 import * as it_IT from "./templates/template.it-IT.json";
 import * as ja_JP from "./templates/template.ja-JP.json";
-import * as en_US from "./templates/template.json";
 import * as kk_KZ from "./templates/template.kk-KZ.json";
 import * as ko_KR from "./templates/template.ko-KR.json";
 import * as lt_LT from "./templates/template.lt-LT.json";
@@ -44,6 +43,7 @@ import * as uk_UA from "./templates/template.uk-UA.json";
 import * as vi_VN from "./templates/template.vi-VN.json";
 import * as zh_CN from "./templates/template.zh-CN.json";
 import * as zh_TW from "./templates/template.zh-TW.json";
+import { Locale } from "./locale";
 
 export {
     bg_BG,

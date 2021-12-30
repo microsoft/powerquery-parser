@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Type } from "..";
 import { Assert } from "../../../common";
 import { Constant } from "../../constant";
+import { Type } from "..";
 
 export function maybePrimitiveTypeConstantKindFromTypeKind(
     typeKind: Type.TypeKind,

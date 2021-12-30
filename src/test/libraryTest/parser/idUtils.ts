@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { expect } from "chai";
 import "mocha";
-import { DefaultSettings, Task } from "../../..";
+import { expect } from "chai";
+
 import { Assert, Language, TaskUtils, Traverse } from "../../../powerquery-parser";
-import { NodeIdMap, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
 import { ChildIdsById, IdsByNodeKind, ParentIdById } from "../../../powerquery-parser/parser/nodeIdMap/nodeIdMap";
+import { DefaultSettings, Task } from "../../..";
+import { NodeIdMap, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
 
 type TraverseState = Traverse.ITraversalState<undefined> &
     Pick<NodeIdMap.Collection, "leafIds" | "idsByNodeKind"> & { astIds: number[]; contextIds: number[] };

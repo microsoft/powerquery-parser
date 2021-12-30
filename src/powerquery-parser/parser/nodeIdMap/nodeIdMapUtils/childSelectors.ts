@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { XorNodeUtils } from "..";
 import { Assert, CommonError } from "../../../common";
-import { Ast, AstUtils } from "../../../language";
-import { ParseContext, ParseContextUtils } from "../../context";
-import { ChildIdsById, Collection } from "../nodeIdMap";
-import { TXorNode, XorNode } from "../xorNode";
 import { assertGetXor, maybeXor } from "./commonSelectors";
+import { Ast, AstUtils } from "../../../language";
+import { ChildIdsById, Collection } from "../nodeIdMap";
+import { ParseContext, ParseContextUtils } from "../../context";
+import { TXorNode, XorNode } from "../xorNode";
+import { XorNodeUtils } from "..";
 
 // You can think of a node as a collection which holds other nodes.
 // The ArithmeticExpression `1 + 2` has three nodes (i.e. attributes):

@@ -1,13 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ParseError } from "..";
-import { ArrayUtils, Assert, Result, ResultUtils, TypeScriptUtils } from "../../common";
-import { Trace, TraceConstant } from "../../common/trace";
-import { Ast, AstUtils, Constant, Token } from "../../language";
-import { NodeIdMapUtils } from "../nodeIdMap";
-import { Parser, ParseStateCheckpoint } from "../parser";
-import { ParseState, ParseStateUtils } from "../parseState";
 import {
     AmbiguousParse,
     BracketDisambiguation,
@@ -16,6 +9,13 @@ import {
     TAmbiguousBracketNode,
     TAmbiguousParenthesisNode,
 } from "./disambiguation";
+import { ArrayUtils, Assert, Result, ResultUtils, TypeScriptUtils } from "../../common";
+import { Ast, AstUtils, Constant, Token } from "../../language";
+import { Parser, ParseStateCheckpoint } from "../parser";
+import { ParseState, ParseStateUtils } from "../parseState";
+import { Trace, TraceConstant } from "../../common/trace";
+import { NodeIdMapUtils } from "../nodeIdMap";
+import { ParseError } from "..";
 
 // For each given parse function it'll create a deep copy of the state then parse with the function.
 // Mutates the given state to whatever parse state which matched the most amount of tokens.

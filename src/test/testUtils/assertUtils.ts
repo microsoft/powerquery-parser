@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import "mocha";
+
 import { Assert, Lexer, LexSettings, Parser, ParseSettings, Task } from "../..";
 import { TaskUtils } from "../../powerquery-parser";
 

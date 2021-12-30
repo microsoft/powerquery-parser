@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Type } from "..";
 import { Assert, CommonError, StringUtils } from "../../../common";
 import { PrimitiveTypeConstantMap, primitiveTypeMapKey } from "./primitive";
 import { simplify } from "./simplify";
+import { Type } from "..";
 
 export function createPrimitiveType<T extends Type.TypeKind>(isNullable: boolean, typeKind: T): Type.TPrimitiveType {
     const key: string = primitiveTypeMapKey(isNullable, typeKind);

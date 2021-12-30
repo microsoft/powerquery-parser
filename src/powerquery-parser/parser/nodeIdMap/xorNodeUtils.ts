@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ParseContext } from "..";
 import { ArrayUtils, Assert } from "../../common";
 import { Ast, AstUtils } from "../../language";
-import { ParseContextUtils } from "../context";
 import { AstXorNode, ContextXorNode, TAstXorNode, TContextXorNode, TXorNode, XorNode, XorNodeKind } from "./xorNode";
+import { ParseContext } from "..";
+import { ParseContextUtils } from "../context";
 
 export function boxAst<T extends Ast.TNode>(node: T): XorNode<T> {
     return {

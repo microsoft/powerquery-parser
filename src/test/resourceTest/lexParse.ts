@@ -1,5 +1,9 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import "mocha";
 import * as path from "path";
+
 import { DefaultSettings, Parser, Settings, Task } from "../..";
 import { TaskUtils } from "../../powerquery-parser";
 import { TestFileUtils } from "../testUtils";

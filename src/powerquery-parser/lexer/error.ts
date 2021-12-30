@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Lexer } from "..";
 import { CommonError, StringUtils } from "../common";
 import { Localization, LocalizationUtils } from "../localization";
+import { Lexer } from "..";
 
 export type TLexError = CommonError.CommonError | LexError;
 

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Type } from "..";
 import { Assert } from "../../../common";
+import { Type } from "..";
 
 export function isAction(type: Type.TPowerQueryType): type is Type.Action {
     return type.kind === Type.TypeKind.Action;

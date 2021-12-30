@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { ParseError, ParseState } from "..";
-import { Result } from "../../common";
 import { Ast } from "../../language";
+import { Result } from "../../common";
 
 export type TriedParse = Result<ParseOk, ParseError.TParseError>;
 

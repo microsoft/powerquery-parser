@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError, StringUtils } from "../common";
-import { Token } from "../language";
 import { Localization, LocalizationUtils } from "../localization";
 import { ParseState } from "./parseState";
+import { Token } from "../language";
 
 export type TParseError = CommonError.CommonError | ParseError;
 

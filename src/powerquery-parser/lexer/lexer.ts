@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { LexError } from ".";
 import {
     ArrayUtils,
     Assert,
@@ -16,6 +15,7 @@ import {
     StringUtils,
 } from "../common";
 import { Keyword, Token } from "../language";
+import { LexError } from ".";
 import { LexSettings } from "../settings";
 
 // Call Lexer.stateFrom to instantiate a new State instance.

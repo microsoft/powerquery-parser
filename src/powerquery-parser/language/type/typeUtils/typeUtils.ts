@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Type } from "..";
 import { Ast, AstUtils } from "../..";
-import { Assert } from "../../../common";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, XorNode, XorNodeKind } from "../../../parser";
+import { Assert } from "../../../common";
 import { createPrimitiveType } from "./factories";
 import { isCompatible } from "./isCompatible";
 import { isEqualType } from "./isEqualType";
+import { Type } from "..";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";
 
 export function typeKindFromLiteralKind(literalKind: Ast.LiteralKind): Type.TypeKind {

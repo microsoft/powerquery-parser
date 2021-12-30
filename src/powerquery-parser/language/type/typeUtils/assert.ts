@@ -2,9 +2,8 @@
 // Licensed under the MIT license.
 
 import * as isType from "./isType";
-
-import { Type } from "..";
 import { CommonError } from "../../../common";
+import { Type } from "..";
 
 export function assertAsAction(type: Type.TPowerQueryType): Type.Action {
     assertIsAction(type);

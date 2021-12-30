@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ParseContext, ParseContextUtils, ParseError } from "..";
 import { Assert, CommonError, MapUtils } from "../../common";
-import { NoOpTraceManager } from "../../common/trace";
 import { Ast, Constant, Token } from "../../language";
-import { LexerSnapshot } from "../../lexer";
+import { ParseContext, ParseContextUtils, ParseError } from "..";
 import { DefaultLocale } from "../../localization";
 import { Disambiguation } from "../disambiguation";
-import { SequenceKind } from "../error";
+import { LexerSnapshot } from "../../lexer";
+import { NoOpTraceManager } from "../../common/trace";
 import { ParseState } from "./parseState";
+import { SequenceKind } from "../error";
 
 export function createState(lexerSnapshot: LexerSnapshot, maybeOverrides: Partial<ParseState> | undefined): ParseState {
     const tokenIndex: number = maybeOverrides?.tokenIndex ?? 0;

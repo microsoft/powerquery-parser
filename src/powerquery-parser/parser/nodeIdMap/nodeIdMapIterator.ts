@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
 import { Assert, MapUtils, StringUtils } from "../../common";
+import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
 import { Ast } from "../../language";
 import { maybeParameterName } from "./nodeIdMapUtils";
 import { XorNode } from "./xorNode";
