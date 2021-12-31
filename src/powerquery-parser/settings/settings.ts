@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ICancellationToken } from "../common";
+import { CombinatorialParser, Parser, ParseState, ParseStateUtils } from "../parser";
 import { NoOpTraceManager, TraceManager } from "../common/trace";
 import { Ast } from "../language";
-import { LexerSnapshot } from "../lexer";
 import { DefaultLocale } from "../localization";
-import { CombinatorialParser, Parser, ParseState, ParseStateUtils } from "../parser";
+import { ICancellationToken } from "../common";
+import { LexerSnapshot } from "../lexer";
 
 export interface CommonSettings {
     readonly locale: string;

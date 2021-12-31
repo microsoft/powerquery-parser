@@ -1,10 +1,12 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import * as fs from "fs";
 import * as path from "path";
 
-import { TestFileUtils } from "../../testUtils";
-
 import { DefaultSettings, Settings } from "../../..";
 import { BenchmarkTraceManager } from "../../../powerquery-parser/common/trace";
+import { TestFileUtils } from "../../testUtils";
 
 const NumberOfRunsPerFile: number = 10;
 const ResourceDirectory: string = path.dirname(__filename);

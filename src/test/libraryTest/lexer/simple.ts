@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { expect } from "chai";
 import "mocha";
-import { Language } from "../../..";
+import { expect } from "chai";
+
 import { assertGetSnapshotAbridgedTokens } from "./common";
+import { Language } from "../../..";
 
 describe(`Lexer.Simple.TokenKinds`, () => {
     it(`HexLiteral`, () => {

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Type } from "..";
-import { ArrayUtils, ImmutableSet } from "../../../common";
 import {
     AnyCategory,
     categorize,
@@ -16,7 +14,9 @@ import {
     TextCategory,
     TypeCategory,
 } from "./categorize";
+import { ArrayUtils, ImmutableSet } from "../../../common";
 import { isEqualType } from "./isEqualType";
+import { Type } from "..";
 
 export function simplify(types: ReadonlyArray<Type.TPowerQueryType>): ReadonlyArray<Type.TPowerQueryType> {
     const categorized: CategorizedPowerQueryTypes = categorize(types);

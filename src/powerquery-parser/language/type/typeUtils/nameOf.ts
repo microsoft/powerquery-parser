@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Type } from "..";
-import { Constant } from "../..";
 import { Assert } from "../../../common";
+import { Constant } from "../..";
+import { Type } from "..";
 
 export function nameOf(type: Type.TPowerQueryType): string {
     if (type.kind === Type.TypeKind.Null) {

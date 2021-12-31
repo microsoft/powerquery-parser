@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Lexer, Parser } from "..";
 import { CommonError, ResultKind } from "../common";
-import { Ast } from "../language";
+import { Lexer, Parser } from "..";
 import { NodeIdMap, ParseState } from "../parser";
+import { Ast } from "../language";
 
 export type TTask = TriedLexTask | TriedParseTask;
 

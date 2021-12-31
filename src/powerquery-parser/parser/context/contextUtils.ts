@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMap, ParseContext } from "..";
 import { ArrayUtils, Assert, CommonError, MapUtils, SetUtils, TypeScriptUtils } from "../../common";
 import { Ast, Token } from "../../language";
+import { NodeIdMap, ParseContext } from "..";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
 
 export function assertIsNodeKind<T extends Ast.TNode>(

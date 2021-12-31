@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Lexer, Parser } from "..";
 import { CommonError, ResultKind, ResultUtils } from "../common";
-import { Ast } from "../language";
-import { ParserUtils, ParseState } from "../parser";
+import { Lexer, Parser } from "..";
 import { LexSettings, ParseSettings } from "../settings/settings";
 import {
     LexTaskError,
@@ -18,6 +16,8 @@ import {
     TriedParseTask,
     TTask,
 } from "./task";
+import { ParserUtils, ParseState } from "../parser";
+import { Ast } from "../language";
 
 export function assertIsError(task: TTask): asserts task is LexTaskError | ParseTaskCommonError | ParseTaskParseError {
     if (!isError(task)) {

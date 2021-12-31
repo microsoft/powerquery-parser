@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { expect } from "chai";
 import "mocha";
+import { expect } from "chai";
+
 import { Assert, DefaultSettings, Lexer, Localization, Parser, Settings, Templates } from "../../..";
 import { TestAssertUtils } from "../../testUtils";
 

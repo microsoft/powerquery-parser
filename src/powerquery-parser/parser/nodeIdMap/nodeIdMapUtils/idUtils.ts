@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, XorNodeUtils } from "..";
 import { Assert, MapUtils, TypeScriptUtils } from "../../../common";
+import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, XorNodeUtils } from "..";
 import { Ast } from "../../../language";
-import { ParseContext } from "../../context";
 import { Collection } from "../nodeIdMap";
+import { ParseContext } from "../../context";
 import { TXorNode } from "../xorNode";
 
 // Helper functions which are related to updating / remapping nodeIds for NodeIdMap.Collection

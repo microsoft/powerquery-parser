@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMap, NodeIdMapIterator, XorNodeUtils } from "..";
-import { CommonError } from "../../../common";
-import { Ast } from "../../../language";
-import { TXorNode, XorNode } from "../xorNode";
 import {
     assertGetNthChild,
     assertGetNthChildChecked,
     maybeNthChildChecked,
     maybeUnboxNthChildIfAstChecked,
 } from "./childSelectors";
-import { assertGetXor, assertGetXorChecked } from "./commonSelectors";
 import { assertGetParentXor, assertGetParentXorChecked } from "./parentSelectors";
+import { assertGetXor, assertGetXorChecked } from "./commonSelectors";
+import { NodeIdMap, NodeIdMapIterator, XorNodeUtils } from "..";
+import { TXorNode, XorNode } from "../xorNode";
+import { Ast } from "../../../language";
+import { CommonError } from "../../../common";
 
 // Returns the previous sibling of the given recursive expression.
 // Commonly used for things like getting the identifier name used in an InvokeExpression.

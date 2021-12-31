@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert } from "../../../common";
 import { Ast, Token } from "../../../language";
-import { ParseContext } from "../../context";
 import { Collection, IdsByNodeKind } from "../nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "../xorNode";
+import { Assert } from "../../../common";
 import { maybeRightMostLeaf } from "./leafSelectors";
+import { ParseContext } from "../../context";
 
 export function copy(nodeIdMapCollection: Collection): Collection {
     const contextNodeById: Map<number, ParseContext.TNode> = new Map(

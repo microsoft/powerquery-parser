@@ -1,5 +1,5 @@
-import { Constant } from ".";
 import { Assert } from "../../common";
+import { Constant } from ".";
 import { TokenKind } from "../token";
 
 export function maybeUnaryOperatorKindFrom(maybeTokenKind: TokenKind | undefined): Constant.UnaryOperator | undefined {

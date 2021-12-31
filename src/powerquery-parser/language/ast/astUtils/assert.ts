@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import * as TypeGuards from "./typeGuards";
-
 import { Ast } from "..";
 import { CommonError } from "../../../common";
 

@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ParseError } from "..";
-import { Result } from "../../common";
 import { Ast } from "../../language";
+import { ParseError } from "..";
 import { ParseState } from "../parseState";
+import { Result } from "../../common";
 
 export type TAmbiguousBracketNode = Ast.FieldProjection | Ast.FieldSelector | Ast.RecordExpression;
 

@@ -1,6 +1,10 @@
-import * as fs from "fs";
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import "mocha";
+import * as fs from "fs";
 import * as path from "path";
+
 import { LexSettings, ParseSettings, Task } from "../..";
 import { TaskUtils } from "../../powerquery-parser";
 

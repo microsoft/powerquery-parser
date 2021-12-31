@@ -32,5 +32,12 @@ module.exports = {
         "prettier/prettier": ["error"],
         "security/detect-non-literal-fs-filename": "off",
         "security/detect-object-injection": "off",
+        "sort-imports": [
+            "error",
+            {
+                allowSeparatedGroups: true,
+                ignoreCase: true,
+            },
+        ],
     },
 };

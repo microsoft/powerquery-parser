@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { expect } from "chai";
 import "mocha";
-import { DefaultSettings, Task } from "../../..";
+import { expect } from "chai";
+
 import { Assert, Language, MapUtils, Parser } from "../../../powerquery-parser";
-import { Ast } from "../../../powerquery-parser/language";
+import { DefaultSettings, Task } from "../../..";
 import {
     NodeIdMap,
     NodeIdMapIterator,
@@ -14,6 +14,7 @@ import {
     TXorNode,
     XorNodeUtils,
 } from "../../../powerquery-parser/parser";
+import { Ast } from "../../../powerquery-parser/language";
 import { RecordKeyValuePair } from "../../../powerquery-parser/parser/nodeIdMap/nodeIdMapIterator";
 import { TestAssertUtils } from "../../testUtils";
 

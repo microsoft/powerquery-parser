@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Type } from "..";
-import { ArrayUtils } from "../../../common";
 import { isCompatible, isCompatibleWithFunctionParameter } from "./isCompatible";
+import { ArrayUtils } from "../../../common";
 import { isEqualFunctionParameter } from "./isEqualType";
+import { Type } from "..";
 
 export type TChecked =
     | CheckedDefinedFunction

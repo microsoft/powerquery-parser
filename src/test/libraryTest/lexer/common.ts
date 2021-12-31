@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { expect } from "chai";
+
 import { Assert, DefaultSettings, Language, Lexer } from "../../..";
 
 export type AbridgedComments = ReadonlyArray<[Language.Comment.CommentKind, string]>;

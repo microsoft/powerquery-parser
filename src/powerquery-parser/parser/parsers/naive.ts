@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
 import {
     ArrayUtils,
     Assert,
@@ -12,13 +11,14 @@ import {
     StringUtils,
     TypeScriptUtils,
 } from "../../common";
-import { Trace, TraceConstant } from "../../common/trace";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../language";
-import { LexerSnapshot } from "../../lexer";
 import { Disambiguation, DisambiguationUtils } from "../disambiguation";
-import { NodeIdMapUtils } from "../nodeIdMap";
+import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
 import { Parser, ParseStateCheckpoint } from "../parser";
 import { ParseState, ParseStateUtils } from "../parseState";
+import { Trace, TraceConstant } from "../../common/trace";
+import { LexerSnapshot } from "../../lexer";
+import { NodeIdMapUtils } from "../nodeIdMap";
 
 const enum NaiveTraceConstant {
     IsFieldTypeSpecification = "isFieldTypeSpecification",

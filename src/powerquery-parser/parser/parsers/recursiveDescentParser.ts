@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NaiveParseSteps } from ".";
 import { Parser, ParserUtils } from "../parser";
+import { NaiveParseSteps } from ".";
 import { ParseStateUtils } from "../parseState";
 
 export const RecursiveDescentParser: Parser = {

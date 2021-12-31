@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { XorNodeUtils } from "..";
 import { Assert, MapUtils } from "../../../common";
 import { Ast, AstUtils } from "../../../language";
-import { ParseContext, ParseContextUtils } from "../../context";
 import { AstNodeById, Collection, ContextNodeById } from "../nodeIdMap";
+import { ParseContext, ParseContextUtils } from "../../context";
 import { TXorNode, XorNode } from "../xorNode";
+import { XorNodeUtils } from "..";
 
 export function assertGetXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
     return Assert.asDefined(maybeXor(nodeIdMapCollection, nodeId), undefined, { nodeId });

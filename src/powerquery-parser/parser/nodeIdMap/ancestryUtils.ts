@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, NodeIdMapIterator, XorNodeUtils } from ".";
+import { TXorNode, XorNode } from "./xorNode";
 import { Assert } from "../../common";
 import { Ast } from "../../language";
-import { TXorNode, XorNode } from "./xorNode";
 
 export function assertGetAncestry(nodeIdMapCollection: NodeIdMap.Collection, rootId: number): ReadonlyArray<TXorNode> {
     const ancestryIds: number[] = [rootId];

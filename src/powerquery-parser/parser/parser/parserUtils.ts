@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ParseError } from "..";
 import { Assert, CommonError, ResultUtils } from "../../common";
+import { NodeIdMap, NodeIdMapUtils } from "../nodeIdMap";
+import { ParseContext, ParseContextUtils } from "../context";
+import { Parser, ParseStateCheckpoint, TriedParse } from "./parser";
+import { ParseState, ParseStateUtils } from "../parseState";
 import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
+import { ParseError } from "..";
 import { ParseSettings } from "../../settings";
-import { ParseContext, ParseContextUtils } from "../context";
-import { NodeIdMap, NodeIdMapUtils } from "../nodeIdMap";
-import { ParseState, ParseStateUtils } from "../parseState";
-import { Parser, ParseStateCheckpoint, TriedParse } from "./parser";
 
 export function tryParse(parseSettings: ParseSettings, lexerSnapshot: LexerSnapshot): TriedParse {
     const maybeParserEntryPointFn: ((state: ParseState, parser: Parser) => Ast.TNode) | undefined =
