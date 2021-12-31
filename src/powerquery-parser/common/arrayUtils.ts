@@ -2,7 +2,7 @@ import { Assert } from ".";
 
 export function all<T>(
     collection: ReadonlyArray<T>,
-    predicateFn: (value: T) => boolean = (value: T) => !!value,
+    predicateFn: (value: T) => boolean = (value: T) => Boolean(value),
 ): boolean {
     for (const element of collection) {
         if (!predicateFn(element)) {

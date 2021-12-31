@@ -193,12 +193,10 @@ export function tryParse(settings: ParseSettings, lexerSnapshot: Lexer.LexerSnap
 
     if (ResultUtils.isOk(triedParse)) {
         return createParseTaskOk(lexerSnapshot, triedParse.value.root, triedParse.value.state);
+    } else if (CommonError.isCommonError(triedParse.error)) {
+        return createParseTaskCommonError(lexerSnapshot, triedParse.error);
     } else {
-        if (CommonError.isCommonError(triedParse.error)) {
-            return createParseTaskCommonError(lexerSnapshot, triedParse.error);
-        } else {
-            return createParseTaskParseError(lexerSnapshot, triedParse.error);
-        }
+        return createParseTaskParseError(lexerSnapshot, triedParse.error);
     }
 }
 

@@ -217,12 +217,10 @@ export function maybeDisambiguateParenthesis(state: ParseState, parser: Parser):
                 }
 
                 parser.restoreCheckpoint(state, checkpoint);
+            } else if (ParseStateUtils.isTokenKind(state, Token.TokenKind.FatArrow, offsetTokenIndex + 1)) {
+                maybeDisambiguation = ParenthesisDisambiguation.FunctionExpression;
             } else {
-                if (ParseStateUtils.isTokenKind(state, Token.TokenKind.FatArrow, offsetTokenIndex + 1)) {
-                    maybeDisambiguation = ParenthesisDisambiguation.FunctionExpression;
-                } else {
-                    maybeDisambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
-                }
+                maybeDisambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
             }
         }
 

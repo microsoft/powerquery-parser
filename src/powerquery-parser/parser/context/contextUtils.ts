@@ -352,12 +352,10 @@ function removeOrReplaceChildId(
         } else {
             maybeNewChildIds = [...beforeChildId, replacementId, ...afterChildId];
         }
+    } else if (childIds.length === 1) {
+        maybeNewChildIds = undefined;
     } else {
-        if (childIds.length === 1) {
-            maybeNewChildIds = undefined;
-        } else {
-            maybeNewChildIds = [...beforeChildId, ...afterChildId];
-        }
+        maybeNewChildIds = [...beforeChildId, ...afterChildId];
     }
 
     if (maybeNewChildIds) {

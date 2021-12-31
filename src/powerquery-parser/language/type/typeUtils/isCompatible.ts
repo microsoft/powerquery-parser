@@ -527,5 +527,7 @@ function isDefinedListTypeCompatibleWithListType(definedList: Type.DefinedListTy
         (itemType: Type.TPowerQueryType) => isCompatible(itemType, listType.itemType),
     );
 
-    return !!itemTypeCompatabilities.find((value: boolean | undefined) => value === undefined || value === false);
+    return Boolean(
+        itemTypeCompatabilities.find((value: boolean | undefined) => value === undefined || value === false),
+    );
 }
