@@ -1,6 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-unused-vars */
+
 import { Assert, DefaultSettings, Lexer, ResultUtils, Task, TaskUtils } from ".";
 
 parseText(`let x = 1 in try x otherwise 2`);
@@ -31,9 +35,7 @@ function parseText(text: string): void {
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function lexText(text: string): void {
     // Notice that the Lexer.State variable is declared using let instead of const.
     // This is because calling Lexer functions return a new state object.
