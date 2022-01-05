@@ -10,6 +10,7 @@ export function assertGetAncestry(nodeIdMapCollection: NodeIdMap.Collection, roo
     const ancestryIds: number[] = [rootId];
 
     let maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(rootId);
+
     while (maybeParentId) {
         const parentId: number = maybeParentId;
         ancestryIds.push(parentId);
@@ -29,11 +30,13 @@ export function assertGetLeafChecked<T extends Ast.TNode>(
 ): XorNode<T> {
     const xorNode: TXorNode = assertGetLeaf(ancestry);
     XorNodeUtils.assertIsNodeKind(xorNode, expectedNodeKinds);
+
     return xorNode;
 }
 
 export function assertGetRoot(ancestry: ReadonlyArray<TXorNode>): TXorNode {
     Assert.isTrue(ancestry.length > 0, "ancestry.length > 0");
+
     return assertGetNthXor(ancestry, ancestry.length - 1);
 }
 
@@ -127,6 +130,7 @@ export function maybeNthXorChecked<T extends Ast.TNode>(
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> | undefined {
     const maybeXorNode: TXorNode | undefined = maybeNthXor(ancestry, ancestryIndex);
+
     return maybeXorNode && XorNodeUtils.isNodeKind(maybeXorNode, expectedNodeKinds) ? maybeXorNode : undefined;
 }
 
@@ -193,6 +197,7 @@ export function maybeFirstXorOfNodeKind<T extends Ast.TNode>(
     nodeKind: T["kind"],
 ): XorNode<T> | undefined {
     const maybeNode: TXorNode | undefined = ancestry.find((xorNode: TXorNode) => xorNode.node.kind === nodeKind);
+
     if (maybeNode === undefined || !XorNodeUtils.isNodeKind(maybeNode, nodeKind)) {
         return undefined;
     }
@@ -205,6 +210,7 @@ export function maybeFirstIndexOfNodeKind<T extends Ast.TNode>(
     nodeKind: T["kind"],
 ): number | undefined {
     const maybeIndex: number = ancestry.findIndex((xorNode: TXorNode) => XorNodeUtils.isNodeKind(xorNode, nodeKind));
+
     return maybeIndex !== -1 ? maybeIndex : undefined;
 }
 
@@ -213,6 +219,7 @@ export function maybeFirstXorAndIndexOfNodeKind<T extends Ast.TNode>(
     nodeKind: T["kind"],
 ): [XorNode<T>, number] | undefined {
     const maybeIndex: number | undefined = maybeFirstIndexOfNodeKind(ancestry, nodeKind);
+
     return maybeIndex !== undefined
         ? [XorNodeUtils.assertAsNodeKind(Assert.asDefined(ancestry[maybeIndex]), nodeKind), maybeIndex]
         : undefined;

@@ -56,6 +56,7 @@ class MockDocument {
 
     public applyChangeAndTokenize(newText: string, index: number): number {
         this.lines[index] = newText;
+
         return this.startTokenize(index);
     }
 
@@ -68,6 +69,7 @@ class MockDocument {
 
         // Get the state for the previous line
         let state: IState;
+
         if (startingIndex === 0 || this.lineEndStates[startingIndex - 1] === undefined) {
             state = this.tokenizer.getInitialState();
         } else {
@@ -102,6 +104,7 @@ describe("MockDocument validation", () => {
     it("Insert at beginning", () => {
         const document: MockDocument2 = new MockDocument2(ORIGINAL_QUERY);
         const changeToMake: string = "    ";
+
         document.applyChange(changeToMake, {
             start: { lineNumber: 0, lineCodeUnit: 0 },
             end: { lineNumber: 0, lineCodeUnit: 0 },
@@ -175,6 +178,7 @@ describe("Incremental updates", () => {
 
         for (let index: number = lineNumber + 1; index < document.lineTokens.length; index += 1) {
             const lineTokens: ReadonlyArray<IToken> = document.lineTokens[index];
+
             lineTokens.forEach((token: IToken) => {
                 expect(token.scopes).equals("TextContent", "expecting remaining tokens to be strings");
             });
@@ -190,6 +194,7 @@ describe("Incremental updates", () => {
 
         for (let index: number = lineNumber + 1; index < document.lineTokens.length; index += 1) {
             const lineTokens: ReadonlyArray<IToken> = document.lineTokens[index];
+
             lineTokens.forEach((token: IToken) => {
                 expect(token.scopes).equals("MultilineCommentContent", "expecting remaining tokens to be comments");
             });

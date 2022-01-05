@@ -46,22 +46,27 @@ function lexText(text: string): void {
     // Note: At this point all errors are isolated to a single line.
     //       Checks for multiline errors, such as an unterminated string, have not been processed.
     let triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
+
     if (ResultUtils.isError(triedLex)) {
         console.log(`An error occured while lexing: ${triedLex.error.message}`);
+
         return;
     }
+
     let lexerState: Lexer.State = triedLex.value;
 
     // The lexer state might have an error.
     // To be sure either use the typeguard Lexer.isErrorState,
     // or Lexer.maybeErrorLineMap to get an option containing a map of all lines with errors.
     const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(lexerState);
+
     if (maybeErrorLineMap !== undefined) {
         const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
 
         for (const [lineNumber, errorLine] of errorLineMap.entries()) {
             console.log(`lineNumber ${lineNumber} has the following error: ${errorLine.error.message}`);
         }
+
         return;
     }
 
@@ -82,10 +87,13 @@ function lexText(text: string): void {
         lexerState.lines.length - 1,
         "// goodbye world",
     );
+
     if (ResultUtils.isError(triedUpdate)) {
         console.log("Failed to update line");
+
         return;
     }
+
     lexerState = triedUpdate.value;
 
     // Once no more changes will occur a LexerSnapshot should be created, which  is an immutable copy that:
@@ -99,6 +107,7 @@ function lexText(text: string): void {
 
     // Creating a LexerSnapshot is a Result due to potential multiline token errors.
     const triedLexerSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(lexerState);
+
     if (ResultUtils.isOk(triedLexerSnapshot)) {
         const snapshot: Lexer.LexerSnapshot = triedLexerSnapshot.value;
         console.log(`numTokens: ${snapshot.tokens}`);

@@ -109,37 +109,27 @@ export interface RangePosition {
 
 // This export is a Result ensuring wrapper around the un-exported implementation.
 export function tryLex(settings: LexSettings, text: string): TriedLex {
-    return ensureCommonOrLexerResult(settings.locale, () => {
-        return lex(settings, text);
-    });
+    return ensureCommonOrLexerResult(settings.locale, () => lex(settings, text));
 }
 
 // This export is a Result ensuring wrapper around the un-exported implementation.
 export function tryAppendLine(state: State, text: string, lineTerminator: string): TriedLex {
-    return ensureCommonOrLexerResult(state.locale, () => {
-        return appendLine(state, text, lineTerminator);
-    });
+    return ensureCommonOrLexerResult(state.locale, () => appendLine(state, text, lineTerminator));
 }
 
 // This export is a Result ensuring wrapper around the un-exported implementation.
 export function tryUpdateLine(state: State, lineNumber: number, text: string): TriedLex {
-    return ensureCommonOrLexerResult(state.locale, () => {
-        return updateLine(state, lineNumber, text);
-    });
+    return ensureCommonOrLexerResult(state.locale, () => updateLine(state, lineNumber, text));
 }
 
 // This export is a Result ensuring wrapper around the un-exported implementation.
 export function tryUpdateRange(state: State, range: Range, text: string): TriedLex {
-    return ensureCommonOrLexerResult(state.locale, () => {
-        return updateRange(state, range, text);
-    });
+    return ensureCommonOrLexerResult(state.locale, () => updateRange(state, range, text));
 }
 
 // This export is a Result ensuring wrapper around the un-exported implementation.
 export function tryDeleteLine(state: State, lineNumber: number): TriedLex {
-    return ensureCommonOrLexerResult(state.locale, () => {
-        return deleteLine(state, lineNumber);
-    });
+    return ensureCommonOrLexerResult(state.locale, () => deleteLine(state, lineNumber));
 }
 
 // deep state comparison
@@ -155,6 +145,7 @@ export function equalLines(leftLines: ReadonlyArray<TLine>, rightLines: Readonly
     }
 
     const numLines: number = leftLines.length;
+
     for (let lineIndex: number = 0; lineIndex < numLines; lineIndex += 1) {
         const left: TLine = leftLines[lineIndex];
         const right: TLine = rightLines[lineIndex];
@@ -167,12 +158,14 @@ export function equalLines(leftLines: ReadonlyArray<TLine>, rightLines: Readonly
             left.lineModeStart === right.lineModeStart &&
             left.lineModeEnd === right.lineModeEnd &&
             leftTokens.length === rightTokens.length;
+
         if (!isEqualQuickCheck) {
             return false;
         }
 
         // isEqualQuickCheck ensures tokens.length is the same
         const numTokens: number = leftTokens.length;
+
         for (let tokenIndex: number = 0; tokenIndex < numTokens; tokenIndex += 1) {
             if (!equalTokens(leftTokens[tokenIndex], rightTokens[tokenIndex])) {
                 return false;
@@ -195,6 +188,7 @@ export function equalTokens(leftToken: Token.LineToken, rightToken: Token.LineTo
 
 export function isErrorState(state: State): boolean {
     const linesWithErrors: ReadonlyArray<ErrorLine | TouchedWithErrorLine> = state.lines.filter(isErrorLine);
+
     return linesWithErrors.length !== 0;
 }
 
@@ -218,6 +212,7 @@ export function maybeErrorLineMap(state: State): ErrorLineMap | undefined {
         if (isErrorLine(line)) {
             errorLineMap.set(index, line);
         }
+
         return errorLineMap;
     }, new Map());
 
@@ -245,12 +240,11 @@ interface SplitLine {
 // Takes a string and splits it on all valid Power Query terminators.
 // The split lines retain what newline was used to create the split.
 function splitOnLineTerminators(startingText: string): SplitLine[] {
-    let lines: SplitLine[] = startingText.split("\r\n").map((lineText: string) => {
-        return {
-            text: lineText,
-            lineTerminator: "\r\n",
-        };
-    });
+    let lines: SplitLine[] = startingText.split("\r\n").map((lineText: string) => ({
+        text: lineText,
+        lineTerminator: "\r\n",
+    }));
+
     const lineTerminators: ReadonlyArray<string> = [
         "\n",
         "\u2028", // LINE SEPARATOR
@@ -258,6 +252,7 @@ function splitOnLineTerminators(startingText: string): SplitLine[] {
     ];
 
     let index: number = 0;
+
     while (index < lines.length) {
         let indexWasExpanded: boolean = false;
 
@@ -268,12 +263,11 @@ function splitOnLineTerminators(startingText: string): SplitLine[] {
             if (text.indexOf(lineTerminator) !== -1) {
                 indexWasExpanded = true;
 
-                const split: ReadonlyArray<SplitLine> = text.split(lineTerminator).map((lineText: string) => {
-                    return {
-                        text: lineText,
-                        lineTerminator,
-                    };
-                });
+                const split: ReadonlyArray<SplitLine> = text.split(lineTerminator).map((lineText: string) => ({
+                    text: lineText,
+                    lineTerminator,
+                }));
+
                 split[split.length - 1].lineTerminator = splitLine.lineTerminator;
 
                 lines = [...lines.slice(0, index), ...split, ...lines.slice(index + 1)];
@@ -286,6 +280,7 @@ function splitOnLineTerminators(startingText: string): SplitLine[] {
     }
 
     lines[lines.length - 1].lineTerminator = "";
+
     return lines;
 }
 
@@ -299,23 +294,27 @@ function ensureCommonOrLexerResult<T>(
         Assert.isInstanceofError(error);
 
         let convertedError: CommonError.CommonError | LexError.LexError;
+
         if (LexError.isTInnerLexError(error)) {
             convertedError = new LexError.LexError(error);
         } else {
             convertedError = CommonError.ensureCommonError(locale, error);
         }
+
         return ResultUtils.boxError(convertedError);
     }
 }
 
 function lex(settings: LexSettings, text: string): State {
     const splitLines: ReadonlyArray<SplitLine> = splitOnLineTerminators(text);
+
     const tokenizedLines: ReadonlyArray<TLine> = tokenizedLinesFrom(
         settings.maybeCancellationToken,
         settings.locale,
         splitLines,
         LineMode.Default,
     );
+
     return {
         lines: tokenizedLines,
         locale: settings.locale,
@@ -343,18 +342,21 @@ function updateLine(state: State, lineNumber: number, text: string): State {
     state.maybeCancellationToken?.throwIfCancelled();
 
     const maybeError: LexError.BadLineNumberError | undefined = testLineNumberError(state, lineNumber);
+
     if (maybeError !== undefined) {
         throw maybeError;
     }
 
     const line: TLine = state.lines[lineNumber];
     const range: Range = rangeFrom(line, lineNumber);
+
     return updateRange(state, range, text);
 }
 
 function updateRange(state: State, range: Range, text: string): State {
     state.maybeCancellationToken?.throwIfCancelled();
     const maybeError: LexError.BadRangeError | undefined = testBadRangeError(state, range);
+
     if (maybeError !== undefined) {
         throw maybeError;
     }
@@ -377,6 +379,7 @@ function updateRange(state: State, range: Range, text: string): State {
 
     const maybePreviousLine: TLine | undefined = state.lines[rangeStart.lineNumber - 1];
     const previousLineModeEnd: LineMode = maybePreviousLine?.lineModeEnd ?? LineMode.Default;
+
     const newLines: ReadonlyArray<TLine> = tokenizedLinesFrom(
         state.maybeCancellationToken,
         state.locale,
@@ -401,6 +404,7 @@ function deleteLine(state: State, lineNumber: number): State {
     state.maybeCancellationToken?.throwIfCancelled();
 
     const maybeError: LexError.BadLineNumberError | undefined = testLineNumberError(state, lineNumber);
+
     if (maybeError !== undefined) {
         throw maybeError;
     }
@@ -471,6 +475,7 @@ function retokenizeLines(state: State, lineNumber: number, previousLineModeEnd: 
     }
 
     const retokenizedLines: TLine[] = [];
+
     if (previousLineModeEnd !== lines[lineNumber].lineModeStart) {
         const offsetLineNumber: number = lineNumber;
         let maybeCurrentLine: TLine | undefined = lines[lineNumber];
@@ -480,12 +485,14 @@ function retokenizeLines(state: State, lineNumber: number, previousLineModeEnd: 
 
             if (previousLineModeEnd !== line.lineModeStart) {
                 const untokenizedLine: UntouchedLine = lineFrom(line.text, line.lineTerminator, previousLineModeEnd);
+
                 const retokenizedLine: TLine = tokenize(
                     state.maybeCancellationToken,
                     state.locale,
                     untokenizedLine,
                     offsetLineNumber,
                 );
+
                 retokenizedLines.push(retokenizedLine);
                 previousLineModeEnd = retokenizedLine.lineModeEnd;
                 lineNumber += 1;
@@ -583,6 +590,7 @@ function tokenize(
 
         try {
             let readOutcome: LineModeAlteringRead;
+
             switch (lineMode) {
                 case LineMode.Comment:
                     readOutcome = tokenizeMultilineCommentContentOrEnd(line, currentPosition);
@@ -619,6 +627,7 @@ function tokenize(
             }
         } catch (e) {
             let error: LexError.TLexError;
+
             if (LexError.isTInnerLexError(e)) {
                 error = new LexError.LexError(e);
             } else {
@@ -632,6 +641,7 @@ function tokenize(
     }
 
     let partialTokenizeResult: PartialResult<TokenizeChanges, TokenizeChanges, LexError.TLexError>;
+
     if (maybeError) {
         if (newTokens.length) {
             partialTokenizeResult = PartialResultUtils.createMixed(
@@ -717,6 +727,7 @@ function tokenizeMultilineCommentContentOrEnd(line: TLine, positionStart: number
         };
     } else {
         const positionEnd: number = indexOfCloseComment + 2;
+
         return {
             token: readTokenFrom(Token.LineTokenKind.MultilineCommentEnd, text, positionStart, positionEnd),
             lineMode: LineMode.Default,
@@ -727,6 +738,7 @@ function tokenizeMultilineCommentContentOrEnd(line: TLine, positionStart: number
 // Read until either string literal end or eof
 function tokenizeQuotedIdentifierContentOrEnd(line: TLine, currentPosition: number): LineModeAlteringRead {
     const read: LineModeAlteringRead = tokenizeTextLiteralContentOrEnd(line, currentPosition);
+
     switch (read.token.kind) {
         case Token.LineTokenKind.TextLiteralContent:
             return {
@@ -766,6 +778,7 @@ function tokenizeTextLiteralContentOrEnd(line: TLine, currentPosition: number): 
         };
     } else {
         const positionEnd: number = maybePositionEnd + 1;
+
         return {
             token: readTokenFrom(Token.LineTokenKind.TextLiteralEnd, text, currentPosition, positionEnd),
             lineMode: LineMode.Default,
@@ -800,6 +813,7 @@ function tokenizeDefault(locale: string, line: TLine, lineNumber: number, positi
         token = readConstant(Token.LineTokenKind.Semicolon, text, positionStart, 1);
     } else if (chr1 === "?") {
         const chr2: string | undefined = text[positionStart + 1];
+
         if (chr2 === "?") {
             token = readConstant(Token.LineTokenKind.NullCoalescingOperator, text, positionStart, 2);
         } else {
@@ -911,6 +925,7 @@ function drainWhitespace(text: string, position: number): number {
 
     while (continueDraining) {
         const maybeLength: number | undefined = StringUtils.maybeRegexMatchLength(Pattern.Whitespace, text, position);
+
         if (maybeLength) {
             position += maybeLength;
         } else {
@@ -923,8 +938,10 @@ function drainWhitespace(text: string, position: number): number {
 
 function readOrStartTextLiteral(text: string, currentPosition: number): LineModeAlteringRead {
     const maybePositionEnd: number | undefined = maybeIndexOfTextEnd(text, currentPosition + 1);
+
     if (maybePositionEnd !== undefined) {
         const positionEnd: number = maybePositionEnd + 1;
+
         return {
             token: readTokenFrom(Token.LineTokenKind.TextLiteral, text, currentPosition, positionEnd),
             lineMode: LineMode.Default,
@@ -939,6 +956,7 @@ function readOrStartTextLiteral(text: string, currentPosition: number): LineMode
 
 function readHexLiteral(locale: string, text: string, lineNumber: number, positionStart: number): Token.LineToken {
     const maybePositionEnd: number | undefined = maybeIndexOfRegexEnd(Pattern.Hex, text, positionStart);
+
     if (maybePositionEnd === undefined) {
         throw new LexError.ExpectedError(
             locale,
@@ -946,6 +964,7 @@ function readHexLiteral(locale: string, text: string, lineNumber: number, positi
             LexError.ExpectedKind.HexLiteral,
         );
     }
+
     const positionEnd: number = maybePositionEnd;
 
     return readTokenFrom(Token.LineTokenKind.HexLiteral, text, positionStart, positionEnd);
@@ -953,6 +972,7 @@ function readHexLiteral(locale: string, text: string, lineNumber: number, positi
 
 function readNumericLiteral(locale: string, text: string, lineNumber: number, positionStart: number): Token.LineToken {
     const maybePositionEnd: number | undefined = maybeIndexOfRegexEnd(Pattern.Numeric, text, positionStart);
+
     if (maybePositionEnd === undefined) {
         throw new LexError.ExpectedError(
             locale,
@@ -960,6 +980,7 @@ function readNumericLiteral(locale: string, text: string, lineNumber: number, po
             LexError.ExpectedKind.Numeric,
         );
     }
+
     const positionEnd: number = maybePositionEnd;
 
     return readTokenFrom(Token.LineTokenKind.NumericLiteral, text, positionStart, positionEnd);
@@ -971,6 +992,7 @@ function readLineComment(text: string, positionStart: number): Token.LineToken {
 
 function readOrStartMultilineComment(text: string, positionStart: number): LineModeAlteringRead {
     const indexOfCloseComment: number = text.indexOf("*/", positionStart + 2);
+
     if (indexOfCloseComment === -1) {
         return {
             token: readRestOfLine(Token.LineTokenKind.MultilineCommentStart, text, positionStart),
@@ -978,6 +1000,7 @@ function readOrStartMultilineComment(text: string, positionStart: number): LineM
         };
     } else {
         const positionEnd: number = indexOfCloseComment + 2;
+
         return {
             token: readTokenFrom(Token.LineTokenKind.MultilineComment, text, positionStart, positionEnd),
             lineMode: LineMode.Default,
@@ -987,6 +1010,7 @@ function readOrStartMultilineComment(text: string, positionStart: number): LineM
 
 function readKeyword(locale: string, text: string, lineNumber: number, positionStart: number): Token.LineToken {
     const maybeLineToken: Token.LineToken | undefined = maybeReadKeyword(text, positionStart);
+
     if (maybeLineToken) {
         return maybeLineToken;
     } else {
@@ -998,13 +1022,16 @@ function maybeReadKeyword(text: string, currentPosition: number): Token.LineToke
     const identifierPositionStart: number = text[currentPosition] === "#" ? currentPosition + 1 : currentPosition;
 
     const maybeIdentifierPositionEnd: number | undefined = maybeIndexOfIdentifierEnd(text, identifierPositionStart);
+
     if (maybeIdentifierPositionEnd === undefined) {
         return undefined;
     }
+
     const identifierPositionEnd: number = maybeIdentifierPositionEnd;
 
     const data: string = text.substring(currentPosition, identifierPositionEnd);
     const maybeKeywordTokenKind: Token.LineTokenKind | undefined = maybeKeywordLineTokenKindFrom(data);
+
     if (maybeKeywordTokenKind === undefined) {
         return undefined;
     } else {
@@ -1019,6 +1046,7 @@ function maybeReadKeyword(text: string, currentPosition: number): Token.LineToke
 
 function readOrStartQuotedIdentifier(text: string, currentPosition: number): LineModeAlteringRead {
     const maybePositionEnd: number | undefined = maybeIndexOfTextEnd(text, currentPosition + 2);
+
     if (maybePositionEnd !== undefined) {
         const positionEnd: number = maybePositionEnd + 1;
 
@@ -1049,6 +1077,7 @@ function readKeywordOrIdentifier(
     // either keyword or identifier
     else {
         const maybePositionEnd: number | undefined = maybeIndexOfIdentifierEnd(text, positionStart);
+
         if (maybePositionEnd === undefined) {
             throw new LexError.ExpectedError(
                 locale,
@@ -1056,11 +1085,13 @@ function readKeywordOrIdentifier(
                 LexError.ExpectedKind.KeywordOrIdentifier,
             );
         }
+
         const positionEnd: number = maybePositionEnd;
         const data: string = text.substring(positionStart, positionEnd);
         const maybeKeywordTokenKind: Token.LineTokenKind | undefined = maybeKeywordLineTokenKindFrom(data);
 
         let tokenKind: Token.LineTokenKind;
+
         if (maybeKeywordTokenKind !== undefined) {
             tokenKind = maybeKeywordTokenKind;
         } else if (data === "null") {
@@ -1085,6 +1116,7 @@ function readConstant(
     length: number,
 ): Token.LineToken {
     const positionEnd: number = positionStart + length;
+
     return readTokenFrom(lineTokenKind, text, positionStart, positionEnd);
 }
 
@@ -1104,16 +1136,19 @@ function readTokenFrom(
 
 function readRestOfLine(lineTokenKind: Token.LineTokenKind, text: string, positionStart: number): Token.LineToken {
     const positionEnd: number = text.length;
+
     return readTokenFrom(lineTokenKind, text, positionStart, positionEnd);
 }
 
 function maybeIndexOfRegexEnd(pattern: RegExp, text: string, positionStart: number): number | undefined {
     const maybeLength: number | undefined = StringUtils.maybeRegexMatchLength(pattern, text, positionStart);
+
     return maybeLength !== undefined ? positionStart + maybeLength : undefined;
 }
 
 function maybeIndexOfIdentifierEnd(text: string, positionStart: number): number | undefined {
     const maybeLength: number | undefined = StringUtils.maybeIdentifierLength(text, positionStart, true);
+
     return maybeLength !== undefined ? positionStart + maybeLength : undefined;
 }
 
@@ -1213,6 +1248,7 @@ function unexpectedReadError(
 
 function testLineNumberError(state: State, lineNumber: number): LexError.BadLineNumberError | undefined {
     const numLines: number = state.lines.length;
+
     if (lineNumber >= numLines) {
         return new LexError.BadLineNumberError(
             state.locale,
@@ -1239,6 +1275,7 @@ function testBadRangeError(state: State, range: Range): LexError.BadRangeError |
     const numLines: number = state.lines.length;
 
     let maybeKind: LexError.BadRangeKind | undefined;
+
     if (start.lineNumber === end.lineNumber && start.lineCodeUnit > end.lineCodeUnit) {
         maybeKind = LexError.BadRangeKind.SameLine_LineCodeUnitStart_Higher;
     } else if (start.lineNumber > end.lineNumber) {
@@ -1253,6 +1290,7 @@ function testBadRangeError(state: State, range: Range): LexError.BadRangeError |
 
     if (maybeKind !== undefined) {
         const kind: LexError.BadRangeKind = maybeKind;
+
         return new LexError.BadRangeError(state.locale, range, kind);
     }
 

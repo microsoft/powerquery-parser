@@ -95,6 +95,7 @@ export function typeCheckInvocation(
     const validArgs: number[] = [];
     const missingArgs: number[] = [];
     const invalidArgs: Map<number, InvocationMismatch> = new Map();
+
     for (let index: number = 0; index < numParameters; index += 1) {
         const maybeArg: Type.TPowerQueryType | undefined = args[index];
         const parameter: Type.FunctionParameter = parameters[index];
@@ -126,8 +127,10 @@ export function typeCheckListWithListType(valueType: Type.DefinedList, schemaTyp
 
     const valueElements: ReadonlyArray<Type.TPowerQueryType> = valueType.elements;
     const numElements: number = valueElements.length;
+
     for (let index: number = 0; index < numElements; index += 1) {
         const element: Type.TPowerQueryType = valueElements[index];
+
         if (isCompatible(element, schemaItemType)) {
             validArgs.push(index);
         } else {
@@ -175,6 +178,7 @@ function typeCheckGenericNumber<
     let upperBound: number;
     let extraneousIndices: ReadonlyArray<number>;
     let missingIndices: ReadonlyArray<number>;
+
     if (numElements > numItemTypes) {
         upperBound = numItemTypes;
         extraneousIndices = ArrayUtils.range(numElements - numItemTypes, numItemTypes);
@@ -187,6 +191,7 @@ function typeCheckGenericNumber<
 
     const validIndices: number[] = [];
     const mismatches: Map<number, IMismatch<Value, Schema>> = new Map();
+
     for (let index: number = 0; index < upperBound; index += 1) {
         const element: Value = valueElements[index];
         const schemaItemType: Schema = schemaItemTypes[index];
@@ -217,12 +222,14 @@ function typeCheckRecordOrTable(
     const validFields: string[] = [];
     const mismatches: Map<string, IMismatch<Type.TPowerQueryType, Type.TPowerQueryType>> = new Map();
     const extraneousFields: string[] = [];
+
     const missingFields: ReadonlyArray<string> = [...schemaFields.keys()].filter(
         (key: string) => !valueFields.has(key),
     );
 
     for (const [key, type] of valueFields.entries()) {
         const maybeSchemaValueType: Type.TPowerQueryType | undefined = schemaFields.get(key);
+
         if (maybeSchemaValueType !== undefined) {
             const schemaValueType: Type.TPowerQueryType = maybeSchemaValueType;
 

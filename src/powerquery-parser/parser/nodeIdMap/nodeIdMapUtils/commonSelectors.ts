@@ -38,6 +38,7 @@ export function assertUnboxAstChecked<T extends Ast.TNode>(
 ): T {
     const astNode: Ast.TNode = assertUnboxAst(astNodeById, nodeId);
     AstUtils.assertIsNodeKind(astNode, expectedNodeKinds);
+
     return astNode;
 }
 
@@ -56,16 +57,19 @@ export function assertUnboxContextChecked<T extends Ast.TNode>(
 ): ParseContext.Node<T> {
     const contextNode: ParseContext.TNode = assertUnboxContext(contextNodeById, nodeId);
     ParseContextUtils.assertIsNodeKind(contextNode, expectedNodeKinds);
+
     return contextNode;
 }
 
 export function maybeXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
     const maybeAstNode: Ast.TNode | undefined = nodeIdMapCollection.astNodeById.get(nodeId);
+
     if (maybeAstNode !== undefined) {
         return XorNodeUtils.boxAst(maybeAstNode);
     }
 
     const maybeContextNode: ParseContext.TNode | undefined = nodeIdMapCollection.contextNodeById.get(nodeId);
+
     if (maybeContextNode !== undefined) {
         return XorNodeUtils.boxContext(maybeContextNode);
     }
@@ -79,5 +83,6 @@ export function maybeXorChecked<T extends Ast.TNode>(
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> | undefined {
     const maybeXorNode: TXorNode | undefined = maybeXor(nodeIdMapCollection, nodeId);
+
     return maybeXorNode && XorNodeUtils.isNodeKind(maybeXorNode, expectedNodeKinds) ? maybeXorNode : undefined;
 }

@@ -57,14 +57,17 @@ describe(`TypeUtils.isCompatible`, () => {
                 Type.TypeKind.Time,
                 Type.TypeKind.Type,
             ];
+
             const expected: ReadonlyArray<[Type.TypeKind, boolean]> = typeKinds.map((typeKind: TypeKind) => [
                 typeKind,
                 true,
             ]);
+
             const actual: ReadonlyArray<[Type.TypeKind, boolean | undefined]> = typeKinds.map((typeKind: TypeKind) => [
                 typeKind,
                 TypeUtils.isCompatible(TypeUtils.createPrimitiveType(false, typeKind), Type.AnyInstance),
             ]);
+
             expect(actual).deep.equal(expected);
         });
 
@@ -73,6 +76,7 @@ describe(`TypeUtils.isCompatible`, () => {
                 TypeUtils.createPrimitiveType(false, Type.TypeKind.None),
                 Type.AnyInstance,
             );
+
             expect(actual).to.equal(false, undefined);
         });
 
@@ -81,6 +85,7 @@ describe(`TypeUtils.isCompatible`, () => {
                 Type.TextInstance,
                 TypeUtils.createAnyUnion([Type.TextInstance, Type.NumberInstance]),
             );
+
             expect(actual).to.equal(true, undefined);
         });
 
@@ -89,6 +94,7 @@ describe(`TypeUtils.isCompatible`, () => {
                 Type.TextInstance,
                 TypeUtils.createAnyUnion([Type.TextInstance, Type.NumberInstance]),
             );
+
             expect(actual).to.equal(true, undefined);
         });
     });
@@ -105,6 +111,7 @@ describe(`TypeUtils.isCompatible`, () => {
                     Type.TextInstance,
                     Type.NumberInstance,
                 ]);
+
                 expect(TypeUtils.isCompatible(definedList, definedList)).to.equal(true, undefined);
             });
         });
@@ -114,6 +121,7 @@ describe(`TypeUtils.isCompatible`, () => {
                 const left: Type.DefinedList = TypeUtils.createDefinedList(false, [
                     TypeUtils.createLogicalLiteral(false, true),
                 ]);
+
                 const right: Type.DefinedList = TypeUtils.createDefinedList(false, [Type.LogicalInstance]);
 
                 expect(TypeUtils.isCompatible(left, right)).to.equal(true, undefined);
@@ -123,6 +131,7 @@ describe(`TypeUtils.isCompatible`, () => {
                 const left: Type.DefinedList = TypeUtils.createDefinedList(false, [
                     TypeUtils.createNumberLiteral(false, `1`),
                 ]);
+
                 const right: Type.DefinedList = TypeUtils.createDefinedList(false, [Type.NumberInstance]);
 
                 expect(TypeUtils.isCompatible(left, right)).to.equal(true, undefined);
@@ -132,6 +141,7 @@ describe(`TypeUtils.isCompatible`, () => {
                 const left: Type.DefinedList = TypeUtils.createDefinedList(false, [
                     TypeUtils.createTextLiteral(false, `"foo"`),
                 ]);
+
                 const right: Type.DefinedList = TypeUtils.createDefinedList(false, [Type.TextInstance]);
 
                 expect(TypeUtils.isCompatible(left, right)).to.equal(true, undefined);
@@ -169,6 +179,7 @@ describe(`TypeUtils.isCompatible`, () => {
                     new Map([["number", Type.NumberInstance]]),
                     false,
                 );
+
                 expect(TypeUtils.isCompatible(definedRecord, definedRecord)).to.equal(true, undefined);
             });
         });
@@ -180,6 +191,7 @@ describe(`TypeUtils.isCompatible`, () => {
                     new Map([["logical", TypeUtils.createLogicalLiteral(false, true)]]),
                     false,
                 );
+
                 const right: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                     false,
                     new Map([["logical", Type.LogicalInstance]]),
@@ -195,6 +207,7 @@ describe(`TypeUtils.isCompatible`, () => {
                     new Map([["number", TypeUtils.createNumberLiteral(false, 1)]]),
                     false,
                 );
+
                 const right: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                     false,
                     new Map([["number", Type.NumberInstance]]),
@@ -210,6 +223,7 @@ describe(`TypeUtils.isCompatible`, () => {
                     new Map([["text", TypeUtils.createTextLiteral(false, `""`)]]),
                     false,
                 );
+
                 const right: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                     false,
                     new Map([["text", Type.TextInstance]]),
@@ -251,6 +265,7 @@ describe(`TypeUtils.isCompatible`, () => {
                     new OrderedMap([["number", Type.NumberInstance]]),
                     false,
                 );
+
                 expect(TypeUtils.isCompatible(definedTable, definedTable)).to.equal(true, undefined);
             });
         });
@@ -262,6 +277,7 @@ describe(`TypeUtils.isCompatible`, () => {
                     new OrderedMap([["logical", TypeUtils.createLogicalLiteral(false, true)]]),
                     false,
                 );
+
                 const right: Type.DefinedTable = TypeUtils.createDefinedTable(
                     false,
                     new OrderedMap([["logical", Type.LogicalInstance]]),
@@ -277,6 +293,7 @@ describe(`TypeUtils.isCompatible`, () => {
                     new OrderedMap([["number", TypeUtils.createNumberLiteral(false, 1)]]),
                     false,
                 );
+
                 const right: Type.DefinedTable = TypeUtils.createDefinedTable(
                     false,
                     new OrderedMap([["number", Type.NumberInstance]]),
@@ -292,6 +309,7 @@ describe(`TypeUtils.isCompatible`, () => {
                     new OrderedMap([["text", TypeUtils.createTextLiteral(false, `""`)]]),
                     false,
                 );
+
                 const right: Type.DefinedTable = TypeUtils.createDefinedTable(
                     false,
                     new OrderedMap([["text", Type.TextInstance]]),

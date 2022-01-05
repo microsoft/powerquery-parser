@@ -71,6 +71,7 @@ export function startContext<T extends Ast.TNode>(state: ParseState, nodeKind: T
         state.maybeCurrentToken,
         state.maybeCurrentContextNode,
     );
+
     state.maybeCurrentContextNode = newContextNode;
 }
 
@@ -85,11 +86,13 @@ export function endContext<T extends Ast.TNode>(state: ParseState, astNode: T): 
         contextNode,
         astNode,
     );
+
     state.maybeCurrentContextNode = maybeParentOfContextNode;
 }
 
 export function deleteContext(state: ParseState, maybeNodeId: number | undefined): void {
     let nodeId: number;
+
     if (maybeNodeId === undefined) {
         nodeId = Assert.asDefined(state.maybeCurrentContextNode, `can't delete a context if one doesn't exist`).id;
     } else {
@@ -126,12 +129,14 @@ export function isOnTokenKind(
 export function isOnConstantKind(state: ParseState, constantKind: Constant.TConstant): boolean {
     if (isOnTokenKind(state, Token.TokenKind.Identifier)) {
         const currentToken: Token.Token = state.lexerSnapshot.tokens[state.tokenIndex];
+
         if (currentToken?.data === undefined) {
             const details: { currentToken: Token.Token } = { currentToken };
             throw new CommonError.InvariantError(`expected data on Token`, details);
         }
 
         const data: string = currentToken.data;
+
         return data === constantKind;
     } else {
         return false;
@@ -140,6 +145,7 @@ export function isOnConstantKind(state: ParseState, constantKind: Constant.TCons
 
 export function isOnGeneralizedIdentifierStart(state: ParseState, tokenIndex: number = state.tokenIndex): boolean {
     const maybeTokenKind: Token.TokenKind | undefined = state.lexerSnapshot.tokens[tokenIndex]?.kind;
+
     if (maybeTokenKind === undefined) {
         return false;
     }
@@ -280,6 +286,7 @@ export function testIsOnTokenKind(
 ): ParseError.ExpectedTokenKindError | undefined {
     if (expectedTokenKind !== state.maybeCurrentTokenKind) {
         const maybeToken: ParseError.TokenWithColumnNumber | undefined = maybeCurrentTokenWithColumnNumber(state);
+
         return new ParseError.ExpectedTokenKindError(state.locale, expectedTokenKind, maybeToken);
     } else {
         return undefined;
@@ -295,6 +302,7 @@ export function testIsOnAnyTokenKind(
 
     if (isError) {
         const maybeToken: ParseError.TokenWithColumnNumber | undefined = maybeCurrentTokenWithColumnNumber(state);
+
         return new ParseError.ExpectedAnyTokenKindError(state.locale, expectedAnyTokenKinds, maybeToken);
     } else {
         return undefined;
@@ -339,6 +347,7 @@ export function unterminatedParenthesesError(state: ParseState): ParseError.Unte
 
 function unterminatedSequence(state: ParseState, sequenceKind: SequenceKind): ParseError.UnterminatedSequence {
     const token: Token.Token = assertGetTokenAt(state, state.tokenIndex);
+
     return new ParseError.UnterminatedSequence(
         state.locale,
         sequenceKind,
@@ -360,9 +369,11 @@ export function maybeTokenWithColumnNumber(
     tokenIndex: number,
 ): ParseError.TokenWithColumnNumber | undefined {
     const maybeToken: Token.Token | undefined = state.lexerSnapshot.tokens[tokenIndex];
+
     if (maybeToken === undefined) {
         return undefined;
     }
+
     const currentToken: Token.Token = maybeToken;
 
     return {

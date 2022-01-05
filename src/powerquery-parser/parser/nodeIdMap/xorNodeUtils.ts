@@ -55,31 +55,37 @@ export function assertAsNodeKind<T extends Ast.TNode>(
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> {
     assertIsNodeKind(xorNode, expectedNodeKinds);
+
     return xorNode;
 }
 
 export function assertAsFunctionParameterList(xorNode: TXorNode): XorNode<Ast.FieldSpecificationList> {
     assertIsFieldSpecificationList(xorNode);
+
     return xorNode;
 }
 
 export function assertAsInvokeExpression(xorNode: TXorNode): XorNode<Ast.InvokeExpression> {
     assertIsInvokeExpression(xorNode);
+
     return xorNode;
 }
 
 export function assertAsLetExpression(xorNode: TXorNode): XorNode<Ast.LetExpression> {
     assertIsLetExpression(xorNode);
+
     return xorNode;
 }
 
 export function assertAsList(xorNode: TXorNode): XorNode<Ast.ListExpression | Ast.ListLiteral> {
     assertIsList(xorNode);
+
     return xorNode;
 }
 
 export function assertAsParameter(xorNode: TXorNode): XorNode<Ast.TParameter> {
     assertIsParameter(xorNode);
+
     return xorNode;
 }
 
@@ -168,6 +174,7 @@ export function assertIsParameter(xorNode: TXorNode): asserts xorNode is XorNode
 
 export function assertUnboxAst(xorNode: TXorNode): Ast.TNode {
     assertIsAstXor(xorNode);
+
     return xorNode.node;
 }
 
@@ -177,11 +184,13 @@ export function assertUnboxAstChecked<T extends Ast.TNode>(
 ): T {
     const astNode: Ast.TNode = assertUnboxAst(xorNode);
     AstUtils.assertIsNodeKind(astNode, expectedNodeKinds);
+
     return astNode;
 }
 
 export function assertUnboxContext(xorNode: TXorNode): ParseContext.TNode {
     assertIsContextXor(xorNode);
+
     return xorNode.node;
 }
 
@@ -190,6 +199,7 @@ export function assertUnboxContextChecked<T extends Ast.TNode>(
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): ParseContext.Node<T> {
     assertIsContextXorChecked(xorNode, expectedNodeKinds);
+
     return xorNode.node;
 }
 
@@ -247,9 +257,11 @@ export function maybeIdentifierExpressionLiteral(xorNode: TXorNode): string | un
         xorNode,
         Ast.NodeKind.IdentifierExpression,
     );
+
     if (maybeIdentifierExpression === undefined) {
         return undefined;
     }
+
     const identifierExpression: Ast.IdentifierExpression = maybeIdentifierExpression;
 
     return identifierExpression.maybeInclusiveConstant === undefined
@@ -266,5 +278,6 @@ export function maybeUnboxAstChecked<T extends Ast.TNode>(
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): T | undefined {
     const maybeAstNode: Ast.TNode | undefined = maybeUnboxAst(xorNode);
+
     return maybeAstNode && AstUtils.isNodeKind(maybeAstNode, expectedNodeKinds) ? maybeAstNode : undefined;
 }

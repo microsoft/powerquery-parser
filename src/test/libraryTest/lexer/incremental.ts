@@ -18,6 +18,7 @@ function assertAbridgedTLexerLine(state: Lexer.State, expected: AbridgedTLexerLi
         line.lineModeEnd,
         line.text,
     ]);
+
     expect(actual).deep.equal(expected);
 }
 
@@ -54,11 +55,13 @@ function assertGetLexerUpdateLineAlphaBravoCharlie(
     expectedUpdate: AbridgedTLexerLine,
 ): Lexer.State {
     const originalText: string = `alpha${LINE_TERMINATOR}bravo${LINE_TERMINATOR}charlie`;
+
     const originalExpected: AbridgedTLexerLine = [
         [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
         [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
         [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
     ];
+
     return assertGetLexerUpdateLine(originalText, originalExpected, lineNumber, newText, expectedUpdate);
 }
 
@@ -75,6 +78,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 0,
                 },
             };
+
             const state: Lexer.State = assertGetLexerUpdateRangeOk(`foobar`, "X", range);
             expect(state.lines.length).to.equal(1);
             expect(state.lines[0].text).to.equal("Xfoobar");
@@ -91,6 +95,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 3,
                 },
             };
+
             const state: Lexer.State = assertGetLexerUpdateRangeOk(`foobar`, "X", range);
             expect(state.lines.length).to.equal(1);
             expect(state.lines[0].text).to.equal("fooXbar");
@@ -107,6 +112,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 1,
                 },
             };
+
             const state: Lexer.State = assertGetLexerUpdateRangeOk(`foobar`, "X", range);
             expect(state.lines.length).to.equal(1);
             expect(state.lines[0].text).to.equal("Xoobar");
@@ -123,6 +129,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 6,
                 },
             };
+
             const state: Lexer.State = assertGetLexerUpdateRangeOk(`foobar`, "X", range);
             expect(state.lines.length).to.equal(1);
             expect(state.lines[0].text).to.equal("X");
@@ -139,6 +146,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 3,
                 },
             };
+
             const state: Lexer.State = assertGetLexerUpdateRangeOk(`foo\nbar`, "X", range);
             expect(state.lines.length).to.equal(1);
             expect(state.lines[0].text).to.equal("X");
@@ -155,6 +163,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 2,
                 },
             };
+
             const state: Lexer.State = assertGetLexerUpdateRangeOk(`foo\nbar`, "X", range);
             expect(state.lines.length).to.equal(1);
             expect(state.lines[0].text).to.equal("fXr");
@@ -171,6 +180,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 3,
                 },
             };
+
             const state: Lexer.State = assertGetLexerUpdateRangeOk(`foo\nbar\nbaz`, "X", range);
             expect(state.lines.length).to.equal(3);
             expect(state.lines[0].text).to.equal("foo");
@@ -189,6 +199,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 2,
                 },
             };
+
             const state: Lexer.State = assertGetLexerUpdateRangeOk(`foo\nbar\nbaz`, "X", range);
             expect(state.lines.length).to.equal(3);
             expect(state.lines[0].text).to.equal("foo");
@@ -198,6 +209,7 @@ describe(`Lexer.Incremental`, () => {
 
         it(`lineTerminator maintained on single line change`, () => {
             const original: string = `foo\nbar\nbaz`;
+
             const range: Lexer.Range = {
                 start: {
                     lineNumber: 1,
@@ -208,6 +220,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 2,
                 },
             };
+
             const state: Lexer.State = assertGetLexerUpdateRangeOk(original, "X", range);
 
             const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(state);
@@ -218,6 +231,7 @@ describe(`Lexer.Incremental`, () => {
 
         it(`lineTerminator maintained on multiline change`, () => {
             const original: string = `foo\nbar\nbaz\nboo`;
+
             const range: Lexer.Range = {
                 start: {
                     lineNumber: 0,
@@ -228,6 +242,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 1,
                 },
             };
+
             const state: Lexer.State = assertGetLexerUpdateRangeOk(original, "OO\nB", range);
             expect(state.lines.length).to.equal(3);
 
@@ -239,6 +254,7 @@ describe(`Lexer.Incremental`, () => {
 
         it(`text match on multiline deconstion`, () => {
             const original: string = `foo\nbar\nbaz\nboo`;
+
             const range: Lexer.Range = {
                 start: {
                     lineNumber: 0,
@@ -249,6 +265,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 1,
                 },
             };
+
             const state: Lexer.State = assertGetLexerUpdateRangeOk(original, "", range);
 
             expect(state.lines.length).to.equal(2);

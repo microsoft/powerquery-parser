@@ -31,7 +31,9 @@ export function assertGetRecursiveExpressionPreviousSibling<T extends Ast.TNode>
             nodeIdMapCollection.childIdsById,
             arrayWrapper.node.id,
         );
+
         const indexOfPrimaryExpressionId: number = childIds.indexOf(xorNode.node.id);
+
         if (indexOfPrimaryExpressionId === -1 || indexOfPrimaryExpressionId === 0) {
             const details: {
                 xorNodeId: number;
@@ -42,6 +44,7 @@ export function assertGetRecursiveExpressionPreviousSibling<T extends Ast.TNode>
                 arrayWrapperId: arrayWrapper.node.id,
                 indexOfPrimaryExpressionId,
             };
+
             throw new CommonError.InvariantError(
                 `expected to find xorNodeId in arrayWrapper's children at an index > 0`,
                 details,
@@ -60,6 +63,7 @@ export function assertGetRecursiveExpressionPreviousSibling<T extends Ast.TNode>
     // It's the first element in ArrayWrapper, meaning we must grab RecursivePrimaryExpression.head
     else {
         const recursivePrimaryExpression: TXorNode = assertGetParentXor(nodeIdMapCollection, arrayWrapper.node.id);
+
         return maybeExpectedNodeKinds
             ? assertGetNthChildChecked(
                   nodeIdMapCollection,
@@ -86,6 +90,7 @@ export function maybeInvokeExpressionIdentifier(
     // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
     const recursiveArrayXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, invokeExprXorNode.node.id);
     const recursiveExprXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, recursiveArrayXorNode.node.id);
+
     const maybeHeadXorNode: XorNode<Ast.IdentifierExpression> | undefined =
         maybeNthChildChecked<Ast.IdentifierExpression>(
             nodeIdMapCollection,
@@ -98,6 +103,7 @@ export function maybeInvokeExpressionIdentifier(
     if (maybeHeadXorNode === undefined) {
         return undefined;
     }
+
     const headXorNode: XorNode<Ast.IdentifierExpression> = maybeHeadXorNode;
 
     // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
@@ -110,6 +116,7 @@ export function maybeInvokeExpressionIdentifier(
             identifierExpressionNodeId: headXorNode.node.id,
             invokeExpressionNodeId: invokeExprXorNode.node.id,
         };
+
         throw new CommonError.InvariantError(
             `the younger IdentifierExpression sibling should've finished parsing before the InvokeExpression node was reached`,
             details,
@@ -148,6 +155,7 @@ export function maybeInvokeExpressionIdentifierLiteral(
 
     const maybeIdentifierExpressionXorNode: XorNode<Ast.IdentifierExpression> | undefined =
         maybeInvokeExpressionIdentifier(nodeIdMapCollection, nodeId);
+
     if (maybeIdentifierExpressionXorNode === undefined || XorNodeUtils.isContextXor(maybeIdentifierExpressionXorNode)) {
         return undefined;
     }

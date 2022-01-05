@@ -17,10 +17,13 @@ import {
 
 function assertGetCancellationError<T, E>(tried: Result<T, E>): CommonError.CancellationError {
     Assert.isError(tried);
+
     if (!CommonError.isCommonError(tried.error)) {
         throw new Error(`expected error to be a ${CommonError.CommonError.name}`);
     }
+
     const innerError: Lexer.LexError.TInnerLexError = tried.error.innerError;
+
     if (!(innerError instanceof CommonError.CancellationError)) {
         throw new Error(`expected innerError to be a ${CommonError.CancellationError.name}`);
     }
@@ -54,6 +57,7 @@ describe("CancellationToken", () => {
                 "bar",
                 "\n",
             );
+
             assertGetCancellationError(triedLex);
         });
 
@@ -82,6 +86,7 @@ describe("CancellationToken", () => {
                 },
                 "",
             );
+
             assertGetCancellationError(triedLex);
         });
     });

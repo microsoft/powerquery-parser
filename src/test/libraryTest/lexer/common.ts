@@ -23,6 +23,7 @@ export function assertGetAbridgedSnapshotMatch(
 ): Lexer.LexerSnapshot {
     if (wrapped) {
         const wrappedText: string = `wrapperOpen\n${text}\nwrapperClose`;
+
         const wrappedExpected: AbridgedSnapshot = {
             tokens: [
                 [Language.Token.TokenKind.Identifier, "wrapperOpen"],
@@ -31,6 +32,7 @@ export function assertGetAbridgedSnapshotMatch(
             ],
             comments: expected.comments,
         };
+
         assertGetAbridgedSnapshotMatch(wrappedText, wrappedExpected, false);
     }
 
@@ -38,6 +40,7 @@ export function assertGetAbridgedSnapshotMatch(
     const expectedTokens: AbridgedTokens = expected.tokens;
     const expectedComments: AbridgedComments = expected.comments;
     const actualTokens: AbridgedTokens = snapshot.tokens.map((token: Language.Token.Token) => [token.kind, token.data]);
+
     const actualComments: AbridgedComments = snapshot.comments.map((comment: Language.Comment.TComment) => [
         comment.kind,
         comment.data,
@@ -52,23 +55,28 @@ export function assertGetAbridgedSnapshotMatch(
 export function assertGetLineTokenMatch(text: string, expected: AbridgedLineTokens, wrapped: boolean): Lexer.State {
     if (wrapped) {
         const wrappedText: string = `wrapperOpen\n${text}\nwrapperClose`;
+
         const wrappedExpected: AbridgedLineTokens = [
             [Language.Token.LineTokenKind.Identifier, "wrapperOpen"],
             ...expected,
             [Language.Token.LineTokenKind.Identifier, "wrapperClose"],
         ];
+
         assertGetLineTokenMatch(wrappedText, wrappedExpected, false);
     }
 
     const state: Lexer.State = assertGetLexOk(text);
 
     const tmp: [Language.Token.LineTokenKind, string][] = [];
+
     for (const line of state.lines) {
         for (const token of line.tokens) {
             tmp.push([token.kind, token.data]);
         }
     }
+
     const actual: AbridgedLineTokens = tmp;
+
     const tokenDetails: {
         actual: AbridgedLineTokens;
         expected: AbridgedLineTokens;
@@ -76,6 +84,7 @@ export function assertGetLineTokenMatch(text: string, expected: AbridgedLineToke
         actual,
         expected,
     };
+
     expect(actual).deep.equal(expected, JSON.stringify(tokenDetails));
 
     return state;

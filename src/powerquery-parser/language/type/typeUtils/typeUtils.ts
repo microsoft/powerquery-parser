@@ -90,6 +90,7 @@ export function isValidInvocation(
 
         if (maybeArgType !== undefined) {
             const argType: Type.TPowerQueryType = maybeArgType;
+
             const parameterType: Type.TPowerQueryType = createPrimitiveType(
                 parameter.isNullable,
                 Assert.asDefined(parameter.maybeType),
@@ -129,6 +130,7 @@ function inspectAstParameter(node: Ast.TParameter): Type.FunctionParameter {
     let maybeType: Type.TypeKind | undefined;
 
     const maybeParameterType: Ast.TParameterType | undefined = node.maybeParameterType;
+
     if (maybeParameterType !== undefined) {
         const parameterType: Ast.TParameterType = maybeParameterType;
 
@@ -176,6 +178,7 @@ function inspectContextParameter(
         1,
         Ast.NodeKind.Identifier,
     );
+
     if (maybeName === undefined) {
         return undefined;
     }
@@ -186,6 +189,7 @@ function inspectContextParameter(
         0,
         Ast.NodeKind.Constant,
     );
+
     const isOptional: boolean = maybeOptional !== undefined;
 
     const maybeParameterType: Ast.AsNullablePrimitiveType | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
@@ -194,6 +198,7 @@ function inspectContextParameter(
         2,
         Ast.NodeKind.AsNullablePrimitiveType,
     );
+
     if (maybeParameterType !== undefined) {
         const parameterType: Ast.AsNullablePrimitiveType = maybeParameterType;
         const simplified: AstUtils.SimplifiedType = AstUtils.simplifyAsNullablePrimitiveType(parameterType);

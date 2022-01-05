@@ -23,6 +23,7 @@ export function simplify(types: ReadonlyArray<Type.TPowerQueryType>): ReadonlyAr
 
     // If an `any` exists then that's as simplified as we can make it.
     const maybeAny: Type.Any | undefined = maybeFindAnyPrimitive(categorized);
+
     if (maybeAny) {
         return [maybeAny];
     }
@@ -76,6 +77,7 @@ function firstNullableElseFirst<T extends Type.TPowerQueryType>(immutableSet: Im
 
 function maybeFindAnyPrimitive(categorized: CategorizedPowerQueryTypes): Type.Any | undefined {
     const maybeAnySet: ImmutableSet<Type.Any> | undefined = categorized.maybeAny?.primitives;
+
     if (maybeAnySet === undefined) {
         return undefined;
     }
@@ -88,6 +90,7 @@ function simplifyAnyCategory(maybeCategory: AnyCategory | undefined): ReadonlyAr
         return [];
     } else {
         const flattnedAnyUnions: ImmutableSet<Type.TPowerQueryType> = maybeCategory?.flattenedAnyUnions;
+
         return [...flattnedAnyUnions.values()];
     }
 }
@@ -120,6 +123,7 @@ function simplifyLogicalCategory(maybeCategory: LogicalCategory | undefined): Re
             : [Type.LogicalInstance];
     } else {
         const maybeType: Type.Logical | undefined = firstNullableElseFirst(maybeCategory.primitives);
+
         return maybeType ? [maybeType] : [];
     }
 }
@@ -161,6 +165,7 @@ function simplifyTypeCategory(maybeCategory: TypeCategory | undefined): Readonly
         return [];
     } else if (maybeCategory.primitives.size) {
         const maybeType: Type.Type | undefined | undefined = firstNullableElseFirst(maybeCategory.primitives);
+
         return maybeType ? [maybeType] : [];
     } else {
         return [
@@ -181,6 +186,7 @@ function simplifyExtendedType<T extends Type.TPowerQueryType, L extends Type.TPo
 ): ReadonlyArray<T> | ReadonlyArray<L> {
     if (primitives.size) {
         const maybeType: T | undefined = firstNullableElseFirst(primitives);
+
         return maybeType ? [maybeType] : [];
     } else if (literals.size) {
         return [...literals.values()];

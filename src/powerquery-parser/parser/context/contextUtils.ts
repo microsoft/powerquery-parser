@@ -56,12 +56,14 @@ export function isNodeKind<T extends Ast.TNode>(
 
 export function nextId(state: ParseContext.State): number {
     state.idCounter += 1;
+
     return state.idCounter;
 }
 
 export function nextAttributeIndex(parentNode: ParseContext.TNode): number {
     const result: number = parentNode.attributeCounter;
     parentNode.attributeCounter += 1;
+
     return result;
 }
 
@@ -87,6 +89,7 @@ export function startContext<T extends Ast.TNode>(
         nodeIdMapCollection.parentIdById.set(nodeId, parentId);
 
         const maybeExistingChildren: ReadonlyArray<number> | undefined = childIdsById.get(parentId);
+
         if (maybeExistingChildren) {
             const existingChildren: ReadonlyArray<number> = maybeExistingChildren;
             childIdsById.set(parentId, [...existingChildren, nodeId]);
@@ -104,13 +107,16 @@ export function startContext<T extends Ast.TNode>(
         isClosed: false,
         maybeAttributeIndex,
     };
+
     nodeIdMapCollection.contextNodeById.set(nodeId, contextNode);
+
     if (state.maybeRoot === undefined) {
         state.maybeRoot = contextNode;
     }
 
     const idsByNodeKind: NodeIdMap.IdsByNodeKind = nodeIdMapCollection.idsByNodeKind;
     const maybeIdsForSpecificNodeKind: Set<number> | undefined = idsByNodeKind.get(nodeKind);
+
     if (maybeIdsForSpecificNodeKind) {
         maybeIdsForSpecificNodeKind.add(nodeId);
     } else {
@@ -149,6 +155,7 @@ export function endContext<T extends Ast.TNode>(
 
     // Ending a context should return the context's parent node (if one exists).
     const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(contextNode.id);
+
     const maybeParentNode: ParseContext.TNode | undefined =
         maybeParentId !== undefined ? nodeIdMapCollection.contextNodeById.get(maybeParentId) : undefined;
 
@@ -159,6 +166,7 @@ export function endContext<T extends Ast.TNode>(
         "failed to endContext as the given nodeId isn't a valid context nodeId",
         { nodeId: contextNode.id },
     );
+
     nodeIdMapCollection.astNodeById.set(astNode.id, astNode);
 
     // Update maybeRightMostLeaf when applicable
@@ -179,12 +187,14 @@ export function deleteAst(state: ParseContext.State, nodeId: number, parentWillB
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
+
     const astNode: Ast.TNode = MapUtils.assertGet(
         astNodeById,
         nodeId,
         `failed to deleteAst as the given nodeId isn't a valid Ast nodeId`,
         { nodeId },
     );
+
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
     const parentIdById: NodeIdMap.ParentIdById = nodeIdMapCollection.parentIdById;
 
@@ -215,6 +225,7 @@ export function deleteAst(state: ParseContext.State, nodeId: number, parentWillB
     // Delete the node from the list of children under the node's parent.
     if (maybeParentId) {
         const parentId: number = maybeParentId;
+
         Assert.isFalse(
             astNodeById.has(maybeParentId) && !parentWillBeDeleted,
             `parent is an Ast node not marked for deletion`,
@@ -223,6 +234,7 @@ export function deleteAst(state: ParseContext.State, nodeId: number, parentWillB
                 nodeId,
             },
         );
+
         removeOrReplaceChildId(nodeIdMapCollection, parentId, nodeId, undefined);
     }
     // Else is root node, is leaf node.
@@ -244,11 +256,13 @@ export function deleteContext(state: ParseContext.State, nodeId: number): ParseC
     const parentIdById: NodeIdMap.ParentIdById = nodeIdMapCollection.parentIdById;
 
     const maybeContextNode: ParseContext.TNode | undefined = contextNodeById.get(nodeId);
+
     if (maybeContextNode === undefined) {
         throw new CommonError.InvariantError(`failed to deleteContext as the given nodeId isn't a valid context node`, {
             nodeId,
         });
     }
+
     const contextNode: ParseContext.TNode = maybeContextNode;
 
     const maybeParentId: number | undefined = parentIdById.get(nodeId);
@@ -265,6 +279,7 @@ export function deleteContext(state: ParseContext.State, nodeId: number): ParseC
         if (maybeParentId === undefined) {
             parentIdById.delete(childId);
             const maybeChildContext: ParseContext.TNode | undefined = contextNodeById.get(childId);
+
             if (maybeChildContext) {
                 const childContext: ParseContext.TNode = maybeChildContext;
                 state.maybeRoot = childContext;
@@ -306,6 +321,7 @@ function deleteFromKindMap(nodeIdMapCollection: NodeIdMap.Collection, nodeId: nu
     const idsByNodeKind: NodeIdMap.IdsByNodeKind = nodeIdMapCollection.idsByNodeKind;
 
     const nodeKind: Ast.NodeKind = NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId).node.kind;
+
     const nodeIds: Set<number> = MapUtils.assertGet(
         idsByNodeKind,
         nodeKind,
@@ -315,6 +331,7 @@ function deleteFromKindMap(nodeIdMapCollection: NodeIdMap.Collection, nodeId: nu
             nodeKind,
         },
     );
+
     SetUtils.assertDelete(nodeIds, nodeId);
 
     if (!nodeIds.size) {
@@ -330,6 +347,7 @@ function removeOrReplaceChildId(
 ): void {
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
     const childIds: ReadonlyArray<number> = NodeIdMapIterator.assertIterChildIds(childIdsById, parentId);
+
     const replacementIndex: number = ArrayUtils.assertIn(
         childIds,
         childId,
@@ -344,9 +362,11 @@ function removeOrReplaceChildId(
     const afterChildId: ReadonlyArray<number> = childIds.slice(replacementIndex + 1);
 
     let maybeNewChildIds: ReadonlyArray<number> | undefined;
+
     if (maybeReplacementId) {
         const replacementId: number = maybeReplacementId;
         nodeIdMapCollection.parentIdById.set(replacementId, parentId);
+
         if (childIds.length === 1) {
             maybeNewChildIds = [replacementId];
         } else {
@@ -366,6 +386,7 @@ function removeOrReplaceChildId(
     }
 
     const maybeParent: ParseContext.TNode | undefined = nodeIdMapCollection.contextNodeById.get(parentId);
+
     if (maybeParent !== undefined && maybeReplacementId === undefined) {
         maybeParent.attributeCounter -= 1;
     }

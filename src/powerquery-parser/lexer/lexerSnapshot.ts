@@ -34,10 +34,12 @@ export class LexerSnapshot {
 
         let substringPositionStart: number = 0;
         let substringPositionEnd: number = text.length;
+
         for (const lineTerminator of lineTerminators) {
             if (lineTerminator.codeUnit < positionStart.codeUnit) {
                 substringPositionStart = lineTerminator.codeUnit + lineTerminator.text.length;
             }
+
             if (lineTerminator.codeUnit >= positionEnd.codeUnit) {
                 substringPositionEnd = lineTerminator.codeUnit + lineTerminator.text.length;
                 break;
@@ -66,12 +68,14 @@ export function trySnapshot(state: Lexer.State): TriedLexerSnapshot {
         return ResultUtils.boxOk(createSnapshot(state));
     } catch (e) {
         let error: LexError.TLexError;
+
         if (LexError.isTInnerLexError(e)) {
             error = new LexError.LexError(e);
         } else {
             Assert.isInstanceofError(e);
             error = CommonError.ensureCommonError(state.locale, e);
         }
+
         return ResultUtils.boxError(error);
     }
 }
@@ -87,10 +91,12 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
     const maybeCancellationToken: ICancellationToken | undefined = state.maybeCancellationToken;
 
     let flatIndex: number = 0;
+
     while (flatIndex < numFlatTokens) {
         state.maybeCancellationToken?.throwIfCancelled();
 
         const flatToken: FlatLineToken = flatTokens[flatIndex];
+
         switch (flatToken.kind) {
             case Token.LineTokenKind.LineComment:
                 comments.push(readLineComment(flatToken));
@@ -107,6 +113,7 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
                     flattenedLines,
                     flatToken,
                 );
+
                 comments.push(concatenatedTokenRead.comment);
                 flatIndex = concatenatedTokenRead.flatIndexEnd;
                 break;
@@ -119,6 +126,7 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
                     flattenedLines,
                     flatToken,
                 );
+
                 tokens.push(concatenatedTokenRead.token);
                 flatIndex = concatenatedTokenRead.flatIndexEnd;
                 break;
@@ -131,6 +139,7 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
                     flattenedLines,
                     flatToken,
                 );
+
                 tokens.push(concatenatedTokenRead.token);
                 flatIndex = concatenatedTokenRead.flatIndexEnd;
                 break;
@@ -139,6 +148,7 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
             default: {
                 const positionStart: Token.TokenPosition = flatToken.positionStart;
                 const positionEnd: Token.TokenPosition = flatToken.positionEnd;
+
                 tokens.push({
                     kind: flatToken.kind as unknown as Token.TokenKind,
                     data: flatToken.data,
@@ -193,7 +203,9 @@ function readMultilineComment(
         tokenStart,
         Token.LineTokenKind.MultilineCommentContent,
     );
+
     const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
+
     if (!maybeTokenEnd) {
         throw new LexError.UnterminatedMultilineTokenError(
             locale,
@@ -234,7 +246,9 @@ function readQuotedIdentifier(
         tokenStart,
         Token.LineTokenKind.QuotedIdentifierContent,
     );
+
     const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
+
     if (!maybeTokenEnd) {
         throw new LexError.UnterminatedMultilineTokenError(
             locale,
@@ -274,7 +288,9 @@ function readTextLiteral(
         tokenStart,
         Token.LineTokenKind.TextLiteralContent,
     );
+
     const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
+
     if (!maybeTokenEnd) {
         throw new LexError.UnterminatedMultilineTokenError(
             locale,
@@ -312,10 +328,12 @@ function collectWhileContent<KindVariant extends Token.LineTokenKind>(
     const numTokens: number = flatTokens.length;
 
     let flatIndex: number = tokenStart.flatIndex + 1;
+
     while (flatIndex < numTokens) {
         maybeCancellationToken?.throwIfCancelled();
 
         const token: FlatLineToken = flatTokens[flatIndex];
+
         if (token.kind !== contentKind) {
             break;
         }
@@ -346,6 +364,7 @@ function flattenLineTokens(state: Lexer.State): FlattenedLines {
         const line: Lexer.TLine = lines[lineNumber];
 
         text += line.text;
+
         if (lineNumber !== numLines - 1) {
             text += line.lineTerminator;
         }
@@ -374,10 +393,12 @@ function flattenLineTokens(state: Lexer.State): FlattenedLines {
         }
 
         const lineTerminatorCodeUnit: number = lineTextOffset + line.text.length;
+
         lineTerminators.push({
             codeUnit: lineTerminatorCodeUnit,
             text: line.lineTerminator,
         });
+
         lineTextOffset = lineTerminatorCodeUnit + line.lineTerminator.length;
     }
 

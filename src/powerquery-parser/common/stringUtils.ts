@@ -46,6 +46,7 @@ export function columnNumberFrom(text: string, requiredCodeUnit: number): number
 
     let columnNumber: number = 0;
     let summedCodeUnits: number = 0;
+
     for (const grapheme of graphemes) {
         if (summedCodeUnits === requiredCodeUnit) {
             return columnNumber;
@@ -62,6 +63,7 @@ export function columnNumberFrom(text: string, requiredCodeUnit: number): number
         text,
         requiredCodeUnit,
     };
+
     throw new CommonError.InvariantError(`no columnNumber can be generated for required codeUnit`, details);
 }
 
@@ -110,6 +112,7 @@ export function isQuotedIdentifier(text: string): boolean {
 export function maybeRegexMatchLength(pattern: RegExp, text: string, index: number): number | undefined {
     pattern.lastIndex = index;
     const matches: RegExpExecArray | null = pattern.exec(text);
+
     return matches !== null && matches.index === index ? matches[0].length : undefined;
 }
 
@@ -119,6 +122,7 @@ export function maybeIdentifierLength(text: string, index: number, allowTrailing
 
     let state: IdentifierRegexpState = IdentifierRegexpState.Start;
     let maybeMatchLength: number | undefined;
+
     while (state !== IdentifierRegexpState.Done) {
         if (index === textLength) {
             return index - startingIndex;
@@ -127,12 +131,14 @@ export function maybeIdentifierLength(text: string, index: number, allowTrailing
         switch (state) {
             case IdentifierRegexpState.Start:
                 maybeMatchLength = maybeRegexMatchLength(Pattern.IdentifierStartCharacter, text, index);
+
                 if (maybeMatchLength === undefined) {
                     state = IdentifierRegexpState.Done;
                 } else {
                     state = IdentifierRegexpState.RegularIdentifier;
                     index += maybeMatchLength;
                 }
+
                 break;
 
             case IdentifierRegexpState.RegularIdentifier:
@@ -142,16 +148,20 @@ export function maybeIdentifierLength(text: string, index: number, allowTrailing
                 }
 
                 maybeMatchLength = maybeRegexMatchLength(Pattern.IdentifierPartCharacters, text, index);
+
                 if (maybeMatchLength === undefined) {
                     state = IdentifierRegexpState.Done;
                 } else {
                     index += maybeMatchLength;
+
                     // Don't consider `..` or `...` part of an identifier.
                     if (allowTrailingPeriod && text[index] === "." && text[index + 1] !== ".") {
                         index += 1;
                     }
+
                     state = IdentifierRegexpState.Start;
                 }
+
                 break;
 
             default:
@@ -178,6 +188,7 @@ export function maybeGeneralizedIdentifierLength(text: string, index: number): n
                 continueMatching = false;
                 break;
             }
+
             index += 1;
         } else {
             const maybeMatchLength: number | undefined = maybeRegexMatchLength(
@@ -185,6 +196,7 @@ export function maybeGeneralizedIdentifierLength(text: string, index: number): n
                 text,
                 index,
             );
+
             if (maybeMatchLength === undefined) {
                 continueMatching = false;
                 break;
@@ -207,6 +219,7 @@ export function maybeNewlineKindAt(text: string, index: number): NewlineKind | u
     switch (chr1) {
         case `\u000d`: {
             const chr2: string | undefined = text[index + 1];
+
             return chr2 === `\u000a` ? NewlineKind.DoubleCharacter : NewlineKind.SingleCharacter;
         }
 
@@ -262,6 +275,7 @@ export function maybeQuotedIdentifier(text: string, index: number): number | und
             if (chr2 !== '"') {
                 continueMatching = false;
                 index += 1;
+
                 continue;
             } else {
                 index += 2;
@@ -281,6 +295,7 @@ export function maybeQuotedIdentifier(text: string, index: number): number | und
 export function normalizeIdentifier(text: string): string {
     if (isQuotedIdentifier(text)) {
         const stripped: string = text.slice(2, -1);
+
         return isRegularIdentifier(stripped, false) ? stripped : text;
     } else {
         return text;

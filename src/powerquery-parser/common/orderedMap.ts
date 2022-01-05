@@ -17,6 +17,7 @@ export class OrderedMap<K, V> implements Map<K, V> {
             this.size = 0;
         } else {
             this.map = new Map(entries);
+
             if (entries instanceof Map) {
                 this.order = [...entries.keys()];
                 this.size = entries.size;
@@ -39,6 +40,7 @@ export class OrderedMap<K, V> implements Map<K, V> {
     public delete(key: K): boolean {
         if (this.map.delete(key)) {
             this.order = ArrayUtils.removeFirstInstance(this.order, key);
+
             return true;
         } else {
             return false;
@@ -79,6 +81,7 @@ export class OrderedMap<K, V> implements Map<K, V> {
         }
 
         this.map.set(key, value);
+
         return this;
     }
 

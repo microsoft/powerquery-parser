@@ -39,6 +39,7 @@ export class UnknownError extends Error {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function assertIsCommonError(error: any): error is CommonError {
     Assert.isTrue(isCommonError(error), "isCommonError(error)");
+
     return true;
 }
 

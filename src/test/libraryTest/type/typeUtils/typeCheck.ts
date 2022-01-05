@@ -31,15 +31,18 @@ describe(`TypeUtils.typeCheck`, () => {
     describe(`typeCheckInvocation`, () => {
         it(`extraneous parameter`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.ActionInstance];
+
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [],
                 Language.Type.ActionInstance,
             );
+
             const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
                 args,
                 definedFunction,
             );
+
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [],
                 invalid: new Map(),
@@ -52,6 +55,7 @@ describe(`TypeUtils.typeCheck`, () => {
 
         it(`missing required parameter`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [];
+
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
@@ -64,10 +68,12 @@ describe(`TypeUtils.typeCheck`, () => {
                 ],
                 Language.Type.ActionInstance,
             );
+
             const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
                 args,
                 definedFunction,
             );
+
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [],
                 invalid: new Map(),
@@ -80,6 +86,7 @@ describe(`TypeUtils.typeCheck`, () => {
 
         it(`missing optional parameter`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [];
+
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
@@ -92,10 +99,12 @@ describe(`TypeUtils.typeCheck`, () => {
                 ],
                 Language.Type.ActionInstance,
             );
+
             const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
                 args,
                 definedFunction,
             );
+
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [0],
                 invalid: new Map(),
@@ -108,6 +117,7 @@ describe(`TypeUtils.typeCheck`, () => {
 
         it(`maybeType === null translates to any`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.NumberInstance];
+
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
@@ -120,10 +130,12 @@ describe(`TypeUtils.typeCheck`, () => {
                 ],
                 Language.Type.ActionInstance,
             );
+
             const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
                 args,
                 definedFunction,
             );
+
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [0],
                 invalid: new Map(),
@@ -136,6 +148,7 @@ describe(`TypeUtils.typeCheck`, () => {
 
         it(`paramter.maybeType === any allows any type`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.NumberInstance];
+
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
@@ -148,10 +161,12 @@ describe(`TypeUtils.typeCheck`, () => {
                 ],
                 Language.Type.ActionInstance,
             );
+
             const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
                 args,
                 definedFunction,
             );
+
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [0],
                 invalid: new Map(),
@@ -164,6 +179,7 @@ describe(`TypeUtils.typeCheck`, () => {
 
         it(`an any argument allowed for non-any parameters`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.AnyInstance];
+
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
@@ -176,10 +192,12 @@ describe(`TypeUtils.typeCheck`, () => {
                 ],
                 Language.Type.ActionInstance,
             );
+
             const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
                 args,
                 definedFunction,
             );
+
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [0],
                 invalid: new Map(),
@@ -194,6 +212,7 @@ describe(`TypeUtils.typeCheck`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [
                 Language.TypeUtils.createNumberLiteral(false, 1),
             ];
+
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
@@ -206,10 +225,12 @@ describe(`TypeUtils.typeCheck`, () => {
                 ],
                 Language.Type.ActionInstance,
             );
+
             const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
                 args,
                 definedFunction,
             );
+
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [0],
                 invalid: new Map(),
@@ -225,6 +246,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.TypeUtils.createNumberLiteral(false, 1),
                 Language.TypeUtils.createTextLiteral(false, `"cat"`),
             ];
+
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
@@ -243,10 +265,12 @@ describe(`TypeUtils.typeCheck`, () => {
                 ],
                 Language.Type.ActionInstance,
             );
+
             const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
                 args,
                 definedFunction,
             );
+
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [0, 1],
                 invalid: new Map(),
@@ -261,6 +285,7 @@ describe(`TypeUtils.typeCheck`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [
                 Language.TypeUtils.createTextLiteral(false, `""`),
             ];
+
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
@@ -273,10 +298,12 @@ describe(`TypeUtils.typeCheck`, () => {
                 ],
                 Language.Type.ActionInstance,
             );
+
             const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
                 args,
                 definedFunction,
             );
+
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [],
                 invalid: new Map([
@@ -297,6 +324,7 @@ describe(`TypeUtils.typeCheck`, () => {
 
         it(`allow null for nullable parameter`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.NullInstance];
+
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
@@ -309,10 +337,12 @@ describe(`TypeUtils.typeCheck`, () => {
                 ],
                 Language.Type.ActionInstance,
             );
+
             const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
                 args,
                 definedFunction,
             );
+
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [0],
                 invalid: new Map(),
@@ -325,6 +355,7 @@ describe(`TypeUtils.typeCheck`, () => {
 
         it(`disallow null for non-nullable parameter`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.NullInstance];
+
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
@@ -337,10 +368,12 @@ describe(`TypeUtils.typeCheck`, () => {
                 ],
                 Language.Type.ActionInstance,
             );
+
             const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
                 args,
                 definedFunction,
             );
+
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [],
                 invalid: new Map([[0, { actual: args[0], expected: definedFunction.parameters[0] }]]),
@@ -353,6 +386,7 @@ describe(`TypeUtils.typeCheck`, () => {
 
         it(`disallow nullable for non-nullable parameter`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.NullableTextInstance];
+
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
@@ -365,10 +399,12 @@ describe(`TypeUtils.typeCheck`, () => {
                 ],
                 Language.Type.ActionInstance,
             );
+
             const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
                 args,
                 definedFunction,
             );
+
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [],
                 invalid: new Map([[0, { actual: args[0], expected: definedFunction.parameters[0] }]]),
@@ -384,6 +420,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.LogicalInstance,
                 Language.Type.FunctionInstance,
             ];
+
             const definedFunction: Language.Type.DefinedFunction = Language.TypeUtils.createDefinedFunction(
                 false,
                 [
@@ -402,10 +439,12 @@ describe(`TypeUtils.typeCheck`, () => {
                 ],
                 Language.Type.ActionInstance,
             );
+
             const actual: Language.TypeUtils.CheckedInvocation = Language.TypeUtils.typeCheckInvocation(
                 args,
                 definedFunction,
             );
+
             const expected: Language.TypeUtils.CheckedInvocation = {
                 valid: [],
                 invalid: new Map([
@@ -438,20 +477,24 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.TextInstance,
                 Language.Type.TextInstance,
             ]);
+
             const schemaType: Language.Type.DefinedListType = Language.TypeUtils.createDefinedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.TextInstance,
             ]);
+
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
                 valueType,
                 schemaType,
             );
+
             const expected: AbridgedChecked = {
                 valid: [0, 1],
                 invalid: [],
                 extraneous: [],
                 missing: [],
             };
+
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
@@ -461,20 +504,24 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.TextInstance,
                 Language.Type.TextInstance,
             ]);
+
             const schemaType: Language.Type.DefinedListType = Language.TypeUtils.createDefinedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.TextInstance,
             ]);
+
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
                 valueType,
                 schemaType,
             );
+
             const expected: AbridgedChecked = {
                 valid: [0, 1],
                 invalid: [],
                 extraneous: [2],
                 missing: [],
             };
+
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
@@ -482,20 +529,24 @@ describe(`TypeUtils.typeCheck`, () => {
             const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, [
                 Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             ]);
+
             const schemaType: Language.Type.ListType = Language.TypeUtils.createListType(
                 false,
                 Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
+
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithListType(
                 valueType,
                 schemaType,
             );
+
             const expected: AbridgedChecked = {
                 valid: [0],
                 invalid: [],
                 extraneous: [],
                 missing: [],
             };
+
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
@@ -506,39 +557,47 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
                 Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             ]);
+
             const schemaType: Language.Type.ListType = Language.TypeUtils.createListType(
                 false,
                 Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
+
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithListType(
                 valueType,
                 schemaType,
             );
+
             const expected: AbridgedChecked = {
                 valid: [0, 1, 2, 3],
                 invalid: [],
                 extraneous: [],
                 missing: [],
             };
+
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
         it(`list of list with two text elements, empty list`, () => {
             const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, []);
+
             const schemaType: Language.Type.ListType = Language.TypeUtils.createListType(
                 false,
                 Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
+
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithListType(
                 valueType,
                 schemaType,
             );
+
             const expected: AbridgedChecked = {
                 valid: [],
                 invalid: [],
                 extraneous: [],
                 missing: [],
             };
+
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
@@ -546,20 +605,24 @@ describe(`TypeUtils.typeCheck`, () => {
             const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, [
                 Language.TypeUtils.createDefinedList(false, [Language.Type.NumberInstance, Language.Type.TextInstance]),
             ]);
+
             const schemaType: Language.Type.ListType = Language.TypeUtils.createListType(
                 false,
                 Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
+
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithListType(
                 valueType,
                 schemaType,
             );
+
             const expected: AbridgedChecked = {
                 valid: [],
                 invalid: [0],
                 extraneous: [],
                 missing: [],
             };
+
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
@@ -570,20 +633,24 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
                 Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             ]);
+
             const schemaType: Language.Type.ListType = Language.TypeUtils.createListType(
                 false,
                 Language.TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
+
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithListType(
                 valueType,
                 schemaType,
             );
+
             const expected: AbridgedChecked = {
                 valid: [0, 2, 3],
                 invalid: [1],
                 extraneous: [],
                 missing: [],
             };
+
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
     });
@@ -594,20 +661,24 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
+
             const schemaType: Language.Type.DefinedListType = Language.TypeUtils.createDefinedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
+
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
                 valueType,
                 schemaType,
             );
+
             const expected: AbridgedChecked = {
                 valid: [0, 1],
                 invalid: [],
                 extraneous: [],
                 missing: [],
             };
+
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
@@ -616,20 +687,24 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.TextInstance,
                 Language.Type.DateInstance,
             ]);
+
             const schemaType: Language.Type.DefinedListType = Language.TypeUtils.createDefinedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
+
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
                 valueType,
                 schemaType,
             );
+
             const expected: AbridgedChecked = {
                 valid: [0],
                 invalid: [1],
                 extraneous: [],
                 missing: [],
             };
+
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
@@ -638,38 +713,46 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
+
             const schemaType: Language.Type.DefinedListType = Language.TypeUtils.createDefinedListType(false, [
                 Language.Type.TextInstance,
             ]);
+
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
                 valueType,
                 schemaType,
             );
+
             const expected: AbridgedChecked = {
                 valid: [0],
                 invalid: [],
                 extraneous: [1],
                 missing: [],
             };
+
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
         it(`missing`, () => {
             const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, []);
+
             const schemaType: Language.Type.DefinedListType = Language.TypeUtils.createDefinedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
+
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
                 valueType,
                 schemaType,
             );
+
             const expected: AbridgedChecked = {
                 valid: [],
                 invalid: [],
                 extraneous: [],
                 missing: [0, 1],
             };
+
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
     });
@@ -680,20 +763,24 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.TextInstance,
                 Language.Type.TextInstance,
             ]);
+
             const schemaType: Language.Type.ListType = Language.TypeUtils.createListType(
                 false,
                 Language.Type.TextInstance,
             );
+
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithListType(
                 valueType,
                 schemaType,
             );
+
             const expected: AbridgedChecked = {
                 valid: [0, 1],
                 invalid: [],
                 extraneous: [],
                 missing: [],
             };
+
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
@@ -702,20 +789,24 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.TextInstance,
                 Language.Type.DateInstance,
             ]);
+
             const schemaType: Language.Type.DefinedListType = Language.TypeUtils.createDefinedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
+
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
                 valueType,
                 schemaType,
             );
+
             const expected: AbridgedChecked = {
                 valid: [0],
                 invalid: [1],
                 extraneous: [],
                 missing: [],
             };
+
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
@@ -724,38 +815,46 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
+
             const schemaType: Language.Type.DefinedListType = Language.TypeUtils.createDefinedListType(false, [
                 Language.Type.TextInstance,
             ]);
+
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
                 valueType,
                 schemaType,
             );
+
             const expected: AbridgedChecked = {
                 valid: [0],
                 invalid: [],
                 extraneous: [1],
                 missing: [],
             };
+
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
 
         it(`missing`, () => {
             const valueType: Language.Type.DefinedList = Language.TypeUtils.createDefinedList(false, []);
+
             const schemaType: Language.Type.DefinedListType = Language.TypeUtils.createDefinedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
+
             const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
                 valueType,
                 schemaType,
             );
+
             const expected: AbridgedChecked = {
                 valid: [],
                 invalid: [],
                 extraneous: [],
                 missing: [0, 1],
             };
+
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
     });
@@ -767,21 +866,25 @@ describe(`TypeUtils.typeCheck`, () => {
                 [],
                 Language.Type.NullableTextInstance,
             );
+
             const schemaType: Language.Type.FunctionType = Language.TypeUtils.createFunctionType(
                 false,
                 [],
                 Language.Type.NullableTextInstance,
             );
+
             const actual: Language.TypeUtils.CheckedDefinedFunction = Language.TypeUtils.typeCheckFunction(
                 valueType,
                 schemaType,
             );
+
             const expected: AbridgedChecked = {
                 valid: [],
                 invalid: [],
                 extraneous: [],
                 missing: [],
             };
+
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
     });
@@ -797,6 +900,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 ]),
                 false,
             );
+
             const schemaType: Language.Type.RecordType = Language.TypeUtils.createRecordType(
                 false,
                 new Map<string, Language.Type.TPowerQueryType>([
@@ -806,16 +910,19 @@ describe(`TypeUtils.typeCheck`, () => {
                 ]),
                 false,
             );
+
             const actual: Language.TypeUtils.CheckedDefinedRecord = Language.TypeUtils.typeCheckRecord(
                 valueType,
                 schemaType,
             );
+
             const expected: AbridgedChecked = {
                 valid: ["nullableNumber"],
                 invalid: ["number"],
                 extraneous: ["table"],
                 missing: ["text"],
             };
+
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
     });
@@ -831,6 +938,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 ]),
                 false,
             );
+
             const schemaType: Language.Type.TableType = Language.TypeUtils.createTableType(
                 false,
                 new Map<string, Language.Type.TPowerQueryType>([
@@ -840,16 +948,19 @@ describe(`TypeUtils.typeCheck`, () => {
                 ]),
                 false,
             );
+
             const actual: Language.TypeUtils.CheckedDefinedTable = Language.TypeUtils.typeCheckTable(
                 valueType,
                 schemaType,
             );
+
             const expected: AbridgedChecked = {
                 valid: ["nullableNumber"],
                 invalid: ["number"],
                 extraneous: ["table"],
                 missing: ["text"],
             };
+
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
     });

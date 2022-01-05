@@ -59,6 +59,7 @@ export class ExpectedAnyTokenKindError extends Error {
                 maybeFoundToken,
             ),
         );
+
         Object.setPrototypeOf(this, ExpectedAnyTokenKindError.prototype);
     }
 }
@@ -76,6 +77,7 @@ export class ExpectedTokenKindError extends Error {
                 maybeFoundToken,
             ),
         );
+
         Object.setPrototypeOf(this, ExpectedTokenKindError.prototype);
     }
 }
@@ -88,6 +90,7 @@ export class ExpectedGeneralizedIdentifierError extends Error {
                 maybeFoundToken,
             ),
         );
+
         Object.setPrototypeOf(this, ExpectedGeneralizedIdentifierError.prototype);
     }
 }
@@ -108,6 +111,7 @@ export class RequiredParameterAfterOptionalParameterError extends Error {
         super(
             Localization.error_parse_requiredParameterAfterOptional(LocalizationUtils.getLocalizationTemplates(locale)),
         );
+
         Object.setPrototypeOf(this, RequiredParameterAfterOptionalParameterError.prototype);
     }
 }
@@ -143,6 +147,7 @@ export interface TokenWithColumnNumber {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function assertIsParseError(error: any): error is ParseError {
     Assert.isTrue(isParseError(error), "isParseError(error)");
+
     return true;
 }
 

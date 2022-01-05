@@ -28,12 +28,14 @@ export function assertGetLeftMostXor(nodeIdMapCollection: Collection, nodeId: nu
 
 export function maybeLeftMostXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
     const currentNode: TXorNode | undefined = maybeXor(nodeIdMapCollection, nodeId);
+
     if (currentNode === undefined) {
         return undefined;
     }
 
     let currentNodeId: number = currentNode.node.id;
     let maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(currentNodeId);
+
     while (maybeChildIds?.length) {
         currentNodeId = maybeChildIds[0];
         maybeChildIds = nodeIdMapCollection.childIdsById.get(currentNodeId);
@@ -44,6 +46,7 @@ export function maybeLeftMostXor(nodeIdMapCollection: Collection, nodeId: number
 
 export function maybeLeftMostLeaf(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): Ast.TNode | undefined {
     const maybeXorNode: TXorNode | undefined = maybeLeftMostXor(nodeIdMapCollection, nodeId);
+
     return maybeXorNode && XorNodeUtils.isAstXor(maybeXorNode) ? maybeXorNode.node : undefined;
 }
 
@@ -69,6 +72,7 @@ export function maybeRightMostLeaf(
         // Check if Ast.TNode or ParserContext.Node
         if (maybeAstNode !== undefined) {
             const astNode: Ast.TNode = maybeAstNode;
+
             if (maybeCondition && !maybeCondition(astNode)) {
                 continue;
             }
@@ -104,6 +108,7 @@ export function maybeRightMostLeaf(
 
         if (addChildren) {
             const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(nodeId);
+
             if (maybeChildIds !== undefined) {
                 // Add the child ids in reversed order to prioritize visiting the right most nodes first.
                 const childIds: ReadonlyArray<number> = maybeChildIds;

@@ -189,9 +189,7 @@ export function localizeTokenKind(localizationTemplates: ILocalizationTemplates,
 }
 
 export const Localization: ILocalization = {
-    error_common_cancellationError: (templates: ILocalizationTemplates) => {
-        return templates.error_common_cancellationError;
-    },
+    error_common_cancellationError: (templates: ILocalizationTemplates) => templates.error_common_cancellationError,
 
     error_common_invariantError: (
         templates: ILocalizationTemplates,
@@ -214,9 +212,8 @@ export const Localization: ILocalization = {
         }
     },
 
-    error_common_unknown: (templates: ILocalizationTemplates, innerError: string) => {
-        return StringUtils.assertGetFormatted(templates.error_common_unknown, new Map([["innerError", innerError]]));
-    },
+    error_common_unknown: (templates: ILocalizationTemplates, innerError: string) =>
+        StringUtils.assertGetFormatted(templates.error_common_unknown, new Map([["innerError", innerError]])),
 
     error_lex_badLineNumber: (templates: ILocalizationTemplates, kind: LexError.BadLineNumberKind) => {
         switch (kind) {
@@ -285,6 +282,7 @@ export const Localization: ILocalization = {
         const lineNumbers: string = [...errorLineMap.keys()]
             .map((lineNumber: number) => lineNumber.toString())
             .join(",");
+
         return StringUtils.assertGetFormatted(templates.error_lex_lineMap, new Map([["lineNumbers", lineNumbers]]));
     },
 
@@ -381,12 +379,11 @@ export const Localization: ILocalization = {
         }
     },
 
-    error_parse_invalidPrimitiveType: (templates: ILocalizationTemplates, token: Token.Token) => {
-        return StringUtils.assertGetFormatted(
+    error_parse_invalidPrimitiveType: (templates: ILocalizationTemplates, token: Token.Token) =>
+        StringUtils.assertGetFormatted(
             templates.error_parse_invalidPrimitiveType,
             new Map([["foundTokenKind", localizeTokenKind(templates, token.kind)]]),
-        );
-    },
+        ),
 
     error_parse_requiredParameterAfterOptional: (templates: ILocalizationTemplates) =>
         templates.error_parse_requiredParameterAfterOptional,

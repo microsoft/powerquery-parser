@@ -1,8 +1,11 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { Assert } from ".";
 
 export function all<T>(
     collection: ReadonlyArray<T>,
-    predicateFn: (value: T) => boolean = (value: T) => Boolean(value),
+    predicateFn: (value: T) => boolean = (value: T): boolean => Boolean(value),
 ): boolean {
     for (const element of collection) {
         if (!predicateFn(element)) {
@@ -21,6 +24,7 @@ export function assertIn<T>(
 ): number {
     const index: number = collection.indexOf(item);
     Assert.isTrue(index !== -1, maybeMessage, maybeDetails ?? { item });
+
     return index;
 }
 
@@ -41,6 +45,7 @@ export function assertIndexOfPredicate<T>(
 ): number {
     const index: number = indexOfPredicate(collection, predicateFn);
     Assert.isTrue(index !== -1, maybeMessage, maybeDetails);
+
     return index;
 }
 
@@ -60,6 +65,7 @@ export function assertNonZeroLength<T>(
 
 export function concatUnique<T>(left: ReadonlyArray<T>, right: ReadonlyArray<T>): ReadonlyArray<T> {
     const partial: T[] = [...left];
+
     for (const element of right) {
         if (partial.indexOf(element) === -1) {
             partial.push(element);
@@ -89,6 +95,7 @@ export function findReverse<T>(collection: ReadonlyArray<T>, predicate: (t: T) =
 
 export function includesPredicate<T>(collection: ReadonlyArray<T>, predicateFn: (element: T) => boolean): boolean {
     const numElements: number = collection.length;
+
     for (let index: number = 0; index < numElements; index += 1) {
         if (predicateFn(collection[index])) {
             return true;
@@ -108,6 +115,7 @@ export function includesUnique<T>(
 
 export function indexOfPredicate<T>(collection: ReadonlyArray<T>, predicateFn: (element: T) => boolean): number {
     const numElements: number = collection.length;
+
     for (let index: number = 0; index < numElements; index += 1) {
         if (predicateFn(collection[index])) {
             return index;
@@ -120,7 +128,7 @@ export function indexOfPredicate<T>(collection: ReadonlyArray<T>, predicateFn: (
 export function isSubset<T>(
     largerCollection: ReadonlyArray<T>,
     smallerCollection: ReadonlyArray<T>,
-    equalityFn: (left: T, right: T) => boolean = (left: T, right: T) => left === right,
+    equalityFn: (left: T, right: T) => boolean = (left: T, right: T): boolean => left === right,
 ): boolean {
     if (smallerCollection.length > largerCollection.length) {
         return false;
@@ -128,6 +136,7 @@ export function isSubset<T>(
 
     for (const smallerCollectionValue of smallerCollection) {
         let foundMatch: boolean = false;
+
         for (const largerCollectionValue of largerCollection) {
             if (equalityFn(smallerCollectionValue, largerCollectionValue)) {
                 foundMatch = true;

@@ -14,11 +14,13 @@ function assertBadLineNumberKind(lineNumber: number, expectedKind: Lexer.LexErro
     Assert.isError(triedUpdate);
 
     const error: Lexer.LexError.LexError = triedUpdate.error;
+
     if (!(error.innerError instanceof Lexer.LexError.BadLineNumberError)) {
         throw new Error(`AssertFailed: error.innerError instanceof LexError.BadLineNumber: ${JSON.stringify(error)}`);
     }
 
     const innerError: Lexer.LexError.BadLineNumberError = error.innerError;
+
     if (!(innerError.kind === expectedKind)) {
         throw new Error(`AssertFailed: innerError.kind === kind: ${JSON.stringify({ error, kind: expectedKind })}`);
     }
@@ -26,23 +28,28 @@ function assertBadLineNumberKind(lineNumber: number, expectedKind: Lexer.LexErro
 
 function assertExpectedKind(text: string, expectedKind: Lexer.LexError.ExpectedKind): void {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
+
     if (ResultUtils.isError(triedLex)) {
         throw new Error(`AssertFailed: ResultUtils.isError(triedLex)`);
     }
+
     const state: Lexer.State = triedLex.value;
     expect(state.lines.length).to.equal(1);
 
     const line: Lexer.TLine = state.lines[0];
+
     if (!Lexer.isErrorLine(line)) {
         throw new Error(`AssertFailed: Lexer.isErrorLine(line): ${JSON.stringify(line)}`);
     }
 
     const error: Lexer.LexError.TLexError = line.error;
+
     if (!(error.innerError instanceof Lexer.LexError.ExpectedError)) {
         throw new Error(`AssertFailed: error.innerError instanceof LexError.ExpectedError: ${JSON.stringify(line)}`);
     }
 
     const innerError: Lexer.LexError.ExpectedError = error.innerError;
+
     if (!(innerError.kind === expectedKind)) {
         throw new Error(`AssertFailed: innerError.kind === kind: ${JSON.stringify({ error, kind: expectedKind })}`);
     }
@@ -50,20 +57,24 @@ function assertExpectedKind(text: string, expectedKind: Lexer.LexError.ExpectedK
 
 function assertBadRangeKind(range: Lexer.Range, expectedKind: Lexer.LexError.BadRangeKind): void {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, `foo`);
+
     if (ResultUtils.isError(triedLex)) {
         throw new Error(`AssertFailed: ResultUtils.isError(triedLex)`);
     }
+
     const state: Lexer.State = triedLex.value;
 
     const TriedLex: Lexer.TriedLex = Lexer.tryUpdateRange(state, range, `bar`);
     Assert.isError(TriedLex);
 
     const error: Lexer.LexError.LexError = TriedLex.error;
+
     if (!(error.innerError instanceof Lexer.LexError.BadRangeError)) {
         throw new Error(`AssertFailed: error.innerError instanceof LexError.BadRangeError: ${JSON.stringify(error)}`);
     }
 
     const innerError: Lexer.LexError.BadRangeError = error.innerError;
+
     if (!(innerError.kind === expectedKind)) {
         throw new Error(`AssertFailed: innerError.kind === kind: ${JSON.stringify({ error, kind: expectedKind })}`);
     }
@@ -80,6 +91,7 @@ function assertUnterminatedMultilineTokenKind(
     Assert.isError(triedSnapshot);
 
     const error: Lexer.LexError.TLexError = triedSnapshot.error;
+
     if (!(error.innerError instanceof Lexer.LexError.UnterminatedMultilineTokenError)) {
         throw new Error(
             `AssertFailed: error.innerError instanceof LexError.UnterminatedMultilineTokenError: ${JSON.stringify(
@@ -89,6 +101,7 @@ function assertUnterminatedMultilineTokenKind(
     }
 
     const innerError: Lexer.LexError.UnterminatedMultilineTokenError = error.innerError;
+
     if (!(innerError.kind === expectedKind)) {
         throw new Error(`AssertFailed: innerError.kind === kind: ${JSON.stringify({ error, kind: expectedKind })}`);
     }
@@ -130,6 +143,7 @@ describe(`Lexer.Error`, () => {
                     lineCodeUnit: 0,
                 },
             };
+
             assertBadRangeKind(range, Lexer.LexError.BadRangeKind.SameLine_LineCodeUnitStart_Higher);
         });
 
@@ -144,6 +158,7 @@ describe(`Lexer.Error`, () => {
                     lineCodeUnit: 0,
                 },
             };
+
             assertBadRangeKind(range, Lexer.LexError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd);
         });
 
@@ -158,6 +173,7 @@ describe(`Lexer.Error`, () => {
                     lineCodeUnit: 0,
                 },
             };
+
             assertBadRangeKind(range, Lexer.LexError.BadRangeKind.LineNumberStart_LessThan_Zero);
         });
 
@@ -172,6 +188,7 @@ describe(`Lexer.Error`, () => {
                     lineCodeUnit: 0,
                 },
             };
+
             assertBadRangeKind(range, Lexer.LexError.BadRangeKind.LineNumberStart_GreaterThan_NumLines);
         });
 
@@ -186,6 +203,7 @@ describe(`Lexer.Error`, () => {
                     lineCodeUnit: 0,
                 },
             };
+
             assertBadRangeKind(range, Lexer.LexError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines);
         });
 
@@ -200,6 +218,7 @@ describe(`Lexer.Error`, () => {
                     lineCodeUnit: 200,
                 },
             };
+
             assertBadRangeKind(range, Lexer.LexError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength);
         });
 
@@ -214,6 +233,7 @@ describe(`Lexer.Error`, () => {
                     lineCodeUnit: 200,
                 },
             };
+
             assertBadRangeKind(range, Lexer.LexError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength);
         });
     });
