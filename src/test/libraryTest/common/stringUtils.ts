@@ -7,43 +7,80 @@ import { expect } from "chai";
 import { StringUtils } from "../../..";
 
 describe("StringUtils", () => {
-    describe(`isRegularIdentifier`, () => {
-        describe(`valid`, () => {
-            it(`foo`, () => expect(StringUtils.isRegularIdentifier("foo", false), "should be true").to.be.true);
-            it(`foo`, () => expect(StringUtils.isRegularIdentifier("foo", true), "should be true").to.be.true);
-            it(`foo.`, () => expect(StringUtils.isRegularIdentifier("foo.", true), "should be true").to.be.true);
+    describe(`maybeFindQuote`, () => {
+        it(`""`, () => {
+            const actual: StringUtils.FoundQuote | undefined = StringUtils.maybefindQuote(`""`, 0);
+
+            const expected: StringUtils.FoundQuote = {
+                indexStart: 0,
+                indexEnd: 2,
+                quoteLength: 2,
+            };
+
+            expect(actual).to.deep.equal(expected);
         });
 
-        describe(`invalid`, () => {
-            it(`foo.`, () => expect(StringUtils.isRegularIdentifier("foo.", false), "should be false").to.be.false);
-        });
-    });
+        it(`""""`, () => {
+            const actual: StringUtils.FoundQuote | undefined = StringUtils.maybefindQuote(`""""`, 0);
 
-    describe(`isGeneralizedIdentifier`, () => {
-        describe(`valid`, () => {
-            it("a", () => expect(StringUtils.isGeneralizedIdentifier("a"), "should be true").to.be.true);
-            it("a.1", () => expect(StringUtils.isGeneralizedIdentifier("a.1"), "should be true").to.be.true);
-            it("a b", () => expect(StringUtils.isGeneralizedIdentifier("a b"), "should be true").to.be.true);
-        });
+            const expected: StringUtils.FoundQuote = {
+                indexStart: 0,
+                indexEnd: 4,
+                quoteLength: 4,
+            };
 
-        describe(`invalid`, () => {
-            it("a..1", () => expect(StringUtils.isGeneralizedIdentifier("a..1"), "should be false").to.be.false);
-        });
-    });
-
-    describe(`isQuotedIdentifier`, () => {
-        describe(`valid`, () => {
-            it(`#"foo"`, () => expect(StringUtils.isQuotedIdentifier(`#"foo"`), "should be true").to.be.true);
-            it(`#""`, () => expect(StringUtils.isQuotedIdentifier(`#""`), "should be true").to.be.true);
-            it(`#""""`, () => expect(StringUtils.isQuotedIdentifier(`#""""`), "should be true").to.be.true);
-            it(`#"a""b""c"`, () => expect(StringUtils.isQuotedIdentifier(`#"a""b""c"`), "should be true").to.be.true);
-            it(`#"""b""c"`, () => expect(StringUtils.isQuotedIdentifier(`#"""b""c"`), "should be true").to.be.true);
-            it(`#"a""b"""`, () => expect(StringUtils.isQuotedIdentifier(`#"a""b"""`), "should be true").to.be.true);
+            expect(actual).to.deep.equal(expected);
         });
 
-        describe(`invalid`, () => {
-            it(`#"`, () => expect(StringUtils.isGeneralizedIdentifier(`#"`), "should be false").to.be.false);
-            it(`""`, () => expect(StringUtils.isGeneralizedIdentifier(`""`), "should be false").to.be.false);
+        it(`"""a"""`, () => {
+            const actual: StringUtils.FoundQuote | undefined = StringUtils.maybefindQuote(`"""a"""`, 0);
+
+            const expected: StringUtils.FoundQuote = {
+                indexStart: 0,
+                indexEnd: 7,
+                quoteLength: 7,
+            };
+
+            expect(actual).to.deep.equal(expected);
+        });
+
+        it(`"""abc"""`, () => {
+            const actual: StringUtils.FoundQuote | undefined = StringUtils.maybefindQuote(`"""abc"""`, 0);
+
+            const expected: StringUtils.FoundQuote = {
+                indexStart: 0,
+                indexEnd: 9,
+                quoteLength: 9,
+            };
+
+            expect(actual).to.deep.equal(expected);
+        });
+
+        it(`"`, () => expect(StringUtils.maybefindQuote(`"`, 0)).to.be.undefined);
+        it(`"abc`, () => expect(StringUtils.maybefindQuote(`"abc`, 0)).to.be.undefined);
+
+        it(`_""`, () => {
+            const actual: StringUtils.FoundQuote | undefined = StringUtils.maybefindQuote(`_""`, 1);
+
+            const expected: StringUtils.FoundQuote = {
+                indexStart: 1,
+                indexEnd: 3,
+                quoteLength: 3,
+            };
+
+            expect(actual).to.deep.equal(expected);
+        });
+
+        it(`_"a"`, () => {
+            const actual: StringUtils.FoundQuote | undefined = StringUtils.maybefindQuote(`_"a"`, 1);
+
+            const expected: StringUtils.FoundQuote = {
+                indexStart: 1,
+                indexEnd: 4,
+                quoteLength: 3,
+            };
+
+            expect(actual).to.deep.equal(expected);
         });
     });
 

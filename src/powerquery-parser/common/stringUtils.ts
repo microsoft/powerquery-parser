@@ -7,17 +7,16 @@ import { Assert, CommonError, Pattern } from ".";
 
 export const graphemeSplitter: GraphemeSplitter = new GraphemeSplitter();
 
+export interface FoundQuote {
+    readonly indexStart: number;
+    readonly indexEnd: number;
+    // Spans [indexStart, indexEnd)
+    readonly quoteLength: number;
+}
+
 export const enum NewlineKind {
     SingleCharacter = "SingleCharacter",
     DoubleCharacter = "DoubleCharacter", // CARRIAGE RETURN + LINE FEED
-}
-
-export const enum IdentifierKind {
-    Generalized = "Generalized",
-    Invalid = "Invalid",
-    Quote = "Quote",
-    QuoteRequired = "QuoteRequired",
-    Regular = "Regular",
 }
 
 export interface GraphemePosition {
@@ -81,32 +80,8 @@ export function graphemePositionFrom(
     };
 }
 
-export function identifierKind(text: string, allowTrailingPeriod: boolean): IdentifierKind {
-    if (isRegularIdentifier(text, allowTrailingPeriod)) {
-        return IdentifierKind.Regular;
-    } else if (isQuotedIdentifier(text)) {
-        return isRegularIdentifier(text.slice(2, -1), false) ? IdentifierKind.Quote : IdentifierKind.QuoteRequired;
-    } else if (isGeneralizedIdentifier(text)) {
-        return IdentifierKind.Generalized;
-    } else {
-        return IdentifierKind.Invalid;
-    }
-}
-
-export function isGeneralizedIdentifier(text: string): boolean {
-    return maybeGeneralizedIdentifierLength(text, 0) === text.length;
-}
-
-export function isRegularIdentifier(text: string, allowTrailingPeriod: boolean): boolean {
-    return maybeIdentifierLength(text, 0, allowTrailingPeriod) === text.length;
-}
-
 export function isNumeric(text: string): boolean {
     return maybeRegexMatchLength(Pattern.Numeric, text, 0) === text.length;
-}
-
-export function isQuotedIdentifier(text: string): boolean {
-    return maybeQuotedIdentifier(text, 0) === text.length;
 }
 
 export function maybeRegexMatchLength(pattern: RegExp, text: string, index: number): number | undefined {
@@ -116,101 +91,56 @@ export function maybeRegexMatchLength(pattern: RegExp, text: string, index: numb
     return matches !== null && matches.index === index ? matches[0].length : undefined;
 }
 
-export function maybeIdentifierLength(text: string, index: number, allowTrailingPeriod: boolean): number | undefined {
-    const startingIndex: number = index;
+// Attempt to find quoted text at the given starting index.
+// Return undefined if the starting index isn't a quote or if there is no closing quotes.
+export function maybefindQuote(text: string, indexStart: number): FoundQuote | undefined {
     const textLength: number = text.length;
 
-    let state: IdentifierRegexpState = IdentifierRegexpState.Start;
-    let maybeMatchLength: number | undefined;
-
-    while (state !== IdentifierRegexpState.Done) {
-        if (index === textLength) {
-            return index - startingIndex;
-        }
-
-        switch (state) {
-            case IdentifierRegexpState.Start:
-                maybeMatchLength = maybeRegexMatchLength(Pattern.IdentifierStartCharacter, text, index);
-
-                if (maybeMatchLength === undefined) {
-                    state = IdentifierRegexpState.Done;
-                } else {
-                    state = IdentifierRegexpState.RegularIdentifier;
-                    index += maybeMatchLength;
-                }
-
-                break;
-
-            case IdentifierRegexpState.RegularIdentifier:
-                // Don't consider `..` or `...` part of an identifier.
-                if (allowTrailingPeriod && text[index] === "." && text[index + 1] !== ".") {
-                    index += 1;
-                }
-
-                maybeMatchLength = maybeRegexMatchLength(Pattern.IdentifierPartCharacters, text, index);
-
-                if (maybeMatchLength === undefined) {
-                    state = IdentifierRegexpState.Done;
-                } else {
-                    index += maybeMatchLength;
-
-                    // Don't consider `..` or `...` part of an identifier.
-                    if (allowTrailingPeriod && text[index] === "." && text[index + 1] !== ".") {
-                        index += 1;
-                    }
-
-                    state = IdentifierRegexpState.Start;
-                }
-
-                break;
-
-            default:
-                throw Assert.isNever(state);
-        }
+    if (
+        // If it doesn't start with a quote
+        text[indexStart] !== '"' ||
+        // or indexStart was the last character
+        indexStart + 1 === textLength
+    ) {
+        return undefined;
     }
 
-    return index !== startingIndex ? index - startingIndex : undefined;
-}
-
-export function maybeGeneralizedIdentifierLength(text: string, index: number): number | undefined {
-    const startingIndex: number = index;
-    const textLength: number = text.length;
-
     let continueMatching: boolean = true;
+    let index: number = indexStart + 1;
 
-    while (continueMatching === true) {
-        const currentChr: string = text[index];
+    while (continueMatching) {
+        const chr1: string | undefined = text[index];
 
-        if (currentChr === " ") {
-            index += 1;
-        } else if (currentChr === ".") {
-            if (text[index - 1] === ".") {
+        if (chr1 === '"') {
+            const chr2: string | undefined = text[index + 1];
+
+            if (chr2 !== '"') {
                 continueMatching = false;
-                break;
+                index += 1;
+
+                continue;
+            } else {
+                index += 2;
             }
-
-            index += 1;
-        } else {
-            const maybeMatchLength: number | undefined = maybeRegexMatchLength(
-                Pattern.IdentifierPartCharacters,
-                text,
-                index,
-            );
-
-            if (maybeMatchLength === undefined) {
-                continueMatching = false;
-                break;
-            }
-
-            index += maybeMatchLength;
         }
+
+        index += 1;
 
         if (index >= textLength) {
             continueMatching = false;
         }
     }
 
-    return index !== startingIndex ? index - startingIndex : undefined;
+    // If no valid end quote was found
+    if (index > textLength) {
+        return undefined;
+    }
+
+    return {
+        indexStart,
+        indexEnd: index,
+        quoteLength: index - indexStart,
+    };
 }
 
 export function maybeNewlineKindAt(text: string, index: number): NewlineKind | undefined {
@@ -254,56 +184,4 @@ export function maybeNormalizeNumber(text: string): string | undefined {
     }
 
     return isPositive === true ? allButUnaryOperators : `-${allButUnaryOperators}`;
-}
-
-export function maybeQuotedIdentifier(text: string, index: number): number | undefined {
-    if (text[index] !== "#" || text[index + 1] !== '"') {
-        return undefined;
-    }
-
-    const startingIndex: number = index;
-    const textLength: number = text.length;
-    let continueMatching: boolean = true;
-    index += 2;
-
-    while (continueMatching) {
-        const chr1: string | undefined = text[index];
-
-        if (chr1 === '"') {
-            const chr2: string | undefined = text[index + 1];
-
-            if (chr2 !== '"') {
-                continueMatching = false;
-                index += 1;
-
-                continue;
-            } else {
-                index += 2;
-            }
-        }
-
-        index += 1;
-
-        if (index >= textLength) {
-            continueMatching = false;
-        }
-    }
-
-    return index !== startingIndex ? index - startingIndex : undefined;
-}
-
-export function normalizeIdentifier(text: string): string {
-    if (isQuotedIdentifier(text)) {
-        const stripped: string = text.slice(2, -1);
-
-        return isRegularIdentifier(stripped, false) ? stripped : text;
-    } else {
-        return text;
-    }
-}
-
-const enum IdentifierRegexpState {
-    Start,
-    RegularIdentifier,
-    Done,
 }

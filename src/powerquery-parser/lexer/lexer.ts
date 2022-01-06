@@ -14,7 +14,7 @@ import {
     ResultUtils,
     StringUtils,
 } from "../common";
-import { Keyword, Token } from "../language";
+import { Keyword, TextUtils, Token } from "../language";
 import { LexError } from ".";
 import { LexSettings } from "../settings";
 
@@ -1147,7 +1147,7 @@ function maybeIndexOfRegexEnd(pattern: RegExp, text: string, positionStart: numb
 }
 
 function maybeIndexOfIdentifierEnd(text: string, positionStart: number): number | undefined {
-    const maybeLength: number | undefined = StringUtils.maybeIdentifierLength(text, positionStart, true);
+    const maybeLength: number | undefined = TextUtils.maybeIdentifierLength(text, positionStart, true);
 
     return maybeLength !== undefined ? positionStart + maybeLength : undefined;
 }

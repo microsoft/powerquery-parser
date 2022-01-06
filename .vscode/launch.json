@@ -9,7 +9,15 @@
             "request": "launch",
             "name": "Debug Library Tests",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-            "args": ["--inspect", "--colors", "--timeout", "999999", "${workspaceFolder}/lib/test/libraryTest/**/*.js"],
+            "args": [
+                "--inspect",
+                "--colors",
+                "--timeout",
+                "999999",
+                "${workspaceFolder}/lib/test/libraryTest/**/*.js",
+                "-g",
+                "WIP"
+            ],
             "preLaunchTask": "watch",
             "internalConsoleOptions": "openOnSessionStart"
         },
