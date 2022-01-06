@@ -6,6 +6,7 @@ export function assertAddUnique<T>(collection: Set<T>, item: T, maybeMessage?: s
         maybeMessage ?? `collection expected to not already contain the given item`,
         maybeDetails ?? { item },
     );
+
     collection.add(item);
 }
 

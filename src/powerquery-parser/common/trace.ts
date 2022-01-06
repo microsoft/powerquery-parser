@@ -142,7 +142,7 @@ export class Trace {
         this.trace(TraceConstant.Entry, maybeDetails);
     }
 
-    public trace(message: string, maybeDetails?: object) {
+    public trace(message: string, maybeDetails?: object): void {
         this.emitTraceFn(this, message, maybeDetails);
     }
 
@@ -166,7 +166,7 @@ export class BenchmarkTrace extends Trace {
         super(emitTraceFn, phase, task, id, maybeDetails);
     }
 
-    public override trace(message: string, maybeDetails?: object) {
+    public override trace(message: string, maybeDetails?: object): void {
         const timeNow: number = performanceNow();
 
         super.trace(message, {
@@ -179,14 +179,15 @@ export class BenchmarkTrace extends Trace {
 
 export class NoOpTrace extends Trace {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    public override trace(_message: string, _maybeDetails?: object) {}
+    public override trace(_message: string, _maybeDetails?: object): void {}
 }
 
 function createAutoIncrementId(): () => string {
     let counter: number = 0;
 
-    return () => {
+    return (): string => {
         counter += 1;
+
         return counter.toString();
     };
 }

@@ -12,6 +12,7 @@ const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"
 
 export function getPowerQueryFilesRecursively(rootDirectory: string): ReadonlyArray<string> {
     const dirs: ReadonlyArray<string> = getDirectoryPaths(rootDirectory);
+
     let files: ReadonlyArray<string> = dirs
         // go through each directory
         .map(getPowerQueryFilesRecursively)
@@ -27,6 +28,7 @@ export function getPowerQueryFilesRecursively(rootDirectory: string): ReadonlyAr
 export function readContents(filePath: string): string {
     // tslint:disable-next-line: non-literal-fs-path
     const contents: string = fs.readFileSync(filePath, "utf8");
+
     return contents.replace(/^\uFEFF/, "");
 }
 
@@ -49,6 +51,7 @@ export function writeContents(filePath: string, contents: string): void {
 
 export function tryLexParse(settings: LexSettings & ParseSettings, filePath: string): Task.TriedLexParseTask {
     const contents: string = readContents(filePath);
+
     return TaskUtils.tryLexParse(settings, contents);
 }
 

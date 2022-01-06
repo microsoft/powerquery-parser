@@ -6,11 +6,13 @@ import { CommonError } from ".";
 
 export function asDefined<T>(maybeValue: T | undefined, maybeMessage?: string, maybeDetails?: object): NonNullable<T> {
     isDefined(maybeValue, maybeMessage, maybeDetails);
+
     return maybeValue;
 }
 
 export function asInstanceofError<T>(value: T): Error {
     isInstanceofError(value);
+
     return value;
 }
 
@@ -78,11 +80,13 @@ export function isError<T, E>(result: Result<T, E>): asserts result is ErrorResu
 
 export function unboxOk<T, E>(result: Result<T, E>): T {
     isOk(result);
+
     return result.value;
 }
 
 export function unboxError<T, E>(result: Result<T, E>): E {
     isError(result);
+
     return result.error;
 }
 

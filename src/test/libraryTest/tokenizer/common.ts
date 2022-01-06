@@ -31,6 +31,7 @@ export class Tokenizer implements TokensProvider {
             locale: DefaultLocale,
             maybeCancellationToken: undefined,
         };
+
         return new TokenizerState(lexerState);
     }
 
@@ -66,6 +67,7 @@ export class TokenizerState implements IState {
 
         // Check for initial state.
         const rightLexerState: Lexer.State = (other as TokenizerState).lexerState;
+
         if (this.lexerState.lines.length === 0) {
             return rightLexerState.lines.length === 0;
         }
@@ -73,6 +75,7 @@ export class TokenizerState implements IState {
         // Compare last line state.
         const leftLastLine: Lexer.TLine = this.lexerState.lines[this.lexerState.lines.length - 1];
         const rightLastLine: Lexer.TLine = rightLexerState.lines[rightLexerState.lines.length - 1];
+
         return leftLastLine.lineModeEnd === rightLastLine.lineModeEnd;
     }
 }

@@ -10,7 +10,7 @@ export class ImmutableSet<T> {
 
     public constructor(
         iterable: Iterable<T> = [],
-        private readonly equalityFn: (left: T, right: T) => boolean = (left: T, right: T) => left === right,
+        private readonly equalityFn: (left: T, right: T) => boolean = (left: T, right: T): boolean => left === right,
     ) {
         this.internalCollection = [...iterable];
         this.size = this.internalCollection.length;

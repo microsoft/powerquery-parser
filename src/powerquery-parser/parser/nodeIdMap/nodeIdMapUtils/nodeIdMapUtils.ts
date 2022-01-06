@@ -10,12 +10,14 @@ import { ParseContext } from "../../context";
 
 export function copy(nodeIdMapCollection: Collection): Collection {
     const contextNodeById: Map<number, ParseContext.TNode> = new Map(
-        [...nodeIdMapCollection.contextNodeById.entries()].map(([id, contextNode]: [number, ParseContext.TNode]) => {
-            return [id, { ...contextNode }];
-        }),
+        [...nodeIdMapCollection.contextNodeById.entries()].map(([id, contextNode]: [number, ParseContext.TNode]) => [
+            id,
+            { ...contextNode },
+        ]),
     );
 
     const idsByNodeKind: IdsByNodeKind = new Map();
+
     for (const [nodeKind, nodeIds] of nodeIdMapCollection.idsByNodeKind.entries()) {
         idsByNodeKind.set(nodeKind, new Set(nodeIds));
     }
@@ -46,6 +48,7 @@ export function hasParsedToken(nodeIdMapCollection: Collection, nodeId: number):
         // There might be a child under here.
         else if (numChildren === 1) {
             const childId: number = maybeChildIds[0];
+
             // We know it's an Ast Node, therefore something was parsed.
             if (nodeIdMapCollection.astNodeById.has(childId)) {
                 return true;
@@ -70,6 +73,7 @@ export function xorNodeTokenRange(nodeIdMapCollection: Collection, xorNode: TXor
     switch (xorNode.kind) {
         case XorNodeKind.Ast: {
             const tokenRange: Token.TokenRange = xorNode.node.tokenRange;
+
             return {
                 tokenIndexStart: tokenRange.tokenIndexStart,
                 tokenIndexEnd: tokenRange.tokenIndexEnd,
@@ -81,6 +85,7 @@ export function xorNodeTokenRange(nodeIdMapCollection: Collection, xorNode: TXor
             let tokenIndexEnd: number;
 
             const maybeRightMostChild: Ast.TNode | undefined = maybeRightMostLeaf(nodeIdMapCollection, xorNode.node.id);
+
             if (maybeRightMostChild === undefined) {
                 tokenIndexEnd = contextNode.tokenIndexStart;
             } else {

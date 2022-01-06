@@ -30,12 +30,14 @@ export function isEqualMap<K, V>(
 
     for (const [leftKey, leftValue] of left.entries()) {
         const maybeRightValue: V | undefined = right.get(leftKey);
+
         if (maybeRightValue === undefined) {
             return false;
         } else if (valueCmpFn(leftValue, maybeRightValue) === false) {
             return false;
         }
     }
+
     return true;
 }
 
@@ -50,6 +52,7 @@ export function isSubsetMap<K, V>(
 
     for (const [key, leftType] of left.entries()) {
         const maybeRightType: V | undefined = right.get(key);
+
         if (maybeRightType === undefined || !valueCmpFn(leftType, maybeRightType)) {
             return false;
         }

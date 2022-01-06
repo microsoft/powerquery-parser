@@ -222,6 +222,7 @@ function isCompatibleWithFieldSpecificationList(
         right.fields,
         (leftValue: Type.TPowerQueryType, rightValue: Type.TPowerQueryType) => {
             const result: boolean | undefined = isCompatible(leftValue, rightValue);
+
             return result !== undefined && result;
         },
     );
@@ -460,6 +461,7 @@ function isCompatibleDefinedListOrDefinedListType<T extends Type.DefinedList | T
     }
 
     const numElements: number = leftElements.length;
+
     for (let index: number = 0; index < numElements; index += 1) {
         if (!isCompatible(leftElements[index], rightElements[index])) {
             return false;

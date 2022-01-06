@@ -74,15 +74,18 @@ function readBinOpExpression(
     // expressions are of length N + 1
     let operators: Constant.TBinOpExpressionOperator[] = [];
     let operatorConstants: Ast.IConstant<Constant.TBinOpExpressionOperator>[] = [];
+
     let expressions: (Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType)[] = [
         parser.readUnaryExpression(state, parser),
     ];
 
     let maybeOperator: Constant.TBinOpExpressionOperator | undefined =
         ConstantUtils.maybeBinOpExpressionOperatorKindFrom(state.maybeCurrentTokenKind);
+
     while (maybeOperator !== undefined) {
         const operator: Constant.TBinOpExpressionOperator = maybeOperator;
         operators.push(operator);
+
         operatorConstants.push(
             NaiveParseSteps.readTokenKindAsConstant<Constant.TBinOpExpressionOperator>(
                 state,
@@ -107,6 +110,7 @@ function readBinOpExpression(
     // There was a single TUnaryExpression, not a TBinOpExpression.
     if (expressions.length === 1) {
         ParseStateUtils.deleteContext(state, placeholderContextId);
+
         return expressions[0];
     }
 
@@ -114,6 +118,7 @@ function readBinOpExpression(
     // which might be previously built TBinOpExpression nodes.
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
     const newNodeThreshold: number = state.contextState.idCounter;
+
     let placeholderContextChildren: ReadonlyArray<number> = MapUtils.assertGet(
         nodeIdMapCollection.childIdsById,
         placeholderContextId,
@@ -125,6 +130,7 @@ function readBinOpExpression(
 
         for (let index: number = 0; index < operators.length; index += 1) {
             const currentPrecedence: number = ConstantUtils.binOpExpressionOperatorPrecedence(operators[index]);
+
             if (minPrecedence > currentPrecedence) {
                 minPrecedence = currentPrecedence;
                 minPrecedenceIndex = index;
@@ -132,12 +138,16 @@ function readBinOpExpression(
         }
 
         const newBinOpExpressionId: number = ParseContextUtils.nextId(state.contextState);
+
         const left: TypeScriptUtils.StripReadonly<
             Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType
         > = expressions[minPrecedenceIndex];
+
         const operator: Constant.TBinOpExpressionOperator = operators[minPrecedenceIndex];
+
         const operatorConstant: TypeScriptUtils.StripReadonly<Ast.IConstant<Constant.TBinOpExpressionOperator>> =
             operatorConstants[minPrecedenceIndex];
+
         const right: TypeScriptUtils.StripReadonly<
             Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType
         > = expressions[minPrecedenceIndex + 1];
@@ -148,6 +158,7 @@ function readBinOpExpression(
 
         const leftTokenRange: Token.TokenRange = left.tokenRange;
         const rightTokenRange: Token.TokenRange = right.tokenRange;
+
         const newBinOpExpression: Ast.TBinOpExpression = {
             kind: binOpExpressionNodeKindFrom(operator),
             id: newBinOpExpressionId,
@@ -168,6 +179,7 @@ function readBinOpExpression(
 
         operators = ArrayUtils.removeAtIndex(operators, minPrecedenceIndex);
         operatorConstants = ArrayUtils.removeAtIndex(operatorConstants, minPrecedenceIndex);
+
         expressions = expressions = [
             ...expressions.slice(0, minPrecedenceIndex),
             newBinOpExpression,
@@ -186,6 +198,7 @@ function readBinOpExpression(
         const maybeIdsForSpecificNodeKind: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
             newBinOpExpression.kind,
         );
+
         if (maybeIdsForSpecificNodeKind) {
             maybeIdsForSpecificNodeKind.add(newBinOpExpression.id);
         } else {
@@ -195,24 +208,30 @@ function readBinOpExpression(
         // All TUnaryExpression and operatorConstants start by being placed under the context node.
         // They need to be removed for deleteContext(placeholderContextId) to succeed.
         placeholderContextChildren = ArrayUtils.removeFirstInstance(placeholderContextChildren, operatorConstant.id);
+
         if (left.id <= newNodeThreshold) {
             placeholderContextChildren = ArrayUtils.removeFirstInstance(placeholderContextChildren, left.id);
         }
+
         if (right.id <= newNodeThreshold) {
             placeholderContextChildren = ArrayUtils.removeFirstInstance(placeholderContextChildren, right.id);
         }
+
         nodeIdMapCollection.childIdsById.set(placeholderContextId, placeholderContextChildren);
     }
 
     const lastExpression: Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType = expressions[0];
+
     Assert.isTrue(AstUtils.isTBinOpExpression(lastExpression), `lastExpression should be a TBinOpExpression`, {
         lastExpressionId: lastExpression.id,
         lastExpressionKind: lastExpression.kind,
     });
+
     nodeIdMapCollection.childIdsById.set(placeholderContextId, [lastExpression.id]);
     nodeIdMapCollection.parentIdById.set(lastExpression.id, placeholderContextId);
 
     ParseStateUtils.deleteContext(state, placeholderContextId);
+
     return lastExpression;
 }
 
@@ -260,6 +279,7 @@ function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUnaryExpre
     state.maybeCancellationToken?.throwIfCancelled();
 
     let maybePrimaryExpression: Ast.TPrimaryExpression | undefined;
+
     // LL(1)
     switch (state.maybeCurrentTokenKind) {
         // PrimaryExpression
@@ -278,6 +298,7 @@ function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUnaryExpre
                 Disambiguation.BracketDisambiguation.FieldSelection,
                 Disambiguation.BracketDisambiguation.FieldProjection,
             ]);
+
             break;
 
         case Token.TokenKind.LeftBrace:
@@ -320,6 +341,7 @@ function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUnaryExpre
 
     // We should only reach this code block if a primary expression was read.
     const primaryExpression: Ast.TPrimaryExpression = maybePrimaryExpression;
+
     if (ParseStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex)) {
         return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
     } else {

@@ -86,6 +86,7 @@ export function simplifyAsNullablePrimitiveType(node: Ast.AsNullablePrimitiveTyp
     let primitiveTypeConstantKind: Constant.PrimitiveTypeConstant;
 
     const nullablePrimitiveType: Ast.TNullablePrimitiveType = node.paired;
+
     switch (nullablePrimitiveType.kind) {
         case Ast.NodeKind.NullablePrimitiveType:
             isNullable = true;

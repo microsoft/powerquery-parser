@@ -167,12 +167,14 @@ export function isParseStageParseError(task: TTask): task is ParseTaskParseError
 
 export function tryLex(settings: LexSettings, text: string): TriedLexTask {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(settings, text);
+
     if (ResultUtils.isError(triedLex)) {
         return createLexTaskError(triedLex.error);
     }
-    const state: Lexer.State = triedLex.value;
 
+    const state: Lexer.State = triedLex.value;
     const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(state);
+
     if (maybeErrorLineMap) {
         return createLexTaskError(
             new Lexer.LexError.LexError(new Lexer.LexError.ErrorLineMapError(settings.locale, maybeErrorLineMap)),
@@ -202,9 +204,11 @@ export function tryParse(settings: ParseSettings, lexerSnapshot: Lexer.LexerSnap
 
 export function tryLexParse(settings: LexSettings & ParseSettings, text: string): TriedLexParseTask {
     const triedLexTask: TriedLexTask = tryLex(settings, text);
+
     if (triedLexTask.resultKind === ResultKind.Error) {
         return triedLexTask;
     }
+
     const lexerSnapshot: Lexer.LexerSnapshot = triedLexTask.lexerSnapshot;
 
     return tryParse(settings, lexerSnapshot);

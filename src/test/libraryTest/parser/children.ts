@@ -31,6 +31,7 @@ function createActual(lexParseOk: Task.ParseTaskOk): ChildIdsByIdEntry[] {
 describe("Parser.Children", () => {
     it(`() as number => 1`, () => {
         const text: string = `() as number => 1`;
+
         const expected: ReadonlyArray<ChildIdsByIdEntry> = [
             {
                 childNodeIds: [2, 6, 9, 12],
@@ -48,14 +49,17 @@ describe("Parser.Children", () => {
                 kind: Language.Ast.NodeKind.AsNullablePrimitiveType,
             },
         ];
+
         const actual: ReadonlyArray<ChildIdsByIdEntry> = createActual(
             TestAssertUtils.assertGetLexParseOk(DefaultSettings, text),
         );
+
         expect(actual).to.deep.equal(expected);
     });
 
     it(`null ?? 1 ?? 2`, () => {
         const text: string = `null ?? 1 ?? 2`;
+
         const expected: ReadonlyArray<ChildIdsByIdEntry> = [
             {
                 childNodeIds: [3, 4, 5],
@@ -68,9 +72,11 @@ describe("Parser.Children", () => {
                 kind: Language.Ast.NodeKind.NullCoalescingExpression,
             },
         ];
+
         const actual: ReadonlyArray<ChildIdsByIdEntry> = createActual(
             TestAssertUtils.assertGetLexParseOk(DefaultSettings, text),
         );
+
         expect(actual).to.deep.equal(expected);
     });
 });

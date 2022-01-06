@@ -53,6 +53,7 @@ export function isEqualTypes(
     }
 
     const numTypes: number = leftTypes.length;
+
     for (let index: number = 0; index < numTypes; index += 1) {
         if (!isTypeInArray(leftTypes, rightTypes[index])) {
             return false;
@@ -139,6 +140,7 @@ export function isEqualDefinedList(left: Type.DefinedList, right: Type.DefinedLi
     }
 
     const rightElements: ReadonlyArray<Type.TPowerQueryType> = right.elements;
+
     return ArrayUtils.all(
         left.elements.map((leftType: Type.TPowerQueryType, index: number) =>
             isEqualType(leftType, rightElements[index]),
@@ -154,6 +156,7 @@ export function isEqualDefinedListType(left: Type.DefinedListType, right: Type.D
     }
 
     const rightElements: ReadonlyArray<Type.TPowerQueryType> = right.itemTypes;
+
     return ArrayUtils.all(
         left.itemTypes.map((leftType: Type.TPowerQueryType, index: number) =>
             isEqualType(leftType, rightElements[index]),
@@ -198,6 +201,7 @@ export function isEqualFieldSpecificationList(
 
     for (const [key, leftValue] of left.fields.entries()) {
         const maybeRightValue: Type.TPowerQueryType | undefined = right.fields.get(key);
+
         if (maybeRightValue === undefined || !isEqualType(leftValue, maybeRightValue)) {
             return false;
         }
@@ -217,9 +221,11 @@ export function isEqualFunctionParameters(
     }
 
     const numParameters: number = left.length;
+
     for (let index: number = 0; index < numParameters; index += 1) {
         const nthLeft: Type.FunctionParameter = left[index];
         const nthRight: Type.FunctionParameter = right[index];
+
         if (!isEqualFunctionParameter(nthLeft, nthRight)) {
             return false;
         }

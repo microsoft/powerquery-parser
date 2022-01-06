@@ -20,6 +20,7 @@ export function tryParse(parseSettings: ParseSettings, lexerSnapshot: LexerSnaps
     }
 
     const parseState: ParseState = parseSettings.createParseState(lexerSnapshot, defaultOverrides(parseSettings));
+
     try {
         const root: Ast.TNode = maybeParserEntryPointFn(parseState, parseSettings.parser);
         ParseStateUtils.assertIsDoneParsing(parseState);
@@ -43,9 +44,11 @@ export function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: Le
         lexerSnapshot,
         defaultOverrides(parseSettings),
     );
+
     try {
         root = parseSettings.parser.readExpression(expressionDocumentState, parseSettings.parser);
         ParseStateUtils.assertIsDoneParsing(expressionDocumentState);
+
         return ResultUtils.boxOk({
             lexerSnapshot,
             root,
@@ -58,9 +61,11 @@ export function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: Le
             lexerSnapshot,
             defaultOverrides(parseSettings),
         );
+
         try {
             root = parseSettings.parser.readSectionDocument(sectionDocumentState, parseSettings.parser);
             ParseStateUtils.assertIsDoneParsing(sectionDocumentState);
+
             return ResultUtils.boxOk({
                 lexerSnapshot,
                 root,
@@ -120,11 +125,13 @@ export function restoreCheckpoint(state: ParseState, checkpoint: ParseStateCheck
 
     const newContextNodeIds: number[] = [];
     const newAstNodeIds: number[] = [];
+
     for (const nodeId of nodeIdMapCollection.astNodeById.keys()) {
         if (nodeId > backupIdCounter) {
             newAstNodeIds.push(nodeId);
         }
     }
+
     for (const nodeId of nodeIdMapCollection.contextNodeById.keys()) {
         if (nodeId > backupIdCounter) {
             newContextNodeIds.push(nodeId);
@@ -132,11 +139,13 @@ export function restoreCheckpoint(state: ParseState, checkpoint: ParseStateCheck
     }
 
     const reverseNumberSort: (left: number, right: number) => number = (left: number, right: number) => right - left;
+
     for (const nodeId of newAstNodeIds.sort(reverseNumberSort)) {
         const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
         const parentWillBeDeleted: boolean = maybeParentId !== undefined && maybeParentId >= backupIdCounter;
         ParseContextUtils.deleteAst(state.contextState, nodeId, parentWillBeDeleted);
     }
+
     for (const nodeId of newContextNodeIds.sort(reverseNumberSort)) {
         ParseContextUtils.deleteContext(state.contextState, nodeId);
     }

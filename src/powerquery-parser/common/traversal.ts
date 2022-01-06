@@ -103,6 +103,7 @@ export function tryTraverse<State extends ITraversalState<ResultType>, ResultTyp
             expandNodesFn,
             maybeEarlyExitFn,
         );
+
         return state.result;
     });
 }
@@ -117,6 +118,7 @@ export function assertGetAllAstChildren<State extends ITraversalState<ResultType
 
     if (maybeChildIds) {
         const childIds: ReadonlyArray<number> = maybeChildIds;
+
         return childIds.map((nodeId: number) => NodeIdMapUtils.assertUnboxAst(nodeIdMapCollection.astNodeById, nodeId));
     } else {
         return [];
@@ -132,17 +134,21 @@ export function assertGetAllXorChildren<State extends ITraversalState<ResultType
     switch (xorNode.kind) {
         case XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
+
             return assertGetAllAstChildren(_state, astNode, nodeIdMapCollection).map(XorNodeUtils.boxAst);
         }
+
         case XorNodeKind.Context: {
             const result: TXorNode[] = [];
             const contextNode: ParseContext.TNode = xorNode.node;
+
             const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(
                 contextNode.id,
             );
 
             if (maybeChildIds !== undefined) {
                 const childIds: ReadonlyArray<number> = maybeChildIds;
+
                 for (const childId of childIds) {
                     result.push(NodeIdMapUtils.assertGetXor(nodeIdMapCollection, childId));
                 }
@@ -150,6 +156,7 @@ export function assertGetAllXorChildren<State extends ITraversalState<ResultType
 
             return result;
         }
+
         default:
             throw Assert.isNever(xorNode);
     }
@@ -162,6 +169,7 @@ export function maybeExpandXorParent<T>(
     nodeIdMapCollection: NodeIdMap.Collection,
 ): ReadonlyArray<TXorNode> {
     const maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXor(nodeIdMapCollection, xorNode.node.id);
+
     return maybeParent !== undefined ? [maybeParent] : [];
 }
 

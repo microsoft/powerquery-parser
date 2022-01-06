@@ -8,6 +8,7 @@ import { Type } from "..";
 
 export function createPrimitiveType<T extends Type.TypeKind>(isNullable: boolean, typeKind: T): Type.TPrimitiveType {
     const key: string = primitiveTypeMapKey(isNullable, typeKind);
+
     return Assert.asDefined(PrimitiveTypeConstantMap.get(key), `unknown key for PrimitiveTypeConstantMap`, {
         typeKind,
         isNullable,
@@ -18,6 +19,7 @@ export function createPrimitiveType<T extends Type.TypeKind>(isNullable: boolean
 // Otherwise returns an instance of `Type.AnyUnion`.
 export function createAnyUnion(unionedTypePairs: ReadonlyArray<Type.TPowerQueryType>): Type.TPowerQueryType {
     const simplified: ReadonlyArray<Type.TPowerQueryType> = simplify(unionedTypePairs);
+
     if (simplified.length === 1) {
         return simplified[0];
     }

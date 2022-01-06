@@ -23,14 +23,17 @@ describe("nodeIdMapIterator", () => {
         it(`normalize record key`, () => {
             const text: string = `let key = [#"foo" = bar] in key`;
             const parseOk: Task.ParseTaskOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+
             const recordIds: Set<number> = MapUtils.assertGet(
                 parseOk.nodeIdMapCollection.idsByNodeKind,
                 Ast.NodeKind.RecordExpression,
             );
+
             expect(recordIds.size).to.equal(1);
 
             const recordId: number = Assert.asDefined([...recordIds.values()][0]);
             const record: TXorNode = NodeIdMapUtils.assertGetXor(parseOk.nodeIdMapCollection, recordId);
+
             const recordKeyValuePairs: ReadonlyArray<RecordKeyValuePair> = NodeIdMapIterator.iterRecord(
                 parseOk.nodeIdMapCollection,
                 record,
@@ -47,17 +50,21 @@ describe("nodeIdMapIterator", () => {
         it(`ast`, () => {
             const text: string = `(x, y as number) => x + y`;
             const parseOk: Task.ParseTaskOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+
             const functionExpressionIds: Set<number> = MapUtils.assertGet(
                 parseOk.nodeIdMapCollection.idsByNodeKind,
                 Ast.NodeKind.FunctionExpression,
             );
+
             expect(functionExpressionIds.size).to.equal(1);
 
             const functionExpressionId: number = Assert.asDefined([...functionExpressionIds.values()][0]);
+
             const functionExpression: TXorNode = NodeIdMapUtils.assertGetXor(
                 parseOk.nodeIdMapCollection,
                 functionExpressionId,
             );
+
             const parameters: ReadonlyArray<TXorNode> = NodeIdMapIterator.iterFunctionExpressionParameters(
                 parseOk.nodeIdMapCollection,
                 functionExpression,
@@ -68,6 +75,7 @@ describe("nodeIdMapIterator", () => {
             const firstParameter: Ast.TParameter = Language.AstUtils.assertAsParameter(
                 XorNodeUtils.assertUnboxAst(parameters[0]),
             );
+
             const secondParameter: Ast.TParameter = Language.AstUtils.assertAsParameter(
                 XorNodeUtils.assertUnboxAst(parameters[1]),
             );
@@ -79,17 +87,21 @@ describe("nodeIdMapIterator", () => {
         it(`context`, () => {
             const text: string = `(x, y as number) => let`;
             const parseError: ParseError.ParseError = TestAssertUtils.assertGetParseError(DefaultSettings, text);
+
             const functionExpressionIds: Set<number> = MapUtils.assertGet(
                 parseError.state.contextState.nodeIdMapCollection.idsByNodeKind,
                 Ast.NodeKind.FunctionExpression,
             );
+
             expect(functionExpressionIds.size).to.equal(1);
 
             const functionExpressionId: number = Assert.asDefined([...functionExpressionIds.values()][0]);
+
             const functionExpression: TXorNode = NodeIdMapUtils.assertGetXor(
                 parseError.state.contextState.nodeIdMapCollection,
                 functionExpressionId,
             );
+
             const parameters: ReadonlyArray<TXorNode> = NodeIdMapIterator.iterFunctionExpressionParameters(
                 parseError.state.contextState.nodeIdMapCollection,
                 functionExpression,
@@ -100,6 +112,7 @@ describe("nodeIdMapIterator", () => {
             const firstParameter: Ast.TParameter = Language.AstUtils.assertAsParameter(
                 XorNodeUtils.assertUnboxAst(parameters[0]),
             );
+
             const secondParameter: Ast.TParameter = Language.AstUtils.assertAsParameter(
                 XorNodeUtils.assertUnboxAst(parameters[1]),
             );
@@ -113,17 +126,21 @@ describe("nodeIdMapIterator", () => {
         it(`ast`, () => {
             const text: string = `(x, y as number) => x + y`;
             const parseOk: Task.ParseTaskOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+
             const functionExpressionIds: Set<number> = MapUtils.assertGet(
                 parseOk.nodeIdMapCollection.idsByNodeKind,
                 Ast.NodeKind.FunctionExpression,
             );
+
             expect(functionExpressionIds.size).to.equal(1);
 
             const functionExpressionId: number = Assert.asDefined([...functionExpressionIds.values()][0]);
+
             const functionExpression: TXorNode = NodeIdMapUtils.assertGetXor(
                 parseOk.nodeIdMapCollection,
                 functionExpressionId,
             );
+
             const parameterNames: ReadonlyArray<string> = NodeIdMapIterator.iterFunctionExpressionParameterNameLiterals(
                 parseOk.nodeIdMapCollection,
                 functionExpression,
@@ -135,17 +152,21 @@ describe("nodeIdMapIterator", () => {
         it(`context`, () => {
             const text: string = `(x, y as number) => let`;
             const parseError: ParseError.ParseError = TestAssertUtils.assertGetParseError(DefaultSettings, text);
+
             const functionExpressionIds: Set<number> = MapUtils.assertGet(
                 parseError.state.contextState.nodeIdMapCollection.idsByNodeKind,
                 Ast.NodeKind.FunctionExpression,
             );
+
             expect(functionExpressionIds.size).to.equal(1);
 
             const functionExpressionId: number = Assert.asDefined([...functionExpressionIds.values()][0]);
+
             const functionExpression: TXorNode = NodeIdMapUtils.assertGetXor(
                 parseError.state.contextState.nodeIdMapCollection,
                 functionExpressionId,
             );
+
             const parameterNames: ReadonlyArray<string> = NodeIdMapIterator.iterFunctionExpressionParameterNameLiterals(
                 parseError.state.contextState.nodeIdMapCollection,
                 functionExpression,
@@ -160,9 +181,11 @@ describe("nodeIdMapIterator", () => {
             const text: string = `[a = 1]`;
             const parseOk: Task.ParseTaskOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
             const nodeIdMapCollection: NodeIdMap.Collection = parseOk.nodeIdMapCollection;
+
             const recordExpressionNodeIds: Set<number> = Assert.asDefined(
                 nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordExpression),
             );
+
             expect(recordExpressionNodeIds.size).to.equal(1);
             const recordExpressionNodeId: number = recordExpressionNodeIds.values().next().value;
 
@@ -176,9 +199,11 @@ describe("nodeIdMapIterator", () => {
             const text: string = `[a = 1][`;
             const parseError: Parser.ParseError.ParseError = TestAssertUtils.assertGetParseError(DefaultSettings, text);
             const nodeIdMapCollection: NodeIdMap.Collection = parseError.state.contextState.nodeIdMapCollection;
+
             const recordExpressionNodeIds: Set<number> = Assert.asDefined(
                 nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordExpression),
             );
+
             expect(recordExpressionNodeIds.size).to.equal(1);
             const recordExpressionNodeId: number = recordExpressionNodeIds.values().next().value;
 

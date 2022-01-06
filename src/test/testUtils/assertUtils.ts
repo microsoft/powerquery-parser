@@ -27,6 +27,7 @@ export function assertGetParseError(settings: LexSettings & ParseSettings, text:
 export function assertGetParseOk(settings: LexSettings & ParseSettings, text: string): Parser.ParseOk {
     const triedParse: Parser.TriedParse = assertGetTriedParse(settings, text);
     Assert.isOk(triedParse);
+
     return triedParse.value;
 }
 

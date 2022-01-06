@@ -29,7 +29,8 @@ export class TimedCancellationToken implements ICancellationToken {
     }
 }
 
-// Cancelled after X calls of isCancelled.
+// Cancelled after X calls are made to isCancelled.
+// Not really useful other than as an example of how to create your own cancellation token.
 export class CounterCancellationToken implements ICancellationToken {
     private wasForceCancelled: boolean;
     private counter: number;
@@ -41,6 +42,7 @@ export class CounterCancellationToken implements ICancellationToken {
 
     public isCancelled(): boolean {
         this.counter += 1;
+
         return this.wasForceCancelled || this.counter >= this.cancellationThreshold;
     }
 

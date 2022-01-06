@@ -522,5 +522,6 @@ export function assertIsUnaryExpression(node: Ast.TNode): asserts node is Ast.Un
 
 function assertAs<T extends Ast.TNode>(node: Ast.TNode, expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"]): T {
     assertIsNodeKind<T>(node, expectedNodeKinds);
+
     return node;
 }

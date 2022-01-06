@@ -184,6 +184,7 @@ function addToCategory(category: TCategory, type: Type.TPowerQueryType): TCatego
 
         case Type.TypeKind.Any: {
             assertIsCategoryForType<Type.TAny, AnyCategory>(category, type);
+
             return addTypeIfUniqueAny(category, type);
         }
 
@@ -207,16 +208,19 @@ function addToCategory(category: TCategory, type: Type.TPowerQueryType): TCatego
 
         case Type.TypeKind.Function: {
             assertIsCategoryForType<Type.TFunction, FunctionCategory>(category, type);
+
             return addToCategoryForFunction(category, type);
         }
 
         case Type.TypeKind.List: {
             assertIsCategoryForType<Type.TList, ListCategory>(category, type);
+
             return addToCategoryForList(category, type);
         }
 
         case Type.TypeKind.Logical: {
             assertIsCategoryForType<Type.TLogical, LogicalCategory>(category, type);
+
             return addToCategoryForLogical(category, type);
         }
 
@@ -231,21 +235,25 @@ function addToCategory(category: TCategory, type: Type.TPowerQueryType): TCatego
 
         case Type.TypeKind.Number: {
             assertIsCategoryForType<Type.TNumber, NumberCategory>(category, type);
+
             return addToCategoryForNumber(category, type);
         }
 
         case Type.TypeKind.Record: {
             assertIsCategoryForType<Type.TRecord, RecordCategory>(category, type);
+
             return addToCategoryForRecord(category, type);
         }
 
         case Type.TypeKind.Table: {
             assertIsCategoryForType<Type.TTable, TableCategory>(category, type);
+
             return addToCategoryForTable(category, type);
         }
 
         case Type.TypeKind.Text: {
             assertIsCategoryForType<Type.TText, TextCategory>(category, type);
+
             return addToCategoryForText(category, type);
         }
 
@@ -254,6 +262,7 @@ function addToCategory(category: TCategory, type: Type.TPowerQueryType): TCatego
 
         case Type.TypeKind.Type: {
             assertIsCategoryForType<Type.TType, TypeCategory>(category, type);
+
             return addTypeIfUniqueType(category, type);
         }
 

@@ -124,6 +124,7 @@ export class UnterminatedMultilineTokenError extends Error {
         super(
             Localization.error_lex_unterminatedMultilineToken(LocalizationUtils.getLocalizationTemplates(locale), kind),
         );
+
         Object.setPrototypeOf(this, UnterminatedMultilineTokenError.prototype);
     }
 }
