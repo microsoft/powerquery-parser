@@ -132,7 +132,7 @@ export function maybefindQuote(text: string, indexStart: number): FoundQuote | u
     }
 
     // If no valid end quote was found
-    if (index > textLength) {
+    if (index >= textLength && text[textLength - 1] !== `"`) {
         return undefined;
     }
 

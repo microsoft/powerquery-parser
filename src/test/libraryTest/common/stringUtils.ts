@@ -65,7 +65,7 @@ describe("StringUtils", () => {
             const expected: StringUtils.FoundQuote = {
                 indexStart: 1,
                 indexEnd: 3,
-                quoteLength: 3,
+                quoteLength: 2,
             };
 
             expect(actual).to.deep.equal(expected);
