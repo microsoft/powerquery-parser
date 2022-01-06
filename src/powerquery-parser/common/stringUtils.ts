@@ -40,6 +40,14 @@ export function assertGetFormatted(template: string, args: Map<string, string>):
     return result;
 }
 
+export function ensureQuoted(text: string): string {
+    if (maybefindQuote(text, 0)) {
+        return text;
+    }
+
+    return `"${text.includes(`"`) ? text.replace(`"`, `""`) : text}"`;
+}
+
 export function columnNumberFrom(text: string, requiredCodeUnit: number): number {
     const graphemes: ReadonlyArray<string> = graphemeSplitter.splitGraphemes(text);
 

@@ -7,6 +7,14 @@ import { expect } from "chai";
 import { StringUtils } from "../../..";
 
 describe("StringUtils", () => {
+    describe(`ensureQuoted`, () => {
+        it(``, () => expect(StringUtils.ensureQuoted(``)).to.equal(`""`));
+        it(`a`, () => expect(StringUtils.ensureQuoted(`a`)).to.equal(`"a"`));
+        it(`"`, () => expect(StringUtils.ensureQuoted(`"`)).to.equal(`""""`));
+        it(`""`, () => expect(StringUtils.ensureQuoted(`""`)).to.equal(`""`));
+        it(`"a"`, () => expect(StringUtils.ensureQuoted(`"a"`)).to.equal(`"a"`));
+    });
+
     describe(`maybeFindQuote`, () => {
         it(`""`, () => {
             const actual: StringUtils.FoundQuote | undefined = StringUtils.maybefindQuote(`""`, 0);
