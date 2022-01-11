@@ -1,23 +1,23 @@
 {
     "compilerOptions": {
-        "target": "es5",
-        "module": "commonjs",
-        "sourceMap": true,
-        "outDir": "lib",
-        "strict": true,
+        "declaration": true,
         "downlevelIteration": true,
-        "noFallthroughCasesInSwitch": true,
+        "incremental": true,
+        "module": "commonjs",
         "noEmitOnError": true,
+        "noFallthroughCasesInSwitch": true,
         "noImplicitOverride": true,
         "noImplicitReturns": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
-        "declaration": true,
+        "outDir": "lib",
+        "resolveJsonModule": true,
         "rootDir": "src",
-        "incremental": true,
-        "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
-        "resolveJsonModule": true
+        "sourceMap": true,
+        "strict": true,
+        "target": "es5",
+        "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
     },
-    "include": ["src/**/*.ts", "src/powerquery-parser/localization/templates/*.json"],
-    "exclude": ["node_modules"]
+    "exclude": ["node_modules"],
+    "include": ["src/**/*.ts", "src/powerquery-parser/localization/templates/*.json"]
 }
