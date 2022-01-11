@@ -11,6 +11,16 @@ export const enum IdentifierKind {
     Regular = "Regular",
 }
 
+export function escape(text: string): string {
+    let result: string = text;
+
+    for (const [regexp, escaped] of UnescapedWhitespaceRegexp) {
+        result = result.replace(regexp, escaped);
+    }
+
+    return result;
+}
+
 export function identifierKind(text: string, allowTrailingPeriod: boolean): IdentifierKind {
     if (isRegularIdentifier(text, allowTrailingPeriod)) {
         return IdentifierKind.Regular;
@@ -150,8 +160,36 @@ export function normalizeIdentifier(text: string): string {
     }
 }
 
+export function unescape(text: string): string {
+    let result: string = text;
+
+    for (const [regexp, literal] of EscapedWhitespaceRegexp) {
+        result = result.replace(regexp, literal);
+    }
+
+    return result;
+}
+
 const enum IdentifierRegexpState {
     Start,
     RegularIdentifier,
     Done,
 }
+
+const EscapedWhitespaceRegexp: ReadonlyArray<[RegExp, string]> = [
+    [/#\(cr,lf\)/gm, "\r\n"],
+    [/#\(cr\)/gm, "\r"],
+    [/#\(lf\)/gm, "\n"],
+    [/#\(tab\)/gm, "\t"],
+    [/""/gm, '"'],
+    [/#\(#\)\(/gm, "#("],
+];
+
+const UnescapedWhitespaceRegexp: ReadonlyArray<[RegExp, string]> = [
+    [/#/gm, "#(#)"],
+    [/\r\n/gm, `#(cr,lf)`],
+    [/\r/gm, `#(cr)`],
+    [/\n/gm, `#(lf)`],
+    [/\t/gm, `#(tab)`],
+    [/"/gm, `""`],
+];
