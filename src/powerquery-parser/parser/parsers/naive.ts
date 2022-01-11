@@ -1,17 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import {
-    ArrayUtils,
-    Assert,
-    CommonError,
-    MapUtils,
-    Result,
-    ResultUtils,
-    StringUtils,
-    TypeScriptUtils,
-} from "../../common";
-import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../language";
+import { ArrayUtils, Assert, CommonError, MapUtils, Result, ResultUtils, TypeScriptUtils } from "../../common";
+import { Ast, AstUtils, Constant, ConstantUtils, TextUtils, Token } from "../../language";
 import { Disambiguation, DisambiguationUtils } from "../disambiguation";
 import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
 import { Parser, ParseStateCheckpoint } from "../parser";
@@ -119,9 +110,9 @@ export function readGeneralizedIdentifier(state: ParseState, _parser: Parser): A
     const contiguousIdentifierStartIndex: number = tokens[tokenRangeStartIndex].positionStart.codeUnit;
     const contiguousIdentifierEndIndex: number = tokens[tokenRangeEndIndex - 1].positionEnd.codeUnit;
     const literal: string = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
-    const literalKind: StringUtils.IdentifierKind = StringUtils.identifierKind(literal, true);
+    const literalKind: TextUtils.IdentifierKind = TextUtils.identifierKind(literal, true);
 
-    if (literalKind === StringUtils.IdentifierKind.Invalid) {
+    if (literalKind === TextUtils.IdentifierKind.Invalid) {
         trace.exit({
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
             [TraceConstant.IsThrowing]: true,

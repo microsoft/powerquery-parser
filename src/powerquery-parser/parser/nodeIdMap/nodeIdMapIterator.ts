@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, MapUtils, StringUtils } from "../../common";
+import { Assert, MapUtils } from "../../common";
+import { Ast, TextUtils } from "../../language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
-import { Ast } from "../../language";
 import { maybeParameterName } from "./nodeIdMapUtils";
 import { XorNode } from "./xorNode";
 
@@ -367,7 +367,7 @@ export function iterSection(
                 source: XorNodeUtils.boxAst(namePairedExpression),
                 key: namePairedExpression.key,
                 keyLiteral,
-                normalizedKeyLiteral: StringUtils.normalizeIdentifier(keyLiteral),
+                normalizedKeyLiteral: TextUtils.normalizeIdentifier(keyLiteral),
                 maybeValue: XorNodeUtils.boxAst(namePairedExpression.value),
                 pairKind: PairKind.SectionMember,
             };
@@ -424,7 +424,7 @@ export function iterSection(
             source: keyValuePair,
             key,
             keyLiteral,
-            normalizedKeyLiteral: StringUtils.normalizeIdentifier(keyLiteral),
+            normalizedKeyLiteral: TextUtils.normalizeIdentifier(keyLiteral),
             maybeValue: NodeIdMapUtils.maybeNthChild(nodeIdMapCollection, keyValuePairNodeId, 2),
             pairKind: PairKind.SectionMember,
         });
@@ -457,7 +457,7 @@ function iterKeyValuePairs<
             source: keyValuePair,
             key: maybeKey,
             keyLiteral,
-            normalizedKeyLiteral: StringUtils.normalizeIdentifier(keyLiteral),
+            normalizedKeyLiteral: TextUtils.normalizeIdentifier(keyLiteral),
             maybeValue: NodeIdMapUtils.maybeNthChild(nodeIdMapCollection, keyValuePair.node.id, 2),
             pairKind,
         } as KVP);
