@@ -35,3 +35,13 @@ export function ensureResult<T>(locale: string, callbackFn: () => T): Result<T, 
         return boxError(CommonError.ensureCommonError(locale, error));
     }
 }
+
+export async function ensureAsyncResult<T>(locale: string, callbackFn: () => Promise<T>): Promise<Result<T, CommonError.CommonError>> {
+    try {
+        return boxOk(await callbackFn());
+    } catch (error) {
+        Assert.isInstanceofError(error);
+
+        return boxError(CommonError.ensureCommonError(locale, error));
+    }
+}

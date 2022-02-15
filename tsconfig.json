@@ -3,6 +3,7 @@
         "declaration": true,
         "downlevelIteration": true,
         "incremental": true,
+        "lib": ["ES2021.Promise"],
         "module": "commonjs",
         "noEmitOnError": true,
         "noFallthroughCasesInSwitch": true,
