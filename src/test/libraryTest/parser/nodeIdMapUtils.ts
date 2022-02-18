@@ -20,9 +20,9 @@ import { TestAssertUtils } from "../../testUtils";
 
 describe("nodeIdMapIterator", () => {
     describe(`iterRecord`, () => {
-        it(`normalize record key`, () => {
+        it(`normalize record key`, async () => {
             const text: string = `let key = [#"foo" = bar] in key`;
-            const parseOk: Task.ParseTaskOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+            const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
 
             const recordIds: Set<number> = MapUtils.assertGet(
                 parseOk.nodeIdMapCollection.idsByNodeKind,
@@ -47,9 +47,9 @@ describe("nodeIdMapIterator", () => {
     });
 
     describe(`iterFunctionExpressionParameters`, () => {
-        it(`ast`, () => {
+        it(`ast`, async () => {
             const text: string = `(x, y as number) => x + y`;
-            const parseOk: Task.ParseTaskOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+            const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
 
             const functionExpressionIds: Set<number> = MapUtils.assertGet(
                 parseOk.nodeIdMapCollection.idsByNodeKind,
@@ -84,9 +84,9 @@ describe("nodeIdMapIterator", () => {
             expect(secondParameter.name.literal).to.equal("y");
         });
 
-        it(`context`, () => {
+        it(`context`, async () => {
             const text: string = `(x, y as number) => let`;
-            const parseError: ParseError.ParseError = TestAssertUtils.assertGetParseError(DefaultSettings, text);
+            const parseError: ParseError.ParseError = await TestAssertUtils.assertGetParseError(DefaultSettings, text);
 
             const functionExpressionIds: Set<number> = MapUtils.assertGet(
                 parseError.state.contextState.nodeIdMapCollection.idsByNodeKind,
@@ -123,9 +123,9 @@ describe("nodeIdMapIterator", () => {
     });
 
     describe(`iterFunctionExpressionParameterNameLiterals`, () => {
-        it(`ast`, () => {
+        it(`ast`, async () => {
             const text: string = `(x, y as number) => x + y`;
-            const parseOk: Task.ParseTaskOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+            const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
 
             const functionExpressionIds: Set<number> = MapUtils.assertGet(
                 parseOk.nodeIdMapCollection.idsByNodeKind,
@@ -149,9 +149,9 @@ describe("nodeIdMapIterator", () => {
             expect(parameterNames).to.deep.equal(["x", "y"]);
         });
 
-        it(`context`, () => {
+        it(`context`, async () => {
             const text: string = `(x, y as number) => let`;
-            const parseError: ParseError.ParseError = TestAssertUtils.assertGetParseError(DefaultSettings, text);
+            const parseError: ParseError.ParseError = await TestAssertUtils.assertGetParseError(DefaultSettings, text);
 
             const functionExpressionIds: Set<number> = MapUtils.assertGet(
                 parseError.state.contextState.nodeIdMapCollection.idsByNodeKind,
@@ -177,9 +177,9 @@ describe("nodeIdMapIterator", () => {
     });
 
     describe("maybeUnboxWrappedContent", () => {
-        it("Ast", () => {
+        it("Ast", async () => {
             const text: string = `[a = 1]`;
-            const parseOk: Task.ParseTaskOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+            const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
             const nodeIdMapCollection: NodeIdMap.Collection = parseOk.nodeIdMapCollection;
 
             const recordExpressionNodeIds: Set<number> = Assert.asDefined(
@@ -195,9 +195,14 @@ describe("nodeIdMapIterator", () => {
             );
         });
 
-        it("Context", () => {
+        it("Context", async () => {
             const text: string = `[a = 1][`;
-            const parseError: Parser.ParseError.ParseError = TestAssertUtils.assertGetParseError(DefaultSettings, text);
+
+            const parseError: Parser.ParseError.ParseError = await TestAssertUtils.assertGetParseError(
+                DefaultSettings,
+                text,
+            );
+
             const nodeIdMapCollection: NodeIdMap.Collection = parseError.state.contextState.nodeIdMapCollection;
 
             const recordExpressionNodeIds: Set<number> = Assert.asDefined(

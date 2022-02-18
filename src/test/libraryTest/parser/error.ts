@@ -20,10 +20,9 @@ const DefaultSettingsWithStrict: Settings = {
     },
 };
 
-function assertGetCsvContinuationError(text: string): Parser.ParseError.ExpectedCsvContinuationError {
-    const innerError: Parser.ParseError.TInnerParseError = TestAssertUtils.assertGetParseError(
-        DefaultSettingsWithStrict,
-        text,
+async function assertGetCsvContinuationError(text: string): Promise<Parser.ParseError.ExpectedCsvContinuationError> {
+    const innerError: Parser.ParseError.TInnerParseError = (
+        await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
     ).innerError;
 
     Assert.isTrue(
@@ -35,12 +34,11 @@ function assertGetCsvContinuationError(text: string): Parser.ParseError.Expected
 }
 
 describe("Parser.Error", () => {
-    it("RequiredParameterAfterOptionalParameterError: (optional x, y) => x", () => {
+    it("RequiredParameterAfterOptionalParameterError: (optional x, y) => x", async () => {
         const text: string = "(optional x, y) => x";
 
-        const innerError: Parser.ParseError.TInnerParseError = TestAssertUtils.assertGetParseError(
-            DefaultSettingsWithStrict,
-            text,
+        const innerError: Parser.ParseError.TInnerParseError = (
+            await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
         ).innerError;
 
         expect(innerError instanceof Parser.ParseError.RequiredParameterAfterOptionalParameterError).to.equal(
@@ -49,12 +47,11 @@ describe("Parser.Error", () => {
         );
     });
 
-    it("UnterminatedSequence (Bracket): let x = [", () => {
+    it("UnterminatedSequence (Bracket): let x = [", async () => {
         const text: string = "let x = [";
 
-        const innerError: Parser.ParseError.TInnerParseError = TestAssertUtils.assertGetParseError(
-            DefaultSettingsWithStrict,
-            text,
+        const innerError: Parser.ParseError.TInnerParseError = (
+            await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
         ).innerError;
 
         expect(innerError instanceof Parser.ParseError.UnterminatedSequence).to.equal(true, innerError.message);
@@ -65,12 +62,11 @@ describe("Parser.Error", () => {
         );
     });
 
-    it("UnterminatedSequence (Parenthesis): let x = (1", () => {
+    it("UnterminatedSequence (Parenthesis): let x = (1", async () => {
         const text: string = "let x = (1";
 
-        const innerError: Parser.ParseError.TInnerParseError = TestAssertUtils.assertGetParseError(
-            DefaultSettingsWithStrict,
-            text,
+        const innerError: Parser.ParseError.TInnerParseError = (
+            await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
         ).innerError;
 
         expect(innerError instanceof Parser.ParseError.UnterminatedSequence).to.equal(true, innerError.message);
@@ -82,38 +78,39 @@ describe("Parser.Error", () => {
     });
 
     describe(`UnusedTokensRemainError`, () => {
-        it("default parser", () => {
+        it("default parser", async () => {
             const text: string = "1 1";
 
-            const innerError: Parser.ParseError.TInnerParseError = TestAssertUtils.assertGetParseError(
-                DefaultSettingsWithStrict,
-                text,
+            const innerError: Parser.ParseError.TInnerParseError = (
+                await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
             ).innerError;
 
             expect(innerError instanceof Parser.ParseError.UnusedTokensRemainError).to.equal(true, innerError.message);
         });
 
-        it("custom start", () => {
+        it("custom start", async () => {
             const customSettings: Settings = {
                 ...DefaultSettings,
                 parser: Parser.RecursiveDescentParser,
-                maybeParserEntryPointFn: Parser.RecursiveDescentParser.readIdentifier,
+                maybeParserEntryPointFn: () => Parser.RecursiveDescentParser.readIdentifier,
             };
 
             const text: string = "a b";
 
-            const innerError: Parser.ParseError.TInnerParseError = TestAssertUtils.assertGetParseError(
-                customSettings,
-                text,
+            const innerError: Parser.ParseError.TInnerParseError = (
+                await TestAssertUtils.assertGetParseError(customSettings, text)
             ).innerError;
 
             expect(innerError instanceof Parser.ParseError.UnusedTokensRemainError).to.equal(true, innerError.message);
         });
     });
 
-    it(`Dangling Comma for LetExpression`, () => {
+    it(`Dangling Comma for LetExpression`, async () => {
         const text: string = "let a = 1, in 1";
-        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
+
+        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
+            text,
+        );
 
         expect(continuationError.message).to.equal(
             Localization.error_parse_csvContinuation(
@@ -123,9 +120,12 @@ describe("Parser.Error", () => {
         );
     });
 
-    it(`Dangling Comma for ListExpression`, () => {
+    it(`Dangling Comma for ListExpression`, async () => {
         const text: string = "{1, }";
-        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
+
+        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
+            text,
+        );
 
         expect(continuationError.message).to.equal(
             Localization.error_parse_csvContinuation(
@@ -135,9 +135,12 @@ describe("Parser.Error", () => {
         );
     });
 
-    it(`Dangling Comma for FunctionExpression`, () => {
+    it(`Dangling Comma for FunctionExpression`, async () => {
         const text: string = "(a, ) => a";
-        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
+
+        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
+            text,
+        );
 
         expect(continuationError.message).to.equal(
             Localization.error_parse_csvContinuation(
@@ -147,9 +150,12 @@ describe("Parser.Error", () => {
         );
     });
 
-    it(`Dangling Comma for FunctionType`, () => {
+    it(`Dangling Comma for FunctionType`, async () => {
         const text: string = "type function (a as number, ) as number";
-        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
+
+        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
+            text,
+        );
 
         expect(continuationError.message).to.equal(
             Localization.error_parse_csvContinuation(
@@ -159,9 +165,12 @@ describe("Parser.Error", () => {
         );
     });
 
-    it(`Dangling Comma for RecordExpression`, () => {
+    it(`Dangling Comma for RecordExpression`, async () => {
         const text: string = "[a = 1,]";
-        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
+
+        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
+            text,
+        );
 
         expect(continuationError.message).to.equal(
             Localization.error_parse_csvContinuation(
@@ -171,9 +180,12 @@ describe("Parser.Error", () => {
         );
     });
 
-    it(`Dangling Comma for RecordType`, () => {
+    it(`Dangling Comma for RecordType`, async () => {
         const text: string = "type [a = 1,]";
-        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
+
+        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
+            text,
+        );
 
         expect(continuationError.message).to.equal(
             Localization.error_parse_csvContinuation(
@@ -183,9 +195,12 @@ describe("Parser.Error", () => {
         );
     });
 
-    it(`Dangling Comma for TableType`, () => {
+    it(`Dangling Comma for TableType`, async () => {
         const text: string = "type table [a = 1,]";
-        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
+
+        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
+            text,
+        );
 
         expect(continuationError.message).to.equal(
             Localization.error_parse_csvContinuation(

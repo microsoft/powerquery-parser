@@ -6,8 +6,11 @@ import "mocha";
 import { Assert, Lexer, LexSettings, Parser, ParseSettings, Task } from "../..";
 import { TaskUtils } from "../../powerquery-parser";
 
-export function assertGetLexParseOk(settings: LexSettings & ParseSettings, text: string): Task.ParseTaskOk {
-    const triedLexParseTask: Task.TriedLexParseTask = TaskUtils.tryLexParse(settings, text);
+export async function assertGetLexParseOk(
+    settings: LexSettings & ParseSettings,
+    text: string,
+): Promise<Task.ParseTaskOk> {
+    const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(settings, text);
     TaskUtils.assertIsParseStageOk(triedLexParseTask);
 
     return triedLexParseTask;

@@ -49,7 +49,10 @@ export function writeContents(filePath: string, contents: string): void {
     });
 }
 
-export function tryLexParse(settings: LexSettings & ParseSettings, filePath: string): Task.TriedLexParseTask {
+export async function tryLexParse(
+    settings: LexSettings & ParseSettings,
+    filePath: string,
+): Promise<Task.TriedLexParseTask> {
     const contents: string = readContents(filePath);
 
     return TaskUtils.tryLexParse(settings, contents);

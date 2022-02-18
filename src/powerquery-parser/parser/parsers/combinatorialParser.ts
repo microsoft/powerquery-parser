@@ -31,41 +31,41 @@ export const CombinatorialParser: Parser = {
 
     // 12.2.3.2 Logical expressions
     readLogicalExpression: (state: ParseState, parser: Parser) =>
-        readBinOpExpression(state, parser, Ast.NodeKind.LogicalExpression) as Ast.TLogicalExpression,
+        readBinOpExpression(state, parser, Ast.NodeKind.LogicalExpression) as Promise<Ast.TLogicalExpression>,
 
     // 12.2.3.3 Is expression
     readIsExpression: (state: ParseState, parser: Parser) =>
-        readBinOpExpression(state, parser, Ast.NodeKind.IsExpression) as Ast.TIsExpression,
+        readBinOpExpression(state, parser, Ast.NodeKind.IsExpression) as Promise<Ast.TIsExpression>,
 
     // 12.2.3.4 As expression
     readAsExpression: (state: ParseState, parser: Parser) =>
-        readBinOpExpression(state, parser, Ast.NodeKind.AsExpression) as Ast.TAsExpression,
+        readBinOpExpression(state, parser, Ast.NodeKind.AsExpression) as Promise<Ast.TAsExpression>,
 
     // 12.2.3.5 Equality expression
     readEqualityExpression: (state: ParseState, parser: Parser) =>
-        readBinOpExpression(state, parser, Ast.NodeKind.EqualityExpression) as Ast.TEqualityExpression,
+        readBinOpExpression(state, parser, Ast.NodeKind.EqualityExpression) as Promise<Ast.TEqualityExpression>,
 
     // 12.2.3.6 Relational expression
     readRelationalExpression: (state: ParseState, parser: Parser) =>
-        readBinOpExpression(state, parser, Ast.NodeKind.RelationalExpression) as Ast.TRelationalExpression,
+        readBinOpExpression(state, parser, Ast.NodeKind.RelationalExpression) as Promise<Ast.TRelationalExpression>,
 
     // 12.2.3.7 Arithmetic expressions
     readArithmeticExpression: (state: ParseState, parser: Parser) =>
-        readBinOpExpression(state, parser, Ast.NodeKind.ArithmeticExpression) as Ast.TArithmeticExpression,
+        readBinOpExpression(state, parser, Ast.NodeKind.ArithmeticExpression) as Promise<Ast.TArithmeticExpression>,
 
     // 12.2.3.8 Metadata expression
     readMetadataExpression: (state: ParseState, parser: Parser) =>
-        readBinOpExpression(state, parser, Ast.NodeKind.MetadataExpression) as Ast.TMetadataExpression,
+        readBinOpExpression(state, parser, Ast.NodeKind.MetadataExpression) as Promise<Ast.TMetadataExpression>,
 
     // 12.2.3.9 Unary expression
     readUnaryExpression,
 };
 
-function readBinOpExpression(
+async function readBinOpExpression(
     state: ParseState,
     parser: Parser,
     nodeKind: Ast.NodeKind,
-): Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType {
+): Promise<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType> {
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
     const placeholderContextId: number = Assert.asDefined(state.maybeCurrentContextNode).id;
@@ -76,7 +76,7 @@ function readBinOpExpression(
     let operatorConstants: Ast.IConstant<Constant.TBinOpExpressionOperator>[] = [];
 
     let expressions: (Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType)[] = [
-        parser.readUnaryExpression(state, parser),
+        await parser.readUnaryExpression(state, parser),
     ];
 
     let maybeOperator: Constant.TBinOpExpressionOperator | undefined =
@@ -97,11 +97,13 @@ function readBinOpExpression(
         switch (operator) {
             case Constant.KeywordConstant.As:
             case Constant.KeywordConstant.Is:
-                expressions.push(parser.readNullablePrimitiveType(state, parser));
+                // eslint-disable-next-line no-await-in-loop
+                expressions.push(await parser.readNullablePrimitiveType(state, parser));
                 break;
 
             default:
-                expressions.push(parser.readUnaryExpression(state, parser));
+                // eslint-disable-next-line no-await-in-loop
+                expressions.push(await parser.readUnaryExpression(state, parser));
         }
 
         maybeOperator = ConstantUtils.maybeBinOpExpressionOperatorKindFrom(state.maybeCurrentTokenKind);
@@ -275,7 +277,7 @@ function binOpExpressionNodeKindFrom(operator: Constant.TBinOpExpressionOperator
     }
 }
 
-function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUnaryExpression {
+async function readUnaryExpression(state: ParseState, parser: Parser): Promise<Ast.TUnaryExpression> {
     state.maybeCancellationToken?.throwIfCancelled();
 
     let maybePrimaryExpression: Ast.TPrimaryExpression | undefined;
@@ -289,11 +291,11 @@ function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUnaryExpre
             break;
 
         case Token.TokenKind.LeftParenthesis:
-            maybePrimaryExpression = NaiveParseSteps.readParenthesizedExpression(state, parser);
+            maybePrimaryExpression = await NaiveParseSteps.readParenthesizedExpression(state, parser);
             break;
 
         case Token.TokenKind.LeftBracket:
-            maybePrimaryExpression = DisambiguationUtils.readAmbiguousBracket(state, parser, [
+            maybePrimaryExpression = await DisambiguationUtils.readAmbiguousBracket(state, parser, [
                 Disambiguation.BracketDisambiguation.RecordExpression,
                 Disambiguation.BracketDisambiguation.FieldSelection,
                 Disambiguation.BracketDisambiguation.FieldProjection,
@@ -302,7 +304,7 @@ function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUnaryExpre
             break;
 
         case Token.TokenKind.LeftBrace:
-            maybePrimaryExpression = NaiveParseSteps.readListExpression(state, parser);
+            maybePrimaryExpression = await NaiveParseSteps.readListExpression(state, parser);
             break;
 
         case Token.TokenKind.Ellipsis:
@@ -320,7 +322,7 @@ function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUnaryExpre
 
         // TypeExpression
         case Token.TokenKind.KeywordType:
-            return NaiveParseSteps.readTypeExpression(state, parser);
+            return await NaiveParseSteps.readTypeExpression(state, parser);
 
         case Token.TokenKind.KeywordHashSections:
         case Token.TokenKind.KeywordHashShared:
@@ -336,14 +338,14 @@ function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUnaryExpre
 
         // Let Naive throw an error.
         default:
-            return NaiveParseSteps.readUnaryExpression(state, parser);
+            return await NaiveParseSteps.readUnaryExpression(state, parser);
     }
 
     // We should only reach this code block if a primary expression was read.
     const primaryExpression: Ast.TPrimaryExpression = maybePrimaryExpression;
 
     if (ParseStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex)) {
-        return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
+        return await parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
     } else {
         return primaryExpression;
     }
