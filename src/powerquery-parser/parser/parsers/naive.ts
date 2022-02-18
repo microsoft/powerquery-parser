@@ -838,7 +838,7 @@ export async function readPrimaryExpression(state: ParseState, parser: Parser): 
                 break;
 
             case Token.TokenKind.Ellipsis:
-                primaryExpression = await parser.readNotImplementedExpression(state, parser);
+                primaryExpression = parser.readNotImplementedExpression(state, parser);
                 break;
 
             case Token.TokenKind.KeywordHashSections:
@@ -854,7 +854,7 @@ export async function readPrimaryExpression(state: ParseState, parser: Parser): 
                 break;
 
             default:
-                primaryExpression = await parser.readLiteralExpression(state, parser);
+                primaryExpression = parser.readLiteralExpression(state, parser);
         }
     }
 
@@ -2359,7 +2359,7 @@ export async function readAnyLiteral(state: ParseState, parser: Parser): Promise
     } else if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.LeftBrace)) {
         anyLiteral = await parser.readListLiteral(state, parser);
     } else {
-        anyLiteral = await parser.readLiteralExpression(state, parser);
+        anyLiteral = parser.readLiteralExpression(state, parser);
     }
 
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
