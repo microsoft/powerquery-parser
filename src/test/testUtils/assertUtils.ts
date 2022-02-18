@@ -13,8 +13,11 @@ export function assertGetLexParseOk(settings: LexSettings & ParseSettings, text:
     return triedLexParseTask;
 }
 
-export function assertGetParseError(settings: LexSettings & ParseSettings, text: string): Parser.ParseError.ParseError {
-    const triedParse: Parser.TriedParse = assertGetTriedParse(settings, text);
+export async function assertGetParseError(
+    settings: LexSettings & ParseSettings,
+    text: string,
+): Promise<Parser.ParseError.ParseError> {
+    const triedParse: Parser.TriedParse = await assertGetTriedParse(settings, text);
     Assert.isError(triedParse);
 
     if (!Parser.ParseError.isParseError(triedParse.error)) {
@@ -24,8 +27,8 @@ export function assertGetParseError(settings: LexSettings & ParseSettings, text:
     return triedParse.error;
 }
 
-export function assertGetParseOk(settings: LexSettings & ParseSettings, text: string): Parser.ParseOk {
-    const triedParse: Parser.TriedParse = assertGetTriedParse(settings, text);
+export async function assertGetParseOk(settings: LexSettings & ParseSettings, text: string): Promise<Parser.ParseOk> {
+    const triedParse: Parser.TriedParse = await assertGetTriedParse(settings, text);
     Assert.isOk(triedParse);
 
     return triedParse.value;
@@ -33,7 +36,7 @@ export function assertGetParseOk(settings: LexSettings & ParseSettings, text: st
 
 // I only care about errors coming from the parse stage.
 // If I use tryLexParse I might get a CommonError which could have come either from lexing or parsing.
-function assertGetTriedParse(settings: LexSettings & ParseSettings, text: string): Parser.TriedParse {
+async function assertGetTriedParse(settings: LexSettings & ParseSettings, text: string): Promise<Parser.TriedParse> {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(settings, text);
     Assert.isOk(triedLex);
     const lexerState: Lexer.State = triedLex.value;
@@ -43,5 +46,5 @@ function assertGetTriedParse(settings: LexSettings & ParseSettings, text: string
     Assert.isOk(triedSnapshot);
     const lexerSnapshot: Lexer.LexerSnapshot = triedSnapshot.value;
 
-    return Parser.ParserUtils.tryParse(settings, lexerSnapshot);
+    return await Parser.ParserUtils.tryParse(settings, lexerSnapshot);
 }

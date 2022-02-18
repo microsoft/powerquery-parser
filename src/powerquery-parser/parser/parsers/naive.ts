@@ -73,7 +73,11 @@ export function readIdentifier(state: ParseState, _parser: Parser): Ast.Identifi
 }
 
 // This behavior matches the C# parser and not the language specification.
-export function readGeneralizedIdentifier(state: ParseState, _parser: Parser): Ast.GeneralizedIdentifier {
+// eslint-disable-next-line require-await
+export async function readGeneralizedIdentifier(
+    state: ParseState,
+    _parser: Parser,
+): Promise<Ast.GeneralizedIdentifier> {
     const nodeKind: Ast.NodeKind.GeneralizedIdentifier = Ast.NodeKind.GeneralizedIdentifier;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readGeneralizedIdentifier.name, {
@@ -276,7 +280,7 @@ export async function readSectionDocument(state: ParseState, parser: Parser): Pr
     let maybeName: Ast.Identifier | undefined;
 
     if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.Identifier)) {
-        maybeName = await parser.readIdentifier(state, parser);
+        maybeName = parser.readIdentifier(state, parser);
     } else {
         ParseStateUtils.incrementAttributeCounter(state);
     }
@@ -813,7 +817,7 @@ export async function readPrimaryExpression(state: ParseState, parser: Parser): 
         maybeCurrentTokenKind === Token.TokenKind.AtSign || maybeCurrentTokenKind === Token.TokenKind.Identifier;
 
     if (isIdentifierExpressionNext) {
-        primaryExpression = await parser.readIdentifierExpression(state, parser);
+        primaryExpression = parser.readIdentifierExpression(state, parser);
     } else {
         switch (maybeCurrentTokenKind) {
             case Token.TokenKind.LeftParenthesis:
@@ -821,7 +825,7 @@ export async function readPrimaryExpression(state: ParseState, parser: Parser): 
                 break;
 
             case Token.TokenKind.LeftBracket:
-                primaryExpression = DisambiguationUtils.readAmbiguousBracket(state, parser, [
+                primaryExpression = await DisambiguationUtils.readAmbiguousBracket(state, parser, [
                     Disambiguation.BracketDisambiguation.FieldProjection,
                     Disambiguation.BracketDisambiguation.FieldSelection,
                     Disambiguation.BracketDisambiguation.RecordExpression,
@@ -846,7 +850,7 @@ export async function readPrimaryExpression(state: ParseState, parser: Parser): 
             case Token.TokenKind.KeywordHashDuration:
             case Token.TokenKind.KeywordHashTable:
             case Token.TokenKind.KeywordHashTime:
-                primaryExpression = await parser.readKeyword(state, parser);
+                primaryExpression = parser.readKeyword(state, parser);
                 break;
 
             default:
@@ -943,14 +947,15 @@ export async function readRecursivePrimaryExpression(
             // eslint-disable-next-line no-await-in-loop
             recursiveExpressions.push(await parser.readItemAccessExpression(state, parser));
         } else if (maybeCurrentTokenKind === Token.TokenKind.LeftBracket) {
-            const bracketExpression: Ast.TFieldAccessExpression = DisambiguationUtils.readAmbiguousBracket(
+            // eslint-disable-next-line no-await-in-loop
+            const bracketExpression: Ast.TFieldAccessExpression = (await DisambiguationUtils.readAmbiguousBracket(
                 state,
                 parser,
                 [
                     Disambiguation.BracketDisambiguation.FieldSelection,
                     Disambiguation.BracketDisambiguation.FieldProjection,
                 ],
-            ) as Ast.TFieldAccessExpression;
+            )) as Ast.TFieldAccessExpression;
 
             recursiveExpressions.push(bracketExpression);
         } else {
@@ -1052,7 +1057,7 @@ export function readLiteralExpression(state: ParseState, _parser: Parser): Ast.L
 // ---------- 12.2.3.12 Identifier expression ----------
 // -----------------------------------------------------
 
-export async function readIdentifierExpression(state: ParseState, parser: Parser): Promise<Ast.IdentifierExpression> {
+export function readIdentifierExpression(state: ParseState, parser: Parser): Ast.IdentifierExpression {
     const nodeKind: Ast.NodeKind.IdentifierExpression = Ast.NodeKind.IdentifierExpression;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIdentifierExpression.name, {
@@ -1065,7 +1070,7 @@ export async function readIdentifierExpression(state: ParseState, parser: Parser
     const maybeInclusiveConstant: Ast.IConstant<Constant.MiscConstant.AtSign> | undefined =
         maybeReadTokenKindAsConstant(state, Token.TokenKind.AtSign, Constant.MiscConstant.AtSign);
 
-    const identifier: Ast.Identifier = await parser.readIdentifier(state, parser);
+    const identifier: Ast.Identifier = parser.readIdentifier(state, parser);
 
     const identifierExpression: Ast.IdentifierExpression = {
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
@@ -2598,7 +2603,8 @@ export async function readIdentifierPairedExpression(
     >(
         state,
         Ast.NodeKind.IdentifierPairedExpression,
-        async () => await parser.readIdentifier(state, parser),
+        // eslint-disable-next-line require-await
+        async () => parser.readIdentifier(state, parser),
         async () => await parser.readExpression(state, parser),
     );
 
@@ -2988,7 +2994,7 @@ async function genericReadParameterList<T extends Ast.TParameterType>(
         }
 
         // eslint-disable-next-line no-await-in-loop
-        const name: Ast.Identifier = await parser.readIdentifier(state, parser);
+        const name: Ast.Identifier = parser.readIdentifier(state, parser);
         // eslint-disable-next-line no-await-in-loop
         const maybeParameterType: T = await typeReader();
 

@@ -24,19 +24,18 @@ export interface Parser {
     // Create a deep copy of S.
     readonly copyState: (state: ParseState) => Promise<ParseState>;
 
-    // Checkpoints are a snapshot for a particular state,
-    // and should enable reverting the state to its earlier version. They do not work on later states.
-    // Eg. given the history below:
-    //  You can restore checkpoint 2 and then checkpoint 1,
-    //  but restoring checkpoint 1 and then checkpoint 2 will result in undefined behavior.
-    // Initial state ------- checkpoint 1 -- checkpoint 2 --- current.
+    // Checkpoints are a snapshot at a particular time.
+    // You can use a checkpoint to restore the parser's state back to when the checkpoint was created.
+    // If the checkpoint is used on a parser that didn't create the checkpoint it results in undefiend behavior.
+    // If the checkpoint is used on a parser whose state is earlier than what the checkpoint recorded
+    // it results in undefined behavior.
     readonly createCheckpoint: (state: ParseState) => Promise<ParseStateCheckpoint>;
     readonly restoreCheckpoint: (state: ParseState, checkpoint: ParseStateCheckpoint) => Promise<void>;
 
     // 12.1.6 Identifiers
-    readonly readIdentifier: (state: ParseState, parser: Parser) => Promise<Ast.Identifier>;
+    readonly readIdentifier: (state: ParseState, parser: Parser) => Ast.Identifier;
     readonly readGeneralizedIdentifier: (state: ParseState, parser: Parser) => Promise<Ast.GeneralizedIdentifier>;
-    readonly readKeyword: (state: ParseState, parser: Parser) => Promise<Ast.IdentifierExpression>;
+    readonly readKeyword: (state: ParseState, parser: Parser) => Ast.IdentifierExpression;
 
     // 12.2.1 Documents
     readonly readDocument: (state: ParseState, parser: Parser) => Promise<Ast.TDocument>;
@@ -84,16 +83,16 @@ export interface Parser {
     ) => Promise<Ast.RecursivePrimaryExpression>;
 
     // 12.2.3.11 Literal expression
-    readonly readLiteralExpression: (state: ParseState, parser: Parser) => Promise<Ast.LiteralExpression>;
+    readonly readLiteralExpression: (state: ParseState, parser: Parser) => Ast.LiteralExpression;
 
     // 12.2.3.12 Identifier expression
-    readonly readIdentifierExpression: (state: ParseState, parser: Parser) => Promise<Ast.IdentifierExpression>;
+    readonly readIdentifierExpression: (state: ParseState, parser: Parser) => Ast.IdentifierExpression;
 
     // 12.2.3.14 Parenthesized expression
     readonly readParenthesizedExpression: (state: ParseState, parser: Parser) => Promise<Ast.ParenthesizedExpression>;
 
     // 12.2.3.15 Not-implemented expression
-    readonly readNotImplementedExpression: (state: ParseState, parser: Parser) => Promise<Ast.NotImplementedExpression>;
+    readonly readNotImplementedExpression: (state: ParseState, parser: Parser) => Ast.NotImplementedExpression;
 
     // 12.2.3.16 Invoke expression
     readonly readInvokeExpression: (state: ParseState, parser: Parser) => Promise<Ast.InvokeExpression>;
