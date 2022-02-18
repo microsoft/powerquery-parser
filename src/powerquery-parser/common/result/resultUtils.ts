@@ -36,7 +36,10 @@ export function ensureResult<T>(locale: string, callbackFn: () => T): Result<T, 
     }
 }
 
-export async function ensureAsyncResult<T>(locale: string, callbackFn: () => Promise<T>): Promise<Result<T, CommonError.CommonError>> {
+export async function ensureAsyncResult<T>(
+    locale: string,
+    callbackFn: () => Promise<T>,
+): Promise<Result<T, CommonError.CommonError>> {
     try {
         return boxOk(await callbackFn());
     } catch (error) {
