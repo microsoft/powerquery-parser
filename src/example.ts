@@ -9,10 +9,10 @@ import { Assert, DefaultSettings, Lexer, ResultUtils, Task, TaskUtils } from "."
 
 parseText(`let x = 1 in try x otherwise 2`);
 
-function parseText(text: string): void {
+async function parseText(text: string): Promise<void> {
     // Try lexing and parsing the argument which returns a Result object.
     // A Result<T, E> is the union (Ok<T> | Error<E>).
-    const task: Task.TriedLexParseTask = TaskUtils.tryLexParse(DefaultSettings, text);
+    const task: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
 
     // If it was a success then dump the abstract syntax tree (AST) as verbose JSON to console.
     if (TaskUtils.isParseStageOk(task)) {

@@ -35,8 +35,8 @@ function parseAllFiles(settings: Settings, parserName: string): void {
         for (const filePath of TestFileUtils.getPowerQueryFilesRecursively(fileDirectory)) {
             const testName: string = testNameFromFilePath(filePath);
 
-            it(testName, () => {
-                const triedLexParseTask: Task.TriedLexParseTask = TestFileUtils.tryLexParse(settings, filePath);
+            it(testName, async () => {
+                const triedLexParseTask: Task.TriedLexParseTask = await TestFileUtils.tryLexParse(settings, filePath);
                 TaskUtils.assertIsParseStageOk(triedLexParseTask);
             });
         }
