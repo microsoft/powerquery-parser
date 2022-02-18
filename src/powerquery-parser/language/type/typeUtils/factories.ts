@@ -206,9 +206,7 @@ export function createTableType(
 }
 
 export function createTextLiteral(isNullable: boolean, literal: string): Type.TextLiteral {
-    if (literal[0] !== `"` || literal[literal.length - 1] !== `"`) {
-        throw new CommonError.InvariantError(`text literal must begin and end with double quote`);
-    }
+    literal = StringUtils.ensureQuoted(literal);
 
     return {
         isNullable,
