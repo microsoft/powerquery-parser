@@ -3,7 +3,6 @@
         "declaration": true,
         "downlevelIteration": true,
         "incremental": true,
-        "lib": ["ES2021.Promise"],
         "module": "commonjs",
         "noEmitOnError": true,
         "noFallthroughCasesInSwitch": true,
@@ -16,7 +15,7 @@
         "rootDir": "src",
         "sourceMap": true,
         "strict": true,
-        "target": "es5",
+        "target": "es6",
         "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
     },
     "exclude": ["node_modules"],
