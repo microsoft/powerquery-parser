@@ -15,7 +15,7 @@
         "rootDir": "src",
         "sourceMap": true,
         "strict": true,
-        "target": "es5",
+        "target": "es6",
         "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
     },
     "exclude": ["node_modules"],

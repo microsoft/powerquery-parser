@@ -63,6 +63,15 @@ export function assertNonZeroLength<T>(
     );
 }
 
+export async function asyncMap<T, U>(
+    collection: ReadonlyArray<T>,
+    mapFn: (value: T) => Promise<U>,
+): Promise<ReadonlyArray<U>> {
+    const tasks: ReadonlyArray<Promise<U>> = collection.map(mapFn);
+
+    return await Promise.all(tasks);
+}
+
 export function concatUnique<T>(left: ReadonlyArray<T>, right: ReadonlyArray<T>): ReadonlyArray<T> {
     const partial: T[] = [...left];
 
