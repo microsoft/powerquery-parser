@@ -8,8 +8,8 @@ import { Assert, DefaultSettings } from "../../..";
 import { ParseError } from "../../../powerquery-parser/parser";
 import { TestAssertUtils } from "../../testUtils";
 
-function assertGetExpectedTokenKindError(text: string): ParseError.ExpectedTokenKindError {
-    const error: ParseError.ParseError = TestAssertUtils.assertGetParseError(DefaultSettings, text);
+async function assertGetExpectedTokenKindError(text: string): Promise<ParseError.ExpectedTokenKindError> {
+    const error: ParseError.ParseError = await TestAssertUtils.assertGetParseError(DefaultSettings, text);
     const innerError: ParseError.TInnerParseError = error.innerError;
 
     Assert.isTrue(
@@ -20,8 +20,8 @@ function assertGetExpectedTokenKindError(text: string): ParseError.ExpectedToken
     return innerError as ParseError.ExpectedTokenKindError;
 }
 
-function assertErrorAt(text: string, lineNumber: number, columnNumber: number, codeUnit: number): void {
-    const error: ParseError.ExpectedTokenKindError = assertGetExpectedTokenKindError(text);
+async function assertErrorAt(text: string, lineNumber: number, columnNumber: number, codeUnit: number): Promise<void> {
+    const error: ParseError.ExpectedTokenKindError = await assertGetExpectedTokenKindError(text);
     const foundToken: ParseError.TokenWithColumnNumber = Assert.asDefined(error.maybeFoundToken);
 
     expect(foundToken.token.positionStart.codeUnit).to.equal(codeUnit, "codeUnit");

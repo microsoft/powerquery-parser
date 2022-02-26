@@ -27,8 +27,8 @@ interface NthNodeOfKindState extends Traverse.ITraversalState<Language.Ast.TNode
     nthCounter: number;
 }
 
-function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
-    const lexParseOk: Task.ParseTaskOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+async function collectAbridgeNodeFromAst(text: string): Promise<ReadonlyArray<AbridgedNode>> {
+    const lexParseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
 
     const state: CollectAbridgeNodeState = {
         locale: DefaultLocale,
@@ -53,12 +53,12 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
     return triedTraverse.value;
 }
 
-function assertGetNthNodeOfKind<N extends Language.Ast.TNode>(
+async function assertGetNthNodeOfKind<N extends Language.Ast.TNode>(
     text: string,
     nodeKind: Language.Ast.NodeKind,
     nthRequired: number,
-): N {
-    const parseTaskOk: Task.ParseTaskOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+): Promise<N> {
+    const parseTaskOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
 
     const state: NthNodeOfKindState = {
         locale: DefaultLocale,
@@ -104,21 +104,21 @@ function nthNodeEarlyExit(state: NthNodeOfKindState, _: Language.Ast.TNode): boo
     return state.nthCounter === state.nthRequired;
 }
 
-function assertAbridgeNodes(text: string, expected: ReadonlyArray<AbridgedNode>): void {
-    const actual: ReadonlyArray<AbridgedNode> = collectAbridgeNodeFromAst(text);
+async function assertAbridgeNodes(text: string, expected: ReadonlyArray<AbridgedNode>): Promise<void> {
+    const actual: ReadonlyArray<AbridgedNode> = await collectAbridgeNodeFromAst(text);
     expect(actual).deep.equal(expected, JSON.stringify(actual));
 }
 
 describe("Parser.AbridgedNode", () => {
     describe(`custom IParser.read`, () => {
-        it(`readParameterSpecificationList`, () => {
+        it(`readParameterSpecificationList`, async () => {
             const customSettings: Settings = {
                 ...DefaultSettings,
                 parser: Parser.RecursiveDescentParser,
                 maybeParserEntryPointFn: Parser.RecursiveDescentParser.readParameterSpecificationList,
             };
 
-            const triedLexParseTask: Task.TriedLexParseTask = TaskUtils.tryLexParse(
+            const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(
                 customSettings,
                 "(a as number, optional b as text)",
             );
@@ -128,7 +128,7 @@ describe("Parser.AbridgedNode", () => {
     });
 
     describe(`${Language.Ast.NodeKind.ArithmeticExpression}`, () => {
-        it(`1 & 2`, () => {
+        it(`1 & 2`, async () => {
             const text: string = `1 & 2`;
 
             const expected: ReadonlyArray<AbridgedNode> = [
@@ -140,7 +140,7 @@ describe("Parser.AbridgedNode", () => {
 
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
                 text,
                 Language.Ast.NodeKind.Constant,
                 1,
@@ -149,7 +149,7 @@ describe("Parser.AbridgedNode", () => {
             expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperator.And);
         });
 
-        it(`1 * 2`, () => {
+        it(`1 * 2`, async () => {
             const text: string = `1 * 2`;
 
             const expected: ReadonlyArray<AbridgedNode> = [
@@ -161,7 +161,7 @@ describe("Parser.AbridgedNode", () => {
 
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
                 text,
                 Language.Ast.NodeKind.Constant,
                 1,
@@ -170,7 +170,7 @@ describe("Parser.AbridgedNode", () => {
             expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperator.Multiplication);
         });
 
-        it(`1 / 2`, () => {
+        it(`1 / 2`, async () => {
             const text: string = `1 / 2`;
 
             const expected: ReadonlyArray<AbridgedNode> = [
@@ -182,7 +182,7 @@ describe("Parser.AbridgedNode", () => {
 
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
                 text,
                 Language.Ast.NodeKind.Constant,
                 1,
@@ -191,7 +191,7 @@ describe("Parser.AbridgedNode", () => {
             expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperator.Division);
         });
 
-        it(`1 + 2`, () => {
+        it(`1 + 2`, async () => {
             const text: string = `1 + 2`;
 
             const expected: ReadonlyArray<AbridgedNode> = [
@@ -203,7 +203,7 @@ describe("Parser.AbridgedNode", () => {
 
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
                 text,
                 Language.Ast.NodeKind.Constant,
                 1,
@@ -212,7 +212,7 @@ describe("Parser.AbridgedNode", () => {
             expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperator.Addition);
         });
 
-        it(`1 - 2`, () => {
+        it(`1 - 2`, async () => {
             const text: string = `1 - 2`;
 
             const expected: ReadonlyArray<AbridgedNode> = [
@@ -224,7 +224,7 @@ describe("Parser.AbridgedNode", () => {
 
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
                 text,
                 Language.Ast.NodeKind.Constant,
                 1,
@@ -311,7 +311,7 @@ describe("Parser.AbridgedNode", () => {
     });
 
     describe(`${Language.Ast.NodeKind.EqualityExpression}`, () => {
-        it(`1 = 2`, () => {
+        it(`1 = 2`, async () => {
             const text: string = `1 = 2`;
 
             const expected: ReadonlyArray<AbridgedNode> = [
@@ -323,7 +323,7 @@ describe("Parser.AbridgedNode", () => {
 
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
                 text,
                 Language.Ast.NodeKind.Constant,
                 1,
@@ -332,7 +332,7 @@ describe("Parser.AbridgedNode", () => {
             expect(operatorNode.constantKind).to.equal(Language.Constant.EqualityOperator.EqualTo);
         });
 
-        it(`1 <> 2`, () => {
+        it(`1 <> 2`, async () => {
             const text: string = `1 <> 2`;
 
             const expected: ReadonlyArray<AbridgedNode> = [
@@ -344,7 +344,7 @@ describe("Parser.AbridgedNode", () => {
 
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
                 text,
                 Language.Ast.NodeKind.Constant,
                 1,
@@ -1775,7 +1775,7 @@ describe("Parser.AbridgedNode", () => {
     // Ast.NodeKind.RecursivePrimaryExpression covered by many
 
     describe(`${Language.Ast.NodeKind.RelationalExpression}`, () => {
-        it(`1 > 2`, () => {
+        it(`1 > 2`, async () => {
             const text: string = `1 > 2`;
 
             const expected: ReadonlyArray<AbridgedNode> = [
@@ -1787,7 +1787,7 @@ describe("Parser.AbridgedNode", () => {
 
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
                 text,
                 Language.Ast.NodeKind.Constant,
                 1,
@@ -1796,7 +1796,7 @@ describe("Parser.AbridgedNode", () => {
             expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperator.GreaterThan);
         });
 
-        it(`1 >= 2`, () => {
+        it(`1 >= 2`, async () => {
             const text: string = `1 >= 2`;
 
             const expected: ReadonlyArray<AbridgedNode> = [
@@ -1808,7 +1808,7 @@ describe("Parser.AbridgedNode", () => {
 
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
                 text,
                 Language.Ast.NodeKind.Constant,
                 1,
@@ -1817,7 +1817,7 @@ describe("Parser.AbridgedNode", () => {
             expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperator.GreaterThanEqualTo);
         });
 
-        it(`1 < 2`, () => {
+        it(`1 < 2`, async () => {
             const text: string = `1 < 2`;
 
             const expected: ReadonlyArray<AbridgedNode> = [
@@ -1829,7 +1829,7 @@ describe("Parser.AbridgedNode", () => {
 
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
                 text,
                 Language.Ast.NodeKind.Constant,
                 1,
@@ -1838,7 +1838,7 @@ describe("Parser.AbridgedNode", () => {
             expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperator.LessThan);
         });
 
-        it(`1 <= 2`, () => {
+        it(`1 <= 2`, async () => {
             const text: string = `1 <= 2`;
 
             const expected: ReadonlyArray<AbridgedNode> = [
@@ -1850,7 +1850,7 @@ describe("Parser.AbridgedNode", () => {
 
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
                 text,
                 Language.Ast.NodeKind.Constant,
                 1,
@@ -2057,7 +2057,7 @@ describe("Parser.AbridgedNode", () => {
     // Ast.NodeKind.TypePrimaryType covered by many
 
     describe(`${Language.Ast.NodeKind.UnaryExpression}`, () => {
-        it(`-1`, () => {
+        it(`-1`, async () => {
             const text: string = `-1`;
 
             const expected: ReadonlyArray<AbridgedNode> = [
@@ -2069,7 +2069,7 @@ describe("Parser.AbridgedNode", () => {
 
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
                 text,
                 Language.Ast.NodeKind.Constant,
                 1,
@@ -2078,7 +2078,7 @@ describe("Parser.AbridgedNode", () => {
             expect(operatorNode.constantKind).to.equal(Language.Constant.UnaryOperator.Negative);
         });
 
-        it(`not 1`, () => {
+        it(`not 1`, async () => {
             const text: string = `not 1`;
 
             const expected: ReadonlyArray<AbridgedNode> = [
@@ -2090,7 +2090,7 @@ describe("Parser.AbridgedNode", () => {
 
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
                 text,
                 Language.Ast.NodeKind.Constant,
                 1,
@@ -2099,7 +2099,7 @@ describe("Parser.AbridgedNode", () => {
             expect(operatorNode.constantKind).to.equal(Language.Constant.UnaryOperator.Not);
         });
 
-        it(`+1`, () => {
+        it(`+1`, async () => {
             const text: string = `+1`;
 
             const expected: ReadonlyArray<AbridgedNode> = [
@@ -2111,7 +2111,7 @@ describe("Parser.AbridgedNode", () => {
 
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
                 text,
                 Language.Ast.NodeKind.Constant,
                 1,

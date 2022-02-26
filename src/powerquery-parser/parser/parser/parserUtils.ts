@@ -11,18 +11,18 @@ import { LexerSnapshot } from "../../lexer";
 import { ParseError } from "..";
 import { ParseSettings } from "../../settings";
 
-export function tryParse(parseSettings: ParseSettings, lexerSnapshot: LexerSnapshot): TriedParse {
-    const maybeParserEntryPointFn: ((state: ParseState, parser: Parser) => Ast.TNode) | undefined =
+export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: LexerSnapshot): Promise<TriedParse> {
+    const maybeParserEntryPointFn: ((state: ParseState, parser: Parser) => Promise<Ast.TNode>) | undefined =
         parseSettings?.maybeParserEntryPointFn;
 
     if (maybeParserEntryPointFn === undefined) {
-        return tryParseDocument(parseSettings, lexerSnapshot);
+        return await tryParseDocument(parseSettings, lexerSnapshot);
     }
 
     const parseState: ParseState = parseSettings.createParseState(lexerSnapshot, defaultOverrides(parseSettings));
 
     try {
-        const root: Ast.TNode = maybeParserEntryPointFn(parseState, parseSettings.parser);
+        const root: Ast.TNode = await maybeParserEntryPointFn(parseState, parseSettings.parser);
         ParseStateUtils.assertIsDoneParsing(parseState);
 
         return ResultUtils.boxOk({
@@ -37,7 +37,10 @@ export function tryParse(parseSettings: ParseSettings, lexerSnapshot: LexerSnaps
     }
 }
 
-export function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: LexerSnapshot): TriedParse {
+export async function tryParseDocument(
+    parseSettings: ParseSettings,
+    lexerSnapshot: LexerSnapshot,
+): Promise<TriedParse> {
     let root: Ast.TNode;
 
     const expressionDocumentState: ParseState = parseSettings.createParseState(
@@ -46,7 +49,7 @@ export function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: Le
     );
 
     try {
-        root = parseSettings.parser.readExpression(expressionDocumentState, parseSettings.parser);
+        root = await parseSettings.parser.readExpression(expressionDocumentState, parseSettings.parser);
         ParseStateUtils.assertIsDoneParsing(expressionDocumentState);
 
         return ResultUtils.boxOk({
@@ -63,7 +66,7 @@ export function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: Le
         );
 
         try {
-            root = parseSettings.parser.readSectionDocument(sectionDocumentState, parseSettings.parser);
+            root = await parseSettings.parser.readSectionDocument(sectionDocumentState, parseSettings.parser);
             ParseStateUtils.assertIsDoneParsing(sectionDocumentState);
 
             return ResultUtils.boxOk({
@@ -92,7 +95,6 @@ export function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: Le
 
 // If you have a custom parser + parser state,
 // then you'll have to create your own (create|restore)Checkpoint functions.
-// See `benchmark.ts` for an example.
 //
 // Due to performance reasons the backup no longer can include a naive deep copy of the context state.
 // Instead it's assumed that a backup is made immediately before a try/catch read block.
@@ -100,7 +102,8 @@ export function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: Le
 // Therefore we only care about the delta between before and after the try/catch block.
 // Thanks to the invariants above and the fact the ids for nodes are an auto-incrementing integer
 // we can easily just drop all delete all context nodes past the id of when the backup was created.
-export function createCheckpoint(state: ParseState): ParseStateCheckpoint {
+// eslint-disable-next-line require-await
+export async function createCheckpoint(state: ParseState): Promise<ParseStateCheckpoint> {
     return {
         tokenIndex: state.tokenIndex,
         contextStateIdCounter: state.contextState.idCounter,
@@ -110,10 +113,9 @@ export function createCheckpoint(state: ParseState): ParseStateCheckpoint {
 
 // If you have a custom parser + parser state,
 // then you'll have to create your own (create|restore)Checkpoint functions.
-// See `benchmark.ts` for an example.
-//
 // See createCheckpoint above for more information.
-export function restoreCheckpoint(state: ParseState, checkpoint: ParseStateCheckpoint): void {
+// eslint-disable-next-line require-await
+export async function restoreCheckpoint(state: ParseState, checkpoint: ParseStateCheckpoint): Promise<void> {
     state.tokenIndex = checkpoint.tokenIndex;
     state.maybeCurrentToken = state.lexerSnapshot.tokens[state.tokenIndex];
     state.maybeCurrentTokenKind = state.maybeCurrentToken?.kind;

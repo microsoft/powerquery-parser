@@ -73,7 +73,11 @@ export function readIdentifier(state: ParseState, _parser: Parser): Ast.Identifi
 }
 
 // This behavior matches the C# parser and not the language specification.
-export function readGeneralizedIdentifier(state: ParseState, _parser: Parser): Ast.GeneralizedIdentifier {
+// eslint-disable-next-line require-await
+export async function readGeneralizedIdentifier(
+    state: ParseState,
+    _parser: Parser,
+): Promise<Ast.GeneralizedIdentifier> {
     const nodeKind: Ast.NodeKind.GeneralizedIdentifier = Ast.NodeKind.GeneralizedIdentifier;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readGeneralizedIdentifier.name, {
@@ -185,7 +189,7 @@ export function readKeyword(state: ParseState, _parser: Parser): Ast.IdentifierE
 // ---------- 12.2.1 Documents ----------
 // --------------------------------------
 
-export function readDocument(state: ParseState, parser: Parser): Ast.TDocument {
+export async function readDocument(state: ParseState, parser: Parser): Promise<Ast.TDocument> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readDocument.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
@@ -198,14 +202,14 @@ export function readDocument(state: ParseState, parser: Parser): Ast.TDocument {
     // If Expression document fails (including UnusedTokensRemainError) then try parsing a SectionDocument.
     // If both fail then return the error which parsed more tokens.
     try {
-        document = parser.readExpression(state, parser);
+        document = await parser.readExpression(state, parser);
         ParseStateUtils.assertIsDoneParsing(state);
     } catch (expressionError) {
         Assert.isInstanceofError(expressionError);
 
         // Fast backup deletes context state, but we want to preserve it for the case
         // where both parsing an expression and section document error out.
-        const expressionCheckpoint: ParseStateCheckpoint = parser.createCheckpoint(state);
+        const expressionCheckpoint: ParseStateCheckpoint = await parser.createCheckpoint(state);
         const expressionErrorContextState: ParseContext.State = state.contextState;
 
         // Reset the parser's state.
@@ -219,7 +223,7 @@ export function readDocument(state: ParseState, parser: Parser): Ast.TDocument {
         }
 
         try {
-            document = readSectionDocument(state, parser);
+            document = await readSectionDocument(state, parser);
             ParseStateUtils.assertIsDoneParsing(state);
         } catch (sectionError) {
             Assert.isInstanceofError(sectionError);
@@ -255,7 +259,7 @@ export function readDocument(state: ParseState, parser: Parser): Ast.TDocument {
 // ---------- 12.2.2 Section Documents ----------
 // ----------------------------------------------
 
-export function readSectionDocument(state: ParseState, parser: Parser): Ast.Section {
+export async function readSectionDocument(state: ParseState, parser: Parser): Promise<Ast.Section> {
     const nodeKind: Ast.NodeKind.Section = Ast.NodeKind.Section;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readSectionDocument.name, {
@@ -265,7 +269,7 @@ export function readSectionDocument(state: ParseState, parser: Parser): Ast.Sect
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
-    const maybeLiteralAttributes: Ast.RecordLiteral | undefined = maybeReadLiteralAttributes(state, parser);
+    const maybeLiteralAttributes: Ast.RecordLiteral | undefined = await maybeReadLiteralAttributes(state, parser);
 
     const sectionConstant: Ast.IConstant<Constant.KeywordConstant.Section> = readTokenKindAsConstant(
         state,
@@ -287,7 +291,7 @@ export function readSectionDocument(state: ParseState, parser: Parser): Ast.Sect
         Constant.MiscConstant.Semicolon,
     );
 
-    const sectionMembers: Ast.IArrayWrapper<Ast.SectionMember> = parser.readSectionMembers(state, parser);
+    const sectionMembers: Ast.IArrayWrapper<Ast.SectionMember> = await parser.readSectionMembers(state, parser);
 
     const section: Ast.Section = {
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
@@ -306,7 +310,10 @@ export function readSectionDocument(state: ParseState, parser: Parser): Ast.Sect
     return section;
 }
 
-export function readSectionMembers(state: ParseState, parser: Parser): Ast.IArrayWrapper<Ast.SectionMember> {
+export async function readSectionMembers(
+    state: ParseState,
+    parser: Parser,
+): Promise<Ast.IArrayWrapper<Ast.SectionMember>> {
     const nodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readSectionMembers.name, {
@@ -320,7 +327,8 @@ export function readSectionMembers(state: ParseState, parser: Parser): Ast.IArra
     const sectionMembers: Ast.SectionMember[] = [];
 
     while (state.tokenIndex < totalTokens) {
-        sectionMembers.push(parser.readSectionMember(state, parser));
+        // eslint-disable-next-line no-await-in-loop
+        sectionMembers.push(await parser.readSectionMember(state, parser));
     }
 
     const sectionMemberArray: Ast.IArrayWrapper<Ast.SectionMember> = {
@@ -336,7 +344,7 @@ export function readSectionMembers(state: ParseState, parser: Parser): Ast.IArra
     return sectionMemberArray;
 }
 
-export function readSectionMember(state: ParseState, parser: Parser): Ast.SectionMember {
+export async function readSectionMember(state: ParseState, parser: Parser): Promise<Ast.SectionMember> {
     const nodeKind: Ast.NodeKind.SectionMember = Ast.NodeKind.SectionMember;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readSectionMember.name, {
@@ -346,12 +354,15 @@ export function readSectionMember(state: ParseState, parser: Parser): Ast.Sectio
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
-    const maybeLiteralAttributes: Ast.RecordLiteral | undefined = maybeReadLiteralAttributes(state, parser);
+    const maybeLiteralAttributes: Ast.RecordLiteral | undefined = await maybeReadLiteralAttributes(state, parser);
 
     const maybeSharedConstant: Ast.IConstant<Constant.KeywordConstant.Shared> | undefined =
         maybeReadTokenKindAsConstant(state, Token.TokenKind.KeywordShared, Constant.KeywordConstant.Shared);
 
-    const namePairedExpression: Ast.IdentifierPairedExpression = parser.readIdentifierPairedExpression(state, parser);
+    const namePairedExpression: Ast.IdentifierPairedExpression = await parser.readIdentifierPairedExpression(
+        state,
+        parser,
+    );
 
     const semicolonConstant: Ast.IConstant<Constant.MiscConstant.Semicolon> = readTokenKindAsConstant(
         state,
@@ -383,14 +394,14 @@ export function readSectionMember(state: ParseState, parser: Parser): Ast.Sectio
 // ---------- NullCoalescing ----------
 // ------------------------------------
 
-export function readNullCoalescingExpression(state: ParseState, parser: Parser): Ast.TExpression {
+export async function readNullCoalescingExpression(state: ParseState, parser: Parser): Promise<Ast.TExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readNullCoalescingExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const expression: Ast.TExpression = recursiveReadBinOpExpression<
+    const expression: Ast.TExpression = await recursiveReadBinOpExpression<
         Ast.NodeKind.NullCoalescingExpression,
         Ast.TLogicalExpression,
         Constant.MiscConstant.NullCoalescingOperator,
@@ -411,7 +422,7 @@ export function readNullCoalescingExpression(state: ParseState, parser: Parser):
     return expression;
 }
 
-export function readExpression(state: ParseState, parser: Parser): Ast.TExpression {
+export async function readExpression(state: ParseState, parser: Parser): Promise<Ast.TExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
@@ -422,31 +433,31 @@ export function readExpression(state: ParseState, parser: Parser): Ast.TExpressi
 
     switch (state.maybeCurrentTokenKind) {
         case Token.TokenKind.KeywordEach:
-            expression = parser.readEachExpression(state, parser);
+            expression = await parser.readEachExpression(state, parser);
             break;
 
         case Token.TokenKind.KeywordLet:
-            expression = parser.readLetExpression(state, parser);
+            expression = await parser.readLetExpression(state, parser);
             break;
 
         case Token.TokenKind.KeywordIf:
-            expression = parser.readIfExpression(state, parser);
+            expression = await parser.readIfExpression(state, parser);
             break;
 
         case Token.TokenKind.KeywordError:
-            expression = parser.readErrorRaisingExpression(state, parser);
+            expression = await parser.readErrorRaisingExpression(state, parser);
             break;
 
         case Token.TokenKind.KeywordTry:
-            expression = parser.readErrorHandlingExpression(state, parser);
+            expression = await parser.readErrorHandlingExpression(state, parser);
             break;
 
         case Token.TokenKind.LeftParenthesis:
-            expression = DisambiguationUtils.readAmbiguousParenthesis(state, parser);
+            expression = await DisambiguationUtils.readAmbiguousParenthesis(state, parser);
             break;
 
         default:
-            expression = parser.readNullCoalescingExpression(state, parser);
+            expression = await parser.readNullCoalescingExpression(state, parser);
             break;
     }
 
@@ -459,14 +470,14 @@ export function readExpression(state: ParseState, parser: Parser): Ast.TExpressi
 // ---------- 12.2.3.2 Logical expressions ----------
 // --------------------------------------------------
 
-export function readLogicalExpression(state: ParseState, parser: Parser): Ast.TLogicalExpression {
+export async function readLogicalExpression(state: ParseState, parser: Parser): Promise<Ast.TLogicalExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readLogicalExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const logicalExpression: Ast.TLogicalExpression = recursiveReadBinOpExpression<
+    const logicalExpression: Ast.TLogicalExpression = await recursiveReadBinOpExpression<
         Ast.NodeKind.LogicalExpression,
         Ast.TLogicalExpression,
         Constant.LogicalOperator,
@@ -489,14 +500,14 @@ export function readLogicalExpression(state: ParseState, parser: Parser): Ast.TL
 // ---------- 12.2.3.3 Is expression ----------
 // --------------------------------------------
 
-export function readIsExpression(state: ParseState, parser: Parser): Ast.TIsExpression {
+export async function readIsExpression(state: ParseState, parser: Parser): Promise<Ast.TIsExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIsExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const isExpression: Ast.TIsExpression = recursiveReadBinOpExpression<
+    const isExpression: Ast.TIsExpression = await recursiveReadBinOpExpression<
         Ast.NodeKind.IsExpression,
         Ast.TAsExpression,
         Constant.KeywordConstant.Is,
@@ -516,7 +527,10 @@ export function readIsExpression(state: ParseState, parser: Parser): Ast.TIsExpr
 }
 
 // sub-item of 12.2.3.3 Is expression
-export function readNullablePrimitiveType(state: ParseState, parser: Parser): Ast.TNullablePrimitiveType {
+export async function readNullablePrimitiveType(
+    state: ParseState,
+    parser: Parser,
+): Promise<Ast.TNullablePrimitiveType> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readNullablePrimitiveType.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
@@ -526,14 +540,14 @@ export function readNullablePrimitiveType(state: ParseState, parser: Parser): As
     let nullablePrimitiveType: Ast.TNullablePrimitiveType;
 
     if (ParseStateUtils.isOnConstantKind(state, Constant.LanguageConstant.Nullable)) {
-        nullablePrimitiveType = readPairedConstant(
+        nullablePrimitiveType = await readPairedConstant(
             state,
             Ast.NodeKind.NullablePrimitiveType,
             () => readConstantKind(state, Constant.LanguageConstant.Nullable),
             () => parser.readPrimitiveType(state, parser),
         );
     } else {
-        nullablePrimitiveType = parser.readPrimitiveType(state, parser);
+        nullablePrimitiveType = await parser.readPrimitiveType(state, parser);
     }
 
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
@@ -545,14 +559,14 @@ export function readNullablePrimitiveType(state: ParseState, parser: Parser): As
 // ---------- 12.2.3.4 As expression ----------
 // --------------------------------------------
 
-export function readAsExpression(state: ParseState, parser: Parser): Ast.TAsExpression {
+export async function readAsExpression(state: ParseState, parser: Parser): Promise<Ast.TAsExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readAsExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const asExpression: Ast.TAsExpression = recursiveReadBinOpExpression<
+    const asExpression: Ast.TAsExpression = await recursiveReadBinOpExpression<
         Ast.NodeKind.AsExpression,
         Ast.TEqualityExpression,
         Constant.KeywordConstant.As,
@@ -575,14 +589,14 @@ export function readAsExpression(state: ParseState, parser: Parser): Ast.TAsExpr
 // ---------- 12.2.3.5 Equality expression ----------
 // --------------------------------------------------
 
-export function readEqualityExpression(state: ParseState, parser: Parser): Ast.TEqualityExpression {
+export async function readEqualityExpression(state: ParseState, parser: Parser): Promise<Ast.TEqualityExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readEqualityExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const equalityExpression: Ast.TEqualityExpression = recursiveReadBinOpExpression<
+    const equalityExpression: Ast.TEqualityExpression = await recursiveReadBinOpExpression<
         Ast.NodeKind.EqualityExpression,
         Ast.TEqualityExpression,
         Constant.EqualityOperator,
@@ -605,14 +619,14 @@ export function readEqualityExpression(state: ParseState, parser: Parser): Ast.T
 // ---------- 12.2.3.6 Relational expression ----------
 // ----------------------------------------------------
 
-export function readRelationalExpression(state: ParseState, parser: Parser): Ast.TRelationalExpression {
+export async function readRelationalExpression(state: ParseState, parser: Parser): Promise<Ast.TRelationalExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readRelationalExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const relationalExpression: Ast.TRelationalExpression = recursiveReadBinOpExpression<
+    const relationalExpression: Ast.TRelationalExpression = await recursiveReadBinOpExpression<
         Ast.NodeKind.RelationalExpression,
         Ast.TArithmeticExpression,
         Constant.RelationalOperator,
@@ -635,14 +649,14 @@ export function readRelationalExpression(state: ParseState, parser: Parser): Ast
 // ---------- 12.2.3.7 Arithmetic expressions ----------
 // -----------------------------------------------------
 
-export function readArithmeticExpression(state: ParseState, parser: Parser): Ast.TArithmeticExpression {
+export async function readArithmeticExpression(state: ParseState, parser: Parser): Promise<Ast.TArithmeticExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readArithmeticExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const arithmeticExpression: Ast.TArithmeticExpression = recursiveReadBinOpExpression<
+    const arithmeticExpression: Ast.TArithmeticExpression = await recursiveReadBinOpExpression<
         Ast.NodeKind.ArithmeticExpression,
         Ast.TMetadataExpression,
         Constant.ArithmeticOperator,
@@ -665,7 +679,7 @@ export function readArithmeticExpression(state: ParseState, parser: Parser): Ast
 // ---------- 12.2.3.8 Metadata expression ----------
 // --------------------------------------------------
 
-export function readMetadataExpression(state: ParseState, parser: Parser): Ast.TMetadataExpression {
+export async function readMetadataExpression(state: ParseState, parser: Parser): Promise<Ast.TMetadataExpression> {
     const nodeKind: Ast.NodeKind.MetadataExpression = Ast.NodeKind.MetadataExpression;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readMetadataExpression.name, {
@@ -675,7 +689,7 @@ export function readMetadataExpression(state: ParseState, parser: Parser): Ast.T
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
-    const left: Ast.TUnaryExpression = parser.readUnaryExpression(state, parser);
+    const left: Ast.TUnaryExpression = await parser.readUnaryExpression(state, parser);
 
     const maybeMetaConstant: Ast.IConstant<Constant.KeywordConstant.Meta> | undefined = maybeReadTokenKindAsConstant(
         state,
@@ -685,7 +699,7 @@ export function readMetadataExpression(state: ParseState, parser: Parser): Ast.T
 
     if (maybeMetaConstant !== undefined) {
         const operatorConstant: Ast.IConstant<Constant.KeywordConstant.Meta> = maybeMetaConstant;
-        const right: Ast.TUnaryExpression = parser.readUnaryExpression(state, parser);
+        const right: Ast.TUnaryExpression = await parser.readUnaryExpression(state, parser);
 
         const metadataExpression: Ast.MetadataExpression = {
             ...ParseStateUtils.assertGetContextNodeMetadata(state),
@@ -720,7 +734,7 @@ export function readMetadataExpression(state: ParseState, parser: Parser): Ast.T
 // ---------- 12.2.3.9 Unary expression ----------
 // -----------------------------------------------
 
-export function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUnaryExpression {
+export async function readUnaryExpression(state: ParseState, parser: Parser): Promise<Ast.TUnaryExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readUnaryExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
@@ -765,7 +779,7 @@ export function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUna
 
     ParseStateUtils.endContext(state, operators);
 
-    const typeExpression: Ast.TTypeExpression = parser.readTypeExpression(state, parser);
+    const typeExpression: Ast.TTypeExpression = await parser.readTypeExpression(state, parser);
 
     const unaryExpression: Ast.UnaryExpression = {
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
@@ -789,7 +803,7 @@ export function readUnaryExpression(state: ParseState, parser: Parser): Ast.TUna
 // ---------- 12.2.3.10 Primary expression ----------
 // --------------------------------------------------
 
-export function readPrimaryExpression(state: ParseState, parser: Parser): Ast.TPrimaryExpression {
+export async function readPrimaryExpression(state: ParseState, parser: Parser): Promise<Ast.TPrimaryExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readPrimaryExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
@@ -807,11 +821,11 @@ export function readPrimaryExpression(state: ParseState, parser: Parser): Ast.TP
     } else {
         switch (maybeCurrentTokenKind) {
             case Token.TokenKind.LeftParenthesis:
-                primaryExpression = parser.readParenthesizedExpression(state, parser);
+                primaryExpression = await parser.readParenthesizedExpression(state, parser);
                 break;
 
             case Token.TokenKind.LeftBracket:
-                primaryExpression = DisambiguationUtils.readAmbiguousBracket(state, parser, [
+                primaryExpression = await DisambiguationUtils.readAmbiguousBracket(state, parser, [
                     Disambiguation.BracketDisambiguation.FieldProjection,
                     Disambiguation.BracketDisambiguation.FieldSelection,
                     Disambiguation.BracketDisambiguation.RecordExpression,
@@ -820,7 +834,7 @@ export function readPrimaryExpression(state: ParseState, parser: Parser): Ast.TP
                 break;
 
             case Token.TokenKind.LeftBrace:
-                primaryExpression = parser.readListExpression(state, parser);
+                primaryExpression = await parser.readListExpression(state, parser);
                 break;
 
             case Token.TokenKind.Ellipsis:
@@ -861,11 +875,11 @@ export function readPrimaryExpression(state: ParseState, parser: Parser): Ast.TP
     }
 }
 
-export function readRecursivePrimaryExpression(
+export async function readRecursivePrimaryExpression(
     state: ParseState,
     parser: Parser,
     head: Ast.TPrimaryExpression,
-): Ast.RecursivePrimaryExpression {
+): Promise<Ast.RecursivePrimaryExpression> {
     const nodeKind: Ast.NodeKind.RecursivePrimaryExpression = Ast.NodeKind.RecursivePrimaryExpression;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readRecursivePrimaryExpression.name, {
@@ -927,18 +941,21 @@ export function readRecursivePrimaryExpression(
         const maybeCurrentTokenKind: Token.TokenKind | undefined = state.maybeCurrentTokenKind;
 
         if (maybeCurrentTokenKind === Token.TokenKind.LeftParenthesis) {
-            recursiveExpressions.push(parser.readInvokeExpression(state, parser));
+            // eslint-disable-next-line no-await-in-loop
+            recursiveExpressions.push(await parser.readInvokeExpression(state, parser));
         } else if (maybeCurrentTokenKind === Token.TokenKind.LeftBrace) {
-            recursiveExpressions.push(parser.readItemAccessExpression(state, parser));
+            // eslint-disable-next-line no-await-in-loop
+            recursiveExpressions.push(await parser.readItemAccessExpression(state, parser));
         } else if (maybeCurrentTokenKind === Token.TokenKind.LeftBracket) {
-            const bracketExpression: Ast.TFieldAccessExpression = DisambiguationUtils.readAmbiguousBracket(
+            // eslint-disable-next-line no-await-in-loop
+            const bracketExpression: Ast.TFieldAccessExpression = (await DisambiguationUtils.readAmbiguousBracket(
                 state,
                 parser,
                 [
                     Disambiguation.BracketDisambiguation.FieldSelection,
                     Disambiguation.BracketDisambiguation.FieldProjection,
                 ],
-            ) as Ast.TFieldAccessExpression;
+            )) as Ast.TFieldAccessExpression;
 
             recursiveExpressions.push(bracketExpression);
         } else {
@@ -1073,14 +1090,17 @@ export function readIdentifierExpression(state: ParseState, parser: Parser): Ast
 // ---------- 12.2.3.14 Parenthesized expression ----------
 // --------------------------------------------------------
 
-export function readParenthesizedExpression(state: ParseState, parser: Parser): Ast.ParenthesizedExpression {
+export async function readParenthesizedExpression(
+    state: ParseState,
+    parser: Parser,
+): Promise<Ast.ParenthesizedExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readParenthesizedExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const parenthesizedExpression: Ast.ParenthesizedExpression = readWrapped(
+    const parenthesizedExpression: Ast.ParenthesizedExpression = await readWrapped(
         state,
         Ast.NodeKind.ParenthesizedExpression,
         () => readTokenKindAsConstant(state, Token.TokenKind.LeftParenthesis, Constant.WrapperConstant.LeftParenthesis),
@@ -1132,7 +1152,7 @@ export function readNotImplementedExpression(state: ParseState, _parser: Parser)
 // ---------- Invoke expression ----------
 // ---------------------------------------
 
-export function readInvokeExpression(state: ParseState, parser: Parser): Ast.InvokeExpression {
+export async function readInvokeExpression(state: ParseState, parser: Parser): Promise<Ast.InvokeExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readInvokeExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
@@ -1141,7 +1161,7 @@ export function readInvokeExpression(state: ParseState, parser: Parser): Ast.Inv
 
     const continueReadingValues: boolean = !ParseStateUtils.isNextTokenKind(state, Token.TokenKind.RightParenthesis);
 
-    const invokeExpression: Ast.InvokeExpression = readWrapped(
+    const invokeExpression: Ast.InvokeExpression = await readWrapped(
         state,
         Ast.NodeKind.InvokeExpression,
         () => readTokenKindAsConstant(state, Token.TokenKind.LeftParenthesis, Constant.WrapperConstant.LeftParenthesis),
@@ -1168,7 +1188,7 @@ export function readInvokeExpression(state: ParseState, parser: Parser): Ast.Inv
 // ---------- 12.2.3.17 List expression ----------
 // -----------------------------------------------
 
-export function readListExpression(state: ParseState, parser: Parser): Ast.ListExpression {
+export async function readListExpression(state: ParseState, parser: Parser): Promise<Ast.ListExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readListExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
@@ -1177,14 +1197,14 @@ export function readListExpression(state: ParseState, parser: Parser): Ast.ListE
 
     const continueReadingValues: boolean = !ParseStateUtils.isNextTokenKind(state, Token.TokenKind.RightBrace);
 
-    const listExpression: Ast.ListExpression = readWrapped(
+    const listExpression: Ast.ListExpression = await readWrapped(
         state,
         Ast.NodeKind.ListExpression,
         () => readTokenKindAsConstant(state, Token.TokenKind.LeftBrace, Constant.WrapperConstant.LeftBrace),
-        () =>
-            readCsvArray<Ast.TListItem>(
+        async () =>
+            await readCsvArray<Ast.TListItem>(
                 state,
-                () => parser.readListItem(state, parser),
+                async () => await parser.readListItem(state, parser),
                 continueReadingValues,
                 testCsvContinuationDanglingCommaForBrace,
             ),
@@ -1197,7 +1217,7 @@ export function readListExpression(state: ParseState, parser: Parser): Ast.ListE
     return listExpression;
 }
 
-export function readListItem(state: ParseState, parser: Parser): Ast.TListItem {
+export async function readListItem(state: ParseState, parser: Parser): Promise<Ast.TListItem> {
     const nodeKind: Ast.NodeKind.RangeExpression = Ast.NodeKind.RangeExpression;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readListItem.name, {
@@ -1207,7 +1227,7 @@ export function readListItem(state: ParseState, parser: Parser): Ast.TListItem {
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
-    const left: Ast.TExpression = parser.readExpression(state, parser);
+    const left: Ast.TExpression = await parser.readExpression(state, parser);
 
     if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.DotDot)) {
         const rangeConstant: Ast.IConstant<Constant.MiscConstant.DotDot> = readTokenKindAsConstant(
@@ -1216,7 +1236,7 @@ export function readListItem(state: ParseState, parser: Parser): Ast.TListItem {
             Constant.MiscConstant.DotDot,
         );
 
-        const right: Ast.TExpression = parser.readExpression(state, parser);
+        const right: Ast.TExpression = await parser.readExpression(state, parser);
 
         const rangeExpression: Ast.RangeExpression = {
             ...ParseStateUtils.assertGetContextNodeMetadata(state),
@@ -1251,7 +1271,7 @@ export function readListItem(state: ParseState, parser: Parser): Ast.TListItem {
 // ---------- 12.2.3.18 Record expression ----------
 // -------------------------------------------------
 
-export function readRecordExpression(state: ParseState, parser: Parser): Ast.RecordExpression {
+export async function readRecordExpression(state: ParseState, parser: Parser): Promise<Ast.RecordExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readRecordExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
@@ -1260,7 +1280,7 @@ export function readRecordExpression(state: ParseState, parser: Parser): Ast.Rec
 
     const continueReadingValues: boolean = !ParseStateUtils.isNextTokenKind(state, Token.TokenKind.RightBracket);
 
-    const recordExpression: Ast.RecordExpression = readWrapped(
+    const recordExpression: Ast.RecordExpression = await readWrapped(
         state,
         Ast.NodeKind.RecordExpression,
         () => readTokenKindAsConstant(state, Token.TokenKind.LeftBracket, Constant.WrapperConstant.LeftBracket),
@@ -1284,18 +1304,18 @@ export function readRecordExpression(state: ParseState, parser: Parser): Ast.Rec
 // ---------- 12.2.3.19 Item access expression ----------
 // ------------------------------------------------------
 
-export function readItemAccessExpression(state: ParseState, parser: Parser): Ast.ItemAccessExpression {
+export async function readItemAccessExpression(state: ParseState, parser: Parser): Promise<Ast.ItemAccessExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readItemAccessExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const itemAccessExpression: Ast.ItemAccessExpression = readWrapped(
+    const itemAccessExpression: Ast.ItemAccessExpression = await readWrapped(
         state,
         Ast.NodeKind.ItemAccessExpression,
         () => readTokenKindAsConstant(state, Token.TokenKind.LeftBrace, Constant.WrapperConstant.LeftBrace),
-        () => parser.readExpression(state, parser),
+        async () => await parser.readExpression(state, parser),
         () => readTokenKindAsConstant(state, Token.TokenKind.RightBrace, Constant.WrapperConstant.RightBrace),
         true,
     );
@@ -1309,27 +1329,27 @@ export function readItemAccessExpression(state: ParseState, parser: Parser): Ast
 // ---------- 12.2.3.20 Field access expression ----------
 // -------------------------------------------------------
 
-export function readFieldSelection(state: ParseState, parser: Parser): Ast.FieldSelector {
+export async function readFieldSelection(state: ParseState, parser: Parser): Promise<Ast.FieldSelector> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFieldSelection.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const fieldSelector: Ast.FieldSelector = readFieldSelector(state, parser, true);
+    const fieldSelector: Ast.FieldSelector = await readFieldSelector(state, parser, true);
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return fieldSelector;
 }
 
-export function readFieldProjection(state: ParseState, parser: Parser): Ast.FieldProjection {
+export async function readFieldProjection(state: ParseState, parser: Parser): Promise<Ast.FieldProjection> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFieldProjection.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const fieldProjection: Ast.FieldProjection = readWrapped(
+    const fieldProjection: Ast.FieldProjection = await readWrapped(
         state,
         Ast.NodeKind.FieldProjection,
         () => readTokenKindAsConstant(state, Token.TokenKind.LeftBracket, Constant.WrapperConstant.LeftBracket),
@@ -1349,14 +1369,18 @@ export function readFieldProjection(state: ParseState, parser: Parser): Ast.Fiel
     return fieldProjection;
 }
 
-export function readFieldSelector(state: ParseState, parser: Parser, allowOptional: boolean): Ast.FieldSelector {
+export async function readFieldSelector(
+    state: ParseState,
+    parser: Parser,
+    allowOptional: boolean,
+): Promise<Ast.FieldSelector> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFieldSelector.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const fieldSelector: Ast.FieldSelector = readWrapped(
+    const fieldSelector: Ast.FieldSelector = await readWrapped(
         state,
         Ast.NodeKind.FieldSelector,
         () => readTokenKindAsConstant(state, Token.TokenKind.LeftBracket, Constant.WrapperConstant.LeftBracket),
@@ -1374,7 +1398,7 @@ export function readFieldSelector(state: ParseState, parser: Parser, allowOption
 // ---------- 12.2.3.21 Function expression ----------
 // ---------------------------------------------------
 
-export function readFunctionExpression(state: ParseState, parser: Parser): Ast.FunctionExpression {
+export async function readFunctionExpression(state: ParseState, parser: Parser): Promise<Ast.FunctionExpression> {
     const nodeKind: Ast.NodeKind.FunctionExpression = Ast.NodeKind.FunctionExpression;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFunctionExpression.name, {
@@ -1384,12 +1408,12 @@ export function readFunctionExpression(state: ParseState, parser: Parser): Ast.F
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
-    const parameters: Ast.IParameterList<Ast.AsNullablePrimitiveType | undefined> = parser.readParameterList(
+    const parameters: Ast.IParameterList<Ast.AsNullablePrimitiveType | undefined> = await parser.readParameterList(
         state,
         parser,
     );
 
-    const maybeFunctionReturnType: Ast.AsNullablePrimitiveType | undefined = maybeReadAsNullablePrimitiveType(
+    const maybeFunctionReturnType: Ast.AsNullablePrimitiveType | undefined = await maybeReadAsNullablePrimitiveType(
         state,
         parser,
     );
@@ -1400,7 +1424,7 @@ export function readFunctionExpression(state: ParseState, parser: Parser): Ast.F
         Constant.MiscConstant.FatArrow,
     );
 
-    const expression: Ast.TExpression = parser.readExpression(state, parser);
+    const expression: Ast.TExpression = await parser.readExpression(state, parser);
 
     const functionExpression: Ast.FunctionExpression = {
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
@@ -1418,17 +1442,17 @@ export function readFunctionExpression(state: ParseState, parser: Parser): Ast.F
     return functionExpression;
 }
 
-export function readParameterList(
+export async function readParameterList(
     state: ParseState,
     parser: Parser,
-): Ast.IParameterList<Ast.AsNullablePrimitiveType | undefined> {
+): Promise<Ast.IParameterList<Ast.AsNullablePrimitiveType | undefined>> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readParameterList.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const parameterList: Ast.IParameterList<Ast.AsNullablePrimitiveType | undefined> = genericReadParameterList(
+    const parameterList: Ast.IParameterList<Ast.AsNullablePrimitiveType | undefined> = await genericReadParameterList(
         state,
         parser,
         () => maybeReadAsNullablePrimitiveType(state, parser),
@@ -1439,14 +1463,17 @@ export function readParameterList(
     return parameterList;
 }
 
-function maybeReadAsNullablePrimitiveType(state: ParseState, parser: Parser): Ast.AsNullablePrimitiveType | undefined {
+async function maybeReadAsNullablePrimitiveType(
+    state: ParseState,
+    parser: Parser,
+): Promise<Ast.AsNullablePrimitiveType | undefined> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, maybeReadAsNullablePrimitiveType.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const maybeAsNullablePrimitiveType: Ast.AsNullablePrimitiveType | undefined = maybeReadPairedConstant(
+    const maybeAsNullablePrimitiveType: Ast.AsNullablePrimitiveType | undefined = await maybeReadPairedConstant(
         state,
         Ast.NodeKind.AsNullablePrimitiveType,
         () => ParseStateUtils.isOnTokenKind(state, Token.TokenKind.KeywordAs),
@@ -1459,14 +1486,14 @@ function maybeReadAsNullablePrimitiveType(state: ParseState, parser: Parser): As
     return maybeAsNullablePrimitiveType;
 }
 
-export function readAsType(state: ParseState, parser: Parser): Ast.AsType {
+export async function readAsType(state: ParseState, parser: Parser): Promise<Ast.AsType> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readAsType.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const asType: Ast.AsType = readPairedConstant(
+    const asType: Ast.AsType = await readPairedConstant(
         state,
         Ast.NodeKind.AsType,
         () => readTokenKindAsConstant(state, Token.TokenKind.KeywordAs, Constant.KeywordConstant.As),
@@ -1482,14 +1509,14 @@ export function readAsType(state: ParseState, parser: Parser): Ast.AsType {
 // ---------- 12.2.3.22 Each expression ----------
 // -----------------------------------------------
 
-export function readEachExpression(state: ParseState, parser: Parser): Ast.EachExpression {
+export async function readEachExpression(state: ParseState, parser: Parser): Promise<Ast.EachExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readEachExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const eachExpression: Ast.EachExpression = readPairedConstant(
+    const eachExpression: Ast.EachExpression = await readPairedConstant(
         state,
         Ast.NodeKind.EachExpression,
         () => readTokenKindAsConstant(state, Token.TokenKind.KeywordEach, Constant.KeywordConstant.Each),
@@ -1505,7 +1532,7 @@ export function readEachExpression(state: ParseState, parser: Parser): Ast.EachE
 // ---------- 12.2.3.23 Let expression ----------
 // ----------------------------------------------
 
-export function readLetExpression(state: ParseState, parser: Parser): Ast.LetExpression {
+export async function readLetExpression(state: ParseState, parser: Parser): Promise<Ast.LetExpression> {
     const nodeKind: Ast.NodeKind.LetExpression = Ast.NodeKind.LetExpression;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readLetExpression.name, {
@@ -1522,7 +1549,7 @@ export function readLetExpression(state: ParseState, parser: Parser): Ast.LetExp
     );
 
     const identifierPairedExpression: Ast.ICsvArray<Ast.IdentifierPairedExpression> =
-        parser.readIdentifierPairedExpressions(
+        await parser.readIdentifierPairedExpressions(
             state,
             parser,
             !ParseStateUtils.isNextTokenKind(state, Token.TokenKind.KeywordIn),
@@ -1535,7 +1562,7 @@ export function readLetExpression(state: ParseState, parser: Parser): Ast.LetExp
         Constant.KeywordConstant.In,
     );
 
-    const expression: Ast.TExpression = parser.readExpression(state, parser);
+    const expression: Ast.TExpression = await parser.readExpression(state, parser);
 
     const letExpression: Ast.LetExpression = {
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
@@ -1557,7 +1584,7 @@ export function readLetExpression(state: ParseState, parser: Parser): Ast.LetExp
 // ---------- 12.2.3.24 If expression ----------
 // ---------------------------------------------
 
-export function readIfExpression(state: ParseState, parser: Parser): Ast.IfExpression {
+export async function readIfExpression(state: ParseState, parser: Parser): Promise<Ast.IfExpression> {
     const nodeKind: Ast.NodeKind.IfExpression = Ast.NodeKind.IfExpression;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIfExpression.name, {
@@ -1573,7 +1600,7 @@ export function readIfExpression(state: ParseState, parser: Parser): Ast.IfExpre
         Constant.KeywordConstant.If,
     );
 
-    const condition: Ast.TExpression = parser.readExpression(state, parser);
+    const condition: Ast.TExpression = await parser.readExpression(state, parser);
 
     const thenConstant: Ast.IConstant<Constant.KeywordConstant.Then> = readTokenKindAsConstant(
         state,
@@ -1581,7 +1608,7 @@ export function readIfExpression(state: ParseState, parser: Parser): Ast.IfExpre
         Constant.KeywordConstant.Then,
     );
 
-    const trueExpression: Ast.TExpression = parser.readExpression(state, parser);
+    const trueExpression: Ast.TExpression = await parser.readExpression(state, parser);
 
     const elseConstant: Ast.IConstant<Constant.KeywordConstant.Else> = readTokenKindAsConstant(
         state,
@@ -1589,7 +1616,7 @@ export function readIfExpression(state: ParseState, parser: Parser): Ast.IfExpre
         Constant.KeywordConstant.Else,
     );
 
-    const falseExpression: Ast.TExpression = parser.readExpression(state, parser);
+    const falseExpression: Ast.TExpression = await parser.readExpression(state, parser);
 
     const ifExpression: Ast.IfExpression = {
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
@@ -1613,7 +1640,7 @@ export function readIfExpression(state: ParseState, parser: Parser): Ast.IfExpre
 // ---------- 12.2.3.25 Type expression ----------
 // -----------------------------------------------
 
-export function readTypeExpression(state: ParseState, parser: Parser): Ast.TTypeExpression {
+export async function readTypeExpression(state: ParseState, parser: Parser): Promise<Ast.TTypeExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readTypeExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
@@ -1623,14 +1650,14 @@ export function readTypeExpression(state: ParseState, parser: Parser): Ast.TType
     let typeExpression: Ast.TTypeExpression;
 
     if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.KeywordType)) {
-        typeExpression = readPairedConstant(
+        typeExpression = await readPairedConstant(
             state,
             Ast.NodeKind.TypePrimaryType,
             () => readTokenKindAsConstant(state, Token.TokenKind.KeywordType, Constant.KeywordConstant.Type),
             () => parser.readPrimaryType(state, parser),
         );
     } else {
-        typeExpression = parser.readPrimaryExpression(state, parser);
+        typeExpression = await parser.readPrimaryExpression(state, parser);
     }
 
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
@@ -1638,14 +1665,14 @@ export function readTypeExpression(state: ParseState, parser: Parser): Ast.TType
     return typeExpression;
 }
 
-export function readType(state: ParseState, parser: Parser): Ast.TType {
+export async function readType(state: ParseState, parser: Parser): Promise<Ast.TType> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readType.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const triedReadPrimaryType: TriedReadPrimaryType = tryReadPrimaryType(state, parser);
+    const triedReadPrimaryType: TriedReadPrimaryType = await tryReadPrimaryType(state, parser);
 
     if (ResultUtils.isOk(triedReadPrimaryType)) {
         trace.exit({
@@ -1664,14 +1691,14 @@ export function readType(state: ParseState, parser: Parser): Ast.TType {
     }
 }
 
-export function readPrimaryType(state: ParseState, parser: Parser): Ast.TPrimaryType {
+export async function readPrimaryType(state: ParseState, parser: Parser): Promise<Ast.TPrimaryType> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readPrimaryType.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const triedReadPrimaryType: TriedReadPrimaryType = tryReadPrimaryType(state, parser);
+    const triedReadPrimaryType: TriedReadPrimaryType = await tryReadPrimaryType(state, parser);
 
     if (ResultUtils.isOk(triedReadPrimaryType)) {
         trace.exit({
@@ -1690,7 +1717,7 @@ export function readPrimaryType(state: ParseState, parser: Parser): Ast.TPrimary
     }
 }
 
-export function readRecordType(state: ParseState, parser: Parser): Ast.RecordType {
+export async function readRecordType(state: ParseState, parser: Parser): Promise<Ast.RecordType> {
     const nodeKind: Ast.NodeKind.RecordType = Ast.NodeKind.RecordType;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readRecordType.name, {
@@ -1700,7 +1727,7 @@ export function readRecordType(state: ParseState, parser: Parser): Ast.RecordTyp
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
-    const fields: Ast.FieldSpecificationList = parser.readFieldSpecificationList(
+    const fields: Ast.FieldSpecificationList = await parser.readFieldSpecificationList(
         state,
         parser,
         true,
@@ -1720,7 +1747,7 @@ export function readRecordType(state: ParseState, parser: Parser): Ast.RecordTyp
     return recordType;
 }
 
-export function readTableType(state: ParseState, parser: Parser): Ast.TableType {
+export async function readTableType(state: ParseState, parser: Parser): Promise<Ast.TableType> {
     const nodeKind: Ast.NodeKind.TableType = Ast.NodeKind.TableType;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readTableType.name, {
@@ -1745,9 +1772,14 @@ export function readTableType(state: ParseState, parser: Parser): Ast.TableType 
     let rowType: Ast.FieldSpecificationList | Ast.TPrimaryExpression;
 
     if (isPrimaryExpressionExpected) {
-        rowType = parser.readPrimaryExpression(state, parser);
+        rowType = await parser.readPrimaryExpression(state, parser);
     } else {
-        rowType = parser.readFieldSpecificationList(state, parser, false, testCsvContinuationDanglingCommaForBracket);
+        rowType = await parser.readFieldSpecificationList(
+            state,
+            parser,
+            false,
+            testCsvContinuationDanglingCommaForBracket,
+        );
     }
 
     const tableType: Ast.TableType = {
@@ -1764,12 +1796,12 @@ export function readTableType(state: ParseState, parser: Parser): Ast.TableType 
     return tableType;
 }
 
-export function readFieldSpecificationList(
+export async function readFieldSpecificationList(
     state: ParseState,
     parser: Parser,
     allowOpenMarker: boolean,
     testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
-): Ast.FieldSpecificationList {
+): Promise<Ast.FieldSpecificationList> {
     const nodeKind: Ast.NodeKind.FieldSpecificationList = Ast.NodeKind.FieldSpecificationList;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFieldSpecificationList.name, {
@@ -1835,12 +1867,12 @@ export function readFieldSpecificationList(
             const maybeOptionalConstant: Ast.IConstant<Constant.LanguageConstant.Optional> | undefined =
                 maybeReadConstantKind(state, Constant.LanguageConstant.Optional);
 
-            const name: Ast.GeneralizedIdentifier = parser.readGeneralizedIdentifier(state, parser);
+            // eslint-disable-next-line no-await-in-loop
+            const name: Ast.GeneralizedIdentifier = await parser.readGeneralizedIdentifier(state, parser);
 
-            const maybeFieldTypeSpecification: Ast.FieldTypeSpecification | undefined = maybeReadFieldTypeSpecification(
-                state,
-                parser,
-            );
+            const maybeFieldTypeSpecification: Ast.FieldTypeSpecification | undefined =
+                // eslint-disable-next-line no-await-in-loop
+                await maybeReadFieldTypeSpecification(state, parser);
 
             const field: Ast.FieldSpecification = {
                 ...ParseStateUtils.assertGetContextNodeMetadata(state),
@@ -1919,7 +1951,10 @@ export function readFieldSpecificationList(
     return fieldSpecificationList;
 }
 
-function maybeReadFieldTypeSpecification(state: ParseState, parser: Parser): Ast.FieldTypeSpecification | undefined {
+async function maybeReadFieldTypeSpecification(
+    state: ParseState,
+    parser: Parser,
+): Promise<Ast.FieldTypeSpecification | undefined> {
     const nodeKind: Ast.NodeKind.FieldTypeSpecification = Ast.NodeKind.FieldTypeSpecification;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, maybeReadFieldTypeSpecification.name, {
@@ -1936,7 +1971,7 @@ function maybeReadFieldTypeSpecification(state: ParseState, parser: Parser): Ast
     );
 
     if (maybeEqualConstant) {
-        const fieldType: Ast.TType = parser.readType(state, parser);
+        const fieldType: Ast.TType = await parser.readType(state, parser);
 
         const fieldTypeSpecification: Ast.FieldTypeSpecification = {
             ...ParseStateUtils.assertGetContextNodeMetadata(state),
@@ -1980,14 +2015,14 @@ function fieldSpecificationListReadError(state: ParseState, allowOpenMarker: boo
     }
 }
 
-export function readListType(state: ParseState, parser: Parser): Ast.ListType {
+export async function readListType(state: ParseState, parser: Parser): Promise<Ast.ListType> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readListType.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const listType: Ast.ListType = readWrapped(
+    const listType: Ast.ListType = await readWrapped(
         state,
         Ast.NodeKind.ListType,
         () => readTokenKindAsConstant(state, Token.TokenKind.LeftBrace, Constant.WrapperConstant.LeftBrace),
@@ -2001,7 +2036,7 @@ export function readListType(state: ParseState, parser: Parser): Ast.ListType {
     return listType;
 }
 
-export function readFunctionType(state: ParseState, parser: Parser): Ast.FunctionType {
+export async function readFunctionType(state: ParseState, parser: Parser): Promise<Ast.FunctionType> {
     const nodeKind: Ast.NodeKind.FunctionType = Ast.NodeKind.FunctionType;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFunctionType.name, {
@@ -2016,8 +2051,8 @@ export function readFunctionType(state: ParseState, parser: Parser): Ast.Functio
         Constant.PrimitiveTypeConstant.Function,
     );
 
-    const parameters: Ast.IParameterList<Ast.AsType> = parser.readParameterSpecificationList(state, parser);
-    const functionReturnType: Ast.AsType = parser.readAsType(state, parser);
+    const parameters: Ast.IParameterList<Ast.AsType> = await parser.readParameterSpecificationList(state, parser);
+    const functionReturnType: Ast.AsType = await parser.readAsType(state, parser);
 
     const functionType: Ast.FunctionType = {
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
@@ -2034,7 +2069,7 @@ export function readFunctionType(state: ParseState, parser: Parser): Ast.Functio
     return functionType;
 }
 
-function tryReadPrimaryType(state: ParseState, parser: Parser): TriedReadPrimaryType {
+async function tryReadPrimaryType(state: ParseState, parser: Parser): Promise<TriedReadPrimaryType> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, tryReadPrimaryType.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
@@ -2053,18 +2088,18 @@ function tryReadPrimaryType(state: ParseState, parser: Parser): TriedReadPrimary
     let attempt: TriedReadPrimaryType;
 
     if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.LeftBracket)) {
-        attempt = ResultUtils.boxOk(parser.readRecordType(state, parser));
+        attempt = ResultUtils.boxOk(await parser.readRecordType(state, parser));
     } else if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.LeftBrace)) {
-        attempt = ResultUtils.boxOk(parser.readListType(state, parser));
+        attempt = ResultUtils.boxOk(await parser.readListType(state, parser));
     } else if (isTableTypeNext) {
-        attempt = ResultUtils.boxOk(parser.readTableType(state, parser));
+        attempt = ResultUtils.boxOk(await parser.readTableType(state, parser));
     } else if (isFunctionTypeNext) {
-        attempt = ResultUtils.boxOk(parser.readFunctionType(state, parser));
+        attempt = ResultUtils.boxOk(await parser.readFunctionType(state, parser));
     } else if (ParseStateUtils.isOnConstantKind(state, Constant.LanguageConstant.Nullable)) {
-        attempt = ResultUtils.boxOk(parser.readNullableType(state, parser));
+        attempt = ResultUtils.boxOk(await parser.readNullableType(state, parser));
     } else {
-        const checkpoint: ParseStateCheckpoint = parser.createCheckpoint(state);
-        const triedReadPrimitiveType: TriedReadPrimaryType = tryReadPrimitiveType(state, parser);
+        const checkpoint: ParseStateCheckpoint = await parser.createCheckpoint(state);
+        const triedReadPrimitiveType: TriedReadPrimaryType = await tryReadPrimitiveType(state, parser);
 
         if (ResultUtils.isError(triedReadPrimitiveType)) {
             parser.restoreCheckpoint(state, checkpoint);
@@ -2078,15 +2113,20 @@ function tryReadPrimaryType(state: ParseState, parser: Parser): TriedReadPrimary
     return attempt;
 }
 
-export function readParameterSpecificationList(state: ParseState, parser: Parser): Ast.IParameterList<Ast.AsType> {
+export async function readParameterSpecificationList(
+    state: ParseState,
+    parser: Parser,
+): Promise<Ast.IParameterList<Ast.AsType>> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readParameterSpecificationList.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const parameterList: Ast.IParameterList<Ast.AsType> = genericReadParameterList(state, parser, () =>
-        parser.readAsType(state, parser),
+    const parameterList: Ast.IParameterList<Ast.AsType> = await genericReadParameterList(
+        state,
+        parser,
+        async () => await parser.readAsType(state, parser),
     );
 
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
@@ -2094,14 +2134,14 @@ export function readParameterSpecificationList(state: ParseState, parser: Parser
     return parameterList;
 }
 
-export function readNullableType(state: ParseState, parser: Parser): Ast.NullableType {
+export async function readNullableType(state: ParseState, parser: Parser): Promise<Ast.NullableType> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readNullableType.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const nullableType: Ast.NullableType = readPairedConstant(
+    const nullableType: Ast.NullableType = await readPairedConstant(
         state,
         Ast.NodeKind.NullableType,
         () => readConstantKind(state, Constant.LanguageConstant.Nullable),
@@ -2117,14 +2157,17 @@ export function readNullableType(state: ParseState, parser: Parser): Ast.Nullabl
 // ---------- 12.2.3.26 Error raising expression ----------
 // --------------------------------------------------------
 
-export function readErrorRaisingExpression(state: ParseState, parser: Parser): Ast.ErrorRaisingExpression {
+export async function readErrorRaisingExpression(
+    state: ParseState,
+    parser: Parser,
+): Promise<Ast.ErrorRaisingExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readErrorRaisingExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const errorRaisingExpression: Ast.ErrorRaisingExpression = readPairedConstant(
+    const errorRaisingExpression: Ast.ErrorRaisingExpression = await readPairedConstant(
         state,
         Ast.NodeKind.ErrorRaisingExpression,
         () => readTokenKindAsConstant(state, Token.TokenKind.KeywordError, Constant.KeywordConstant.Error),
@@ -2140,7 +2183,10 @@ export function readErrorRaisingExpression(state: ParseState, parser: Parser): A
 // ---------- 12.2.3.27 Error handling expression ----------
 // ---------------------------------------------------------
 
-export function readErrorHandlingExpression(state: ParseState, parser: Parser): Ast.ErrorHandlingExpression {
+export async function readErrorHandlingExpression(
+    state: ParseState,
+    parser: Parser,
+): Promise<Ast.ErrorHandlingExpression> {
     const nodeKind: Ast.NodeKind.ErrorHandlingExpression = Ast.NodeKind.ErrorHandlingExpression;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readErrorHandlingExpression.name, {
@@ -2156,11 +2202,11 @@ export function readErrorHandlingExpression(state: ParseState, parser: Parser): 
         Constant.KeywordConstant.Try,
     );
 
-    const protectedExpression: Ast.TExpression = parser.readExpression(state, parser);
+    const protectedExpression: Ast.TExpression = await parser.readExpression(state, parser);
 
     const otherwiseExpressionNodeKind: Ast.NodeKind.OtherwiseExpression = Ast.NodeKind.OtherwiseExpression;
 
-    const maybeOtherwiseExpression: Ast.OtherwiseExpression | undefined = maybeReadPairedConstant(
+    const maybeOtherwiseExpression: Ast.OtherwiseExpression | undefined = await maybeReadPairedConstant(
         state,
         otherwiseExpressionNodeKind,
         () => ParseStateUtils.isOnTokenKind(state, Token.TokenKind.KeywordOtherwise),
@@ -2187,7 +2233,7 @@ export function readErrorHandlingExpression(state: ParseState, parser: Parser): 
 // ---------- 12.2.4 Literal Attributes ----------
 // -----------------------------------------------
 
-export function readRecordLiteral(state: ParseState, parser: Parser): Ast.RecordLiteral {
+export async function readRecordLiteral(state: ParseState, parser: Parser): Promise<Ast.RecordLiteral> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readRecordLiteral.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
@@ -2201,7 +2247,7 @@ export function readRecordLiteral(state: ParseState, parser: Parser): Ast.Record
         Constant.WrapperConstant.LeftBracket,
         Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>,
         Constant.WrapperConstant.RightBracket
-    > = readWrapped(
+    > = await readWrapped(
         state,
         Ast.NodeKind.RecordLiteral,
         () => readTokenKindAsConstant(state, Token.TokenKind.LeftBracket, Constant.WrapperConstant.LeftBracket),
@@ -2226,19 +2272,19 @@ export function readRecordLiteral(state: ParseState, parser: Parser): Ast.Record
     return recordLiteral;
 }
 
-export function readFieldNamePairedAnyLiterals(
+export async function readFieldNamePairedAnyLiterals(
     state: ParseState,
     parser: Parser,
     continueReadingValues: boolean,
     testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
-): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral> {
+): Promise<Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFieldNamePairedAnyLiterals.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const csvArray: Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral> = readCsvArray(
+    const csvArray: Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral> = await readCsvArray(
         state,
         () =>
             readKeyValuePair<
@@ -2260,7 +2306,7 @@ export function readFieldNamePairedAnyLiterals(
     return csvArray;
 }
 
-export function readListLiteral(state: ParseState, parser: Parser): Ast.ListLiteral {
+export async function readListLiteral(state: ParseState, parser: Parser): Promise<Ast.ListLiteral> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readListLiteral.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
@@ -2274,7 +2320,7 @@ export function readListLiteral(state: ParseState, parser: Parser): Ast.ListLite
         Constant.WrapperConstant.LeftBrace,
         Ast.ICsvArray<Ast.TAnyLiteral>,
         Constant.WrapperConstant.RightBrace
-    > = readWrapped(
+    > = await readWrapped(
         state,
         Ast.NodeKind.ListLiteral,
         () => readTokenKindAsConstant(state, Token.TokenKind.LeftBrace, Constant.WrapperConstant.LeftBrace),
@@ -2299,7 +2345,7 @@ export function readListLiteral(state: ParseState, parser: Parser): Ast.ListLite
     return listLiteral;
 }
 
-export function readAnyLiteral(state: ParseState, parser: Parser): Ast.TAnyLiteral {
+export async function readAnyLiteral(state: ParseState, parser: Parser): Promise<Ast.TAnyLiteral> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readAnyLiteral.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
@@ -2309,9 +2355,9 @@ export function readAnyLiteral(state: ParseState, parser: Parser): Ast.TAnyLiter
     let anyLiteral: Ast.TAnyLiteral;
 
     if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.LeftBracket)) {
-        anyLiteral = parser.readRecordLiteral(state, parser);
+        anyLiteral = await parser.readRecordLiteral(state, parser);
     } else if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.LeftBrace)) {
-        anyLiteral = parser.readListLiteral(state, parser);
+        anyLiteral = await parser.readListLiteral(state, parser);
     } else {
         anyLiteral = parser.readLiteralExpression(state, parser);
     }
@@ -2321,14 +2367,14 @@ export function readAnyLiteral(state: ParseState, parser: Parser): Ast.TAnyLiter
     return anyLiteral;
 }
 
-export function readPrimitiveType(state: ParseState, parser: Parser): Ast.PrimitiveType {
+export async function readPrimitiveType(state: ParseState, parser: Parser): Promise<Ast.PrimitiveType> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readPrimitiveType.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const triedReadPrimitiveType: TriedReadPrimitiveType = tryReadPrimitiveType(state, parser);
+    const triedReadPrimitiveType: TriedReadPrimitiveType = await tryReadPrimitiveType(state, parser);
 
     if (ResultUtils.isOk(triedReadPrimitiveType)) {
         trace.exit({
@@ -2347,7 +2393,7 @@ export function readPrimitiveType(state: ParseState, parser: Parser): Ast.Primit
     }
 }
 
-function tryReadPrimitiveType(state: ParseState, parser: Parser): TriedReadPrimitiveType {
+async function tryReadPrimitiveType(state: ParseState, parser: Parser): Promise<TriedReadPrimitiveType> {
     const nodeKind: Ast.NodeKind.PrimitiveType = Ast.NodeKind.PrimitiveType;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, tryReadPrimitiveType.name, {
@@ -2356,7 +2402,7 @@ function tryReadPrimitiveType(state: ParseState, parser: Parser): TriedReadPrimi
 
     ParseStateUtils.startContext(state, nodeKind);
 
-    const checkpoint: ParseStateCheckpoint = parser.createCheckpoint(state);
+    const checkpoint: ParseStateCheckpoint = await parser.createCheckpoint(state);
 
     const expectedTokenKinds: ReadonlyArray<Token.TokenKind> = [
         Token.TokenKind.Identifier,
@@ -2461,19 +2507,19 @@ function tryReadPrimitiveType(state: ParseState, parser: Parser): TriedReadPrimi
 // ---------- key-value pairs ----------
 // -------------------------------------
 
-export function readIdentifierPairedExpressions(
+export async function readIdentifierPairedExpressions(
     state: ParseState,
     parser: Parser,
     continueReadingValues: boolean,
     testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
-): Ast.ICsvArray<Ast.IdentifierPairedExpression> {
+): Promise<Ast.ICsvArray<Ast.IdentifierPairedExpression>> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIdentifierPairedExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const csvArray: Ast.ICsvArray<Ast.IdentifierPairedExpression> = readCsvArray(
+    const csvArray: Ast.ICsvArray<Ast.IdentifierPairedExpression> = await readCsvArray(
         state,
         () => parser.readIdentifierPairedExpression(state, parser),
         continueReadingValues,
@@ -2485,12 +2531,12 @@ export function readIdentifierPairedExpressions(
     return csvArray;
 }
 
-export function readGeneralizedIdentifierPairedExpressions(
+export async function readGeneralizedIdentifierPairedExpressions(
     state: ParseState,
     parser: Parser,
     continueReadingValues: boolean,
     testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
-): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression> {
+): Promise<Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression>> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readGeneralizedIdentifierPairedExpressions.name,
@@ -2498,7 +2544,7 @@ export function readGeneralizedIdentifierPairedExpressions(
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const csvArray: Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression> = readCsvArray(
+    const csvArray: Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression> = await readCsvArray(
         state,
         () => parser.readGeneralizedIdentifierPairedExpression(state, parser),
         continueReadingValues,
@@ -2510,10 +2556,10 @@ export function readGeneralizedIdentifierPairedExpressions(
     return csvArray;
 }
 
-export function readGeneralizedIdentifierPairedExpression(
+export async function readGeneralizedIdentifierPairedExpression(
     state: ParseState,
     parser: Parser,
-): Ast.GeneralizedIdentifierPairedExpression {
+): Promise<Ast.GeneralizedIdentifierPairedExpression> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readGeneralizedIdentifierPairedExpression.name,
@@ -2524,7 +2570,7 @@ export function readGeneralizedIdentifierPairedExpression(
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const generalizedIdentifierPairedExpression: Ast.GeneralizedIdentifierPairedExpression = readKeyValuePair<
+    const generalizedIdentifierPairedExpression: Ast.GeneralizedIdentifierPairedExpression = await readKeyValuePair<
         Ast.NodeKind.GeneralizedIdentifierPairedExpression,
         Ast.GeneralizedIdentifier,
         Ast.TExpression
@@ -2540,22 +2586,26 @@ export function readGeneralizedIdentifierPairedExpression(
     return generalizedIdentifierPairedExpression;
 }
 
-export function readIdentifierPairedExpression(state: ParseState, parser: Parser): Ast.IdentifierPairedExpression {
+export async function readIdentifierPairedExpression(
+    state: ParseState,
+    parser: Parser,
+): Promise<Ast.IdentifierPairedExpression> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIdentifierPairedExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const identifierPairedExpression: Ast.IdentifierPairedExpression = readKeyValuePair<
+    const identifierPairedExpression: Ast.IdentifierPairedExpression = await readKeyValuePair<
         Ast.NodeKind.IdentifierPairedExpression,
         Ast.Identifier,
         Ast.TExpression
     >(
         state,
         Ast.NodeKind.IdentifierPairedExpression,
-        () => parser.readIdentifier(state, parser),
-        () => parser.readExpression(state, parser),
+        // eslint-disable-next-line require-await
+        async () => parser.readIdentifier(state, parser),
+        async () => await parser.readExpression(state, parser),
     );
 
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
@@ -2572,7 +2622,7 @@ export function readIdentifierPairedExpression(state: ParseState, parser: Parser
 // The helper function is nearly a copy except it replaces Left and leftReader with Right and rightReader.
 //
 // The reason the code is duplicated across two functions is because I can't think of a cleaner way to do it.
-function recursiveReadBinOpExpression<
+async function recursiveReadBinOpExpression<
     Kind extends Ast.TBinOpExpressionNodeKind,
     Left,
     Op extends Constant.TBinOpExpressionOperator,
@@ -2580,16 +2630,16 @@ function recursiveReadBinOpExpression<
 >(
     state: ParseState,
     nodeKind: Kind,
-    leftReader: () => Left,
+    leftReader: () => Promise<Left>,
     maybeOperatorFrom: (tokenKind: Token.TokenKind | undefined) => Op | undefined,
-    rightReader: () => Right,
-): Left | Ast.IBinOpExpression<Kind, Left, Op, Right> {
+    rightReader: () => Promise<Right>,
+): Promise<Left | Ast.IBinOpExpression<Kind, Left, Op, Right>> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, recursiveReadBinOpExpression.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     ParseStateUtils.startContext(state, nodeKind);
-    const left: Left = leftReader();
+    const left: Left = await leftReader();
 
     // If no operator, return Left
     const maybeOperator: Op | undefined = maybeOperatorFrom(state.maybeCurrentTokenKind);
@@ -2611,7 +2661,7 @@ function recursiveReadBinOpExpression<
         maybeOperator,
     );
 
-    const right: Right | Ast.IBinOpExpression<Kind, Right, Op, Right> = recursiveReadBinOpExpressionHelper<
+    const right: Right | Ast.IBinOpExpression<Kind, Right, Op, Right> = await recursiveReadBinOpExpressionHelper<
         Kind,
         Op,
         Right
@@ -2639,7 +2689,7 @@ function recursiveReadBinOpExpression<
 // Given the string `1 + 2 + 3` the function will recursively parse 2 Ast nodes,
 // where their TokenRange's are represented by brackets:
 // 1 + [2 + [3]]
-function recursiveReadBinOpExpressionHelper<
+async function recursiveReadBinOpExpressionHelper<
     Kind extends Ast.TBinOpExpressionNodeKind,
     OperatorKind extends Constant.TBinOpExpressionOperator,
     Right,
@@ -2647,14 +2697,14 @@ function recursiveReadBinOpExpressionHelper<
     state: ParseState,
     nodeKind: Kind,
     maybeOperatorFrom: (tokenKind: Token.TokenKind | undefined) => OperatorKind | undefined,
-    rightReader: () => Right,
-): Right | Ast.IBinOpExpression<Kind, Right, OperatorKind, Right> {
+    rightReader: () => Promise<Right>,
+): Promise<Right | Ast.IBinOpExpression<Kind, Right, OperatorKind, Right>> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, recursiveReadBinOpExpressionHelper.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
     ParseStateUtils.startContext(state, nodeKind);
-    const rightAsLeft: Right = rightReader();
+    const rightAsLeft: Right = await rightReader();
 
     const maybeOperator: OperatorKind | undefined = maybeOperatorFrom(state.maybeCurrentTokenKind);
 
@@ -2675,11 +2725,13 @@ function recursiveReadBinOpExpressionHelper<
         maybeOperator,
     );
 
-    const right: Right | Ast.IBinOpExpression<Kind, Right, OperatorKind, Right> = recursiveReadBinOpExpressionHelper<
-        Kind,
-        OperatorKind,
-        Right
-    >(state, nodeKind, maybeOperatorFrom, rightReader);
+    const right: Right | Ast.IBinOpExpression<Kind, Right, OperatorKind, Right> =
+        await recursiveReadBinOpExpressionHelper<Kind, OperatorKind, Right>(
+            state,
+            nodeKind,
+            maybeOperatorFrom,
+            rightReader,
+        );
 
     const binOpExpression: Ast.IBinOpExpression<Kind, Right, OperatorKind, Right> = {
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
@@ -2700,12 +2752,12 @@ function recursiveReadBinOpExpressionHelper<
     return binOpExpression;
 }
 
-function readCsvArray<T extends Ast.TCsvType>(
+async function readCsvArray<T extends Ast.TCsvType>(
     state: ParseState,
-    valueReader: () => T,
+    valueReader: () => Promise<T>,
     continueReadingValues: boolean,
     testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
-): Ast.TCsvArray & Ast.ICsvArray<T> {
+): Promise<Ast.TCsvArray & Ast.ICsvArray<T>> {
     const nodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readCsvArray.name, {
@@ -2731,7 +2783,8 @@ function readCsvArray<T extends Ast.TCsvType>(
             throw maybeError;
         }
 
-        const node: T = valueReader();
+        // eslint-disable-next-line no-await-in-loop
+        const node: T = await valueReader();
 
         const maybeCommaConstant: Ast.IConstant<Constant.MiscConstant.Comma> | undefined = maybeReadTokenKindAsConstant(
             state,
@@ -2770,19 +2823,19 @@ function readCsvArray<T extends Ast.TCsvType>(
     return csvArray;
 }
 
-function readKeyValuePair<Kind extends Ast.TKeyValuePairNodeKind, Key, Value>(
+async function readKeyValuePair<Kind extends Ast.TKeyValuePairNodeKind, Key, Value>(
     state: ParseState,
     nodeKind: Kind,
-    keyReader: () => Key,
-    valueReader: () => Value,
-): Ast.IKeyValuePair<Kind, Key, Value> {
+    keyReader: () => Promise<Key>,
+    valueReader: () => Promise<Value>,
+): Promise<Ast.IKeyValuePair<Kind, Key, Value>> {
     ParseStateUtils.startContext(state, nodeKind);
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readKeyValuePair.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    const key: Key = keyReader();
+    const key: Key = await keyReader();
 
     const equalConstant: Ast.IConstant<Constant.MiscConstant.Equal> = readTokenKindAsConstant(
         state,
@@ -2790,7 +2843,7 @@ function readKeyValuePair<Kind extends Ast.TKeyValuePairNodeKind, Key, Value>(
         Constant.MiscConstant.Equal,
     );
 
-    const value: Value = valueReader();
+    const value: Value = await valueReader();
 
     const keyValuePair: Ast.IKeyValuePair<Kind, Key, Value> = {
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
@@ -2807,12 +2860,16 @@ function readKeyValuePair<Kind extends Ast.TKeyValuePairNodeKind, Key, Value>(
     return keyValuePair;
 }
 
-function readPairedConstant<Kind extends Ast.TPairedConstantNodeKind, ConstantKind extends Constant.TConstant, Paired>(
+async function readPairedConstant<
+    Kind extends Ast.TPairedConstantNodeKind,
+    ConstantKind extends Constant.TConstant,
+    Paired,
+>(
     state: ParseState,
     nodeKind: Kind,
     constantReader: () => Ast.TConstant & Ast.IConstant<ConstantKind>,
-    pairedReader: () => Paired,
-): Ast.IPairedConstant<Kind, ConstantKind, Paired> {
+    pairedReader: () => Promise<Paired>,
+): Promise<Ast.IPairedConstant<Kind, ConstantKind, Paired>> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readPairedConstant.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
@@ -2820,7 +2877,7 @@ function readPairedConstant<Kind extends Ast.TPairedConstantNodeKind, ConstantKi
     ParseStateUtils.startContext(state, nodeKind);
 
     const constant: Ast.TConstant & Ast.IConstant<ConstantKind> = constantReader();
-    const paired: Paired = pairedReader();
+    const paired: Paired = await pairedReader();
 
     const pairedConstant: Ast.IPairedConstant<Kind, ConstantKind, Paired> = {
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
@@ -2836,7 +2893,7 @@ function readPairedConstant<Kind extends Ast.TPairedConstantNodeKind, ConstantKi
     return pairedConstant;
 }
 
-function maybeReadPairedConstant<
+async function maybeReadPairedConstant<
     Kind extends Ast.TPairedConstantNodeKind,
     ConstantKind extends Constant.TConstant,
     Paired,
@@ -2845,8 +2902,8 @@ function maybeReadPairedConstant<
     nodeKind: Kind,
     condition: () => boolean,
     constantReader: () => Ast.TConstant & Ast.IConstant<ConstantKind>,
-    pairedReader: () => Paired,
-): Ast.IPairedConstant<Kind, ConstantKind, Paired> | undefined {
+    pairedReader: () => Promise<Paired>,
+): Promise<Ast.IPairedConstant<Kind, ConstantKind, Paired> | undefined> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, maybeReadPairedConstant.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
@@ -2854,7 +2911,12 @@ function maybeReadPairedConstant<
     let pairedConstant: Ast.IPairedConstant<Kind, ConstantKind, Paired> | undefined;
 
     if (condition()) {
-        pairedConstant = readPairedConstant<Kind, ConstantKind, Paired>(state, nodeKind, constantReader, pairedReader);
+        pairedConstant = await readPairedConstant<Kind, ConstantKind, Paired>(
+            state,
+            nodeKind,
+            constantReader,
+            pairedReader,
+        );
     } else {
         ParseStateUtils.incrementAttributeCounter(state);
         pairedConstant = undefined;
@@ -2868,11 +2930,11 @@ function maybeReadPairedConstant<
     return pairedConstant;
 }
 
-function genericReadParameterList<T extends Ast.TParameterType>(
+async function genericReadParameterList<T extends Ast.TParameterType>(
     state: ParseState,
     parser: Parser,
-    typeReader: () => T,
-): Ast.IParameterList<T> {
+    typeReader: () => Promise<T>,
+): Promise<Ast.IParameterList<T>> {
     const nodeKind: Ast.NodeKind.ParameterList = Ast.NodeKind.ParameterList;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, genericReadParameterList.name, {
@@ -2931,8 +2993,10 @@ function genericReadParameterList<T extends Ast.TParameterType>(
             reachedOptionalParameter = true;
         }
 
+        // eslint-disable-next-line no-await-in-loop
         const name: Ast.Identifier = parser.readIdentifier(state, parser);
-        const maybeParameterType: T = typeReader();
+        // eslint-disable-next-line no-await-in-loop
+        const maybeParameterType: T = await typeReader();
 
         const parameter: Ast.IParameter<T> = {
             ...ParseStateUtils.assertGetContextNodeMetadata(state),
@@ -3000,7 +3064,7 @@ function genericReadParameterList<T extends Ast.TParameterType>(
     return parameterList;
 }
 
-function readWrapped<
+async function readWrapped<
     Kind extends Ast.TWrappedNodeKind,
     Open extends Constant.WrapperConstant,
     Content,
@@ -3009,10 +3073,10 @@ function readWrapped<
     state: ParseState,
     nodeKind: Kind,
     openConstantReader: () => Ast.IConstant<Open>,
-    contentReader: () => Content,
+    contentReader: () => Promise<Content>,
     closeConstantReader: () => Ast.IConstant<Close>,
     allowOptionalConstant: boolean,
-): WrappedRead<Kind, Open, Content, Close> {
+): Promise<WrappedRead<Kind, Open, Content, Close>> {
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readWrapped.name, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
@@ -3020,7 +3084,7 @@ function readWrapped<
     ParseStateUtils.startContext(state, nodeKind);
 
     const openWrapperConstant: Ast.IConstant<Open> = openConstantReader();
-    const content: Content = contentReader();
+    const content: Content = await contentReader();
     const closeWrapperConstant: Ast.IConstant<Close> = closeConstantReader();
 
     let maybeOptionalConstant: Ast.IConstant<Constant.MiscConstant.QuestionMark> | undefined;
@@ -3216,9 +3280,9 @@ function maybeReadConstantKind<ConstantKind extends Constant.TConstant>(
     }
 }
 
-function maybeReadLiteralAttributes(state: ParseState, parser: Parser): Ast.RecordLiteral | undefined {
+async function maybeReadLiteralAttributes(state: ParseState, parser: Parser): Promise<Ast.RecordLiteral | undefined> {
     if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.LeftBracket)) {
-        return parser.readRecordLiteral(state, parser);
+        return await parser.readRecordLiteral(state, parser);
     } else {
         ParseStateUtils.incrementAttributeCounter(state);
 

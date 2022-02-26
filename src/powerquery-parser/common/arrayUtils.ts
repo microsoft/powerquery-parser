@@ -161,6 +161,15 @@ export function isSubset<T>(
     return true;
 }
 
+export async function asyncMap<T, U>(
+    collection: ReadonlyArray<T>,
+    mapFn: (value: T) => Promise<U>,
+): Promise<ReadonlyArray<U>> {
+    const tasks: ReadonlyArray<Promise<U>> = collection.map(mapFn);
+
+    return await Promise.all(tasks);
+}
+
 export function range(size: number, startAt: number = 0): ReadonlyArray<number> {
     // tslint:disable-next-line: prefer-array-literal
     return [...Array(size).keys()].map((index: number) => index + startAt);

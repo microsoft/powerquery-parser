@@ -190,8 +190,8 @@ export function tryLex(settings: LexSettings, text: string): TriedLexTask {
     }
 }
 
-export function tryParse(settings: ParseSettings, lexerSnapshot: Lexer.LexerSnapshot): TriedParseTask {
-    const triedParse: Parser.TriedParse = ParserUtils.tryParse(settings, lexerSnapshot);
+export async function tryParse(settings: ParseSettings, lexerSnapshot: Lexer.LexerSnapshot): Promise<TriedParseTask> {
+    const triedParse: Parser.TriedParse = await ParserUtils.tryParse(settings, lexerSnapshot);
 
     if (ResultUtils.isOk(triedParse)) {
         return createParseTaskOk(lexerSnapshot, triedParse.value.root, triedParse.value.state);
@@ -202,7 +202,7 @@ export function tryParse(settings: ParseSettings, lexerSnapshot: Lexer.LexerSnap
     }
 }
 
-export function tryLexParse(settings: LexSettings & ParseSettings, text: string): TriedLexParseTask {
+export async function tryLexParse(settings: LexSettings & ParseSettings, text: string): Promise<TriedLexParseTask> {
     const triedLexTask: TriedLexTask = tryLex(settings, text);
 
     if (triedLexTask.resultKind === ResultKind.Error) {
@@ -211,7 +211,7 @@ export function tryLexParse(settings: LexSettings & ParseSettings, text: string)
 
     const lexerSnapshot: Lexer.LexerSnapshot = triedLexTask.lexerSnapshot;
 
-    return tryParse(settings, lexerSnapshot);
+    return await tryParse(settings, lexerSnapshot);
 }
 
 function createLexTaskOk(lexerSnapshot: Lexer.LexerSnapshot): LexTaskOk {
