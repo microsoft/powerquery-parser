@@ -217,9 +217,11 @@ export async function maybeDisambiguateParenthesis(
                 unsafeMoveTo(state, offsetTokenIndex + 2);
 
                 try {
-                    parser.readNullablePrimitiveType(state, parser);
+                    // eslint-disable-next-line no-await-in-loop
+                    await parser.readNullablePrimitiveType(state, parser);
                 } catch {
-                    parser.restoreCheckpoint(state, checkpoint);
+                    // eslint-disable-next-line no-await-in-loop
+                    await parser.restoreCheckpoint(state, checkpoint);
 
                     if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.FatArrow)) {
                         return ParenthesisDisambiguation.FunctionExpression;
@@ -234,7 +236,8 @@ export async function maybeDisambiguateParenthesis(
                     maybeDisambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
                 }
 
-                parser.restoreCheckpoint(state, checkpoint);
+                // eslint-disable-next-line no-await-in-loop
+                await parser.restoreCheckpoint(state, checkpoint);
             } else if (ParseStateUtils.isTokenKind(state, Token.TokenKind.FatArrow, offsetTokenIndex + 1)) {
                 maybeDisambiguation = ParenthesisDisambiguation.FunctionExpression;
             } else {
@@ -359,7 +362,7 @@ async function thoroughReadAmbiguous<T extends TAmbiguousBracketNode | TAmbiguou
 
     const ambiguousParse: AmbiguousParse<T> = await readAmbiguous(state, parser, parseFns);
 
-    parser.applyState(state, ambiguousParse.parseState);
+    await parser.applyState(state, ambiguousParse.parseState);
 
     if (ResultUtils.isOk(ambiguousParse.result)) {
         trace.exit({

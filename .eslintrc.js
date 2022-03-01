@@ -14,6 +14,7 @@ module.exports = {
         "@typescript-eslint/consistent-type-assertions": ["warn", { assertionStyle: "as" }],
         "@typescript-eslint/explicit-function-return-type": "error",
         "@typescript-eslint/no-inferrable-types": "off",
+        "@typescript-eslint/no-floating-promises": "error",
         "@typescript-eslint/no-namespace": "error",
         "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
         "@typescript-eslint/prefer-namespace-keyword": "error",

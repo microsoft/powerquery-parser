@@ -32,7 +32,7 @@ for (const filePath of TestFileUtils.getPowerQueryFilesRecursively(SourceFilesDi
     for (let iteration: number = 0; iteration < NumberOfRunsPerFile; iteration += 1) {
         const stream: fs.WriteStream = createOutputStream(filePath, iteration);
 
-        stream.on("open", () => {
+        stream.on("open", async () => {
             if (iteration % 10 === 0 || iteration === NumberOfRunsPerFile - 1) {
                 console.log(
                     `Running iteration ${iteration + 1} out of ${NumberOfRunsPerFile} for ${path.basename(filePath)}`,
@@ -44,7 +44,7 @@ for (const filePath of TestFileUtils.getPowerQueryFilesRecursively(SourceFilesDi
                 traceManager: new BenchmarkTraceManager((message: string) => stream.write(message)),
             };
 
-            TestFileUtils.tryLexParse(benchmarkSettings, filePath);
+            await TestFileUtils.tryLexParse(benchmarkSettings, filePath);
         });
     }
 }

@@ -21,7 +21,7 @@ export interface ParseOk {
 export interface Parser {
     // Update `state` to match the the `update`.
     readonly applyState: (state: ParseState, update: ParseState) => Promise<void>;
-    // Create a deep copy of S.
+    // Create a deep copy of ParseState.
     readonly copyState: (state: ParseState) => Promise<ParseState>;
 
     // Checkpoints are a snapshot at a particular time.

@@ -232,7 +232,8 @@ export async function readDocument(state: ParseState, parser: Parser): Promise<A
 
             if (expressionCheckpoint.tokenIndex > /* sectionErrorState */ state.tokenIndex) {
                 triedError = expressionError;
-                parser.restoreCheckpoint(state, expressionCheckpoint);
+                await parser.restoreCheckpoint(state, expressionCheckpoint);
+                // eslint-disable-next-line require-atomic-updates
                 state.contextState = expressionErrorContextState;
             } else {
                 triedError = sectionError;
@@ -2102,7 +2103,7 @@ async function tryReadPrimaryType(state: ParseState, parser: Parser): Promise<Tr
         const triedReadPrimitiveType: TriedReadPrimaryType = await tryReadPrimitiveType(state, parser);
 
         if (ResultUtils.isError(triedReadPrimitiveType)) {
-            parser.restoreCheckpoint(state, checkpoint);
+            await parser.restoreCheckpoint(state, checkpoint);
         }
 
         attempt = triedReadPrimitiveType;
@@ -2455,7 +2456,7 @@ async function tryReadPrimitiveType(state: ParseState, parser: Parser): Promise<
 
             default: {
                 const token: Token.Token = ParseStateUtils.assertGetTokenAt(state, state.tokenIndex);
-                parser.restoreCheckpoint(state, checkpoint);
+                await parser.restoreCheckpoint(state, checkpoint);
 
                 return ResultUtils.boxError(
                     new ParseError.InvalidPrimitiveTypeError(
@@ -2474,7 +2475,7 @@ async function tryReadPrimitiveType(state: ParseState, parser: Parser): Promise<
         readToken(state);
     } else {
         const details: { tokenKind: Token.TokenKind | undefined } = { tokenKind: state.maybeCurrentTokenKind };
-        parser.restoreCheckpoint(state, checkpoint);
+        await parser.restoreCheckpoint(state, checkpoint);
 
         trace.exit({
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
