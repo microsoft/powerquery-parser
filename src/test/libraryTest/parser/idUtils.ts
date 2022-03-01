@@ -206,7 +206,7 @@ function traverseVisitNode(state: TraverseState, xorNode: TXorNode): void {
 }
 
 describe("idUtils", () => {
-    it(`1`, () => {
+    it(`1`, async () => {
         const text: string = `1`;
 
         const expected: AbridgedNodeIdMapCollection = {
@@ -218,11 +218,11 @@ describe("idUtils", () => {
             parentIdById: [],
         };
 
-        const triedLexParse: Task.TriedLexParseTask = TaskUtils.tryLexParse(DefaultSettings, text);
+        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
         expectLinksMatch(triedLexParse, expected);
     });
 
-    it(`-1`, () => {
+    it(`-1`, async () => {
         const text: string = `-1`;
 
         const expected: AbridgedNodeIdMapCollection = {
@@ -246,11 +246,11 @@ describe("idUtils", () => {
             ],
         };
 
-        const triedLexParse: Task.TriedLexParseTask = TaskUtils.tryLexParse(DefaultSettings, text);
+        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
         expectLinksMatch(triedLexParse, expected);
     });
 
-    it(`1 + 2`, () => {
+    it(`1 + 2`, async () => {
         const text: string = `1 + 2`;
 
         const expected: AbridgedNodeIdMapCollection = {
@@ -270,11 +270,11 @@ describe("idUtils", () => {
             ],
         };
 
-        const triedLexParse: Task.TriedLexParseTask = TaskUtils.tryLexParse(DefaultSettings, text);
+        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
         expectLinksMatch(triedLexParse, expected);
     });
 
-    it(`foo()`, () => {
+    it(`foo()`, async () => {
         const text: string = `foo()`;
 
         const expected: AbridgedNodeIdMapCollection = {
@@ -306,7 +306,7 @@ describe("idUtils", () => {
             ],
         };
 
-        const triedLexParse: Task.TriedLexParseTask = TaskUtils.tryLexParse(DefaultSettings, text);
+        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
         expectLinksMatch(triedLexParse, expected);
     });
 });

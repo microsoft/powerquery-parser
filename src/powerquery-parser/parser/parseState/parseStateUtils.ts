@@ -45,8 +45,8 @@ export function createState(lexerSnapshot: LexerSnapshot, maybeOverrides: Partia
 }
 
 // If you have a custom parser + parser state, then you'll have to create your own copyState/applyState functions.
-// See `benchmark.ts` for an example.
-export function applyState(state: ParseState, update: ParseState): void {
+// eslint-disable-next-line require-await
+export async function applyState(state: ParseState, update: ParseState): Promise<void> {
     state.tokenIndex = update.tokenIndex;
     state.maybeCurrentToken = update.maybeCurrentToken;
     state.maybeCurrentTokenKind = update.maybeCurrentTokenKind;
@@ -55,8 +55,8 @@ export function applyState(state: ParseState, update: ParseState): void {
 }
 
 // If you have a custom parser + parser state, then you'll have to create your own copyState/applyState functions.
-// See `benchmark.ts` for an example.
-export function copyState(state: ParseState): ParseState {
+// eslint-disable-next-line require-await
+export async function copyState(state: ParseState): Promise<ParseState> {
     return {
         ...state,
         contextState: ParseContextUtils.copyState(state.contextState),

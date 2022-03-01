@@ -69,7 +69,10 @@ export function hasParsedToken(nodeIdMapCollection: Collection, nodeId: number):
     return false;
 }
 
-export function xorNodeTokenRange(nodeIdMapCollection: Collection, xorNode: TXorNode): XorNodeTokenRange {
+export async function xorNodeTokenRange(
+    nodeIdMapCollection: Collection,
+    xorNode: TXorNode,
+): Promise<XorNodeTokenRange> {
     switch (xorNode.kind) {
         case XorNodeKind.Ast: {
             const tokenRange: Token.TokenRange = xorNode.node.tokenRange;
@@ -84,7 +87,10 @@ export function xorNodeTokenRange(nodeIdMapCollection: Collection, xorNode: TXor
             const contextNode: ParseContext.TNode = xorNode.node;
             let tokenIndexEnd: number;
 
-            const maybeRightMostChild: Ast.TNode | undefined = maybeRightMostLeaf(nodeIdMapCollection, xorNode.node.id);
+            const maybeRightMostChild: Ast.TNode | undefined = await maybeRightMostLeaf(
+                nodeIdMapCollection,
+                xorNode.node.id,
+            );
 
             if (maybeRightMostChild === undefined) {
                 tokenIndexEnd = contextNode.tokenIndexStart;

@@ -20,11 +20,11 @@ import { ParseError } from "..";
 // For each given parse function it'll create a deep copy of the state then parse with the function.
 // Mutates the given state to whatever parse state which matched the most amount of tokens.
 // Ties are resolved in the order of the given parse functions.
-export function readAmbiguous<T extends Ast.TNode>(
+export async function readAmbiguous<T extends Ast.TNode>(
     state: ParseState,
     parser: Parser,
-    parseFns: ReadonlyArray<(state: ParseState, parser: Parser) => T>,
-): AmbiguousParse<T> {
+    parseFns: ReadonlyArray<(state: ParseState, parser: Parser) => Promise<T>>,
+): Promise<AmbiguousParse<T>> {
     const trace: Trace = state.traceManager.entry(DisambiguationTraceConstant.Disambiguation, readAmbiguous.name, {
         [TraceConstant.Length]: parseFns.length,
     });
@@ -34,13 +34,15 @@ export function readAmbiguous<T extends Ast.TNode>(
     let maybeBestMatch: AmbiguousParse<T> | undefined = undefined;
 
     for (const parseFn of parseFns) {
-        const variantState: ParseState = parser.copyState(state);
+        // eslint-disable-next-line no-await-in-loop
+        const variantState: ParseState = await parser.copyState(state);
 
         let maybeNode: T | undefined;
         let variantResult: Result<T, ParseError.ParseError>;
 
         try {
-            maybeNode = parseFn(variantState, parser);
+            // eslint-disable-next-line no-await-in-loop
+            maybeNode = await parseFn(variantState, parser);
             variantResult = ResultUtils.boxOk(maybeNode);
         } catch (error) {
             if (!ParseError.isTInnerParseError(error)) {
@@ -65,11 +67,11 @@ export function readAmbiguous<T extends Ast.TNode>(
 }
 
 // Peeks at the token stream and either performs an explicit read or an ambiguous read.
-export function readAmbiguousBracket(
+export async function readAmbiguousBracket(
     state: ParseState,
     parser: Parser,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
-): TAmbiguousBracketNode {
+): Promise<TAmbiguousBracketNode> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         readAmbiguousBracket.name,
@@ -86,15 +88,15 @@ export function readAmbiguousBracket(
 
         switch (disambiguation) {
             case BracketDisambiguation.FieldProjection:
-                ambiguousBracket = parser.readFieldProjection(state, parser);
+                ambiguousBracket = await parser.readFieldProjection(state, parser);
                 break;
 
             case BracketDisambiguation.FieldSelection:
-                ambiguousBracket = parser.readFieldSelection(state, parser);
+                ambiguousBracket = await parser.readFieldSelection(state, parser);
                 break;
 
             case BracketDisambiguation.RecordExpression:
-                ambiguousBracket = parser.readRecordExpression(state, parser);
+                ambiguousBracket = await parser.readRecordExpression(state, parser);
                 break;
 
             default:
@@ -110,7 +112,7 @@ export function readAmbiguousBracket(
                 throw ParseStateUtils.unterminatedBracketError(state);
 
             case DismabiguationBehavior.Thorough:
-                ambiguousBracket = thoroughReadAmbiguousBracket(state, parser, allowedVariants);
+                ambiguousBracket = await thoroughReadAmbiguousBracket(state, parser, allowedVariants);
                 break;
 
             default:
@@ -124,14 +126,17 @@ export function readAmbiguousBracket(
 }
 
 // Peeks at the token stream and either performs an explicit read or an ambiguous read.
-export function readAmbiguousParenthesis(state: ParseState, parser: Parser): TAmbiguousParenthesisNode {
+export async function readAmbiguousParenthesis(state: ParseState, parser: Parser): Promise<TAmbiguousParenthesisNode> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         readAmbiguousParenthesis.name,
     );
 
     // We might be able to peek at tokens to disambiguate what parenthesized expression is next.
-    const maybeDisambiguation: ParenthesisDisambiguation | undefined = maybeDisambiguateParenthesis(state, parser);
+    const maybeDisambiguation: ParenthesisDisambiguation | undefined = await maybeDisambiguateParenthesis(
+        state,
+        parser,
+    );
 
     // Peeking gave us a concrete answer as to what's next.
     let ambiguousParenthesis: TAmbiguousParenthesisNode;
@@ -141,11 +146,11 @@ export function readAmbiguousParenthesis(state: ParseState, parser: Parser): TAm
 
         switch (disambiguation) {
             case ParenthesisDisambiguation.FunctionExpression:
-                ambiguousParenthesis = parser.readFunctionExpression(state, parser);
+                ambiguousParenthesis = await parser.readFunctionExpression(state, parser);
                 break;
 
             case ParenthesisDisambiguation.ParenthesizedExpression:
-                ambiguousParenthesis = readParenthesizedExpressionOrBinOpExpression(state, parser);
+                ambiguousParenthesis = await readParenthesizedExpressionOrBinOpExpression(state, parser);
                 break;
 
             default:
@@ -161,7 +166,7 @@ export function readAmbiguousParenthesis(state: ParseState, parser: Parser): TAm
                 throw ParseStateUtils.unterminatedParenthesesError(state);
 
             case DismabiguationBehavior.Thorough:
-                ambiguousParenthesis = thoroughReadAmbiguousParenthesis(state, parser);
+                ambiguousParenthesis = await thoroughReadAmbiguousParenthesis(state, parser);
                 break;
 
             default:
@@ -177,7 +182,10 @@ export function readAmbiguousParenthesis(state: ParseState, parser: Parser): TAm
 }
 
 // Peeks at tokens which might give a concrete disambiguation.
-export function maybeDisambiguateParenthesis(state: ParseState, parser: Parser): ParenthesisDisambiguation | undefined {
+export async function maybeDisambiguateParenthesis(
+    state: ParseState,
+    parser: Parser,
+): Promise<ParenthesisDisambiguation | undefined> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         maybeDisambiguateParenthesis.name,
@@ -204,13 +212,16 @@ export function maybeDisambiguateParenthesis(state: ParseState, parser: Parser):
             // '(x as number) as number' could either be either case,
             // so we need to consume test if the trailing 'as number' is followed by a FatArrow.
             if (ParseStateUtils.isTokenKind(state, Token.TokenKind.KeywordAs, offsetTokenIndex + 1)) {
-                const checkpoint: ParseStateCheckpoint = parser.createCheckpoint(state);
+                // eslint-disable-next-line no-await-in-loop
+                const checkpoint: ParseStateCheckpoint = await parser.createCheckpoint(state);
                 unsafeMoveTo(state, offsetTokenIndex + 2);
 
                 try {
-                    parser.readNullablePrimitiveType(state, parser);
+                    // eslint-disable-next-line no-await-in-loop
+                    await parser.readNullablePrimitiveType(state, parser);
                 } catch {
-                    parser.restoreCheckpoint(state, checkpoint);
+                    // eslint-disable-next-line no-await-in-loop
+                    await parser.restoreCheckpoint(state, checkpoint);
 
                     if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.FatArrow)) {
                         return ParenthesisDisambiguation.FunctionExpression;
@@ -225,7 +236,8 @@ export function maybeDisambiguateParenthesis(state: ParseState, parser: Parser):
                     maybeDisambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
                 }
 
-                parser.restoreCheckpoint(state, checkpoint);
+                // eslint-disable-next-line no-await-in-loop
+                await parser.restoreCheckpoint(state, checkpoint);
             } else if (ParseStateUtils.isTokenKind(state, Token.TokenKind.FatArrow, offsetTokenIndex + 1)) {
                 maybeDisambiguation = ParenthesisDisambiguation.FunctionExpression;
             } else {
@@ -304,17 +316,17 @@ const enum DisambiguationTraceConstant {
 // Copy the current state and attempt to read for each of the following:
 //  FieldProjection, FieldSelection, and RecordExpression.
 // Mutates the given state with the read attempt which matched the most tokens.
-function thoroughReadAmbiguousBracket(
+async function thoroughReadAmbiguousBracket(
     state: ParseState,
     parser: Parser,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
-): TAmbiguousBracketNode {
+): Promise<TAmbiguousBracketNode> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         readAmbiguousBracket.name,
     );
 
-    const ambiguousBracket: TAmbiguousBracketNode = thoroughReadAmbiguous(
+    const ambiguousBracket: TAmbiguousBracketNode = await thoroughReadAmbiguous(
         state,
         parser,
         bracketDisambiguationParseFunctions(parser, allowedVariants),
@@ -328,18 +340,18 @@ function thoroughReadAmbiguousBracket(
 // Copy the current state and attempt to read for each of the following:
 //  FunctionExpression, ParenthesisExpression.
 // Mutates the given state with the read attempt which matched the most tokens.
-function thoroughReadAmbiguousParenthesis(state: ParseState, parser: Parser): TAmbiguousParenthesisNode {
-    return thoroughReadAmbiguous<TAmbiguousParenthesisNode>(state, parser, [
+async function thoroughReadAmbiguousParenthesis(state: ParseState, parser: Parser): Promise<TAmbiguousParenthesisNode> {
+    return await thoroughReadAmbiguous<TAmbiguousParenthesisNode>(state, parser, [
         parser.readFunctionExpression,
         readParenthesizedExpressionOrBinOpExpression,
     ]);
 }
 
-function thoroughReadAmbiguous<T extends TAmbiguousBracketNode | TAmbiguousParenthesisNode>(
+async function thoroughReadAmbiguous<T extends TAmbiguousBracketNode | TAmbiguousParenthesisNode>(
     state: ParseState,
     parser: Parser,
-    parseFns: ReadonlyArray<(state: ParseState, parser: Parser) => T>,
-): T {
+    parseFns: ReadonlyArray<(state: ParseState, parser: Parser) => Promise<T>>,
+): Promise<T> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         thoroughReadAmbiguous.name,
@@ -348,9 +360,9 @@ function thoroughReadAmbiguous<T extends TAmbiguousBracketNode | TAmbiguousParen
         },
     );
 
-    const ambiguousParse: AmbiguousParse<T> = readAmbiguous(state, parser, parseFns);
+    const ambiguousParse: AmbiguousParse<T> = await readAmbiguous(state, parser, parseFns);
 
-    parser.applyState(state, ambiguousParse.parseState);
+    await parser.applyState(state, ambiguousParse.parseState);
 
     if (ResultUtils.isOk(ambiguousParse.result)) {
         trace.exit({
@@ -376,7 +388,7 @@ function thoroughReadAmbiguous<T extends TAmbiguousBracketNode | TAmbiguousParen
 function bracketDisambiguationParseFunctions(
     parser: Parser,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
-): ReadonlyArray<(state: ParseState, parser: Parser) => TAmbiguousBracketNode> {
+): ReadonlyArray<(state: ParseState, parser: Parser) => Promise<TAmbiguousBracketNode>> {
     return allowedVariants.map((bracketDisambiguation: BracketDisambiguation) => {
         switch (bracketDisambiguation) {
             case BracketDisambiguation.FieldProjection:
@@ -397,11 +409,11 @@ function bracketDisambiguationParseFunctions(
 // When the next token is an open parenthesis we can't directly read
 // a ParenthesisExpression as it may leave trailing tokens behind.
 // `(1) + 2`
-function readParenthesizedExpressionOrBinOpExpression(
+async function readParenthesizedExpressionOrBinOpExpression(
     state: ParseState,
     parser: Parser,
-): Ast.ParenthesizedExpression | Ast.TLogicalExpression {
-    const node: Ast.TNode = parser.readLogicalExpression(state, parser);
+): Promise<Ast.ParenthesizedExpression | Ast.TLogicalExpression> {
+    const node: Ast.TNode = await parser.readLogicalExpression(state, parser);
 
     const leftMostNode: Ast.TNode = NodeIdMapUtils.assertUnboxLeftMostLeaf(
         state.contextState.nodeIdMapCollection,

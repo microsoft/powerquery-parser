@@ -22,7 +22,7 @@ export interface ParseSettings extends CommonSettings {
         lexerSnapshot: LexerSnapshot,
         maybeOverrides: Partial<ParseState> | undefined,
     ) => ParseState;
-    readonly maybeParserEntryPointFn: ((state: ParseState, parser: Parser) => Ast.TNode) | undefined;
+    readonly maybeParserEntryPointFn: ((state: ParseState, parser: Parser) => Promise<Ast.TNode>) | undefined;
 }
 
 export type Settings = LexSettings & ParseSettings;

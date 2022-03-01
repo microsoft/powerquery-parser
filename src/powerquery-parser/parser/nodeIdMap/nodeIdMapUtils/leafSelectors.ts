@@ -58,7 +58,7 @@ export function maybeRightMostLeaf(
     nodeIdMapCollection: Collection,
     rootId: number,
     maybeCondition: ((node: Ast.TNode) => boolean) | undefined = undefined,
-): Ast.TNode | undefined {
+): Promise<Ast.TNode | undefined> {
     const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
     let nodeIdsToExplore: number[] = [rootId];
     let maybeRightMost: Ast.TNode | undefined;
@@ -119,13 +119,13 @@ export function maybeRightMostLeaf(
         }
     }
 
-    return maybeRightMost;
+    return Promise.resolve(maybeRightMost);
 }
 
 export function maybeRightMostLeafWhere(
     nodeIdMapCollection: Collection,
     rootId: number,
     maybeCondition: ((node: Ast.TNode) => boolean) | undefined,
-): Ast.TNode | undefined {
+): Promise<Ast.TNode | undefined> {
     return maybeRightMostLeaf(nodeIdMapCollection, rootId, maybeCondition);
 }
