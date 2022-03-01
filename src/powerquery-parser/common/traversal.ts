@@ -11,13 +11,7 @@ export type TriedTraverse<ResultType> = Result<ResultType, CommonError.CommonErr
 export type TVisitNodeFn<State extends ITraversalState<ResultType>, ResultType, Node, Return> = (
     state: State,
     node: Node,
-) => Return;
-
-export type TVisitChildNodeFn<State extends ITraversalState<ResultType>, ResultType, Node, Return> = (
-    state: State,
-    parent: Node,
-    node: Node,
-) => Return;
+) => Promise<Return>;
 
 export type TEarlyExitFn<State extends ITraversalState<ResultType>, ResultType, Node> = TVisitNodeFn<
     State,
@@ -30,7 +24,7 @@ export type TExpandNodesFn<State extends ITraversalState<ResultType>, ResultType
     state: State,
     node: Node,
     collection: NodesById,
-) => ReadonlyArray<Node>;
+) => Promise<ReadonlyArray<Node>>;
 
 export const enum VisitNodeStrategy {
     BreadthFirst = "BreadthFirst",
@@ -51,7 +45,7 @@ export function tryTraverseAst<State extends ITraversalState<ResultType>, Result
     visitNodeFn: TVisitNodeFn<State, ResultType, Ast.TNode, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, Ast.TNode, NodeIdMap.Collection>,
     maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Ast.TNode> | undefined,
-): TriedTraverse<ResultType> {
+): Promise<TriedTraverse<ResultType>> {
     return tryTraverse<State, ResultType, Ast.TNode, NodeIdMap.Collection>(
         state,
         nodeIdMapCollection,
@@ -72,7 +66,7 @@ export function tryTraverseXor<State extends ITraversalState<ResultType>, Result
     visitNodeFn: TVisitNodeFn<State, ResultType, TXorNode, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, TXorNode, NodeIdMap.Collection>,
     maybeEarlyExitFn: TEarlyExitFn<State, ResultType, TXorNode> | undefined,
-): TriedTraverse<ResultType> {
+): Promise<TriedTraverse<ResultType>> {
     return tryTraverse<State, ResultType, TXorNode, NodeIdMap.Collection>(
         state,
         nodeIdMapCollection,
@@ -92,9 +86,9 @@ export function tryTraverse<State extends ITraversalState<ResultType>, ResultTyp
     visitNodeFn: TVisitNodeFn<State, ResultType, Node, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
     maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
-): TriedTraverse<ResultType> {
-    return ResultUtils.ensureResult(state.locale, () => {
-        traverseRecursion<State, ResultType, Node, NodesById>(
+): Promise<TriedTraverse<ResultType>> {
+    return ResultUtils.ensureAsyncResult(state.locale, async () => {
+        await traverseRecursion<State, ResultType, Node, NodesById>(
             state,
             nodesById,
             root,
@@ -173,7 +167,7 @@ export function maybeExpandXorParent<T>(
     return maybeParent !== undefined ? [maybeParent] : [];
 }
 
-function traverseRecursion<State extends ITraversalState<ResultType>, ResultType, Node, NodesById>(
+async function traverseRecursion<State extends ITraversalState<ResultType>, ResultType, Node, NodesById>(
     state: State,
     nodesById: NodesById,
     node: Node,
@@ -181,18 +175,19 @@ function traverseRecursion<State extends ITraversalState<ResultType>, ResultType
     visitNodeFn: TVisitNodeFn<State, ResultType, Node, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
     maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
-): void {
+): Promise<void> {
     if (maybeEarlyExitFn && maybeEarlyExitFn(state, node)) {
         return;
     } else if (strategy === VisitNodeStrategy.BreadthFirst) {
-        visitNodeFn(state, node);
+        await visitNodeFn(state, node);
     }
 
-    for (const child of expandNodesFn(state, node, nodesById)) {
-        traverseRecursion(state, nodesById, child, strategy, visitNodeFn, expandNodesFn, maybeEarlyExitFn);
+    for (const child of await expandNodesFn(state, node, nodesById)) {
+        // eslint-disable-next-line no-await-in-loop
+        await traverseRecursion(state, nodesById, child, strategy, visitNodeFn, expandNodesFn, maybeEarlyExitFn);
     }
 
     if (strategy === VisitNodeStrategy.DepthFirst) {
-        visitNodeFn(state, node);
+        await visitNodeFn(state, node);
     }
 }
