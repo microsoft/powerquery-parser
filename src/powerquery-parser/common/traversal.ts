@@ -88,7 +88,7 @@ export function tryTraverse<State extends ITraversalState<ResultType>, ResultTyp
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
     maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
 ): Promise<TriedTraverse<ResultType>> {
-    return ResultUtils.ensureAsyncResult(state.locale, async () => {
+    return ResultUtils.ensureResultAsync(state.locale, async () => {
         await traverseRecursion<State, ResultType, Node, NodesById>(
             state,
             nodesById,
@@ -138,7 +138,7 @@ export async function assertGetAllXorChildren<State extends ITraversalState<Resu
                 nodeIdMapCollection,
             );
 
-            return ArrayUtils.asyncMap(children, (value: Ast.TNode) => Promise.resolve(XorNodeUtils.boxAst(value)));
+            return ArrayUtils.mapAsync(children, (value: Ast.TNode) => Promise.resolve(XorNodeUtils.boxAst(value)));
         }
 
         case XorNodeKind.Context: {
