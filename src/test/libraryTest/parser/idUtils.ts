@@ -8,6 +8,7 @@ import { Assert, Language, TaskUtils, Traverse } from "../../../powerquery-parse
 import { ChildIdsById, IdsByNodeKind, ParentIdById } from "../../../powerquery-parser/parser/nodeIdMap/nodeIdMap";
 import { DefaultSettings, Task } from "../../..";
 import { NodeIdMap, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
+import { NoOpTraceManager } from "../../../powerquery-parser/common/trace";
 
 type TraverseState = Traverse.ITraversalState<undefined> &
     Pick<NodeIdMap.Collection, "leafIds" | "idsByNodeKind"> & { astIds: number[]; contextIds: number[] };
@@ -48,7 +49,10 @@ function createSimplifiedParentIdById(parentIdById: ParentIdById): ReadonlyArray
     return [...parentIdById.entries()].sort();
 }
 
-function expectLinksMatch(triedLexParse: Task.TriedLexParseTask, expected: AbridgedNodeIdMapCollection): void {
+async function expectLinksMatch(
+    triedLexParse: Task.TriedLexParseTask,
+    expected: AbridgedNodeIdMapCollection,
+): Promise<void> {
     let nodeIdMapCollection: NodeIdMap.Collection;
     let xorNode: TXorNode;
 
@@ -78,9 +82,11 @@ function expectLinksMatch(triedLexParse: Task.TriedLexParseTask, expected: Abrid
         contextIds: [],
         leafIds: new Set<number>(),
         idsByNodeKind: new Map(),
+        maybeCancellationToken: undefined,
+        traceManager: new NoOpTraceManager(),
     };
 
-    const triedTraverse: Traverse.TriedTraverse<undefined> = Traverse.tryTraverseXor(
+    const triedTraverse: Traverse.TriedTraverse<undefined> = await Traverse.tryTraverseXor(
         traverseState,
         triedLexParse.nodeIdMapCollection,
         xorNode,
@@ -185,7 +191,8 @@ function assertTraverseMatchesState(traverseState: TraverseState, nodeIdMapColle
     );
 }
 
-function traverseVisitNode(state: TraverseState, xorNode: TXorNode): void {
+// eslint-disable-next-line require-await
+async function traverseVisitNode(state: TraverseState, xorNode: TXorNode): Promise<void> {
     if (XorNodeUtils.isAstXor(xorNode)) {
         state.astIds.push(xorNode.node.id);
 
@@ -219,7 +226,7 @@ describe("idUtils", () => {
         };
 
         const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
-        expectLinksMatch(triedLexParse, expected);
+        await expectLinksMatch(triedLexParse, expected);
     });
 
     it(`-1`, async () => {
@@ -247,7 +254,7 @@ describe("idUtils", () => {
         };
 
         const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
-        expectLinksMatch(triedLexParse, expected);
+        await expectLinksMatch(triedLexParse, expected);
     });
 
     it(`1 + 2`, async () => {
@@ -271,7 +278,7 @@ describe("idUtils", () => {
         };
 
         const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
-        expectLinksMatch(triedLexParse, expected);
+        await expectLinksMatch(triedLexParse, expected);
     });
 
     it(`foo()`, async () => {
@@ -307,6 +314,6 @@ describe("idUtils", () => {
         };
 
         const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
-        expectLinksMatch(triedLexParse, expected);
+        await expectLinksMatch(triedLexParse, expected);
     });
 });

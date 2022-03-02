@@ -63,7 +63,7 @@ export function assertNonZeroLength<T>(
     );
 }
 
-export async function asyncMap<T, U>(
+export async function mapAsync<T, U>(
     collection: ReadonlyArray<T>,
     mapFn: (value: T) => Promise<U>,
 ): Promise<ReadonlyArray<U>> {

@@ -1,23 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, Result } from ".";
+import { ArrayUtils, Assert, CommonError, Result } from ".";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind, XorNodeUtils } from "../parser";
 import { Ast } from "../language";
 import { ResultUtils } from "./result";
+import { Settings } from "..";
+import { Trace } from "./trace";
 
 export type TriedTraverse<ResultType> = Result<ResultType, CommonError.CommonError>;
 
 export type TVisitNodeFn<State extends ITraversalState<ResultType>, ResultType, Node, Return> = (
     state: State,
     node: Node,
-) => Return;
-
-export type TVisitChildNodeFn<State extends ITraversalState<ResultType>, ResultType, Node, Return> = (
-    state: State,
-    parent: Node,
-    node: Node,
-) => Return;
+) => Promise<Return>;
 
 export type TEarlyExitFn<State extends ITraversalState<ResultType>, ResultType, Node> = TVisitNodeFn<
     State,
@@ -30,15 +26,14 @@ export type TExpandNodesFn<State extends ITraversalState<ResultType>, ResultType
     state: State,
     node: Node,
     collection: NodesById,
-) => ReadonlyArray<Node>;
+) => Promise<ReadonlyArray<Node>>;
 
 export const enum VisitNodeStrategy {
     BreadthFirst = "BreadthFirst",
     DepthFirst = "DepthFirst",
 }
 
-export interface ITraversalState<T> {
-    readonly locale: string;
+export interface ITraversalState<T> extends Pick<Settings, "locale" | "maybeCancellationToken" | "traceManager"> {
     result: T;
 }
 
@@ -51,7 +46,7 @@ export function tryTraverseAst<State extends ITraversalState<ResultType>, Result
     visitNodeFn: TVisitNodeFn<State, ResultType, Ast.TNode, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, Ast.TNode, NodeIdMap.Collection>,
     maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Ast.TNode> | undefined,
-): TriedTraverse<ResultType> {
+): Promise<TriedTraverse<ResultType>> {
     return tryTraverse<State, ResultType, Ast.TNode, NodeIdMap.Collection>(
         state,
         nodeIdMapCollection,
@@ -72,7 +67,7 @@ export function tryTraverseXor<State extends ITraversalState<ResultType>, Result
     visitNodeFn: TVisitNodeFn<State, ResultType, TXorNode, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, TXorNode, NodeIdMap.Collection>,
     maybeEarlyExitFn: TEarlyExitFn<State, ResultType, TXorNode> | undefined,
-): TriedTraverse<ResultType> {
+): Promise<TriedTraverse<ResultType>> {
     return tryTraverse<State, ResultType, TXorNode, NodeIdMap.Collection>(
         state,
         nodeIdMapCollection,
@@ -92,9 +87,9 @@ export function tryTraverse<State extends ITraversalState<ResultType>, ResultTyp
     visitNodeFn: TVisitNodeFn<State, ResultType, Node, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
     maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
-): TriedTraverse<ResultType> {
-    return ResultUtils.ensureResult(state.locale, () => {
-        traverseRecursion<State, ResultType, Node, NodesById>(
+): Promise<TriedTraverse<ResultType>> {
+    return ResultUtils.ensureResultAsync(state.locale, async () => {
+        await traverseRecursion<State, ResultType, Node, NodesById>(
             state,
             nodesById,
             root,
@@ -109,11 +104,12 @@ export function tryTraverse<State extends ITraversalState<ResultType>, ResultTyp
 }
 
 // a TExpandNodesFn usable by tryTraverseAst which visits all nodes.
-export function assertGetAllAstChildren<State extends ITraversalState<ResultType>, ResultType>(
+// eslint-disable-next-line require-await
+export async function assertGetAllAstChildren<State extends ITraversalState<ResultType>, ResultType>(
     _state: State,
     astNode: Ast.TNode,
     nodeIdMapCollection: NodeIdMap.Collection,
-): ReadonlyArray<Ast.TNode> {
+): Promise<ReadonlyArray<Ast.TNode>> {
     const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(astNode.id);
 
     if (maybeChildIds) {
@@ -126,16 +122,23 @@ export function assertGetAllAstChildren<State extends ITraversalState<ResultType
 }
 
 // a TExpandNodesFn usable by tryTraverseXor which visits all nodes.
-export function assertGetAllXorChildren<State extends ITraversalState<ResultType>, ResultType>(
+// eslint-disable-next-line require-await
+export async function assertGetAllXorChildren<State extends ITraversalState<ResultType>, ResultType>(
     _state: State,
     xorNode: TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
-): ReadonlyArray<TXorNode> {
+): Promise<ReadonlyArray<TXorNode>> {
     switch (xorNode.kind) {
         case XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
 
-            return assertGetAllAstChildren(_state, astNode, nodeIdMapCollection).map(XorNodeUtils.boxAst);
+            const children: ReadonlyArray<Ast.TNode> = await assertGetAllAstChildren(
+                _state,
+                astNode,
+                nodeIdMapCollection,
+            );
+
+            return ArrayUtils.mapAsync(children, (value: Ast.TNode) => Promise.resolve(XorNodeUtils.boxAst(value)));
         }
 
         case XorNodeKind.Context: {
@@ -167,13 +170,13 @@ export function maybeExpandXorParent<T>(
     _state: T,
     xorNode: TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
-): ReadonlyArray<TXorNode> {
+): Promise<ReadonlyArray<TXorNode>> {
     const maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXor(nodeIdMapCollection, xorNode.node.id);
 
-    return maybeParent !== undefined ? [maybeParent] : [];
+    return Promise.resolve(maybeParent !== undefined ? [maybeParent] : []);
 }
 
-function traverseRecursion<State extends ITraversalState<ResultType>, ResultType, Node, NodesById>(
+async function traverseRecursion<State extends ITraversalState<ResultType>, ResultType, Node, NodesById>(
     state: State,
     nodesById: NodesById,
     node: Node,
@@ -181,18 +184,24 @@ function traverseRecursion<State extends ITraversalState<ResultType>, ResultType
     visitNodeFn: TVisitNodeFn<State, ResultType, Node, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
     maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
-): void {
-    if (maybeEarlyExitFn && maybeEarlyExitFn(state, node)) {
+): Promise<void> {
+    const trace: Trace = state.traceManager.entry("Traversal", traverseRecursion.name);
+    state.maybeCancellationToken?.throwIfCancelled();
+
+    if (maybeEarlyExitFn && (await maybeEarlyExitFn(state, node))) {
         return;
     } else if (strategy === VisitNodeStrategy.BreadthFirst) {
-        visitNodeFn(state, node);
+        await visitNodeFn(state, node);
     }
 
-    for (const child of expandNodesFn(state, node, nodesById)) {
-        traverseRecursion(state, nodesById, child, strategy, visitNodeFn, expandNodesFn, maybeEarlyExitFn);
+    for (const child of await expandNodesFn(state, node, nodesById)) {
+        // eslint-disable-next-line no-await-in-loop
+        await traverseRecursion(state, nodesById, child, strategy, visitNodeFn, expandNodesFn, maybeEarlyExitFn);
     }
 
     if (strategy === VisitNodeStrategy.DepthFirst) {
-        visitNodeFn(state, node);
+        await visitNodeFn(state, node);
     }
+
+    trace.exit();
 }

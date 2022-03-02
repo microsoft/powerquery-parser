@@ -15,6 +15,7 @@ import {
     TaskUtils,
     Traverse,
 } from "../../..";
+import { NoOpTraceManager } from "../../../powerquery-parser/common/trace";
 import { TestAssertUtils } from "../../testUtils";
 
 type AbridgedNode = [Language.Ast.NodeKind, number | undefined];
@@ -33,9 +34,11 @@ async function collectAbridgeNodeFromAst(text: string): Promise<ReadonlyArray<Ab
     const state: CollectAbridgeNodeState = {
         locale: DefaultLocale,
         result: [],
+        maybeCancellationToken: undefined,
+        traceManager: new NoOpTraceManager(),
     };
 
-    const triedTraverse: Traverse.TriedTraverse<AbridgedNode[]> = Traverse.tryTraverseAst<
+    const triedTraverse: Traverse.TriedTraverse<AbridgedNode[]> = await Traverse.tryTraverseAst<
         CollectAbridgeNodeState,
         AbridgedNode[]
     >(
@@ -66,9 +69,11 @@ async function assertGetNthNodeOfKind<N extends Language.Ast.TNode>(
         nodeKind,
         nthCounter: 0,
         nthRequired,
+        maybeCancellationToken: undefined,
+        traceManager: new NoOpTraceManager(),
     };
 
-    const triedTraverse: Traverse.TriedTraverse<Language.Ast.TNode | undefined> = Traverse.tryTraverseAst<
+    const triedTraverse: Traverse.TriedTraverse<Language.Ast.TNode | undefined> = await Traverse.tryTraverseAst<
         NthNodeOfKindState,
         Language.Ast.TNode | undefined
     >(
@@ -86,11 +91,13 @@ async function assertGetNthNodeOfKind<N extends Language.Ast.TNode>(
     return Assert.asDefined(triedTraverse.value) as N;
 }
 
-function collectAbridgeNodeVisit(state: CollectAbridgeNodeState, node: Language.Ast.TNode): void {
+// eslint-disable-next-line require-await
+async function collectAbridgeNodeVisit(state: CollectAbridgeNodeState, node: Language.Ast.TNode): Promise<void> {
     state.result.push([node.kind, node.maybeAttributeIndex]);
 }
 
-function nthNodeVisit(state: NthNodeOfKindState, node: Language.Ast.TNode): void {
+// eslint-disable-next-line require-await
+async function nthNodeVisit(state: NthNodeOfKindState, node: Language.Ast.TNode): Promise<void> {
     if (node.kind === state.nodeKind) {
         state.nthCounter += 1;
 
@@ -100,7 +107,8 @@ function nthNodeVisit(state: NthNodeOfKindState, node: Language.Ast.TNode): void
     }
 }
 
-function nthNodeEarlyExit(state: NthNodeOfKindState, _: Language.Ast.TNode): boolean {
+// eslint-disable-next-line require-await
+async function nthNodeEarlyExit(state: NthNodeOfKindState, _: Language.Ast.TNode): Promise<boolean> {
     return state.nthCounter === state.nthRequired;
 }
 
