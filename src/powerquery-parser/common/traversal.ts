@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, Result } from ".";
+import { ArrayUtils, Assert, CommonError, Result } from ".";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind, XorNodeUtils } from "../parser";
 import { Ast } from "../language";
 import { ResultUtils } from "./result";
+import { Settings } from "..";
+import { Trace } from "./trace";
 
 export type TriedTraverse<ResultType> = Result<ResultType, CommonError.CommonError>;
 
@@ -31,8 +33,7 @@ export const enum VisitNodeStrategy {
     DepthFirst = "DepthFirst",
 }
 
-export interface ITraversalState<T> {
-    readonly locale: string;
+export interface ITraversalState<T> extends Pick<Settings, "locale" | "maybeCancellationToken" | "traceManager"> {
     result: T;
 }
 
@@ -103,11 +104,12 @@ export function tryTraverse<State extends ITraversalState<ResultType>, ResultTyp
 }
 
 // a TExpandNodesFn usable by tryTraverseAst which visits all nodes.
-export function assertGetAllAstChildren<State extends ITraversalState<ResultType>, ResultType>(
+// eslint-disable-next-line require-await
+export async function assertGetAllAstChildren<State extends ITraversalState<ResultType>, ResultType>(
     _state: State,
     astNode: Ast.TNode,
     nodeIdMapCollection: NodeIdMap.Collection,
-): ReadonlyArray<Ast.TNode> {
+): Promise<ReadonlyArray<Ast.TNode>> {
     const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(astNode.id);
 
     if (maybeChildIds) {
@@ -120,16 +122,23 @@ export function assertGetAllAstChildren<State extends ITraversalState<ResultType
 }
 
 // a TExpandNodesFn usable by tryTraverseXor which visits all nodes.
-export function assertGetAllXorChildren<State extends ITraversalState<ResultType>, ResultType>(
+// eslint-disable-next-line require-await
+export async function assertGetAllXorChildren<State extends ITraversalState<ResultType>, ResultType>(
     _state: State,
     xorNode: TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
-): ReadonlyArray<TXorNode> {
+): Promise<ReadonlyArray<TXorNode>> {
     switch (xorNode.kind) {
         case XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
 
-            return assertGetAllAstChildren(_state, astNode, nodeIdMapCollection).map(XorNodeUtils.boxAst);
+            const children: ReadonlyArray<Ast.TNode> = await assertGetAllAstChildren(
+                _state,
+                astNode,
+                nodeIdMapCollection,
+            );
+
+            return ArrayUtils.asyncMap(children, (value: Ast.TNode) => Promise.resolve(XorNodeUtils.boxAst(value)));
         }
 
         case XorNodeKind.Context: {
@@ -161,10 +170,10 @@ export function maybeExpandXorParent<T>(
     _state: T,
     xorNode: TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
-): ReadonlyArray<TXorNode> {
+): Promise<ReadonlyArray<TXorNode>> {
     const maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXor(nodeIdMapCollection, xorNode.node.id);
 
-    return maybeParent !== undefined ? [maybeParent] : [];
+    return Promise.resolve(maybeParent !== undefined ? [maybeParent] : []);
 }
 
 async function traverseRecursion<State extends ITraversalState<ResultType>, ResultType, Node, NodesById>(
@@ -176,7 +185,10 @@ async function traverseRecursion<State extends ITraversalState<ResultType>, Resu
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
     maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
 ): Promise<void> {
-    if (maybeEarlyExitFn && maybeEarlyExitFn(state, node)) {
+    const trace: Trace = state.traceManager.entry("Traversal", traverseRecursion.name);
+    state.maybeCancellationToken?.throwIfCancelled();
+
+    if (maybeEarlyExitFn && (await maybeEarlyExitFn(state, node))) {
         return;
     } else if (strategy === VisitNodeStrategy.BreadthFirst) {
         await visitNodeFn(state, node);
@@ -190,4 +202,6 @@ async function traverseRecursion<State extends ITraversalState<ResultType>, Resu
     if (strategy === VisitNodeStrategy.DepthFirst) {
         await visitNodeFn(state, node);
     }
+
+    trace.exit();
 }
