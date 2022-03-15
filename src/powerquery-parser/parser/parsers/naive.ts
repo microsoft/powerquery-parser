@@ -1819,7 +1819,7 @@ export async function readFieldSpecificationList(
     );
 
     const fields: Ast.ICsv<Ast.FieldSpecification>[] = [];
-    let continueReadingValues: boolean = true;
+    let continueReadingValues: boolean = !ParseStateUtils.isOnTokenKind(state, Token.TokenKind.RightBracket);
     let isOnOpenRecordMarker: boolean = false;
 
     const fieldArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;

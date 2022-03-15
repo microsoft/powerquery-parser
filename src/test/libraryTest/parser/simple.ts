@@ -571,6 +571,39 @@ describe("Parser.AbridgedNode", () => {
     });
 
     describe(`${Language.Ast.NodeKind.FieldSpecificationList}`, () => {
+        it(`type []`, async () => {
+            const text: string = `type []`;
+
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Language.Ast.NodeKind.TypePrimaryType, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.RecordType, 1],
+                [Language.Ast.NodeKind.FieldSpecificationList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+            ];
+
+            await assertAbridgeNodes(text, expected);
+        });
+
+        it(`type table []`, async () => {
+            const text: string = `type table []`;
+
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Language.Ast.NodeKind.TypePrimaryType, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.TableType, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.FieldSpecificationList, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+            ];
+
+            await assertAbridgeNodes(text, expected);
+        });
+
         it(`${Language.Ast.NodeKind.FieldSpecificationList}`, async () => {
             const text: string = `type [x]`;
 
