@@ -147,6 +147,27 @@ export const enum TypeKind {
     Unknown = "Unknown",
 }
 
+export const TypeKinds: ReadonlyArray<TypeKind> = [
+    TypeKind.Action,
+    TypeKind.Any,
+    TypeKind.AnyNonNull,
+    TypeKind.Binary,
+    TypeKind.Date,
+    TypeKind.DateTime,
+    TypeKind.DateTimeZone,
+    TypeKind.Duration,
+    TypeKind.Function,
+    TypeKind.List,
+    TypeKind.Logical,
+    TypeKind.Null,
+    TypeKind.Number,
+    TypeKind.Record,
+    TypeKind.Table,
+    TypeKind.Text,
+    TypeKind.Time,
+    TypeKind.Type,
+];
+
 export const enum ExtendedTypeKind {
     // In Power Query if you want a union type, such as when a function returns either a `text` OR a `number`,
     // then you're only option is to give it the 'any' type.
