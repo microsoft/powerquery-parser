@@ -17,8 +17,8 @@ Pc = ['005F', '203F', '2040', '2054', 'FE33', 'FE34', 'FE4D', 'FE4E', 'FE4F', 'F
 Zs = ['0020', '00A0', '1680', '2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '200A', '202F', '205F', '3000']
 
 def create_code_trio(code_point_hex):
-	code_point_int = int(code_point_hex, 16)
-	return CodeTrio(
+    code_point_int = int(code_point_hex, 16)
+    return CodeTrio(
         code_point_hex=code_point_hex,
         code_point_int=code_point_int,
         code_units=codepoint_to_codeunits(code_point_int)
@@ -26,73 +26,33 @@ def create_code_trio(code_point_hex):
 
 def create_regex(unicode_classes):
     code_trios = [create_code_trio(item) for item in unicode_classes]
+
     # Given the code units AB, AC, AD (where A, B, C, and D are valid code units),
     # we want to eventually create the regex A[BCD].
     # The first step to that is to organize them by their leading code unit.
-    code_trios_by_leading_codeunit = {}
-    for code_trio in code_trios:
-        key = code_trio.code_units[0]
-
-        if key not in code_trios_by_leading_codeunit:
-            code_trios_by_leading_codeunit[key] = []
-        
-        code_trios_by_leading_codeunit[key].append(code_trio)
-
-    # Partition the previous collection by:
-    #   if the leading code unit is shared by more than one code point
-    #   if the siblingless code point is one or two code units
-    short_siblingless_code_trios = []
-    long_siblingless_code_trios = []
-    code_trios_sibling_collections = []
-    for key, code_trios in code_trios_by_leading_codeunit.items():
-        if len(code_trios) == 1:
-            siblingless_code_trio = code_trios[0]
-
-            if len(siblingless_code_trio.code_units) == 1:
-                short_siblingless_code_trios.append(siblingless_code_trio)
-            else:
-                long_siblingless_code_trios.append(siblingless_code_trio)
-
-        else:
-            code_trios_sibling_collections.append(code_trios)
 
     regex_chunks = []
-    short_regex_ranges = []
+    regex_ranges = []
 
-    # We might be able to turn short siblingless code units into a range.
-    # Eg. given A, B, and C we might be able to do [A-C].
-    for (low, high) in code_trio_sequences(short_siblingless_code_trios):
-        assert len(low.code_units) == len(high.code_units)
+    for (low, high) in code_trio_sequences(code_trios):
+        num_code_units = len(low.code_units)
+
+        assert low.code_point_int <= high.code_point_int
+        assert len(low.code_units) == len(high.code_units), [len(low.code_units), len(high.code_units)]
+        assert num_code_units <= 2, num_code_units
 
         if low.code_point_int == high.code_point_int:
-            regex_chunks.append("(?:{})".format("".join(low.code_units)))
-        elif len(low.code_units) == 1:
-            short_regex_ranges.append("{}-{}".format(
-                low.code_units[0],
-                high.code_units[0],
-            ))
+            if num_code_units == 1:
+                regex_chunks.append("(?:\\u{{{}}})".format(low.code_point_hex))
+            else:
+                regex_chunks.append("(?:\\u{{{}}})".format(low.code_point_hex))
         else:
-            regex_chunks.append("(?:{}[{}-{}])".format(
-                low.code_units[0],
-                low.code_units[1],
-                high.code_units[1],
-            ))
+            if num_code_units == 1:
+                regex_ranges.append("\\u{{{}}}-\\u{{{}}}".format(low.code_point_hex, high.code_point_hex))
+            else:
+                regex_ranges.append("\\u{{{}}}-\\u{{{}}}".format(low.code_point_hex, high.code_point_hex))
 
-    regex_chunks.append("(:?[{}])".format("".join(short_regex_ranges)))
-
-    # We can't do any optimization here without being able to use the 'u' flag.
-    for code_trio in long_siblingless_code_trios:
-        regex_chunks.append("(?:{})".format("".join(code_trio.code_units)))
-
-    for collection in code_trios_sibling_collections:
-        assert len(collection) > 1
-        assert len(collection[0].code_units) == 2, collection
-
-        tails = (code_trio.code_units[1] for code_trio in collection)
-        regex_chunks.append("(?:{}[{}])".format(
-            collection[0].code_units[0],
-            "".join(tails),
-        ))
+    regex_chunks.append("(:?[{}])".format("".join(regex_ranges)))
 
     return "|".join(sorted(regex_chunks))
 
@@ -128,7 +88,7 @@ def codepoint_to_codeunits(codepoint):
 def print_regex(regex):
     print('/{}/g'.format(regex))
 
-# constructs
+# From the Power Query spec
 combining_character = Mc + Mn
 connecting_character = Pc
 decimal_digit_character = Nd
@@ -137,14 +97,15 @@ formatting_character = Cf
 letter_character = Lu + Ll + Lt + Lm + Lo + Nl
 underscore_character = ["005F"]
 
-identifier_start = create_regex(letter_character + underscore_character)
 identifier_part_character = create_regex(
-    letter_character \ 
+    letter_character \
     + decimal_digit_character \
-    + underscore_character \
+    # '_' is already included as part of Pc
+    # + underscore_character \
     + connecting_character \
     + combining_character \
     + formatting_character)
+identifier_start = create_regex(letter_character + underscore_character)
 
-print("identifier_start\n" + identifier_start)
 print("identifier_part_character\n" + identifier_part_character)
+# print("identifier_start\n" + identifier_start)
