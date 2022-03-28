@@ -108,4 +108,4 @@ identifier_part_character = create_regex(
 identifier_start = create_regex(letter_character + underscore_character)
 
 print("identifier_part_character\n" + identifier_part_character)
-# print("identifier_start\n" + identifier_start)
+print("identifier_start\n" + identifier_start)
