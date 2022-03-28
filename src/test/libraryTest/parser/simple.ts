@@ -1026,6 +1026,17 @@ describe("Parser.AbridgedNode", () => {
 
             await assertAbridgeNodes(text, expected);
         });
+
+        it(`零`, async () => {
+            const text: string = `零`;
+
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Language.Ast.NodeKind.IdentifierExpression, undefined],
+                [Language.Ast.NodeKind.Identifier, 1],
+            ];
+
+            await assertAbridgeNodes(text, expected);
+        });
     });
 
     it(`${Language.Ast.NodeKind.IdentifierPairedExpression}`, async () => {
