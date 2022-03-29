@@ -1012,6 +1012,14 @@ describe("Parser.AbridgedNode", () => {
         await assertAbridgeNodes(text, expected);
     });
 
+    it(`let Foo.Bar123 = 1 in Foo.Bar123`, async () => {
+        const text: string = `let Foo.Bar123 = 1 in Foo.Bar123"`;
+
+        const expected: ReadonlyArray<AbridgedNode> = [];
+
+        await assertAbridgeNodes(text, expected);
+    });
+
     // Ast.NodeKind.Identifier covered by many
 
     describe(`${Language.Ast.NodeKind.IdentifierExpression}`, () => {
