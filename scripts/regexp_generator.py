@@ -42,15 +42,12 @@ def create_regex(unicode_classes):
         assert num_code_units <= 2, num_code_units
 
         if low.code_point_int == high.code_point_int:
-            if num_code_units == 1:
-                regex_chunks.append("(?:\\u{{{}}})".format(low.code_point_hex))
-            else:
-                regex_chunks.append("(?:\\u{{{}}})".format(low.code_point_hex))
+            regex_chunks.append("(?:\\u{{{}}})".format(low.code_point_hex.lstrip("0")))
         else:
-            if num_code_units == 1:
-                regex_ranges.append("\\u{{{}}}-\\u{{{}}}".format(low.code_point_hex, high.code_point_hex))
-            else:
-                regex_ranges.append("\\u{{{}}}-\\u{{{}}}".format(low.code_point_hex, high.code_point_hex))
+            regex_ranges.append("\\u{{{}}}-\\u{{{}}}".format(
+                low.code_point_hex.lstrip("0"),
+                high.code_point_hex.lstrip("0"))
+            )
 
     regex_chunks.append("(:?[{}])".format("".join(regex_ranges)))
 
@@ -105,6 +102,8 @@ identifier_part_character = create_regex(
     + connecting_character \
     + combining_character \
     + formatting_character)
+identifier_part_character = "(?:{})+".format(identifier_part_character)
+
 identifier_start = create_regex(letter_character + underscore_character)
 
 print("identifier_part_character\n" + identifier_part_character)
