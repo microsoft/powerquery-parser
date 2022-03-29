@@ -20,6 +20,9 @@ describe("TextUtils", () => {
             it(`foo`, () => expect(TextUtils.isRegularIdentifier("foo", false), "should be true").to.be.true);
             it(`foo`, () => expect(TextUtils.isRegularIdentifier("foo", true), "should be true").to.be.true);
             it(`foo.`, () => expect(TextUtils.isRegularIdentifier("foo.", true), "should be true").to.be.true);
+
+            it(`foo.bar123`, () =>
+                expect(TextUtils.isRegularIdentifier("foo.bar123", true), "should be true").to.be.true);
         });
 
         describe(`invalid`, () => {
