@@ -854,4 +854,12 @@ export interface Identifier extends INode {
     readonly kind: NodeKind.Identifier;
     readonly isLeaf: true;
     readonly literal: string;
+    readonly identifierContextKind: IdentifierContextKind;
+}
+
+export const enum IdentifierContextKind {
+    Key = "Key",
+    Keyword = "Keyword",
+    Parameter = "Parameter",
+    Value = "Value",
 }
