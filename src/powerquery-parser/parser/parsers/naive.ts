@@ -824,7 +824,7 @@ export async function readPrimaryExpression(state: ParseState, parser: Parser): 
         maybeCurrentTokenKind === Token.TokenKind.AtSign || maybeCurrentTokenKind === Token.TokenKind.Identifier;
 
     if (isIdentifierExpressionNext) {
-        primaryExpression = parser.readIdentifierExpression(state, parser, Ast.IdentifierContextKind.Value);
+        primaryExpression = parser.readIdentifierExpression(state, parser);
     } else {
         switch (maybeCurrentTokenKind) {
             case Token.TokenKind.LeftParenthesis:

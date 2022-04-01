@@ -90,11 +90,7 @@ export interface Parser {
     readonly readLiteralExpression: (state: ParseState, parser: Parser) => Ast.LiteralExpression;
 
     // 12.2.3.12 Identifier expression
-    readonly readIdentifierExpression: (
-        state: ParseState,
-        parser: Parser,
-        identifierContextKind: Ast.IdentifierContextKind,
-    ) => Ast.IdentifierExpression;
+    readonly readIdentifierExpression: (state: ParseState, parser: Parser) => Ast.IdentifierExpression;
 
     // 12.2.3.14 Parenthesized expression
     readonly readParenthesizedExpression: (state: ParseState, parser: Parser) => Promise<Ast.ParenthesizedExpression>;
