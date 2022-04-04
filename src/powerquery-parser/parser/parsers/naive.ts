@@ -48,7 +48,11 @@ const GeneralizedIdentifierTerminatorTokenKinds: ReadonlyArray<Token.TokenKind> 
 // ---------- 12.1.6 Identifiers ----------
 // ----------------------------------------
 
-export function readIdentifier(state: ParseState, _parser: Parser): Ast.Identifier {
+export function readIdentifier(
+    state: ParseState,
+    _parser: Parser,
+    identifierContextKind: Ast.IdentifierContextKind,
+): Ast.Identifier {
     const nodeKind: Ast.NodeKind.Identifier = Ast.NodeKind.Identifier;
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIdentifier.name, {
@@ -63,6 +67,7 @@ export function readIdentifier(state: ParseState, _parser: Parser): Ast.Identifi
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: true,
+        identifierContextKind,
         literal,
     };
 
@@ -166,6 +171,7 @@ export function readKeyword(state: ParseState, _parser: Parser): Ast.IdentifierE
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
         kind: identifierNodeKind,
         isLeaf: true,
+        identifierContextKind: Ast.IdentifierContextKind.Keyword,
         literal,
     };
 
@@ -281,7 +287,7 @@ export async function readSectionDocument(state: ParseState, parser: Parser): Pr
     let maybeName: Ast.Identifier | undefined;
 
     if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.Identifier)) {
-        maybeName = parser.readIdentifier(state, parser);
+        maybeName = parser.readIdentifier(state, parser, Ast.IdentifierContextKind.Key);
     } else {
         ParseStateUtils.incrementAttributeCounter(state);
     }
@@ -1071,7 +1077,7 @@ export function readIdentifierExpression(state: ParseState, parser: Parser): Ast
     const maybeInclusiveConstant: Ast.IConstant<Constant.MiscConstant.AtSign> | undefined =
         maybeReadTokenKindAsConstant(state, Token.TokenKind.AtSign, Constant.MiscConstant.AtSign);
 
-    const identifier: Ast.Identifier = parser.readIdentifier(state, parser);
+    const identifier: Ast.Identifier = parser.readIdentifier(state, parser, Ast.IdentifierContextKind.Value);
 
     const identifierExpression: Ast.IdentifierExpression = {
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
@@ -2605,7 +2611,7 @@ export async function readIdentifierPairedExpression(
         state,
         Ast.NodeKind.IdentifierPairedExpression,
         // eslint-disable-next-line require-await
-        async () => parser.readIdentifier(state, parser),
+        async () => parser.readIdentifier(state, parser, Ast.IdentifierContextKind.Key),
         async () => await parser.readExpression(state, parser),
     );
 
@@ -2995,7 +3001,7 @@ async function genericReadParameterList<T extends Ast.TParameterType>(
         }
 
         // eslint-disable-next-line no-await-in-loop
-        const name: Ast.Identifier = parser.readIdentifier(state, parser);
+        const name: Ast.Identifier = parser.readIdentifier(state, parser, Ast.IdentifierContextKind.Parameter);
         // eslint-disable-next-line no-await-in-loop
         const maybeParameterType: T = await typeReader();
 

@@ -33,7 +33,11 @@ export interface Parser {
     readonly restoreCheckpoint: (state: ParseState, checkpoint: ParseStateCheckpoint) => Promise<void>;
 
     // 12.1.6 Identifiers
-    readonly readIdentifier: (state: ParseState, parser: Parser) => Ast.Identifier;
+    readonly readIdentifier: (
+        state: ParseState,
+        parser: Parser,
+        identifierContextKind: Ast.IdentifierContextKind,
+    ) => Ast.Identifier;
     readonly readGeneralizedIdentifier: (state: ParseState, parser: Parser) => Promise<Ast.GeneralizedIdentifier>;
     readonly readKeyword: (state: ParseState, parser: Parser) => Ast.IdentifierExpression;
 
