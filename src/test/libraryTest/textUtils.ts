@@ -20,6 +20,7 @@ describe("TextUtils", () => {
             it(`foo`, () => expect(TextUtils.isRegularIdentifier("foo", false), "should be true").to.be.true);
             it(`foo`, () => expect(TextUtils.isRegularIdentifier("foo", true), "should be true").to.be.true);
             it(`foo.`, () => expect(TextUtils.isRegularIdentifier("foo.", true), "should be true").to.be.true);
+            it(`foo.1`, () => expect(TextUtils.isRegularIdentifier("foo.1", true), "should be true").to.be.true);
 
             it(`foo.bar123`, () =>
                 expect(TextUtils.isRegularIdentifier("foo.bar123", true), "should be true").to.be.true);
@@ -50,6 +51,7 @@ describe("TextUtils", () => {
             it(`#"a""b""c"`, () => expect(TextUtils.isQuotedIdentifier(`#"a""b""c"`), "should be true").to.be.true);
             it(`#"""b""c"`, () => expect(TextUtils.isQuotedIdentifier(`#"""b""c"`), "should be true").to.be.true);
             it(`#"a""b"""`, () => expect(TextUtils.isQuotedIdentifier(`#"a""b"""`), "should be true").to.be.true);
+            it(`#"bar.1"`, () => expect(TextUtils.isQuotedIdentifier(`#"foo"`), "should be true").to.be.true);
         });
 
         describe(`invalid`, () => {
