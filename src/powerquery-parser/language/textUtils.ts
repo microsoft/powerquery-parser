@@ -87,8 +87,6 @@ export function maybeIdentifierLength(text: string, index: number, allowTrailing
                     if (allowTrailingPeriod && text[index] === "." && text[index + 1] !== ".") {
                         index += 1;
                     }
-
-                    state = IdentifierRegexpState.Start;
                 }
 
                 break;
