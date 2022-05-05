@@ -41,6 +41,7 @@ import performanceNow = require("performance-now");
 
 // Constants used in multiple files as part of a trace's phase/task/message/details.
 export const enum TraceConstant {
+    CorrelationId = "CorrelationId",
     Empty = "[Empty]",
     Entry = "Entry",
     Exit = "Exit",
@@ -48,7 +49,6 @@ export const enum TraceConstant {
     IsThrowing = "IsThrowing",
     Length = "Length",
     Result = "Result",
-    TimeEnd = "TimeEnd",
     TimeNow = "TimeNow",
     TimeStart = "TimeStart",
 }
@@ -196,6 +196,7 @@ export class BenchmarkTrace extends Trace {
         super.trace(message, {
             ...maybeDetails,
             [TraceConstant.TimeNow]: timeNow,
+            [TraceConstant.CorrelationId]: this.maybeCorrelationId,
         });
     }
 }
