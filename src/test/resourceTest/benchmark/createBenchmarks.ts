@@ -16,7 +16,7 @@ const OutputDirectory: string = path.join(ResourceDirectory, "logs");
 function createOutputStream(filePath: string, iteration: number): fs.WriteStream {
     const iterationFilePath: string = path.join(
         OutputDirectory,
-        `file_${path.parse(filePath).name}_iteration_${iteration}.log`,
+        `${path.parse(filePath).name}_example_${iteration}.log`,
     );
 
     // tslint:disable-next-line: non-literal-fs-path
