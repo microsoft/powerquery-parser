@@ -20,7 +20,7 @@ export function recalculateIds(
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeStart: TXorNode,
 ): Map<number, number> {
-    const trace: Trace = traceManager.entry(maybeCorrelationId, IdUtilsTraceConstant.IdUtils, recalculateIds.name);
+    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, recalculateIds.name, maybeCorrelationId);
 
     const visitedXorNodes: TXorNode[] = [];
     const nodeIds: number[] = [];
@@ -62,7 +62,7 @@ export function updateNodeIds(
     nodeIdMapCollection: Collection,
     newIdByOldId: Map<number, number>,
 ): void {
-    const trace: Trace = traceManager.entry(maybeCorrelationId, IdUtilsTraceConstant.IdUtils, updateNodeIds.name, {
+    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, updateNodeIds.name, maybeCorrelationId, {
         [IdUtilsTraceConstant.MapSize]: newIdByOldId.size,
     });
 
@@ -104,7 +104,7 @@ function createDelta(
     newIdByOldId: Map<number, number>,
     xorNodes: ReadonlyArray<TXorNode>,
 ): CollectionDelta {
-    const trace: Trace = traceManager.entry(correlationId, IdUtilsTraceConstant.IdUtils, createDelta.name, {
+    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, createDelta.name, correlationId, {
         [IdUtilsTraceConstant.MapSize]: newIdByOldId.size,
     });
 
@@ -177,7 +177,7 @@ function applyDelta(
     xorNodes: ReadonlyArray<TXorNode>,
     delta: CollectionDelta,
 ): void {
-    const trace: Trace = traceManager.entry(correlationId, IdUtilsTraceConstant.IdUtils, applyDelta.name);
+    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, applyDelta.name, correlationId);
 
     const newIds: ReadonlySet<number> = new Set(newIdByOldId.values());
     const oldLeafIds: ReadonlySet<number> = new Set(nodeIdMapCollection.leafIds.values());

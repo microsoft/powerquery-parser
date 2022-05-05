@@ -18,9 +18,9 @@ export async function tryParse(
     maybeCorrelationId: number | undefined,
 ): Promise<TriedParse> {
     const trace: Trace = parseSettings.traceManager.entry(
-        maybeCorrelationId,
         ParserUtilsTraceConstant.ParserUtils,
         tryParse.name,
+        maybeCorrelationId,
     );
 
     const maybeParserEntryPointFn:
@@ -55,9 +55,9 @@ export async function tryParseDocument(
     maybeCorrelationId: number | undefined,
 ): Promise<TriedParse> {
     const trace: Trace = parseSettings.traceManager.entry(
-        maybeCorrelationId,
         ParserUtilsTraceConstant.ParserUtils,
         tryParseDocument.name,
+        maybeCorrelationId,
     );
 
     let root: Ast.TNode;

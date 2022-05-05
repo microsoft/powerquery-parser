@@ -182,6 +182,10 @@ export function maybeExpandXorParent<T>(
     return Promise.resolve(maybeParent !== undefined ? [maybeParent] : []);
 }
 
+const enum TraversalTraceConstant {
+    Traversal = "Traversal",
+}
+
 async function traverseRecursion<State extends ITraversalState<ResultType>, ResultType, Node, NodesById>(
     state: State,
     maybeCorrelationId: number | undefined,
@@ -192,7 +196,12 @@ async function traverseRecursion<State extends ITraversalState<ResultType>, Resu
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
     maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
 ): Promise<void> {
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, "Traversal", traverseRecursion.name);
+    const trace: Trace = state.traceManager.entry(
+        TraversalTraceConstant.Traversal,
+        traverseRecursion.name,
+        maybeCorrelationId,
+    );
+
     state.maybeCancellationToken?.throwIfCancelled();
 
     if (maybeEarlyExitFn && (await maybeEarlyExitFn(state, node))) {

@@ -56,7 +56,7 @@ export function readIdentifier(
 ): Ast.Identifier {
     const nodeKind: Ast.NodeKind.Identifier = Ast.NodeKind.Identifier;
 
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readIdentifier.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIdentifier.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -88,9 +88,9 @@ export async function readGeneralizedIdentifier(
     const nodeKind: Ast.NodeKind.GeneralizedIdentifier = Ast.NodeKind.GeneralizedIdentifier;
 
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readGeneralizedIdentifier.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -164,7 +164,7 @@ export function readKeyword(
 ): Ast.IdentifierExpression {
     const nodeKind: Ast.NodeKind.IdentifierExpression = Ast.NodeKind.IdentifierExpression;
 
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readKeyword.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readKeyword.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -211,7 +211,7 @@ export async function readDocument(
     parser: Parser,
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.TDocument> {
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readDocument.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readDocument.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -289,9 +289,9 @@ export async function readSectionDocument(
     const nodeKind: Ast.NodeKind.Section = Ast.NodeKind.Section;
 
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readSectionDocument.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -359,9 +359,9 @@ export async function readSectionMembers(
     const nodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
 
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readSectionMembers.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -399,9 +399,9 @@ export async function readSectionMember(
     const nodeKind: Ast.NodeKind.SectionMember = Ast.NodeKind.SectionMember;
 
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readSectionMember.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -462,9 +462,9 @@ export async function readNullCoalescingExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.TExpression> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readNullCoalescingExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -499,7 +499,7 @@ export async function readExpression(
     parser: Parser,
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.TExpression> {
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readExpression.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readExpression.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -552,9 +552,9 @@ export async function readLogicalExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.TLogicalExpression> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readLogicalExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -591,7 +591,7 @@ export async function readIsExpression(
     parser: Parser,
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.TIsExpression> {
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readIsExpression.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIsExpression.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -624,9 +624,9 @@ export async function readNullablePrimitiveType(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.TNullablePrimitiveType> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readNullablePrimitiveType.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -662,7 +662,7 @@ export async function readAsExpression(
     parser: Parser,
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.TAsExpression> {
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readAsExpression.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readAsExpression.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -698,9 +698,9 @@ export async function readEqualityExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.TEqualityExpression> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readEqualityExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -738,9 +738,9 @@ export async function readRelationalExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.TRelationalExpression> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readRelationalExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -778,9 +778,9 @@ export async function readArithmeticExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.TArithmeticExpression> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readArithmeticExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -820,9 +820,9 @@ export async function readMetadataExpression(
     const nodeKind: Ast.NodeKind.MetadataExpression = Ast.NodeKind.MetadataExpression;
 
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readMetadataExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -882,9 +882,9 @@ export async function readUnaryExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.TUnaryExpression> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readUnaryExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -960,9 +960,9 @@ export async function readPrimaryExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.TPrimaryExpression> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readPrimaryExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -1044,9 +1044,9 @@ export async function readRecursivePrimaryExpression(
     const nodeKind: Ast.NodeKind.RecursivePrimaryExpression = Ast.NodeKind.RecursivePrimaryExpression;
 
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readRecursivePrimaryExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -1169,9 +1169,9 @@ export function readLiteralExpression(
     const nodeKind: Ast.NodeKind.LiteralExpression = Ast.NodeKind.LiteralExpression;
 
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readLiteralExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -1243,9 +1243,9 @@ export function readIdentifierExpression(
     const nodeKind: Ast.NodeKind.IdentifierExpression = Ast.NodeKind.IdentifierExpression;
 
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readIdentifierExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -1283,9 +1283,9 @@ export async function readParenthesizedExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.ParenthesizedExpression> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readParenthesizedExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -1332,9 +1332,9 @@ export function readNotImplementedExpression(
     const nodeKind: Ast.NodeKind.NotImplementedExpression = Ast.NodeKind.NotImplementedExpression;
 
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readNotImplementedExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -1373,9 +1373,9 @@ export async function readInvokeExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.InvokeExpression> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readInvokeExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -1431,9 +1431,9 @@ export async function readListExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.ListExpression> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readListExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -1472,7 +1472,7 @@ export async function readListItem(
 ): Promise<Ast.TListItem> {
     const nodeKind: Ast.NodeKind.RangeExpression = Ast.NodeKind.RangeExpression;
 
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readListItem.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readListItem.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -1530,9 +1530,9 @@ export async function readRecordExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.RecordExpression> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readRecordExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -1581,9 +1581,9 @@ export async function readItemAccessExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.ItemAccessExpression> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readItemAccessExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -1616,9 +1616,9 @@ export async function readFieldSelection(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.FieldSelector> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readFieldSelection.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -1638,9 +1638,9 @@ export async function readFieldProjection(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.FieldProjection> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readFieldProjection.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -1684,9 +1684,9 @@ export async function readFieldSelector(
     allowOptional: boolean,
 ): Promise<Ast.FieldSelector> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readFieldSelector.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -1728,9 +1728,9 @@ export async function readFunctionExpression(
     const nodeKind: Ast.NodeKind.FunctionExpression = Ast.NodeKind.FunctionExpression;
 
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readFunctionExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -1782,9 +1782,9 @@ export async function readParameterList(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.IParameterList<Ast.AsNullablePrimitiveType | undefined>> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readParameterList.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -1810,9 +1810,9 @@ async function maybeReadAsNullablePrimitiveType(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.AsNullablePrimitiveType | undefined> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         maybeReadAsNullablePrimitiveType.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -1839,7 +1839,7 @@ export async function readAsType(
     parser: Parser,
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.AsType> {
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readAsType.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readAsType.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -1868,9 +1868,9 @@ export async function readEachExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.EachExpression> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readEachExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -1903,9 +1903,9 @@ export async function readLetExpression(
     const nodeKind: Ast.NodeKind.LetExpression = Ast.NodeKind.LetExpression;
 
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readLetExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -1966,7 +1966,7 @@ export async function readIfExpression(
 ): Promise<Ast.IfExpression> {
     const nodeKind: Ast.NodeKind.IfExpression = Ast.NodeKind.IfExpression;
 
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readIfExpression.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIfExpression.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -2028,9 +2028,9 @@ export async function readTypeExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.TTypeExpression> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readTypeExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -2062,7 +2062,7 @@ export async function readType(
     parser: Parser,
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.TType> {
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readType.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readType.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -2092,7 +2092,7 @@ export async function readPrimaryType(
     parser: Parser,
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.TPrimaryType> {
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readPrimaryType.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readPrimaryType.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -2124,7 +2124,7 @@ export async function readRecordType(
 ): Promise<Ast.RecordType> {
     const nodeKind: Ast.NodeKind.RecordType = Ast.NodeKind.RecordType;
 
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readRecordType.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readRecordType.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -2159,7 +2159,7 @@ export async function readTableType(
 ): Promise<Ast.TableType> {
     const nodeKind: Ast.NodeKind.TableType = Ast.NodeKind.TableType;
 
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readTableType.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readTableType.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -2216,9 +2216,9 @@ export async function readFieldSpecificationList(
     const nodeKind: Ast.NodeKind.FieldSpecificationList = Ast.NodeKind.FieldSpecificationList;
 
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readFieldSpecificationList.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -2378,9 +2378,9 @@ async function maybeReadFieldTypeSpecification(
     const nodeKind: Ast.NodeKind.FieldTypeSpecification = Ast.NodeKind.FieldTypeSpecification;
 
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         maybeReadFieldTypeSpecification.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -2445,7 +2445,7 @@ export async function readListType(
     parser: Parser,
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.ListType> {
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readListType.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readListType.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -2473,7 +2473,7 @@ export async function readFunctionType(
 ): Promise<Ast.FunctionType> {
     const nodeKind: Ast.NodeKind.FunctionType = Ast.NodeKind.FunctionType;
 
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readFunctionType.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFunctionType.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -2514,9 +2514,9 @@ async function tryReadPrimaryType(
     maybeCorrelationId: number | undefined,
 ): Promise<TriedReadPrimaryType> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         tryReadPrimaryType.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -2567,9 +2567,9 @@ export async function readParameterSpecificationList(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.IParameterList<Ast.AsType>> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readParameterSpecificationList.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -2594,7 +2594,7 @@ export async function readNullableType(
     parser: Parser,
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.NullableType> {
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readNullableType.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readNullableType.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -2623,9 +2623,9 @@ export async function readErrorRaisingExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.ErrorRaisingExpression> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readErrorRaisingExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -2658,9 +2658,9 @@ export async function readErrorHandlingExpression(
     const nodeKind: Ast.NodeKind.ErrorHandlingExpression = Ast.NodeKind.ErrorHandlingExpression;
 
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readErrorHandlingExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -2720,9 +2720,9 @@ export async function readRecordLiteral(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.RecordLiteral> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readRecordLiteral.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -2779,9 +2779,9 @@ export async function readFieldNamePairedAnyLiterals(
     testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
 ): Promise<Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readFieldNamePairedAnyLiterals.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -2818,7 +2818,7 @@ export async function readListLiteral(
     parser: Parser,
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.ListLiteral> {
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readListLiteral.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readListLiteral.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -2863,7 +2863,7 @@ export async function readAnyLiteral(
     parser: Parser,
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.TAnyLiteral> {
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readAnyLiteral.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readAnyLiteral.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -2890,9 +2890,9 @@ export async function readPrimitiveType(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.PrimitiveType> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readPrimitiveType.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -2927,9 +2927,9 @@ async function tryReadPrimitiveType(
     const nodeKind: Ast.NodeKind.PrimitiveType = Ast.NodeKind.PrimitiveType;
 
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         tryReadPrimitiveType.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -3050,9 +3050,9 @@ export async function readIdentifierPairedExpressions(
     testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
 ): Promise<Ast.ICsvArray<Ast.IdentifierPairedExpression>> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readIdentifierPairedExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -3081,9 +3081,9 @@ export async function readGeneralizedIdentifierPairedExpressions(
     testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
 ): Promise<Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression>> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readGeneralizedIdentifierPairedExpressions.name,
+        maybeCorrelationId,
     );
 
     state.maybeCancellationToken?.throwIfCancelled();
@@ -3107,9 +3107,9 @@ export async function readGeneralizedIdentifierPairedExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.GeneralizedIdentifierPairedExpression> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readGeneralizedIdentifierPairedExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -3140,9 +3140,9 @@ export async function readIdentifierPairedExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.IdentifierPairedExpression> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readIdentifierPairedExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -3191,9 +3191,9 @@ async function recursiveReadBinOpExpression<
     rightReader: () => Promise<Right>,
 ): Promise<Left | Ast.IBinOpExpression<Kind, Left, Op, Right>> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         recursiveReadBinOpExpression.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -3263,9 +3263,9 @@ async function recursiveReadBinOpExpressionHelper<
     rightReader: () => Promise<Right>,
 ): Promise<Right | Ast.IBinOpExpression<Kind, Right, OperatorKind, Right>> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         recursiveReadBinOpExpressionHelper.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -3331,7 +3331,7 @@ async function readCsvArray<T extends Ast.TCsvType>(
 ): Promise<Ast.TCsvArray & Ast.ICsvArray<T>> {
     const nodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
 
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readCsvArray.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readCsvArray.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -3403,7 +3403,7 @@ async function readKeyValuePair<Kind extends Ast.TKeyValuePairNodeKind, Key, Val
 ): Promise<Ast.IKeyValuePair<Kind, Key, Value>> {
     ParseStateUtils.startContext(state, nodeKind);
 
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readKeyValuePair.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readKeyValuePair.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -3445,9 +3445,9 @@ async function readPairedConstant<
     pairedReader: () => Promise<Paired>,
 ): Promise<Ast.IPairedConstant<Kind, ConstantKind, Paired>> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readPairedConstant.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -3485,9 +3485,9 @@ async function maybeReadPairedConstant<
     pairedReader: () => Promise<Paired>,
 ): Promise<Ast.IPairedConstant<Kind, ConstantKind, Paired> | undefined> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         maybeReadPairedConstant.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -3525,9 +3525,9 @@ async function genericReadParameterList<T extends Ast.TParameterType>(
     const nodeKind: Ast.NodeKind.ParameterList = Ast.NodeKind.ParameterList;
 
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         genericReadParameterList.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -3678,7 +3678,7 @@ async function readWrapped<
     closeConstantReader: () => Ast.IConstant<Close>,
     allowOptionalConstant: boolean,
 ): Promise<WrappedRead<Kind, Open, Content, Close>> {
-    const trace: Trace = state.traceManager.entry(maybeCorrelationId, NaiveTraceConstant.Parse, readWrapped.name, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readWrapped.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -3755,9 +3755,9 @@ export function readTokenKindAsConstant<ConstantKind extends Constant.TConstant>
     constantKind: ConstantKind,
 ): Ast.TConstant & Ast.IConstant<ConstantKind> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         NaiveTraceConstant.Parse,
         readTokenKindAsConstant.name,
+        maybeCorrelationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },

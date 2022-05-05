@@ -98,9 +98,9 @@ async function readBinOpExpression(
     nodeKind: Ast.NodeKind,
 ): Promise<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         CombinatorialTraceConstant.CombinatorialParse,
         readBinOpExpression.name,
+        maybeCorrelationId,
     );
 
     state.maybeCancellationToken?.throwIfCancelled();
@@ -323,9 +323,9 @@ async function readUnaryExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Ast.TUnaryExpression> {
     const trace: Trace = state.traceManager.entry(
-        maybeCorrelationId,
         CombinatorialTraceConstant.CombinatorialParse,
         readUnaryExpression.name,
+        maybeCorrelationId,
     );
 
     state.maybeCancellationToken?.throwIfCancelled();

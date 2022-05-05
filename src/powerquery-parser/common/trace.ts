@@ -62,8 +62,8 @@ export abstract class TraceManager {
 
     // Creates a new Trace instance and call its entry method.
     // Traces should be created at the start of a function, and further calls are made on Trace instance.
-    public entry(maybeCorrelationId: number | undefined, phase: string, task: string, maybeDetails?: object): Trace {
-        return this.create(maybeCorrelationId, phase, task, maybeDetails);
+    public entry(phase: string, task: string, maybeCorrelationId: number | undefined, maybeDetails?: object): Trace {
+        return this.create(phase, task, maybeCorrelationId, maybeDetails);
     }
 
     // Defaults to simple concatenation.
@@ -77,12 +77,12 @@ export abstract class TraceManager {
     // Subclass this when the TraceManager needs a different subclass of Trace.
     // Eg. BenchmarkTraceManager returns a BenchmarkTrace instance.
     protected create(
-        maybeCorrelationId: number | undefined,
         phase: string,
         task: string,
+        maybeCorrelationId: number | undefined,
         maybeDetails?: object,
     ): Trace {
-        return new Trace(this.emit.bind(this), maybeCorrelationId, phase, task, this.createIdFn(), maybeDetails);
+        return new Trace(this.emit.bind(this), phase, task, this.createIdFn(), maybeCorrelationId, maybeDetails);
     }
 
     // Copied signature from `JSON.stringify`.
@@ -119,17 +119,17 @@ export class BenchmarkTraceManager extends ReportTraceManager {
     }
 
     protected override create(
-        maybeCorrelationId: number | undefined,
         phase: string,
         task: string,
+        maybeCorrelationId: number | undefined,
         maybeDetails?: object,
     ): BenchmarkTrace {
         return new BenchmarkTrace(
             this.emit.bind(this),
-            maybeCorrelationId,
             phase,
             task,
             this.createIdFn(),
+            maybeCorrelationId,
             maybeDetails,
         );
     }
@@ -141,22 +141,22 @@ export class NoOpTraceManager extends TraceManager {
     emit(_tracer: Trace, _message: string, _maybeDetails?: object): void {}
 
     protected override create(
-        maybeCorrelationId: number | undefined,
         phase: string,
         task: string,
+        maybeCorrelationId: number | undefined,
         maybeDetails?: object,
     ): Trace {
-        return new NoOpTrace(this.emit.bind(this), maybeCorrelationId, phase, task, this.createIdFn(), maybeDetails);
+        return new NoOpTrace(this.emit.bind(this), phase, task, this.createIdFn(), maybeCorrelationId, maybeDetails);
     }
 }
 
 export class Trace {
     constructor(
         protected readonly emitTraceFn: (trace: Trace, message: string, maybeDetails?: object) => void,
-        public readonly maybeCorrelationId: number | undefined,
         public readonly phase: string,
         public readonly task: string,
         public readonly id: number,
+        public readonly maybeCorrelationId: number | undefined,
         maybeDetails?: object,
     ) {
         this.entry(maybeDetails);
@@ -181,13 +181,13 @@ export class BenchmarkTrace extends Trace {
 
     constructor(
         emitTraceFn: (trace: Trace, message: string, maybeDetails?: object) => void,
-        maybeCorrelationId: number | undefined,
         phase: string,
         task: string,
         id: number,
+        maybeCorrelationId: number | undefined,
         maybeDetails?: object,
     ) {
-        super(emitTraceFn, maybeCorrelationId, phase, task, id, maybeDetails);
+        super(emitTraceFn, phase, task, id, maybeCorrelationId, maybeDetails);
     }
 
     public override trace(message: string, maybeDetails?: object): void {
@@ -195,8 +195,8 @@ export class BenchmarkTrace extends Trace {
 
         super.trace(message, {
             ...maybeDetails,
+            ...(message === TraceConstant.Entry ? { [TraceConstant.CorrelationId]: this.maybeCorrelationId } : {}),
             [TraceConstant.TimeNow]: timeNow,
-            [TraceConstant.CorrelationId]: this.maybeCorrelationId,
         });
     }
 }
