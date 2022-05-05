@@ -5,7 +5,7 @@
 import performanceNow = require("performance-now");
 
 // maybeCorrelationId:
-//      May be undefined. If turhty it should be a previously generated 'id' number.
+//      Can be undefined. If truthy then it refers to a previously generated 'id' number.
 //      Used to track execution flow.
 // phase:
 //      Static string.
@@ -48,7 +48,6 @@ export const enum TraceConstant {
     IsThrowing = "IsThrowing",
     Length = "Length",
     Result = "Result",
-    TimeDelta = "TimeDelta",
     TimeEnd = "TimeEnd",
     TimeNow = "TimeNow",
     TimeStart = "TimeStart",
@@ -176,8 +175,7 @@ export class Trace {
     }
 }
 
-// Tracing entries add the current time to its details field,
-// and calculates the duration between the BenchmarkTrace's creation and now.
+// Tracing entries add the current time to its details field.
 export class BenchmarkTrace extends Trace {
     protected readonly timeStart: number = performanceNow();
 
@@ -198,7 +196,6 @@ export class BenchmarkTrace extends Trace {
         super.trace(message, {
             ...maybeDetails,
             [TraceConstant.TimeNow]: timeNow,
-            [TraceConstant.TimeDelta]: timeNow - this.timeStart,
         });
     }
 }

@@ -131,6 +131,7 @@ describe("Parser.AbridgedNode", () => {
             const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(
                 customSettings,
                 "(a as number, optional b as text)",
+                undefined,
             );
 
             TaskUtils.assertIsParseStageOk(triedLexParseTask);

@@ -1087,6 +1087,8 @@ export async function readRecursivePrimaryExpression(
 
     // Recalculate ids after shuffling things around.
     const newNodeIdByOldNodeId: Map<number, number> = NodeIdMapUtils.recalculateIds(
+        state.traceManager,
+        trace.id,
         nodeIdMapCollection,
         NodeIdMapUtils.assertGetXor(
             nodeIdMapCollection,
@@ -1094,7 +1096,7 @@ export async function readRecursivePrimaryExpression(
         ),
     );
 
-    NodeIdMapUtils.updateNodeIds(nodeIdMapCollection, newNodeIdByOldNodeId);
+    NodeIdMapUtils.updateNodeIds(state.traceManager, trace.id, nodeIdMapCollection, newNodeIdByOldNodeId);
 
     // Begin normal parsing.
     const recursiveArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;

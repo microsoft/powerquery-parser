@@ -226,7 +226,7 @@ describe("idUtils", () => {
             parentIdById: [],
         };
 
-        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
+        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text, undefined);
         await expectLinksMatch(triedLexParse, expected);
     });
 
@@ -254,7 +254,7 @@ describe("idUtils", () => {
             ],
         };
 
-        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
+        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text, undefined);
         await expectLinksMatch(triedLexParse, expected);
     });
 
@@ -278,7 +278,7 @@ describe("idUtils", () => {
             ],
         };
 
-        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
+        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text, undefined);
         await expectLinksMatch(triedLexParse, expected);
     });
 
@@ -314,7 +314,7 @@ describe("idUtils", () => {
             ],
         };
 
-        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
+        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text, undefined);
         await expectLinksMatch(triedLexParse, expected);
     });
 });
