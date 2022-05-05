@@ -23,11 +23,17 @@ import { ParseError } from "..";
 export async function readAmbiguous<T extends Ast.TNode>(
     state: ParseState,
     parser: Parser,
-    parseFns: ReadonlyArray<(state: ParseState, parser: Parser) => Promise<T>>,
+    maybeCorrelationId: number | undefined,
+    parseFns: ReadonlyArray<(state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) => Promise<T>>,
 ): Promise<AmbiguousParse<T>> {
-    const trace: Trace = state.traceManager.entry(DisambiguationTraceConstant.Disambiguation, readAmbiguous.name, {
-        [TraceConstant.Length]: parseFns.length,
-    });
+    const trace: Trace = state.traceManager.entry(
+        maybeCorrelationId,
+        DisambiguationTraceConstant.Disambiguation,
+        readAmbiguous.name,
+        {
+            [TraceConstant.Length]: parseFns.length,
+        },
+    );
 
     ArrayUtils.assertNonZeroLength(parseFns, "requires at least one parse function");
 
@@ -42,7 +48,7 @@ export async function readAmbiguous<T extends Ast.TNode>(
 
         try {
             // eslint-disable-next-line no-await-in-loop
-            maybeNode = await parseFn(variantState, parser);
+            maybeNode = await parseFn(variantState, parser, trace.id);
             variantResult = ResultUtils.boxOk(maybeNode);
         } catch (error) {
             if (!ParseError.isTInnerParseError(error)) {
@@ -70,15 +76,21 @@ export async function readAmbiguous<T extends Ast.TNode>(
 export async function readAmbiguousBracket(
     state: ParseState,
     parser: Parser,
+    maybeCorrelationId: number | undefined,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
 ): Promise<TAmbiguousBracketNode> {
     const trace: Trace = state.traceManager.entry(
+        maybeCorrelationId,
         DisambiguationTraceConstant.Disambiguation,
         readAmbiguousBracket.name,
     );
 
     // We might be able to peek at tokens to disambiguate what bracketed expression is next.
-    const maybeDisambiguation: BracketDisambiguation | undefined = maybeDisambiguateBracket(state, allowedVariants);
+    const maybeDisambiguation: BracketDisambiguation | undefined = maybeDisambiguateBracket(
+        state,
+        trace.id,
+        allowedVariants,
+    );
 
     // Peeking gave us a concrete answer as to what's next.
     let ambiguousBracket: TAmbiguousBracketNode;
@@ -88,15 +100,15 @@ export async function readAmbiguousBracket(
 
         switch (disambiguation) {
             case BracketDisambiguation.FieldProjection:
-                ambiguousBracket = await parser.readFieldProjection(state, parser);
+                ambiguousBracket = await parser.readFieldProjection(state, parser, trace.id);
                 break;
 
             case BracketDisambiguation.FieldSelection:
-                ambiguousBracket = await parser.readFieldSelection(state, parser);
+                ambiguousBracket = await parser.readFieldSelection(state, parser, trace.id);
                 break;
 
             case BracketDisambiguation.RecordExpression:
-                ambiguousBracket = await parser.readRecordExpression(state, parser);
+                ambiguousBracket = await parser.readRecordExpression(state, parser, trace.id);
                 break;
 
             default:
@@ -112,7 +124,7 @@ export async function readAmbiguousBracket(
                 throw ParseStateUtils.unterminatedBracketError(state);
 
             case DismabiguationBehavior.Thorough:
-                ambiguousBracket = await thoroughReadAmbiguousBracket(state, parser, allowedVariants);
+                ambiguousBracket = await thoroughReadAmbiguousBracket(state, parser, trace.id, allowedVariants);
                 break;
 
             default:
@@ -126,8 +138,13 @@ export async function readAmbiguousBracket(
 }
 
 // Peeks at the token stream and either performs an explicit read or an ambiguous read.
-export async function readAmbiguousParenthesis(state: ParseState, parser: Parser): Promise<TAmbiguousParenthesisNode> {
+export async function readAmbiguousParenthesis(
+    state: ParseState,
+    parser: Parser,
+    maybeCorrelationId: number | undefined,
+): Promise<TAmbiguousParenthesisNode> {
     const trace: Trace = state.traceManager.entry(
+        maybeCorrelationId,
         DisambiguationTraceConstant.Disambiguation,
         readAmbiguousParenthesis.name,
     );
@@ -136,6 +153,7 @@ export async function readAmbiguousParenthesis(state: ParseState, parser: Parser
     const maybeDisambiguation: ParenthesisDisambiguation | undefined = await maybeDisambiguateParenthesis(
         state,
         parser,
+        trace.id,
     );
 
     // Peeking gave us a concrete answer as to what's next.
@@ -146,11 +164,11 @@ export async function readAmbiguousParenthesis(state: ParseState, parser: Parser
 
         switch (disambiguation) {
             case ParenthesisDisambiguation.FunctionExpression:
-                ambiguousParenthesis = await parser.readFunctionExpression(state, parser);
+                ambiguousParenthesis = await parser.readFunctionExpression(state, parser, trace.id);
                 break;
 
             case ParenthesisDisambiguation.ParenthesizedExpression:
-                ambiguousParenthesis = await readParenthesizedExpressionOrBinOpExpression(state, parser);
+                ambiguousParenthesis = await readParenthesizedExpressionOrBinOpExpression(state, parser, trace.id);
                 break;
 
             default:
@@ -166,7 +184,7 @@ export async function readAmbiguousParenthesis(state: ParseState, parser: Parser
                 throw ParseStateUtils.unterminatedParenthesesError(state);
 
             case DismabiguationBehavior.Thorough:
-                ambiguousParenthesis = await thoroughReadAmbiguousParenthesis(state, parser);
+                ambiguousParenthesis = await thoroughReadAmbiguousParenthesis(state, parser, trace.id);
                 break;
 
             default:
@@ -185,8 +203,10 @@ export async function readAmbiguousParenthesis(state: ParseState, parser: Parser
 export async function maybeDisambiguateParenthesis(
     state: ParseState,
     parser: Parser,
+    maybeCorrelationId: number | undefined,
 ): Promise<ParenthesisDisambiguation | undefined> {
     const trace: Trace = state.traceManager.entry(
+        maybeCorrelationId,
         DisambiguationTraceConstant.Disambiguation,
         maybeDisambiguateParenthesis.name,
     );
@@ -218,7 +238,7 @@ export async function maybeDisambiguateParenthesis(
 
                 try {
                     // eslint-disable-next-line no-await-in-loop
-                    await parser.readNullablePrimitiveType(state, parser);
+                    await parser.readNullablePrimitiveType(state, parser, trace.id);
                 } catch {
                     // eslint-disable-next-line no-await-in-loop
                     await parser.restoreCheckpoint(state, checkpoint);
@@ -261,9 +281,11 @@ export async function maybeDisambiguateParenthesis(
 
 export function maybeDisambiguateBracket(
     state: ParseState,
+    maybeCorrelationId: number | undefined,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
 ): BracketDisambiguation | undefined {
     const trace: Trace = state.traceManager.entry(
+        maybeCorrelationId,
         DisambiguationTraceConstant.Disambiguation,
         maybeDisambiguateBracket.name,
     );
@@ -319,9 +341,11 @@ const enum DisambiguationTraceConstant {
 async function thoroughReadAmbiguousBracket(
     state: ParseState,
     parser: Parser,
+    maybeCorrelationId: number | undefined,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
 ): Promise<TAmbiguousBracketNode> {
     const trace: Trace = state.traceManager.entry(
+        maybeCorrelationId,
         DisambiguationTraceConstant.Disambiguation,
         readAmbiguousBracket.name,
     );
@@ -329,6 +353,7 @@ async function thoroughReadAmbiguousBracket(
     const ambiguousBracket: TAmbiguousBracketNode = await thoroughReadAmbiguous(
         state,
         parser,
+        trace.id,
         bracketDisambiguationParseFunctions(parser, allowedVariants),
     );
 
@@ -340,8 +365,12 @@ async function thoroughReadAmbiguousBracket(
 // Copy the current state and attempt to read for each of the following:
 //  FunctionExpression, ParenthesisExpression.
 // Mutates the given state with the read attempt which matched the most tokens.
-async function thoroughReadAmbiguousParenthesis(state: ParseState, parser: Parser): Promise<TAmbiguousParenthesisNode> {
-    return await thoroughReadAmbiguous<TAmbiguousParenthesisNode>(state, parser, [
+async function thoroughReadAmbiguousParenthesis(
+    state: ParseState,
+    parser: Parser,
+    maybeCorrelationId: number | undefined,
+): Promise<TAmbiguousParenthesisNode> {
+    return await thoroughReadAmbiguous<TAmbiguousParenthesisNode>(state, parser, maybeCorrelationId, [
         parser.readFunctionExpression,
         readParenthesizedExpressionOrBinOpExpression,
     ]);
@@ -350,9 +379,11 @@ async function thoroughReadAmbiguousParenthesis(state: ParseState, parser: Parse
 async function thoroughReadAmbiguous<T extends TAmbiguousBracketNode | TAmbiguousParenthesisNode>(
     state: ParseState,
     parser: Parser,
-    parseFns: ReadonlyArray<(state: ParseState, parser: Parser) => Promise<T>>,
+    maybeCorrelationId: number | undefined,
+    parseFns: ReadonlyArray<(state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) => Promise<T>>,
 ): Promise<T> {
     const trace: Trace = state.traceManager.entry(
+        maybeCorrelationId,
         DisambiguationTraceConstant.Disambiguation,
         thoroughReadAmbiguous.name,
         {
@@ -360,7 +391,7 @@ async function thoroughReadAmbiguous<T extends TAmbiguousBracketNode | TAmbiguou
         },
     );
 
-    const ambiguousParse: AmbiguousParse<T> = await readAmbiguous(state, parser, parseFns);
+    const ambiguousParse: AmbiguousParse<T> = await readAmbiguous(state, parser, trace.id, parseFns);
 
     await parser.applyState(state, ambiguousParse.parseState);
 
@@ -388,7 +419,9 @@ async function thoroughReadAmbiguous<T extends TAmbiguousBracketNode | TAmbiguou
 function bracketDisambiguationParseFunctions(
     parser: Parser,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
-): ReadonlyArray<(state: ParseState, parser: Parser) => Promise<TAmbiguousBracketNode>> {
+): ReadonlyArray<
+    (state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) => Promise<TAmbiguousBracketNode>
+> {
     return allowedVariants.map((bracketDisambiguation: BracketDisambiguation) => {
         switch (bracketDisambiguation) {
             case BracketDisambiguation.FieldProjection:
@@ -412,8 +445,15 @@ function bracketDisambiguationParseFunctions(
 async function readParenthesizedExpressionOrBinOpExpression(
     state: ParseState,
     parser: Parser,
+    maybeCorrelationId: number | undefined,
 ): Promise<Ast.ParenthesizedExpression | Ast.TLogicalExpression> {
-    const node: Ast.TNode = await parser.readLogicalExpression(state, parser);
+    const trace: Trace = state.traceManager.entry(
+        maybeCorrelationId,
+        DisambiguationTraceConstant.Disambiguation,
+        readParenthesizedExpressionOrBinOpExpression.name,
+    );
+
+    const node: Ast.TNode = await parser.readLogicalExpression(state, parser, trace.id);
 
     const leftMostNode: Ast.TNode = NodeIdMapUtils.assertUnboxLeftMostLeaf(
         state.contextState.nodeIdMapCollection,
@@ -427,6 +467,8 @@ async function readParenthesizedExpressionOrBinOpExpression(
             leftMostNode.constantKind === Constant.WrapperConstant.LeftParenthesis,
         `leftMostNode should be a ${Ast.NodeKind.Constant} with a constantKind of ${Constant.WrapperConstant.LeftParenthesis}`,
     );
+
+    trace.exit();
 
     return node;
 }

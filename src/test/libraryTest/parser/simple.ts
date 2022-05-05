@@ -43,6 +43,7 @@ async function collectAbridgeNodeFromAst(text: string): Promise<ReadonlyArray<Ab
         AbridgedNode[]
     >(
         state,
+        undefined,
         lexParseOk.nodeIdMapCollection,
         lexParseOk.ast,
         Traverse.VisitNodeStrategy.BreadthFirst,
@@ -78,6 +79,7 @@ async function assertGetNthNodeOfKind<N extends Language.Ast.TNode>(
         Language.Ast.TNode | undefined
     >(
         state,
+        undefined,
         parseTaskOk.nodeIdMapCollection,
         parseTaskOk.ast,
         Traverse.VisitNodeStrategy.BreadthFirst,

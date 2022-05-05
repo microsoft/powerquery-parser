@@ -88,6 +88,7 @@ async function expectLinksMatch(
 
     const triedTraverse: Traverse.TriedTraverse<undefined> = await Traverse.tryTraverseXor(
         traverseState,
+        undefined,
         triedLexParse.nodeIdMapCollection,
         xorNode,
         Traverse.VisitNodeStrategy.BreadthFirst,

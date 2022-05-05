@@ -40,6 +40,7 @@ export interface ITraversalState<T> extends Pick<Settings, "locale" | "maybeCanc
 // sets Node and NodesById for tryTraverse
 export function tryTraverseAst<State extends ITraversalState<ResultType>, ResultType>(
     state: State,
+    maybeCorrelationId: number | undefined,
     nodeIdMapCollection: NodeIdMap.Collection,
     root: Ast.TNode,
     strategy: VisitNodeStrategy,
@@ -49,6 +50,7 @@ export function tryTraverseAst<State extends ITraversalState<ResultType>, Result
 ): Promise<TriedTraverse<ResultType>> {
     return tryTraverse<State, ResultType, Ast.TNode, NodeIdMap.Collection>(
         state,
+        maybeCorrelationId,
         nodeIdMapCollection,
         root,
         strategy,
@@ -61,6 +63,7 @@ export function tryTraverseAst<State extends ITraversalState<ResultType>, Result
 // sets Node and NodesById for tryTraverse
 export function tryTraverseXor<State extends ITraversalState<ResultType>, ResultType>(
     state: State,
+    maybeCorrelationId: number | undefined,
     nodeIdMapCollection: NodeIdMap.Collection,
     root: TXorNode,
     strategy: VisitNodeStrategy,
@@ -70,6 +73,7 @@ export function tryTraverseXor<State extends ITraversalState<ResultType>, Result
 ): Promise<TriedTraverse<ResultType>> {
     return tryTraverse<State, ResultType, TXorNode, NodeIdMap.Collection>(
         state,
+        maybeCorrelationId,
         nodeIdMapCollection,
         root,
         strategy,
@@ -81,6 +85,7 @@ export function tryTraverseXor<State extends ITraversalState<ResultType>, Result
 
 export function tryTraverse<State extends ITraversalState<ResultType>, ResultType, Node, NodesById>(
     state: State,
+    maybeCorrelationId: number | undefined,
     nodesById: NodesById,
     root: Node,
     strategy: VisitNodeStrategy,
@@ -91,6 +96,7 @@ export function tryTraverse<State extends ITraversalState<ResultType>, ResultTyp
     return ResultUtils.ensureResultAsync(state.locale, async () => {
         await traverseRecursion<State, ResultType, Node, NodesById>(
             state,
+            maybeCorrelationId,
             nodesById,
             root,
             strategy,
@@ -178,6 +184,7 @@ export function maybeExpandXorParent<T>(
 
 async function traverseRecursion<State extends ITraversalState<ResultType>, ResultType, Node, NodesById>(
     state: State,
+    maybeCorrelationId: number | undefined,
     nodesById: NodesById,
     node: Node,
     strategy: VisitNodeStrategy,
@@ -185,7 +192,7 @@ async function traverseRecursion<State extends ITraversalState<ResultType>, Resu
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
     maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
 ): Promise<void> {
-    const trace: Trace = state.traceManager.entry("Traversal", traverseRecursion.name);
+    const trace: Trace = state.traceManager.entry(maybeCorrelationId, "Traversal", traverseRecursion.name);
     state.maybeCancellationToken?.throwIfCancelled();
 
     if (maybeEarlyExitFn && (await maybeEarlyExitFn(state, node))) {
@@ -196,7 +203,16 @@ async function traverseRecursion<State extends ITraversalState<ResultType>, Resu
 
     for (const child of await expandNodesFn(state, node, nodesById)) {
         // eslint-disable-next-line no-await-in-loop
-        await traverseRecursion(state, nodesById, child, strategy, visitNodeFn, expandNodesFn, maybeEarlyExitFn);
+        await traverseRecursion(
+            state,
+            trace.id,
+            nodesById,
+            child,
+            strategy,
+            visitNodeFn,
+            expandNodesFn,
+            maybeEarlyExitFn,
+        );
     }
 
     if (strategy === VisitNodeStrategy.DepthFirst) {

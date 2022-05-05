@@ -4,6 +4,9 @@
 // tslint:disable-next-line: no-require-imports
 import performanceNow = require("performance-now");
 
+// maybeCorrelationId:
+//      May be undefined. If turhty it should be a previously generated 'id' number.
+//      Used to track execution flow.
 // phase:
 //      Static string.
 //      Examples: 'Lex', 'Parse', 'StaticAnalysis'
@@ -12,9 +15,8 @@ import performanceNow = require("performance-now");
 //      Something that falls under the given phase. Recommended to be the name of a function.
 //      Examples: 'readNumericLiteral' for the phase 'Lex', or 'parseRecord' for the phase 'Parse'.
 // id:
-//      Dynamic string.
-//      Used to guarantee uniqueness, defaults to an auto incrementing integer.
-//      If we ever run into an integer overflow issue then we could look into a GUID generating library.
+//      Dynamic number.
+//      Used to help identify uniqueness. Auto incrementing integer.
 // message:
 //      Static string.
 //      Identifies what portion of a task you're in.
@@ -53,7 +55,7 @@ export const enum TraceConstant {
 }
 
 export abstract class TraceManager {
-    protected readonly createIdFn: () => string = createAutoIncrementId();
+    protected readonly createIdFn: () => number = createAutoIncrementId();
 
     constructor(protected readonly valueDelimiter: string = ",", protected readonly newline: "\n" | "\r\n" = "\r\n") {}
 
@@ -61,8 +63,8 @@ export abstract class TraceManager {
 
     // Creates a new Trace instance and call its entry method.
     // Traces should be created at the start of a function, and further calls are made on Trace instance.
-    public entry(phase: string, task: string, maybeDetails?: object): Trace {
-        return this.create(phase, task, maybeDetails);
+    public entry(maybeCorrelationId: number | undefined, phase: string, task: string, maybeDetails?: object): Trace {
+        return this.create(maybeCorrelationId, phase, task, maybeDetails);
     }
 
     // Defaults to simple concatenation.
@@ -75,8 +77,13 @@ export abstract class TraceManager {
     // The return to the TraceManager.start function.
     // Subclass this when the TraceManager needs a different subclass of Trace.
     // Eg. BenchmarkTraceManager returns a BenchmarkTrace instance.
-    protected create(phase: string, task: string, maybeDetails?: object): Trace {
-        return new Trace(this.emit.bind(this), phase, task, this.createIdFn(), maybeDetails);
+    protected create(
+        maybeCorrelationId: number | undefined,
+        phase: string,
+        task: string,
+        maybeDetails?: object,
+    ): Trace {
+        return new Trace(this.emit.bind(this), maybeCorrelationId, phase, task, this.createIdFn(), maybeDetails);
     }
 
     // Copied signature from `JSON.stringify`.
@@ -112,8 +119,20 @@ export class BenchmarkTraceManager extends ReportTraceManager {
         super(outputFn, valueDelimiter);
     }
 
-    protected override create(phase: string, task: string, maybeDetails?: object): BenchmarkTrace {
-        return new BenchmarkTrace(this.emit.bind(this), phase, task, this.createIdFn(), maybeDetails);
+    protected override create(
+        maybeCorrelationId: number | undefined,
+        phase: string,
+        task: string,
+        maybeDetails?: object,
+    ): BenchmarkTrace {
+        return new BenchmarkTrace(
+            this.emit.bind(this),
+            maybeCorrelationId,
+            phase,
+            task,
+            this.createIdFn(),
+            maybeDetails,
+        );
     }
 }
 
@@ -122,17 +141,23 @@ export class NoOpTraceManager extends TraceManager {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     emit(_tracer: Trace, _message: string, _maybeDetails?: object): void {}
 
-    protected override create(phase: string, task: string, maybeDetails?: object): Trace {
-        return new NoOpTrace(this.emit.bind(this), phase, task, this.createIdFn(), maybeDetails);
+    protected override create(
+        maybeCorrelationId: number | undefined,
+        phase: string,
+        task: string,
+        maybeDetails?: object,
+    ): Trace {
+        return new NoOpTrace(this.emit.bind(this), maybeCorrelationId, phase, task, this.createIdFn(), maybeDetails);
     }
 }
 
 export class Trace {
     constructor(
         protected readonly emitTraceFn: (trace: Trace, message: string, maybeDetails?: object) => void,
+        public readonly maybeCorrelationId: number | undefined,
         public readonly phase: string,
         public readonly task: string,
-        public readonly id: string,
+        public readonly id: number,
         maybeDetails?: object,
     ) {
         this.entry(maybeDetails);
@@ -158,12 +183,13 @@ export class BenchmarkTrace extends Trace {
 
     constructor(
         emitTraceFn: (trace: Trace, message: string, maybeDetails?: object) => void,
+        maybeCorrelationId: number | undefined,
         phase: string,
         task: string,
-        id: string,
+        id: number,
         maybeDetails?: object,
     ) {
-        super(emitTraceFn, phase, task, id, maybeDetails);
+        super(emitTraceFn, maybeCorrelationId, phase, task, id, maybeDetails);
     }
 
     public override trace(message: string, maybeDetails?: object): void {
@@ -182,12 +208,12 @@ export class NoOpTrace extends Trace {
     public override trace(_message: string, _maybeDetails?: object): void {}
 }
 
-function createAutoIncrementId(): () => string {
+function createAutoIncrementId(): () => number {
     let counter: number = 0;
 
-    return (): string => {
+    return (): number => {
         counter += 1;
 
-        return counter.toString();
+        return counter;
     };
 }
