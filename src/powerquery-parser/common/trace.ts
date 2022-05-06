@@ -4,9 +4,6 @@
 // tslint:disable-next-line: no-require-imports
 import performanceNow = require("performance-now");
 
-// maybeCorrelationId:
-//      Can be undefined. If truthy then it refers to a previously generated 'id' number.
-//      Used to track execution flow.
 // phase:
 //      Static string.
 //      Examples: 'Lex', 'Parse', 'StaticAnalysis'
@@ -17,6 +14,9 @@ import performanceNow = require("performance-now");
 // id:
 //      Dynamic number.
 //      Used to help identify uniqueness. Auto incrementing integer.
+// maybeCorrelationId:
+//      Can be undefined. If truthy then it refers to a previously generated 'id' number.
+//      Used to track execution flow.
 // message:
 //      Static string.
 //      Identifies what portion of a task you're in.
