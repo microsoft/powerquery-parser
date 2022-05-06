@@ -18,6 +18,7 @@ import {
 } from "./task";
 import { ParserUtils, ParseState } from "../parser";
 import { Ast } from "../language";
+import { Trace } from "../common/trace";
 
 export function assertIsError(task: TTask): asserts task is LexTaskError | ParseTaskCommonError | ParseTaskParseError {
     if (!isError(task)) {
@@ -190,12 +191,8 @@ export function tryLex(settings: LexSettings, text: string): TriedLexTask {
     }
 }
 
-export async function tryParse(
-    settings: ParseSettings,
-    lexerSnapshot: Lexer.LexerSnapshot,
-    maybeCorrelationId: number | undefined,
-): Promise<TriedParseTask> {
-    const triedParse: Parser.TriedParse = await ParserUtils.tryParse(settings, lexerSnapshot, maybeCorrelationId);
+export async function tryParse(settings: ParseSettings, lexerSnapshot: Lexer.LexerSnapshot): Promise<TriedParseTask> {
+    const triedParse: Parser.TriedParse = await ParserUtils.tryParse(settings, lexerSnapshot);
 
     if (ResultUtils.isOk(triedParse)) {
         return createParseTaskOk(lexerSnapshot, triedParse.value.root, triedParse.value.state);
@@ -206,12 +203,20 @@ export async function tryParse(
     }
 }
 
-export async function tryLexParse(
-    settings: LexSettings & ParseSettings,
-    text: string,
-    maybeCorrelationId: number | undefined,
-): Promise<TriedLexParseTask> {
-    const triedLexTask: TriedLexTask = tryLex(settings, text);
+export async function tryLexParse(settings: LexSettings & ParseSettings, text: string): Promise<TriedLexParseTask> {
+    const trace: Trace = settings.traceManager.entry(
+        TaskUtilsTraceConstant.LexParse,
+        tryLexParse.name,
+        settings.maybeInitialCorrelationId,
+    );
+
+    const triedLexTask: TriedLexTask = tryLex(
+        {
+            ...settings,
+            maybeInitialCorrelationId: trace.id,
+        },
+        text,
+    );
 
     if (triedLexTask.resultKind === ResultKind.Error) {
         return triedLexTask;
@@ -219,7 +224,21 @@ export async function tryLexParse(
 
     const lexerSnapshot: Lexer.LexerSnapshot = triedLexTask.lexerSnapshot;
 
-    return await tryParse(settings, lexerSnapshot, maybeCorrelationId);
+    const result: TriedLexParseTask = await tryParse(
+        {
+            ...settings,
+            maybeInitialCorrelationId: trace.id,
+        },
+        lexerSnapshot,
+    );
+
+    trace.exit();
+
+    return result;
+}
+
+const enum TaskUtilsTraceConstant {
+    LexParse = "LexParse",
 }
 
 function createLexTaskOk(lexerSnapshot: Lexer.LexerSnapshot): LexTaskOk {

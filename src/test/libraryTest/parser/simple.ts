@@ -35,6 +35,7 @@ async function collectAbridgeNodeFromAst(text: string): Promise<ReadonlyArray<Ab
         locale: DefaultLocale,
         result: [],
         maybeCancellationToken: undefined,
+        maybeInitialCorrelationId: undefined,
         traceManager: new NoOpTraceManager(),
     };
 
@@ -43,7 +44,6 @@ async function collectAbridgeNodeFromAst(text: string): Promise<ReadonlyArray<Ab
         AbridgedNode[]
     >(
         state,
-        undefined,
         lexParseOk.nodeIdMapCollection,
         lexParseOk.ast,
         Traverse.VisitNodeStrategy.BreadthFirst,
@@ -71,6 +71,7 @@ async function assertGetNthNodeOfKind<N extends Language.Ast.TNode>(
         nthCounter: 0,
         nthRequired,
         maybeCancellationToken: undefined,
+        maybeInitialCorrelationId: undefined,
         traceManager: new NoOpTraceManager(),
     };
 
@@ -79,7 +80,6 @@ async function assertGetNthNodeOfKind<N extends Language.Ast.TNode>(
         Language.Ast.TNode | undefined
     >(
         state,
-        undefined,
         parseTaskOk.nodeIdMapCollection,
         parseTaskOk.ast,
         Traverse.VisitNodeStrategy.BreadthFirst,
@@ -131,7 +131,6 @@ describe("Parser.AbridgedNode", () => {
             const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(
                 customSettings,
                 "(a as number, optional b as text)",
-                undefined,
             );
 
             TaskUtils.assertIsParseStageOk(triedLexParseTask);

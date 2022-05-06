@@ -10,7 +10,7 @@ export async function assertGetLexParseOk(
     settings: LexSettings & ParseSettings,
     text: string,
 ): Promise<Task.ParseTaskOk> {
-    const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(settings, text, undefined);
+    const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(settings, text);
     TaskUtils.assertIsParseStageOk(triedLexParseTask);
 
     return triedLexParseTask;
@@ -49,5 +49,5 @@ async function assertGetTriedParse(settings: LexSettings & ParseSettings, text: 
     Assert.isOk(triedSnapshot);
     const lexerSnapshot: Lexer.LexerSnapshot = triedSnapshot.value;
 
-    return await Parser.ParserUtils.tryParse(settings, lexerSnapshot, undefined);
+    return await Parser.ParserUtils.tryParse(settings, lexerSnapshot);
 }

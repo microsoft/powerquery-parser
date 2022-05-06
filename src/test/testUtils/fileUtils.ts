@@ -55,7 +55,7 @@ export async function tryLexParse(
 ): Promise<Task.TriedLexParseTask> {
     const contents: string = readContents(filePath);
 
-    return await TaskUtils.tryLexParse(settings, contents, undefined);
+    return await TaskUtils.tryLexParse(settings, contents);
 }
 
 function isDirectory(maybePath: string): boolean {
