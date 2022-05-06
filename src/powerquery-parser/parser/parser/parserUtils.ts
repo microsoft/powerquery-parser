@@ -12,15 +12,11 @@ import { ParseError } from "..";
 import { ParseSettings } from "../../settings";
 import { Trace } from "../../common/trace";
 
-export async function tryParse(
-    parseSettings: ParseSettings,
-    lexerSnapshot: LexerSnapshot,
-    maybeCorrelationId: number | undefined,
-): Promise<TriedParse> {
+export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: LexerSnapshot): Promise<TriedParse> {
     const trace: Trace = parseSettings.traceManager.entry(
         ParserUtilsTraceConstant.ParserUtils,
         tryParse.name,
-        maybeCorrelationId,
+        parseSettings.maybeInitialCorrelationId,
     );
 
     const maybeParserEntryPointFn:

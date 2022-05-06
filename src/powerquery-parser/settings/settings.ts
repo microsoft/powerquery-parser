@@ -11,6 +11,7 @@ import { LexerSnapshot } from "../lexer";
 export interface CommonSettings {
     readonly locale: string;
     readonly maybeCancellationToken: ICancellationToken | undefined;
+    readonly maybeInitialCorrelationId: number | undefined;
     readonly traceManager: TraceManager;
 }
 
@@ -34,6 +35,7 @@ export const DefaultSettings: Settings = {
         ParseStateUtils.createState(lexerSnapshot, maybeOverrides),
     locale: DefaultLocale,
     maybeCancellationToken: undefined,
+    maybeInitialCorrelationId: undefined,
     maybeParserEntryPointFn: undefined,
     parser: CombinatorialParser,
     traceManager: new NoOpTraceManager(),
