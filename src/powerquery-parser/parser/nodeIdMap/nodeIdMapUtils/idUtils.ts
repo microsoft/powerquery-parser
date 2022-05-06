@@ -3,6 +3,7 @@
 
 import { Assert, MapUtils, TypeScriptUtils } from "../../../common";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, XorNodeUtils } from "..";
+import { Trace, TraceManager } from "../../../common/trace";
 import { Ast } from "../../../language";
 import { Collection } from "../nodeIdMap";
 import { ParseContext } from "../../context";
@@ -13,7 +14,14 @@ import { TXorNode } from "../xorNode";
 // Returns a map of `oldId -> newId` which follows the ID ordering invariant,
 // expected to be consumed by updateNodeIds.
 // Used to restore the nodeId ordering invariant after manual mangling of the Ast.
-export function recalculateIds(nodeIdMapCollection: NodeIdMap.Collection, nodeStart: TXorNode): Map<number, number> {
+export function recalculateIds(
+    traceManager: TraceManager,
+    maybeCorrelationId: number | undefined,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    nodeStart: TXorNode,
+): Map<number, number> {
+    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, recalculateIds.name, maybeCorrelationId);
+
     const visitedXorNodes: TXorNode[] = [];
     const nodeIds: number[] = [];
 
@@ -41,13 +49,26 @@ export function recalculateIds(nodeIdMapCollection: NodeIdMap.Collection, nodeSt
         visitedXorNodes.map((xorNode: TXorNode, index: number) => [xorNode.node.id, nodeIds[index]]),
     );
 
+    trace.exit();
+
     return newNodeIdByOldNodeId;
 }
 
 // Given a mapping of (existingId) => (newId) this mutates the NodeIdMap.Collection and the TXorNodes it holds.
 // Assumes the given arguments are valid as this function does no validation.
-export function updateNodeIds(nodeIdMapCollection: Collection, newIdByOldId: Map<number, number>): void {
+export function updateNodeIds(
+    traceManager: TraceManager,
+    maybeCorrelationId: number | undefined,
+    nodeIdMapCollection: Collection,
+    newIdByOldId: Map<number, number>,
+): void {
+    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, updateNodeIds.name, maybeCorrelationId, {
+        [IdUtilsTraceConstant.MapSize]: newIdByOldId.size,
+    });
+
     if (newIdByOldId.size === 0) {
+        trace.exit();
+
         return;
     }
 
@@ -57,17 +78,36 @@ export function updateNodeIds(nodeIdMapCollection: Collection, newIdByOldId: Map
     ]);
 
     // Storage for the change delta which is used to mutate nodeIdMapCollection.
-    const partialDelta: CollectionDelta = createDelta(nodeIdMapCollection, newIdByOldId, xorNodes);
-    applyDelta(nodeIdMapCollection, newIdByOldId, xorNodes, partialDelta);
+    const partialDelta: CollectionDelta = createDelta(
+        traceManager,
+        maybeCorrelationId,
+        nodeIdMapCollection,
+        newIdByOldId,
+        xorNodes,
+    );
+
+    applyDelta(traceManager, trace.id, nodeIdMapCollection, newIdByOldId, xorNodes, partialDelta);
+    trace.exit();
+}
+
+const enum IdUtilsTraceConstant {
+    IdUtils = "IdUtils",
+    MapSize = "MapSize",
 }
 
 type CollectionDelta = Omit<Collection, "leafIds" | "maybeRightMostLeaf" | "idsByNodeKind">;
 
 function createDelta(
+    traceManager: TraceManager,
+    correlationId: number | undefined,
     nodeIdMapCollection: Collection,
     newIdByOldId: Map<number, number>,
     xorNodes: ReadonlyArray<TXorNode>,
 ): CollectionDelta {
+    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, createDelta.name, correlationId, {
+        [IdUtilsTraceConstant.MapSize]: newIdByOldId.size,
+    });
+
     const partialCollection: CollectionDelta = {
         astNodeById: new Map(),
         contextNodeById: new Map(),
@@ -124,15 +164,21 @@ function createDelta(
         }
     }
 
+    trace.exit();
+
     return partialCollection;
 }
 
 function applyDelta(
+    traceManager: TraceManager,
+    correlationId: number,
     nodeIdMapCollection: Collection,
     newIdByOldId: Map<number, number>,
     xorNodes: ReadonlyArray<TXorNode>,
     delta: CollectionDelta,
 ): void {
+    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, applyDelta.name, correlationId);
+
     const newIds: ReadonlySet<number> = new Set(newIdByOldId.values());
     const oldLeafIds: ReadonlySet<number> = new Set(nodeIdMapCollection.leafIds.values());
 
@@ -217,4 +263,6 @@ function applyDelta(
             nodeIdMapCollection.parentIdById.delete(newId);
         }
     }
+
+    trace.exit();
 }

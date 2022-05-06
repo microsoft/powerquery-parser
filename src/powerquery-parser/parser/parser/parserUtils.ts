@@ -10,19 +10,31 @@ import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { ParseError } from "..";
 import { ParseSettings } from "../../settings";
+import { Trace } from "../../common/trace";
 
-export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: LexerSnapshot): Promise<TriedParse> {
-    const maybeParserEntryPointFn: ((state: ParseState, parser: Parser) => Promise<Ast.TNode>) | undefined =
-        parseSettings?.maybeParserEntryPointFn;
+export async function tryParse(
+    parseSettings: ParseSettings,
+    lexerSnapshot: LexerSnapshot,
+    maybeCorrelationId: number | undefined,
+): Promise<TriedParse> {
+    const trace: Trace = parseSettings.traceManager.entry(
+        ParserUtilsTraceConstant.ParserUtils,
+        tryParse.name,
+        maybeCorrelationId,
+    );
+
+    const maybeParserEntryPointFn:
+        | ((state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) => Promise<Ast.TNode>)
+        | undefined = parseSettings?.maybeParserEntryPointFn;
 
     if (maybeParserEntryPointFn === undefined) {
-        return await tryParseDocument(parseSettings, lexerSnapshot);
+        return await tryParseDocument(parseSettings, lexerSnapshot, trace.id);
     }
 
     const parseState: ParseState = parseSettings.createParseState(lexerSnapshot, defaultOverrides(parseSettings));
 
     try {
-        const root: Ast.TNode = await maybeParserEntryPointFn(parseState, parseSettings.parser);
+        const root: Ast.TNode = await maybeParserEntryPointFn(parseState, parseSettings.parser, trace.id);
         ParseStateUtils.assertIsDoneParsing(parseState);
 
         return ResultUtils.boxOk({
@@ -40,7 +52,14 @@ export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: Lexe
 export async function tryParseDocument(
     parseSettings: ParseSettings,
     lexerSnapshot: LexerSnapshot,
+    maybeCorrelationId: number | undefined,
 ): Promise<TriedParse> {
+    const trace: Trace = parseSettings.traceManager.entry(
+        ParserUtilsTraceConstant.ParserUtils,
+        tryParseDocument.name,
+        maybeCorrelationId,
+    );
+
     let root: Ast.TNode;
 
     const expressionDocumentState: ParseState = parseSettings.createParseState(
@@ -49,8 +68,9 @@ export async function tryParseDocument(
     );
 
     try {
-        root = await parseSettings.parser.readExpression(expressionDocumentState, parseSettings.parser);
+        root = await parseSettings.parser.readExpression(expressionDocumentState, parseSettings.parser, trace.id);
         ParseStateUtils.assertIsDoneParsing(expressionDocumentState);
+        trace.exit();
 
         return ResultUtils.boxOk({
             lexerSnapshot,
@@ -66,8 +86,9 @@ export async function tryParseDocument(
         );
 
         try {
-            root = await parseSettings.parser.readSectionDocument(sectionDocumentState, parseSettings.parser);
+            root = await parseSettings.parser.readSectionDocument(sectionDocumentState, parseSettings.parser, trace.id);
             ParseStateUtils.assertIsDoneParsing(sectionDocumentState);
+            trace.exit();
 
             return ResultUtils.boxOk({
                 lexerSnapshot,
@@ -87,6 +108,8 @@ export async function tryParseDocument(
                 betterParsedState = sectionDocumentState;
                 betterParsedError = sectionDocumentError;
             }
+
+            trace.exit();
 
             return ResultUtils.boxError(ensureParseError(betterParsedState, betterParsedError, parseSettings.locale));
         }
@@ -160,6 +183,10 @@ export async function restoreCheckpoint(state: ParseState, checkpoint: ParseStat
     } else {
         state.maybeCurrentContextNode = undefined;
     }
+}
+
+const enum ParserUtilsTraceConstant {
+    ParserUtils = "ParserUtils",
 }
 
 function ensureParseError(state: ParseState, error: Error, locale: string): ParseError.TParseError {

@@ -190,8 +190,12 @@ export function tryLex(settings: LexSettings, text: string): TriedLexTask {
     }
 }
 
-export async function tryParse(settings: ParseSettings, lexerSnapshot: Lexer.LexerSnapshot): Promise<TriedParseTask> {
-    const triedParse: Parser.TriedParse = await ParserUtils.tryParse(settings, lexerSnapshot);
+export async function tryParse(
+    settings: ParseSettings,
+    lexerSnapshot: Lexer.LexerSnapshot,
+    maybeCorrelationId: number | undefined,
+): Promise<TriedParseTask> {
+    const triedParse: Parser.TriedParse = await ParserUtils.tryParse(settings, lexerSnapshot, maybeCorrelationId);
 
     if (ResultUtils.isOk(triedParse)) {
         return createParseTaskOk(lexerSnapshot, triedParse.value.root, triedParse.value.state);
@@ -202,7 +206,11 @@ export async function tryParse(settings: ParseSettings, lexerSnapshot: Lexer.Lex
     }
 }
 
-export async function tryLexParse(settings: LexSettings & ParseSettings, text: string): Promise<TriedLexParseTask> {
+export async function tryLexParse(
+    settings: LexSettings & ParseSettings,
+    text: string,
+    maybeCorrelationId: number | undefined,
+): Promise<TriedLexParseTask> {
     const triedLexTask: TriedLexTask = tryLex(settings, text);
 
     if (triedLexTask.resultKind === ResultKind.Error) {
@@ -211,7 +219,7 @@ export async function tryLexParse(settings: LexSettings & ParseSettings, text: s
 
     const lexerSnapshot: Lexer.LexerSnapshot = triedLexTask.lexerSnapshot;
 
-    return await tryParse(settings, lexerSnapshot);
+    return await tryParse(settings, lexerSnapshot, maybeCorrelationId);
 }
 
 function createLexTaskOk(lexerSnapshot: Lexer.LexerSnapshot): LexTaskOk {

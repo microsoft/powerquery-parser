@@ -88,6 +88,7 @@ async function expectLinksMatch(
 
     const triedTraverse: Traverse.TriedTraverse<undefined> = await Traverse.tryTraverseXor(
         traverseState,
+        undefined,
         triedLexParse.nodeIdMapCollection,
         xorNode,
         Traverse.VisitNodeStrategy.BreadthFirst,
@@ -225,7 +226,7 @@ describe("idUtils", () => {
             parentIdById: [],
         };
 
-        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
+        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text, undefined);
         await expectLinksMatch(triedLexParse, expected);
     });
 
@@ -253,7 +254,7 @@ describe("idUtils", () => {
             ],
         };
 
-        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
+        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text, undefined);
         await expectLinksMatch(triedLexParse, expected);
     });
 
@@ -277,7 +278,7 @@ describe("idUtils", () => {
             ],
         };
 
-        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
+        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text, undefined);
         await expectLinksMatch(triedLexParse, expected);
     });
 
@@ -313,7 +314,7 @@ describe("idUtils", () => {
             ],
         };
 
-        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
+        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text, undefined);
         await expectLinksMatch(triedLexParse, expected);
     });
 });
