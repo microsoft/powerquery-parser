@@ -32,7 +32,7 @@ import performanceNow = require("performance-now");
 // const traceManager = new TraceManager((entry: string) => (message += (entry + "\n")), "\t");
 //
 // function foobar(x: number): void {
-//     const trace: Trace = traceManager.entry("Example", foobar.name, { x, messageLength: message.length });
+//     const trace: Trace = traceManager.entry("Example", foobar.name, undefined, { x, messageLength: message.length });
 //     // ...
 //     trace.exit();
 // }
