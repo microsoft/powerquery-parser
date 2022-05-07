@@ -90,20 +90,20 @@ export function tryTraverse<State extends ITraversalState<ResultType>, ResultTyp
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
     maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
 ): Promise<TriedTraverse<ResultType>> {
-    return ResultUtils.ensureResultAsync(state.locale, async () => {
+    return ResultUtils.ensureResultAsync(async () => {
         await traverseRecursion<State, ResultType, Node, NodesById>(
             state,
-            state.maybeInitialCorrelationId,
             nodesById,
             root,
             strategy,
             visitNodeFn,
             expandNodesFn,
             maybeEarlyExitFn,
+            state.maybeInitialCorrelationId,
         );
 
         return state.result;
-    });
+    }, state.locale);
 }
 
 // a TExpandNodesFn usable by tryTraverseAst which visits all nodes.
@@ -185,13 +185,13 @@ const enum TraversalTraceConstant {
 
 async function traverseRecursion<State extends ITraversalState<ResultType>, ResultType, Node, NodesById>(
     state: State,
-    maybeCorrelationId: number | undefined,
     nodesById: NodesById,
     node: Node,
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<State, ResultType, Node, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
     maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
+    maybeCorrelationId: number | undefined,
 ): Promise<void> {
     const trace: Trace = state.traceManager.entry(
         TraversalTraceConstant.Traversal,
@@ -211,13 +211,13 @@ async function traverseRecursion<State extends ITraversalState<ResultType>, Resu
         // eslint-disable-next-line no-await-in-loop
         await traverseRecursion(
             state,
-            trace.id,
             nodesById,
             child,
             strategy,
             visitNodeFn,
             expandNodesFn,
             maybeEarlyExitFn,
+            trace.id,
         );
     }
 

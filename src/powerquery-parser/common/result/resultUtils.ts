@@ -26,25 +26,25 @@ export function isError<T, E>(result: Result<T, E>): result is ErrorResult<E> {
     return result.kind === ResultKind.Error;
 }
 
-export function ensureResult<T>(locale: string, callbackFn: () => T): Result<T, CommonError.CommonError> {
+export function ensureResult<T>(callbackFn: () => T, locale: string): Result<T, CommonError.CommonError> {
     try {
         return boxOk(callbackFn());
     } catch (error) {
         Assert.isInstanceofError(error);
 
-        return boxError(CommonError.ensureCommonError(locale, error));
+        return boxError(CommonError.ensureCommonError(error, locale));
     }
 }
 
 export async function ensureResultAsync<T>(
-    locale: string,
     callbackFn: () => Promise<T>,
+    locale: string,
 ): Promise<Result<T, CommonError.CommonError>> {
     try {
         return boxOk(await callbackFn());
     } catch (error) {
         Assert.isInstanceofError(error);
 
-        return boxError(CommonError.ensureCommonError(locale, error));
+        return boxError(CommonError.ensureCommonError(error, locale));
     }
 }
