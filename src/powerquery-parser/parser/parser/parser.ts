@@ -36,8 +36,8 @@ export interface Parser {
     readonly readIdentifier: (
         state: ParseState,
         parser: Parser,
-        maybeCorrelationId: number | undefined,
         identifierContextKind: Ast.IdentifierContextKind,
+        maybeCorrelationId: number | undefined,
     ) => Ast.Identifier;
     readonly readGeneralizedIdentifier: (
         state: ParseState,
@@ -77,7 +77,7 @@ export interface Parser {
     // 12.2.3.1 Expressions
     readonly readNullCoalescingExpression: (
         state: ParseState,
-        Parser: Parser,
+        parser: Parser,
         maybeCorrelationId: number | undefined,
     ) => Promise<Ast.TExpression>;
     readonly readExpression: (
@@ -156,8 +156,8 @@ export interface Parser {
     readonly readRecursivePrimaryExpression: (
         state: ParseState,
         parser: Parser,
-        maybeCorrelationId: number | undefined,
         head: Ast.TPrimaryExpression,
+        maybeCorrelationId: number | undefined,
     ) => Promise<Ast.RecursivePrimaryExpression>;
 
     // 12.2.3.11 Literal expression
@@ -235,8 +235,8 @@ export interface Parser {
     readonly readFieldSelector: (
         state: ParseState,
         parser: Parser,
-        maybeCorrelationId: number | undefined,
         allowOptional: boolean,
+        maybeCorrelationId: number | undefined,
     ) => Promise<Ast.FieldSelector>;
 
     // 12.2.3.21 Function expression
@@ -306,9 +306,9 @@ export interface Parser {
     readonly readFieldSpecificationList: (
         state: ParseState,
         parser: Parser,
-        maybeCorrelationId: number | undefined,
         allowOpenMarker: boolean,
         testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
+        maybeCorrelationId: number | undefined,
     ) => Promise<Ast.FieldSpecificationList>;
     readonly readListType: (
         state: ParseState,
@@ -354,9 +354,9 @@ export interface Parser {
     readonly readFieldNamePairedAnyLiterals: (
         state: ParseState,
         parser: Parser,
-        maybeCorrelationId: number | undefined,
         onePairRequired: boolean,
         testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
+        maybeCorrelationId: number | undefined,
     ) => Promise<Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>>;
     readonly readListLiteral: (
         state: ParseState,
@@ -377,9 +377,9 @@ export interface Parser {
     readonly readIdentifierPairedExpressions: (
         state: ParseState,
         parser: Parser,
-        maybeCorrelationId: number | undefined,
         onePairRequired: boolean,
         testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
+        maybeCorrelationId: number | undefined,
     ) => Promise<Ast.ICsvArray<Ast.IdentifierPairedExpression>>;
     readonly readIdentifierPairedExpression: (
         state: ParseState,
@@ -389,9 +389,9 @@ export interface Parser {
     readonly readGeneralizedIdentifierPairedExpressions: (
         state: ParseState,
         parser: Parser,
-        maybeCorrelationId: number | undefined,
         onePairRequired: boolean,
         testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
+        maybeCorrelationId: number | undefined,
     ) => Promise<Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression>>;
     readonly readGeneralizedIdentifierPairedExpression: (
         state: ParseState,

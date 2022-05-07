@@ -30,7 +30,7 @@ export class InvariantError extends Error {
 
 export class UnknownError extends Error {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(locale: string, readonly innerError: any) {
+    constructor(readonly innerError: any, locale: string) {
         super(Localization.error_common_unknown(LocalizationUtils.getLocalizationTemplates(locale), innerError));
         Object.setPrototypeOf(this, UnknownError.prototype);
     }
@@ -53,12 +53,12 @@ export function isTInnerCommonError(x: any): x is TInnerCommonError {
     return x instanceof CancellationError || x instanceof InvariantError || x instanceof UnknownError;
 }
 
-export function ensureCommonError(locale: string, error: Error): CommonError {
+export function ensureCommonError(error: Error, locale: string): CommonError {
     if (error instanceof CommonError) {
         return error;
     } else if (isTInnerCommonError(error)) {
         return new CommonError(error);
     } else {
-        return new CommonError(new UnknownError(locale, error));
+        return new CommonError(new UnknownError(error, locale));
     }
 }

@@ -103,7 +103,7 @@ describe("Parser.Error", () => {
                 parser: RecursiveDescentParser,
                 // eslint-disable-next-line require-await
                 maybeParserEntryPointFn: async (state: ParseState, parser: Parser): Promise<Ast.TNode> =>
-                    parser.readIdentifier(state, parser, undefined, Ast.IdentifierContextKind.Value),
+                    parser.readIdentifier(state, parser, Ast.IdentifierContextKind.Value, undefined),
             };
 
             const text: string = "a b";

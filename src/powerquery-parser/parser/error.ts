@@ -37,9 +37,9 @@ export class ParseError extends Error {
 
 export class ExpectedCsvContinuationError extends Error {
     constructor(
-        locale: string,
         readonly kind: CsvContinuationKind,
         readonly maybeFoundToken: TokenWithColumnNumber | undefined,
+        locale: string,
     ) {
         super(Localization.error_parse_csvContinuation(LocalizationUtils.getLocalizationTemplates(locale), kind));
         Object.setPrototypeOf(this, ExpectedCsvContinuationError.prototype);
@@ -48,9 +48,9 @@ export class ExpectedCsvContinuationError extends Error {
 
 export class ExpectedAnyTokenKindError extends Error {
     constructor(
-        locale: string,
         readonly expectedAnyTokenKinds: ReadonlyArray<Token.TokenKind>,
         readonly maybeFoundToken: TokenWithColumnNumber | undefined,
+        locale: string,
     ) {
         super(
             Localization.error_parse_expectAnyTokenKind(
@@ -66,9 +66,9 @@ export class ExpectedAnyTokenKindError extends Error {
 
 export class ExpectedTokenKindError extends Error {
     constructor(
-        locale: string,
         readonly expectedTokenKind: Token.TokenKind,
         readonly maybeFoundToken: TokenWithColumnNumber | undefined,
+        locale: string,
     ) {
         super(
             Localization.error_parse_expectTokenKind(
@@ -83,7 +83,7 @@ export class ExpectedTokenKindError extends Error {
 }
 
 export class ExpectedGeneralizedIdentifierError extends Error {
-    constructor(locale: string, readonly maybeFoundToken: TokenWithColumnNumber | undefined) {
+    constructor(readonly maybeFoundToken: TokenWithColumnNumber | undefined, locale: string) {
         super(
             Localization.error_parse_expectGeneralizedIdentifier(
                 LocalizationUtils.getLocalizationTemplates(locale),
@@ -96,7 +96,7 @@ export class ExpectedGeneralizedIdentifierError extends Error {
 }
 
 export class InvalidPrimitiveTypeError extends Error {
-    constructor(locale: string, readonly token: Token.Token, readonly positionStart: StringUtils.GraphemePosition) {
+    constructor(readonly token: Token.Token, readonly positionStart: StringUtils.GraphemePosition, locale: string) {
         super(Localization.error_parse_invalidPrimitiveType(LocalizationUtils.getLocalizationTemplates(locale), token));
         Object.setPrototypeOf(this, InvalidPrimitiveTypeError.prototype);
     }
@@ -104,9 +104,9 @@ export class InvalidPrimitiveTypeError extends Error {
 
 export class RequiredParameterAfterOptionalParameterError extends Error {
     constructor(
-        locale: string,
         readonly missingOptionalToken: Token.Token,
         readonly positionStart: StringUtils.GraphemePosition,
+        locale: string,
     ) {
         super(
             Localization.error_parse_requiredParameterAfterOptional(LocalizationUtils.getLocalizationTemplates(locale)),
@@ -118,10 +118,10 @@ export class RequiredParameterAfterOptionalParameterError extends Error {
 
 export class UnterminatedSequence extends Error {
     constructor(
-        locale: string,
         readonly kind: SequenceKind,
         readonly startToken: Token.Token,
         readonly positionStart: StringUtils.GraphemePosition,
+        locale: string,
     ) {
         super(Localization.error_parse_unterminated_sequence(LocalizationUtils.getLocalizationTemplates(locale), kind));
         Object.setPrototypeOf(this, UnterminatedSequence.prototype);
@@ -130,9 +130,9 @@ export class UnterminatedSequence extends Error {
 
 export class UnusedTokensRemainError extends Error {
     constructor(
-        locale: string,
         readonly firstUnusedToken: Token.Token,
         readonly positionStart: StringUtils.GraphemePosition,
+        locale: string,
     ) {
         super(Localization.error_parse_unusedTokens(LocalizationUtils.getLocalizationTemplates(locale)));
         Object.setPrototypeOf(this, UnusedTokensRemainError.prototype);

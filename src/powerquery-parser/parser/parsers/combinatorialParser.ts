@@ -35,25 +35,25 @@ export const CombinatorialParser: Parser = {
         readBinOpExpression(
             state,
             parser,
-            maybeCorrelationId,
             Ast.NodeKind.LogicalExpression,
+            maybeCorrelationId,
         ) as Promise<Ast.TLogicalExpression>,
 
     // 12.2.3.3 Is expression
     readIsExpression: (state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) =>
-        readBinOpExpression(state, parser, maybeCorrelationId, Ast.NodeKind.IsExpression) as Promise<Ast.TIsExpression>,
+        readBinOpExpression(state, parser, Ast.NodeKind.IsExpression, maybeCorrelationId) as Promise<Ast.TIsExpression>,
 
     // 12.2.3.4 As expression
     readAsExpression: (state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) =>
-        readBinOpExpression(state, parser, maybeCorrelationId, Ast.NodeKind.AsExpression) as Promise<Ast.TAsExpression>,
+        readBinOpExpression(state, parser, Ast.NodeKind.AsExpression, maybeCorrelationId) as Promise<Ast.TAsExpression>,
 
     // 12.2.3.5 Equality expression
     readEqualityExpression: (state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) =>
         readBinOpExpression(
             state,
             parser,
-            maybeCorrelationId,
             Ast.NodeKind.EqualityExpression,
+            maybeCorrelationId,
         ) as Promise<Ast.TEqualityExpression>,
 
     // 12.2.3.6 Relational expression
@@ -61,8 +61,8 @@ export const CombinatorialParser: Parser = {
         readBinOpExpression(
             state,
             parser,
-            maybeCorrelationId,
             Ast.NodeKind.RelationalExpression,
+            maybeCorrelationId,
         ) as Promise<Ast.TRelationalExpression>,
 
     // 12.2.3.7 Arithmetic expressions
@@ -70,8 +70,8 @@ export const CombinatorialParser: Parser = {
         readBinOpExpression(
             state,
             parser,
-            maybeCorrelationId,
             Ast.NodeKind.ArithmeticExpression,
+            maybeCorrelationId,
         ) as Promise<Ast.TArithmeticExpression>,
 
     // 12.2.3.8 Metadata expression
@@ -79,8 +79,8 @@ export const CombinatorialParser: Parser = {
         readBinOpExpression(
             state,
             parser,
-            maybeCorrelationId,
             Ast.NodeKind.MetadataExpression,
+            maybeCorrelationId,
         ) as Promise<Ast.TMetadataExpression>,
 
     // 12.2.3.9 Unary expression
@@ -94,8 +94,8 @@ const enum CombinatorialTraceConstant {
 async function readBinOpExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
     nodeKind: Ast.NodeKind,
+    maybeCorrelationId: number | undefined,
 ): Promise<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType> {
     const trace: Trace = state.traceManager.entry(
         CombinatorialTraceConstant.CombinatorialParse,
@@ -126,9 +126,9 @@ async function readBinOpExpression(
         operatorConstants.push(
             NaiveParseSteps.readTokenKindAsConstant<Constant.TBinOpExpressionOperator>(
                 state,
-                trace.id,
                 Assert.asDefined(state.maybeCurrentTokenKind),
                 maybeOperator,
+                trace.id,
             ),
         );
 
@@ -345,11 +345,16 @@ async function readUnaryExpression(
             break;
 
         case Token.TokenKind.LeftBracket:
-            maybePrimaryExpression = await DisambiguationUtils.readAmbiguousBracket(state, parser, trace.id, [
-                Disambiguation.BracketDisambiguation.RecordExpression,
-                Disambiguation.BracketDisambiguation.FieldSelection,
-                Disambiguation.BracketDisambiguation.FieldProjection,
-            ]);
+            maybePrimaryExpression = await DisambiguationUtils.readAmbiguousBracket(
+                state,
+                parser,
+                [
+                    Disambiguation.BracketDisambiguation.RecordExpression,
+                    Disambiguation.BracketDisambiguation.FieldSelection,
+                    Disambiguation.BracketDisambiguation.FieldProjection,
+                ],
+                trace.id,
+            );
 
             break;
 
@@ -403,7 +408,7 @@ async function readUnaryExpression(
     if (ParseStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex)) {
         trace.exit();
 
-        return await parser.readRecursivePrimaryExpression(state, parser, trace.id, primaryExpression);
+        return await parser.readRecursivePrimaryExpression(state, parser, primaryExpression, trace.id);
     } else {
         trace.exit();
 

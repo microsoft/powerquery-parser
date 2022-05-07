@@ -35,7 +35,6 @@ export function createState(lexerSnapshot: LexerSnapshot, maybeOverrides: Partia
         locale: maybeOverrides?.locale ?? DefaultLocale,
         maybeCancellationToken: maybeOverrides?.maybeCancellationToken,
         traceManager: maybeOverrides?.traceManager ?? new NoOpTraceManager(),
-
         contextState: maybeOverrides?.contextState ?? ParseContextUtils.createState(),
         maybeCurrentToken,
         maybeCurrentContextNode,
@@ -252,9 +251,9 @@ export function testCsvContinuationLetExpression(
 ): ParseError.ExpectedCsvContinuationError | undefined {
     if (state.maybeCurrentTokenKind === Token.TokenKind.KeywordIn) {
         return new ParseError.ExpectedCsvContinuationError(
-            state.locale,
             ParseError.CsvContinuationKind.LetExpression,
             maybeCurrentTokenWithColumnNumber(state),
+            state.locale,
         );
     }
 
@@ -267,9 +266,9 @@ export function testCsvContinuationDanglingComma(
 ): ParseError.ExpectedCsvContinuationError | undefined {
     if (state.maybeCurrentTokenKind === tokenKind) {
         return new ParseError.ExpectedCsvContinuationError(
-            state.locale,
             ParseError.CsvContinuationKind.DanglingComma,
             maybeCurrentTokenWithColumnNumber(state),
+            state.locale,
         );
     } else {
         return undefined;
@@ -287,7 +286,7 @@ export function testIsOnTokenKind(
     if (expectedTokenKind !== state.maybeCurrentTokenKind) {
         const maybeToken: ParseError.TokenWithColumnNumber | undefined = maybeCurrentTokenWithColumnNumber(state);
 
-        return new ParseError.ExpectedTokenKindError(state.locale, expectedTokenKind, maybeToken);
+        return new ParseError.ExpectedTokenKindError(expectedTokenKind, maybeToken, state.locale);
     } else {
         return undefined;
     }
@@ -303,7 +302,7 @@ export function testIsOnAnyTokenKind(
     if (isError) {
         const maybeToken: ParseError.TokenWithColumnNumber | undefined = maybeCurrentTokenWithColumnNumber(state);
 
-        return new ParseError.ExpectedAnyTokenKindError(state.locale, expectedAnyTokenKinds, maybeToken);
+        return new ParseError.ExpectedAnyTokenKindError(expectedAnyTokenKinds, maybeToken, state.locale);
     } else {
         return undefined;
     }
@@ -316,9 +315,9 @@ export function assertNoMoreTokens(state: ParseState): void {
 
     const token: Token.Token = assertGetTokenAt(state, state.tokenIndex);
     throw new ParseError.UnusedTokensRemainError(
-        state.locale,
         token,
         state.lexerSnapshot.graphemePositionStartFrom(token),
+        state.locale,
     );
 }
 
@@ -349,10 +348,10 @@ function unterminatedSequence(state: ParseState, sequenceKind: SequenceKind): Pa
     const token: Token.Token = assertGetTokenAt(state, state.tokenIndex);
 
     return new ParseError.UnterminatedSequence(
-        state.locale,
         sequenceKind,
         token,
         state.lexerSnapshot.graphemePositionStartFrom(token),
+        state.locale,
     );
 }
 

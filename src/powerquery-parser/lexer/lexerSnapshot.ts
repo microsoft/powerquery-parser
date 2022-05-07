@@ -73,7 +73,7 @@ export function trySnapshot(state: Lexer.State): TriedLexerSnapshot {
             error = new LexError.LexError(e);
         } else {
             Assert.isInstanceofError(e);
-            error = CommonError.ensureCommonError(state.locale, e);
+            error = CommonError.ensureCommonError(e, state.locale);
         }
 
         return ResultUtils.boxError(error);
@@ -108,10 +108,10 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
 
             case Token.LineTokenKind.MultilineCommentStart: {
                 const concatenatedTokenRead: ConcatenatedCommentRead = readMultilineComment(
-                    maybeCancellationToken,
-                    state.locale,
                     flattenedLines,
                     flatToken,
+                    state.locale,
+                    maybeCancellationToken,
                 );
 
                 comments.push(concatenatedTokenRead.comment);
@@ -121,10 +121,10 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
 
             case Token.LineTokenKind.QuotedIdentifierStart: {
                 const concatenatedTokenRead: ConcatenatedTokenRead = readQuotedIdentifier(
-                    maybeCancellationToken,
-                    state.locale,
                     flattenedLines,
                     flatToken,
+                    state.locale,
+                    maybeCancellationToken,
                 );
 
                 tokens.push(concatenatedTokenRead.token);
@@ -134,10 +134,10 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
 
             case Token.LineTokenKind.TextLiteralStart: {
                 const concatenatedTokenRead: ConcatenatedTokenRead = readTextLiteral(
-                    maybeCancellationToken,
-                    state.locale,
                     flattenedLines,
                     flatToken,
+                    state.locale,
+                    maybeCancellationToken,
                 );
 
                 tokens.push(concatenatedTokenRead.token);
@@ -192,16 +192,16 @@ function readSingleLineMultilineComment(flatToken: FlatLineToken): Comment.Multi
 }
 
 function readMultilineComment(
-    maybeCancellationToken: ICancellationToken | undefined,
-    locale: string,
     flattenedLines: FlattenedLines,
     tokenStart: FlatLineToken,
+    locale: string,
+    maybeCancellationToken: ICancellationToken | undefined,
 ): ConcatenatedCommentRead {
     const collection: FlatLineCollection = collectWhileContent(
-        maybeCancellationToken,
         flattenedLines.flatLineTokens,
         tokenStart,
         Token.LineTokenKind.MultilineCommentContent,
+        maybeCancellationToken,
     );
 
     const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
@@ -235,16 +235,16 @@ function readMultilineComment(
 }
 
 function readQuotedIdentifier(
-    maybeCancellationToken: ICancellationToken | undefined,
-    locale: string,
     flattenedLines: FlattenedLines,
     tokenStart: FlatLineToken,
+    locale: string,
+    maybeCancellationToken: ICancellationToken | undefined,
 ): ConcatenatedTokenRead {
     const collection: FlatLineCollection = collectWhileContent(
-        maybeCancellationToken,
         flattenedLines.flatLineTokens,
         tokenStart,
         Token.LineTokenKind.QuotedIdentifierContent,
+        maybeCancellationToken,
     );
 
     const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
@@ -277,16 +277,16 @@ function readQuotedIdentifier(
 }
 
 function readTextLiteral(
-    maybeCancellationToken: ICancellationToken | undefined,
-    locale: string,
     flattenedLines: FlattenedLines,
     tokenStart: FlatLineToken,
+    locale: string,
+    maybeCancellationToken: ICancellationToken | undefined,
 ): ConcatenatedTokenRead {
     const collection: FlatLineCollection = collectWhileContent(
-        maybeCancellationToken,
         flattenedLines.flatLineTokens,
         tokenStart,
         Token.LineTokenKind.TextLiteralContent,
+        maybeCancellationToken,
     );
 
     const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
@@ -319,10 +319,10 @@ function readTextLiteral(
 }
 
 function collectWhileContent<KindVariant extends Token.LineTokenKind>(
-    maybeCancellationToken: ICancellationToken | undefined,
     flatTokens: ReadonlyArray<FlatLineToken>,
     tokenStart: FlatLineToken,
     contentKind: KindVariant,
+    maybeCancellationToken: ICancellationToken | undefined,
 ): FlatLineCollection {
     const collectedTokens: FlatLineToken[] = [];
     const numTokens: number = flatTokens.length;

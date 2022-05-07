@@ -191,7 +191,7 @@ function ensureParseError(state: ParseState, error: Error, locale: string): Pars
     } else if (ParseError.isTInnerParseError(error)) {
         return new ParseError.ParseError(error, state);
     } else {
-        return CommonError.ensureCommonError(locale, error);
+        return CommonError.ensureCommonError(error, locale);
     }
 }
 
