@@ -49,8 +49,6 @@ export const enum TraceConstant {
     IsThrowing = "IsThrowing",
     Length = "Length",
     Result = "Result",
-    TimeNow = "TimeNow",
-    TimeStart = "TimeStart",
 }
 
 export abstract class TraceManager {
@@ -70,7 +68,11 @@ export abstract class TraceManager {
     protected formatMessage(trace: Trace, message: string, maybeDetails?: object): string {
         const details: string = maybeDetails !== undefined ? this.safeJsonStringify(maybeDetails) : TraceConstant.Empty;
 
-        return [trace.phase, trace.task, trace.id, message, details].join(this.valueDelimiter) + this.newline;
+        return (
+            [trace.phase, trace.task, trace.id, trace.maybeCorrelationId, performanceNow(), message, details].join(
+                this.valueDelimiter,
+            ) + this.newline
+        );
     }
 
     // The return to the TraceManager.start function.
@@ -177,8 +179,6 @@ export class Trace {
 
 // Tracing entries add the current time to its details field.
 export class BenchmarkTrace extends Trace {
-    protected readonly timeStart: number = performanceNow();
-
     constructor(
         emitTraceFn: (trace: Trace, message: string, maybeDetails?: object) => void,
         phase: string,
@@ -191,12 +191,8 @@ export class BenchmarkTrace extends Trace {
     }
 
     public override trace(message: string, maybeDetails?: object): void {
-        const timeNow: number = performanceNow();
-
         super.trace(message, {
             ...maybeDetails,
-            ...(message === TraceConstant.Entry ? { [TraceConstant.CorrelationId]: this.maybeCorrelationId } : {}),
-            [TraceConstant.TimeNow]: timeNow,
         });
     }
 }
