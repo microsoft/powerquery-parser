@@ -191,9 +191,7 @@ export class BenchmarkTrace extends Trace {
     }
 
     public override trace(message: string, maybeDetails?: object): void {
-        super.trace(message, {
-            ...maybeDetails,
-        });
+        super.trace(message, maybeDetails);
     }
 }
 
