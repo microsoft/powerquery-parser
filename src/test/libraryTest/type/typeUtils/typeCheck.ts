@@ -30,19 +30,19 @@ function assertAbridgedEqual(actual: AbridgedChecked, expected: AbridgedChecked)
     expect(actual).to.deep.equal(expected);
 }
 
-const localTypeCheckInvocation: (
+const noopTypeCheckInvocation: (
     args: ReadonlyArray<Type.TPowerQueryType>,
     definedFunction: Type.DefinedFunction,
 ) => CheckedInvocation = (args: ReadonlyArray<Type.TPowerQueryType>, definedFunction: Type.DefinedFunction) =>
     TypeUtils.typeCheckInvocation(args, definedFunction, NoOpTraceManagerInstance, undefined);
 
-const localTypeCheckListWithDefinedListType: (
+const noopTypeCheckListWithDefinedListType: (
     valueType: Type.DefinedList,
     schemaType: Type.DefinedListType,
 ) => CheckedDefinedList = (valueType: Type.DefinedList, schemaType: Type.DefinedListType) =>
     TypeUtils.typeCheckListWithDefinedListType(valueType, schemaType, NoOpTraceManagerInstance, undefined);
 
-const localTypeCheckListWithListType: (valueType: Type.DefinedList, schemaType: Type.ListType) => CheckedDefinedList = (
+const noopTypeCheckListWithListType: (valueType: Type.DefinedList, schemaType: Type.ListType) => CheckedDefinedList = (
     valueType: Type.DefinedList,
     schemaType: Type.ListType,
 ) => TypeUtils.typeCheckListWithListType(valueType, schemaType, NoOpTraceManagerInstance, undefined);
@@ -58,7 +58,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.ActionInstance,
             );
 
-            const actual: TypeUtils.CheckedInvocation = localTypeCheckInvocation(args, definedFunction);
+            const actual: TypeUtils.CheckedInvocation = noopTypeCheckInvocation(args, definedFunction);
 
             const expected: TypeUtils.CheckedInvocation = {
                 valid: [],
@@ -86,7 +86,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.ActionInstance,
             );
 
-            const actual: TypeUtils.CheckedInvocation = localTypeCheckInvocation(args, definedFunction);
+            const actual: TypeUtils.CheckedInvocation = noopTypeCheckInvocation(args, definedFunction);
 
             const expected: TypeUtils.CheckedInvocation = {
                 valid: [],
@@ -114,7 +114,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.ActionInstance,
             );
 
-            const actual: TypeUtils.CheckedInvocation = localTypeCheckInvocation(args, definedFunction);
+            const actual: TypeUtils.CheckedInvocation = noopTypeCheckInvocation(args, definedFunction);
 
             const expected: TypeUtils.CheckedInvocation = {
                 valid: [0],
@@ -142,7 +142,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.ActionInstance,
             );
 
-            const actual: TypeUtils.CheckedInvocation = localTypeCheckInvocation(args, definedFunction);
+            const actual: TypeUtils.CheckedInvocation = noopTypeCheckInvocation(args, definedFunction);
 
             const expected: TypeUtils.CheckedInvocation = {
                 valid: [0],
@@ -170,7 +170,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.ActionInstance,
             );
 
-            const actual: TypeUtils.CheckedInvocation = localTypeCheckInvocation(args, definedFunction);
+            const actual: TypeUtils.CheckedInvocation = noopTypeCheckInvocation(args, definedFunction);
 
             const expected: TypeUtils.CheckedInvocation = {
                 valid: [0],
@@ -198,7 +198,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.ActionInstance,
             );
 
-            const actual: TypeUtils.CheckedInvocation = localTypeCheckInvocation(args, definedFunction);
+            const actual: TypeUtils.CheckedInvocation = noopTypeCheckInvocation(args, definedFunction);
 
             const expected: TypeUtils.CheckedInvocation = {
                 valid: [0],
@@ -226,7 +226,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.ActionInstance,
             );
 
-            const actual: TypeUtils.CheckedInvocation = localTypeCheckInvocation(args, definedFunction);
+            const actual: TypeUtils.CheckedInvocation = noopTypeCheckInvocation(args, definedFunction);
 
             const expected: TypeUtils.CheckedInvocation = {
                 valid: [0],
@@ -263,7 +263,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.ActionInstance,
             );
 
-            const actual: TypeUtils.CheckedInvocation = localTypeCheckInvocation(args, definedFunction);
+            const actual: TypeUtils.CheckedInvocation = noopTypeCheckInvocation(args, definedFunction);
 
             const expected: TypeUtils.CheckedInvocation = {
                 valid: [0, 1],
@@ -291,7 +291,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.ActionInstance,
             );
 
-            const actual: TypeUtils.CheckedInvocation = localTypeCheckInvocation(args, definedFunction);
+            const actual: TypeUtils.CheckedInvocation = noopTypeCheckInvocation(args, definedFunction);
 
             const expected: TypeUtils.CheckedInvocation = {
                 valid: [],
@@ -327,7 +327,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.ActionInstance,
             );
 
-            const actual: TypeUtils.CheckedInvocation = localTypeCheckInvocation(args, definedFunction);
+            const actual: TypeUtils.CheckedInvocation = noopTypeCheckInvocation(args, definedFunction);
 
             const expected: TypeUtils.CheckedInvocation = {
                 valid: [0],
@@ -355,7 +355,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.ActionInstance,
             );
 
-            const actual: TypeUtils.CheckedInvocation = localTypeCheckInvocation(args, definedFunction);
+            const actual: TypeUtils.CheckedInvocation = noopTypeCheckInvocation(args, definedFunction);
 
             const expected: TypeUtils.CheckedInvocation = {
                 valid: [],
@@ -383,7 +383,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.ActionInstance,
             );
 
-            const actual: TypeUtils.CheckedInvocation = localTypeCheckInvocation(args, definedFunction);
+            const actual: TypeUtils.CheckedInvocation = noopTypeCheckInvocation(args, definedFunction);
 
             const expected: TypeUtils.CheckedInvocation = {
                 valid: [],
@@ -420,7 +420,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.ActionInstance,
             );
 
-            const actual: TypeUtils.CheckedInvocation = localTypeCheckInvocation(args, definedFunction);
+            const actual: TypeUtils.CheckedInvocation = noopTypeCheckInvocation(args, definedFunction);
 
             const expected: TypeUtils.CheckedInvocation = {
                 valid: [],
@@ -460,7 +460,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.TextInstance,
             ]);
 
-            const actual: TypeUtils.CheckedDefinedList = localTypeCheckListWithDefinedListType(valueType, schemaType);
+            const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithDefinedListType(valueType, schemaType);
 
             const expected: AbridgedChecked = {
                 valid: [0, 1],
@@ -484,7 +484,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.TextInstance,
             ]);
 
-            const actual: TypeUtils.CheckedDefinedList = localTypeCheckListWithDefinedListType(valueType, schemaType);
+            const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithDefinedListType(valueType, schemaType);
 
             const expected: AbridgedChecked = {
                 valid: [0, 1],
@@ -506,7 +506,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
 
-            const actual: TypeUtils.CheckedDefinedList = localTypeCheckListWithListType(valueType, schemaType);
+            const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithListType(valueType, schemaType);
 
             const expected: AbridgedChecked = {
                 valid: [0],
@@ -531,7 +531,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
 
-            const actual: TypeUtils.CheckedDefinedList = localTypeCheckListWithListType(valueType, schemaType);
+            const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithListType(valueType, schemaType);
 
             const expected: AbridgedChecked = {
                 valid: [0, 1, 2, 3],
@@ -551,7 +551,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
 
-            const actual: TypeUtils.CheckedDefinedList = localTypeCheckListWithListType(valueType, schemaType);
+            const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithListType(valueType, schemaType);
 
             const expected: AbridgedChecked = {
                 valid: [],
@@ -573,7 +573,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
 
-            const actual: TypeUtils.CheckedDefinedList = localTypeCheckListWithListType(valueType, schemaType);
+            const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithListType(valueType, schemaType);
 
             const expected: AbridgedChecked = {
                 valid: [],
@@ -598,7 +598,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
 
-            const actual: TypeUtils.CheckedDefinedList = localTypeCheckListWithListType(valueType, schemaType);
+            const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithListType(valueType, schemaType);
 
             const expected: AbridgedChecked = {
                 valid: [0, 2, 3],
@@ -623,7 +623,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.NumberInstance,
             ]);
 
-            const actual: TypeUtils.CheckedDefinedList = localTypeCheckListWithDefinedListType(valueType, schemaType);
+            const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithDefinedListType(valueType, schemaType);
 
             const expected: AbridgedChecked = {
                 valid: [0, 1],
@@ -646,7 +646,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.NumberInstance,
             ]);
 
-            const actual: TypeUtils.CheckedDefinedList = localTypeCheckListWithDefinedListType(valueType, schemaType);
+            const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithDefinedListType(valueType, schemaType);
 
             const expected: AbridgedChecked = {
                 valid: [0],
@@ -668,7 +668,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.TextInstance,
             ]);
 
-            const actual: TypeUtils.CheckedDefinedList = localTypeCheckListWithDefinedListType(valueType, schemaType);
+            const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithDefinedListType(valueType, schemaType);
 
             const expected: AbridgedChecked = {
                 valid: [0],
@@ -688,7 +688,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.NumberInstance,
             ]);
 
-            const actual: TypeUtils.CheckedDefinedList = localTypeCheckListWithDefinedListType(valueType, schemaType);
+            const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithDefinedListType(valueType, schemaType);
 
             const expected: AbridgedChecked = {
                 valid: [],
@@ -710,7 +710,7 @@ describe(`TypeUtils.typeCheck`, () => {
 
             const schemaType: Language.Type.ListType = TypeUtils.createListType(false, Language.Type.TextInstance);
 
-            const actual: TypeUtils.CheckedDefinedList = localTypeCheckListWithListType(valueType, schemaType);
+            const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithListType(valueType, schemaType);
 
             const expected: AbridgedChecked = {
                 valid: [0, 1],
@@ -733,7 +733,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.NumberInstance,
             ]);
 
-            const actual: TypeUtils.CheckedDefinedList = localTypeCheckListWithDefinedListType(valueType, schemaType);
+            const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithDefinedListType(valueType, schemaType);
 
             const expected: AbridgedChecked = {
                 valid: [0],
@@ -755,7 +755,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.TextInstance,
             ]);
 
-            const actual: TypeUtils.CheckedDefinedList = localTypeCheckListWithDefinedListType(valueType, schemaType);
+            const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithDefinedListType(valueType, schemaType);
 
             const expected: AbridgedChecked = {
                 valid: [0],
@@ -775,7 +775,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.NumberInstance,
             ]);
 
-            const actual: TypeUtils.CheckedDefinedList = localTypeCheckListWithDefinedListType(valueType, schemaType);
+            const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithDefinedListType(valueType, schemaType);
 
             const expected: AbridgedChecked = {
                 valid: [],

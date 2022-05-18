@@ -9,11 +9,11 @@ import { NoOpTraceManagerInstance } from "../../../../powerquery-parser/common/t
 import { OrderedMap } from "../../../../powerquery-parser";
 import { TypeKind } from "../../../../powerquery-parser/language/type/type";
 
-const localCreateAnyUnion: (unionedTypePairs: ReadonlyArray<Type.TPowerQueryType>) => Type.TPowerQueryType = (
+const noopCreateAnyUnion: (unionedTypePairs: ReadonlyArray<Type.TPowerQueryType>) => Type.TPowerQueryType = (
     unionedTypePairs: ReadonlyArray<Type.TPowerQueryType>,
 ) => TypeUtils.createAnyUnion(unionedTypePairs, NoOpTraceManagerInstance, undefined);
 
-const localIsCompatible: (left: Type.TPowerQueryType, right: Type.TPowerQueryType) => boolean | undefined = (
+const noopIsCompatible: (left: Type.TPowerQueryType, right: Type.TPowerQueryType) => boolean | undefined = (
     left: Type.TPowerQueryType,
     right: Type.TPowerQueryType,
 ) => TypeUtils.isCompatible(left, right, NoOpTraceManagerInstance, undefined);
@@ -21,25 +21,25 @@ const localIsCompatible: (left: Type.TPowerQueryType, right: Type.TPowerQueryTyp
 describe(`localIsCompatible`, () => {
     describe(`${Type.TypeKind.AnyNonNull}`, () => {
         it(`null is not compatible`, () => {
-            expect(localIsCompatible(Type.NullInstance, Type.AnyNonNullInstance)).to.equal(false, undefined);
+            expect(noopIsCompatible(Type.NullInstance, Type.AnyNonNullInstance)).to.equal(false, undefined);
         });
 
         it(`nullable is not compatible`, () => {
-            expect(localIsCompatible(Type.NullableTextInstance, Type.AnyNonNullInstance)).to.equal(false, undefined);
+            expect(noopIsCompatible(Type.NullableTextInstance, Type.AnyNonNullInstance)).to.equal(false, undefined);
         });
 
         it(`text is compatible`, () => {
-            expect(localIsCompatible(Type.TextInstance, Type.AnyNonNullInstance)).to.equal(true, undefined);
+            expect(noopIsCompatible(Type.TextInstance, Type.AnyNonNullInstance)).to.equal(true, undefined);
         });
     });
 
     it(`${Type.TypeKind.NotApplicable} should return undefined`, () => {
-        const actual: boolean | undefined = localIsCompatible(Type.NotApplicableInstance, Type.AnyInstance);
+        const actual: boolean | undefined = noopIsCompatible(Type.NotApplicableInstance, Type.AnyInstance);
         expect(actual).to.equal(undefined, undefined);
     });
 
     it(`${Type.TypeKind.Unknown} should return undefined`, () => {
-        const actual: boolean | undefined = localIsCompatible(Type.UnknownInstance, Type.AnyInstance);
+        const actual: boolean | undefined = noopIsCompatible(Type.UnknownInstance, Type.AnyInstance);
         expect(actual).to.equal(undefined, undefined);
     });
 
@@ -72,14 +72,14 @@ describe(`localIsCompatible`, () => {
 
             const actual: ReadonlyArray<[Type.TypeKind, boolean | undefined]> = typeKinds.map((typeKind: TypeKind) => [
                 typeKind,
-                localIsCompatible(TypeUtils.createPrimitiveType(false, typeKind), Type.AnyInstance),
+                noopIsCompatible(TypeUtils.createPrimitiveType(false, typeKind), Type.AnyInstance),
             ]);
 
             expect(actual).deep.equal(expected);
         });
 
         it(`${Type.TypeKind.None} not compatible with any`, () => {
-            const actual: boolean | undefined = localIsCompatible(
+            const actual: boolean | undefined = noopIsCompatible(
                 TypeUtils.createPrimitiveType(false, Type.TypeKind.None),
                 Type.AnyInstance,
             );
@@ -88,18 +88,18 @@ describe(`localIsCompatible`, () => {
         });
 
         it(`AnyUnion, basic`, () => {
-            const actual: boolean | undefined = localIsCompatible(
+            const actual: boolean | undefined = noopIsCompatible(
                 Type.TextInstance,
-                localCreateAnyUnion([Type.TextInstance, Type.NumberInstance]),
+                noopCreateAnyUnion([Type.TextInstance, Type.NumberInstance]),
             );
 
             expect(actual).to.equal(true, undefined);
         });
 
         it(`AnyUnion, contains any`, () => {
-            const actual: boolean | undefined = localIsCompatible(
+            const actual: boolean | undefined = noopIsCompatible(
                 Type.TextInstance,
-                localCreateAnyUnion([Type.TextInstance, Type.NumberInstance]),
+                noopCreateAnyUnion([Type.TextInstance, Type.NumberInstance]),
             );
 
             expect(actual).to.equal(true, undefined);
@@ -110,7 +110,7 @@ describe(`localIsCompatible`, () => {
         describe(`identity`, () => {
             it(`empty`, () => {
                 const definedList: Type.DefinedList = TypeUtils.createDefinedList(false, []);
-                expect(localIsCompatible(definedList, definedList)).to.equal(true, undefined);
+                expect(noopIsCompatible(definedList, definedList)).to.equal(true, undefined);
             });
 
             it(`non-empty`, () => {
@@ -119,7 +119,7 @@ describe(`localIsCompatible`, () => {
                     Type.NumberInstance,
                 ]);
 
-                expect(localIsCompatible(definedList, definedList)).to.equal(true, undefined);
+                expect(noopIsCompatible(definedList, definedList)).to.equal(true, undefined);
             });
         });
 
@@ -131,7 +131,7 @@ describe(`localIsCompatible`, () => {
 
                 const right: Type.DefinedList = TypeUtils.createDefinedList(false, [Type.LogicalInstance]);
 
-                expect(localIsCompatible(left, right)).to.equal(true, undefined);
+                expect(noopIsCompatible(left, right)).to.equal(true, undefined);
             });
 
             it(`${Type.ExtendedTypeKind.NumberLiteral}`, () => {
@@ -141,7 +141,7 @@ describe(`localIsCompatible`, () => {
 
                 const right: Type.DefinedList = TypeUtils.createDefinedList(false, [Type.NumberInstance]);
 
-                expect(localIsCompatible(left, right)).to.equal(true, undefined);
+                expect(noopIsCompatible(left, right)).to.equal(true, undefined);
             });
 
             it(`${Type.ExtendedTypeKind.TextLiteral}`, () => {
@@ -151,24 +151,24 @@ describe(`localIsCompatible`, () => {
 
                 const right: Type.DefinedList = TypeUtils.createDefinedList(false, [Type.TextInstance]);
 
-                expect(localIsCompatible(left, right)).to.equal(true, undefined);
+                expect(noopIsCompatible(left, right)).to.equal(true, undefined);
             });
         });
 
         describe(`null`, () => {
             it(`null is not compatible with non-nullable`, () => {
                 const definedList: Type.DefinedList = TypeUtils.createDefinedList(false, []);
-                expect(localIsCompatible(Type.NullInstance, definedList)).to.equal(false, undefined);
+                expect(noopIsCompatible(Type.NullInstance, definedList)).to.equal(false, undefined);
             });
 
             it(`non-nullable is not compatible with null`, () => {
                 const definedList: Type.DefinedList = TypeUtils.createDefinedList(false, []);
-                expect(localIsCompatible(definedList, Type.NullInstance)).to.equal(false, undefined);
+                expect(noopIsCompatible(definedList, Type.NullInstance)).to.equal(false, undefined);
             });
 
             it(`null is compatible with nullable`, () => {
                 const definedList: Type.DefinedList = TypeUtils.createDefinedList(true, []);
-                expect(localIsCompatible(Type.NullInstance, definedList)).to.equal(true, undefined);
+                expect(noopIsCompatible(Type.NullInstance, definedList)).to.equal(true, undefined);
             });
         });
     });
@@ -177,7 +177,7 @@ describe(`localIsCompatible`, () => {
         describe(`identity`, () => {
             it(`empty`, () => {
                 const definedRecord: Type.DefinedRecord = TypeUtils.createDefinedRecord(false, new Map(), false);
-                expect(localIsCompatible(definedRecord, definedRecord)).to.equal(true, undefined);
+                expect(noopIsCompatible(definedRecord, definedRecord)).to.equal(true, undefined);
             });
 
             it(`non-empty`, () => {
@@ -187,7 +187,7 @@ describe(`localIsCompatible`, () => {
                     false,
                 );
 
-                expect(localIsCompatible(definedRecord, definedRecord)).to.equal(true, undefined);
+                expect(noopIsCompatible(definedRecord, definedRecord)).to.equal(true, undefined);
             });
         });
 
@@ -205,7 +205,7 @@ describe(`localIsCompatible`, () => {
                     false,
                 );
 
-                expect(localIsCompatible(left, right)).to.equal(true, undefined);
+                expect(noopIsCompatible(left, right)).to.equal(true, undefined);
             });
 
             it(`${Type.ExtendedTypeKind.NumberLiteral}`, () => {
@@ -221,7 +221,7 @@ describe(`localIsCompatible`, () => {
                     false,
                 );
 
-                expect(localIsCompatible(left, right)).to.equal(true, undefined);
+                expect(noopIsCompatible(left, right)).to.equal(true, undefined);
             });
 
             it(`${Type.ExtendedTypeKind.TextLiteral}`, () => {
@@ -237,24 +237,24 @@ describe(`localIsCompatible`, () => {
                     false,
                 );
 
-                expect(localIsCompatible(left, right)).to.equal(true, undefined);
+                expect(noopIsCompatible(left, right)).to.equal(true, undefined);
             });
         });
 
         describe(`null`, () => {
             it(`null is not compatible with non-nullable`, () => {
                 const definedRecord: Type.DefinedRecord = TypeUtils.createDefinedRecord(false, new Map(), false);
-                expect(localIsCompatible(Type.NullInstance, definedRecord)).to.equal(false, undefined);
+                expect(noopIsCompatible(Type.NullInstance, definedRecord)).to.equal(false, undefined);
             });
 
             it(`non-nullable is not compatible with null`, () => {
                 const definedRecord: Type.DefinedRecord = TypeUtils.createDefinedRecord(false, new Map(), false);
-                expect(localIsCompatible(definedRecord, Type.NullInstance)).to.equal(false, undefined);
+                expect(noopIsCompatible(definedRecord, Type.NullInstance)).to.equal(false, undefined);
             });
 
             it(`null is compatible with nullable`, () => {
                 const definedRecord: Type.DefinedRecord = TypeUtils.createDefinedRecord(true, new Map(), false);
-                expect(localIsCompatible(Type.NullInstance, definedRecord)).to.equal(true, undefined);
+                expect(noopIsCompatible(Type.NullInstance, definedRecord)).to.equal(true, undefined);
             });
         });
     });
@@ -263,7 +263,7 @@ describe(`localIsCompatible`, () => {
         describe(`identity`, () => {
             it(`empty`, () => {
                 const definedTable: Type.DefinedTable = TypeUtils.createDefinedTable(false, new OrderedMap(), false);
-                expect(localIsCompatible(definedTable, definedTable)).to.equal(true, undefined);
+                expect(noopIsCompatible(definedTable, definedTable)).to.equal(true, undefined);
             });
 
             it(`non-empty`, () => {
@@ -273,7 +273,7 @@ describe(`localIsCompatible`, () => {
                     false,
                 );
 
-                expect(localIsCompatible(definedTable, definedTable)).to.equal(true, undefined);
+                expect(noopIsCompatible(definedTable, definedTable)).to.equal(true, undefined);
             });
         });
 
@@ -291,7 +291,7 @@ describe(`localIsCompatible`, () => {
                     false,
                 );
 
-                expect(localIsCompatible(left, right)).to.equal(true, undefined);
+                expect(noopIsCompatible(left, right)).to.equal(true, undefined);
             });
 
             it(`${Type.ExtendedTypeKind.NumberLiteral}`, () => {
@@ -307,7 +307,7 @@ describe(`localIsCompatible`, () => {
                     false,
                 );
 
-                expect(localIsCompatible(left, right)).to.equal(true, undefined);
+                expect(noopIsCompatible(left, right)).to.equal(true, undefined);
             });
 
             it(`${Type.ExtendedTypeKind.TextLiteral}`, () => {
@@ -323,24 +323,24 @@ describe(`localIsCompatible`, () => {
                     false,
                 );
 
-                expect(localIsCompatible(left, right)).to.equal(true, undefined);
+                expect(noopIsCompatible(left, right)).to.equal(true, undefined);
             });
         });
 
         describe(`null`, () => {
             it(`null is not compatible with non-nullable`, () => {
                 const definedTable: Type.DefinedTable = TypeUtils.createDefinedTable(false, new OrderedMap(), false);
-                expect(localIsCompatible(Type.NullInstance, definedTable)).to.equal(false, undefined);
+                expect(noopIsCompatible(Type.NullInstance, definedTable)).to.equal(false, undefined);
             });
 
             it(`non-nullable is not compatible with null`, () => {
                 const definedTable: Type.DefinedTable = TypeUtils.createDefinedTable(false, new OrderedMap(), false);
-                expect(localIsCompatible(definedTable, Type.NullInstance)).to.equal(false, undefined);
+                expect(noopIsCompatible(definedTable, Type.NullInstance)).to.equal(false, undefined);
             });
 
             it(`null is compatible with nullable`, () => {
                 const definedTable: Type.DefinedTable = TypeUtils.createDefinedTable(true, new OrderedMap(), false);
-                expect(localIsCompatible(Type.NullInstance, definedTable)).to.equal(true, undefined);
+                expect(noopIsCompatible(Type.NullInstance, definedTable)).to.equal(true, undefined);
             });
         });
     });
@@ -348,29 +348,29 @@ describe(`localIsCompatible`, () => {
     describe(`literals are compatible with parent type`, () => {
         describe(`${Type.ExtendedTypeKind.LogicalLiteral}`, () => {
             it(`true`, () =>
-                expect(localIsCompatible(Type.TrueInstance, Type.LogicalInstance)).to.equal(true, undefined));
+                expect(noopIsCompatible(Type.TrueInstance, Type.LogicalInstance)).to.equal(true, undefined));
 
             it(`false`, () =>
-                expect(localIsCompatible(Type.FalseInstance, Type.LogicalInstance)).to.equal(true, undefined));
+                expect(noopIsCompatible(Type.FalseInstance, Type.LogicalInstance)).to.equal(true, undefined));
         });
 
         describe(`${Type.ExtendedTypeKind.NumberLiteral}`, () => {
             it(`1`, () => {
-                expect(localIsCompatible(TypeUtils.createNumberLiteral(false, `1`), Type.NumberInstance)).to.equal(
+                expect(noopIsCompatible(TypeUtils.createNumberLiteral(false, `1`), Type.NumberInstance)).to.equal(
                     true,
                     undefined,
                 );
             });
 
             it(`--1`, () => {
-                expect(localIsCompatible(TypeUtils.createNumberLiteral(false, `--1`), Type.NumberInstance)).to.equal(
+                expect(noopIsCompatible(TypeUtils.createNumberLiteral(false, `--1`), Type.NumberInstance)).to.equal(
                     true,
                     undefined,
                 );
             });
 
             it(`+1`, () => {
-                expect(localIsCompatible(TypeUtils.createNumberLiteral(false, `+1`), Type.NumberInstance)).to.equal(
+                expect(noopIsCompatible(TypeUtils.createNumberLiteral(false, `+1`), Type.NumberInstance)).to.equal(
                     true,
                     undefined,
                 );
@@ -378,7 +378,7 @@ describe(`localIsCompatible`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.TextLiteral}`, () => {
-            expect(localIsCompatible(TypeUtils.createTextLiteral(false, `"foo"`), Type.TextInstance)).to.equal(
+            expect(noopIsCompatible(TypeUtils.createTextLiteral(false, `"foo"`), Type.TextInstance)).to.equal(
                 true,
                 undefined,
             );
@@ -388,13 +388,13 @@ describe(`localIsCompatible`, () => {
     describe(`literals are compatible with literals`, () => {
         it(`1`, () => {
             expect(
-                localIsCompatible(TypeUtils.createNumberLiteral(false, `1`), TypeUtils.createNumberLiteral(false, `1`)),
+                noopIsCompatible(TypeUtils.createNumberLiteral(false, `1`), TypeUtils.createNumberLiteral(false, `1`)),
             ).to.equal(true, undefined);
         });
 
         it(`"foo"`, () => {
             expect(
-                localIsCompatible(
+                noopIsCompatible(
                     TypeUtils.createTextLiteral(false, `"foo"`),
                     TypeUtils.createTextLiteral(false, `"foo"`),
                 ),
