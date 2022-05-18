@@ -200,6 +200,17 @@ export class NoOpTrace extends Trace {
     public override trace(_message: string, _maybeDetails?: object): void {}
 }
 
+export const NoOpTraceManagerInstance: NoOpTraceManager = new NoOpTraceManager(undefined, undefined);
+
+export const NoOpTraceInstance: NoOpTrace = new NoOpTrace(
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    (_trace: Trace, _message: string, _maybeDetails?: object) => {},
+    "",
+    "",
+    -1,
+    undefined,
+);
+
 function createAutoIncrementId(): () => number {
     let counter: number = 0;
 

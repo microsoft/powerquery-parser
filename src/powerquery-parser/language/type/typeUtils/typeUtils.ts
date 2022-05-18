@@ -7,6 +7,7 @@ import { Assert } from "../../../common";
 import { createPrimitiveType } from "./factories";
 import { isCompatible } from "./isCompatible";
 import { isEqualType } from "./isEqualType";
+import { TraceManager } from "../../../common/trace";
 import { Type } from "..";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";
 
@@ -75,6 +76,8 @@ export function isTypeKind(text: string): text is Type.TypeKind {
 export function isValidInvocation(
     functionType: Type.DefinedFunction,
     args: ReadonlyArray<Type.TPowerQueryType>,
+    traceManager: TraceManager,
+    correlationId: number | undefined,
 ): boolean {
     // You can't provide more arguments than are on the function signature.
     if (args.length > functionType.parameters.length) {
@@ -96,7 +99,7 @@ export function isValidInvocation(
                 Assert.asDefined(parameter.maybeType),
             );
 
-            if (!isCompatible(argType, parameterType)) {
+            if (!isCompatible(argType, parameterType, traceManager, correlationId)) {
                 return false;
             }
         }

@@ -3,8 +3,10 @@
 
 import { Assert, CommonError, StringUtils } from "../../../common";
 import { PrimitiveTypeConstantMap, primitiveTypeMapKey } from "./primitive";
+import { Trace, TraceManager } from "../../../common/trace";
 import { simplify } from "./simplify";
 import { Type } from "..";
+import { TypeUtilsTraceConstant } from "./typeTraceConstant";
 
 export function createPrimitiveType<T extends Type.TypeKind>(isNullable: boolean, typeKind: T): Type.TPrimitiveType {
     const key: string = primitiveTypeMapKey(isNullable, typeKind);
@@ -17,19 +19,29 @@ export function createPrimitiveType<T extends Type.TypeKind>(isNullable: boolean
 
 // If the given types can be simplified/deduped down to a single type then that is returned instead.
 // Otherwise returns an instance of `Type.AnyUnion`.
-export function createAnyUnion(unionedTypePairs: ReadonlyArray<Type.TPowerQueryType>): Type.TPowerQueryType {
-    const simplified: ReadonlyArray<Type.TPowerQueryType> = simplify(unionedTypePairs);
+export function createAnyUnion(
+    unionedTypePairs: ReadonlyArray<Type.TPowerQueryType>,
+    traceManager: TraceManager,
+    maybeCorrelationId: number | undefined,
+): Type.TPowerQueryType {
+    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.Categorize, createAnyUnion.name, maybeCorrelationId);
+
+    const simplified: ReadonlyArray<Type.TPowerQueryType> = simplify(unionedTypePairs, traceManager, trace.id);
 
     if (simplified.length === 1) {
         return simplified[0];
     }
 
-    return {
+    const result: Type.AnyUnion = {
         kind: Type.TypeKind.Any,
         maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
         isNullable: unionedTypePairs.find((ttype: Type.TPowerQueryType) => ttype.isNullable === true) !== undefined,
         unionedTypePairs: simplified,
     };
+
+    trace.exit();
+
+    return result;
 }
 
 export function createDefinedFunction(

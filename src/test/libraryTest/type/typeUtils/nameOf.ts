@@ -5,6 +5,7 @@ import "mocha";
 import { expect } from "chai";
 
 import { Type, TypeUtils } from "../../../../powerquery-parser/language";
+import { NoOpTraceManagerInstance } from "../../../../powerquery-parser/common/trace";
 import { OrderedMap } from "../../../../powerquery-parser";
 
 describe(`TypeUtils.nameOf`, () => {
@@ -222,16 +223,25 @@ describe(`TypeUtils.nameOf`, () => {
     describe(`extended`, () => {
         describe(`${Type.ExtendedTypeKind.AnyUnion}`, () => {
             it(`primitives`, () => {
-                const type: Type.TPowerQueryType = TypeUtils.createAnyUnion([Type.NumberInstance, Type.ListInstance]);
+                const type: Type.TPowerQueryType = TypeUtils.createAnyUnion(
+                    [Type.NumberInstance, Type.ListInstance],
+                    NoOpTraceManagerInstance,
+                    undefined,
+                );
+
                 expect(TypeUtils.nameOf(type)).to.equal(`list | number`);
             });
 
             it(`complex`, () => {
-                const type: Type.TPowerQueryType = TypeUtils.createAnyUnion([
-                    TypeUtils.createDefinedRecord(false, new Map([[`foo`, Type.NumberInstance]]), false),
-                    TypeUtils.createDefinedList(false, [Type.TextInstance]),
-                    TypeUtils.createDefinedTable(false, new OrderedMap([[`bar`, Type.TextInstance]]), true),
-                ]);
+                const type: Type.TPowerQueryType = TypeUtils.createAnyUnion(
+                    [
+                        TypeUtils.createDefinedRecord(false, new Map([[`foo`, Type.NumberInstance]]), false),
+                        TypeUtils.createDefinedList(false, [Type.TextInstance]),
+                        TypeUtils.createDefinedTable(false, new OrderedMap([[`bar`, Type.TextInstance]]), true),
+                    ],
+                    NoOpTraceManagerInstance,
+                    undefined,
+                );
 
                 const actual: string = TypeUtils.nameOf(type);
                 expect(actual).to.equal(`{text} | [foo: number] | table [bar: text, ...]`);

@@ -20,7 +20,9 @@ import {
     isEqualTextLiteral,
     isEqualType,
 } from "./isEqualType";
+import { Trace, TraceManager } from "../../../common/trace";
 import { Type } from "..";
+import { TypeUtilsTraceConstant } from "./typeTraceConstant";
 
 export type TCategory = TExtendedCategory | NonExtendedCategory;
 export type TExtendedCategory =
@@ -133,20 +135,26 @@ export interface TypeCategory extends ITypeKindCategory<Type.Type> {
 
 // Takes a collection of PowerQueryType and breaks them down into buckets based on their TypeKind,
 // then again on their ExtendedTypeKind.
-export function categorize(types: ReadonlyArray<Type.TPowerQueryType>): CategorizedPowerQueryTypes {
+export function categorize(
+    types: ReadonlyArray<Type.TPowerQueryType>,
+    traceManager: TraceManager,
+    maybeCorrelationId: number | undefined,
+): CategorizedPowerQueryTypes {
+    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.Categorize, categorize.name, maybeCorrelationId);
+
     const categoryByKind: Map<Type.TypeKind, TCategory> = new Map();
 
     for (const type of types) {
         const maybeCategory: TCategory | undefined = categoryByKind.get(type.kind);
 
         if (maybeCategory === undefined) {
-            categoryByKind.set(type.kind, createCategory(type));
+            categoryByKind.set(type.kind, createCategory(type, traceManager, trace.id));
         } else {
-            categoryByKind.set(type.kind, addToCategory(maybeCategory, type));
+            categoryByKind.set(type.kind, addToCategory(maybeCategory, type, traceManager, trace.id));
         }
     }
 
-    return {
+    const result: CategorizedPowerQueryTypes = {
         maybeAction: categoryByKind.get(Type.TypeKind.Action) as ActionCategory,
         maybeAny: categoryByKind.get(Type.TypeKind.Any) as AnyCategory,
         maybeAnyNonNull: categoryByKind.get(Type.TypeKind.AnyNonNull) as AnyNonNullCategory,
@@ -169,6 +177,10 @@ export function categorize(types: ReadonlyArray<Type.TPowerQueryType>): Categori
         maybeType: categoryByKind.get(Type.TypeKind.Type) as TypeCategory,
         maybeUnknown: categoryByKind.get(Type.TypeKind.Unknown) as UnknownCategory,
     };
+
+    trace.exit();
+
+    return result;
 }
 
 interface ITypeKindCategory<T extends Type.TPowerQueryType> {
@@ -176,102 +188,135 @@ interface ITypeKindCategory<T extends Type.TPowerQueryType> {
     readonly primitives: ImmutableSet<T>;
 }
 
-function addToCategory(category: TCategory, type: Type.TPowerQueryType): TCategory {
+function addToCategory(
+    category: TCategory,
+    type: Type.TPowerQueryType,
+    traceManager: TraceManager,
+    correlationId: number,
+): TCategory {
+    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.Categorize, addToCategory.name, correlationId);
+
+    let result: TCategory;
+
     // We can't group cases which call `addToCategoryForPrimitive` as they each have a different generic type.
     switch (type.kind) {
         case Type.TypeKind.Action:
-            return addToCategoryForPrimitive(category, type);
+            result = addToCategoryForPrimitive(category, type);
+            break;
 
         case Type.TypeKind.Any: {
             assertIsCategoryForType<Type.TAny, AnyCategory>(category, type);
 
-            return addTypeIfUniqueAny(category, type);
+            result = addTypeIfUniqueAny(category, type);
+            break;
         }
 
         case Type.TypeKind.AnyNonNull:
-            return addToCategoryForPrimitive(category, type);
+            result = addToCategoryForPrimitive(category, type);
+            break;
 
         case Type.TypeKind.Binary:
-            return addToCategoryForPrimitive(category, type);
+            result = addToCategoryForPrimitive(category, type);
+            break;
 
         case Type.TypeKind.Date:
-            return addToCategoryForPrimitive(category, type);
+            result = addToCategoryForPrimitive(category, type);
+            break;
 
         case Type.TypeKind.DateTime:
-            return addToCategoryForPrimitive(category, type);
+            result = addToCategoryForPrimitive(category, type);
+            break;
 
         case Type.TypeKind.DateTimeZone:
-            return addToCategoryForPrimitive(category, type);
+            result = addToCategoryForPrimitive(category, type);
+            break;
 
         case Type.TypeKind.Duration:
-            return addToCategoryForPrimitive(category, type);
+            result = addToCategoryForPrimitive(category, type);
+            break;
 
         case Type.TypeKind.Function: {
             assertIsCategoryForType<Type.TFunction, FunctionCategory>(category, type);
 
-            return addToCategoryForFunction(category, type);
+            result = addToCategoryForFunction(category, type);
+            break;
         }
 
         case Type.TypeKind.List: {
             assertIsCategoryForType<Type.TList, ListCategory>(category, type);
 
-            return addToCategoryForList(category, type);
+            result = addToCategoryForList(category, type);
+            break;
         }
 
         case Type.TypeKind.Logical: {
             assertIsCategoryForType<Type.TLogical, LogicalCategory>(category, type);
 
-            return addToCategoryForLogical(category, type);
+            result = addToCategoryForLogical(category, type);
+            break;
         }
 
         case Type.TypeKind.None:
-            return addToCategoryForPrimitive(category, type);
+            result = addToCategoryForPrimitive(category, type);
+            break;
 
         case Type.TypeKind.NotApplicable:
-            return addToCategoryForPrimitive(category, type);
+            result = addToCategoryForPrimitive(category, type);
+            break;
 
         case Type.TypeKind.Null:
-            return addToCategoryForPrimitive(category, type);
+            result = addToCategoryForPrimitive(category, type);
+            break;
 
         case Type.TypeKind.Number: {
             assertIsCategoryForType<Type.TNumber, NumberCategory>(category, type);
-
-            return addToCategoryForNumber(category, type);
+            result = addToCategoryForNumber(category, type);
+            break;
         }
 
         case Type.TypeKind.Record: {
             assertIsCategoryForType<Type.TRecord, RecordCategory>(category, type);
 
-            return addToCategoryForRecord(category, type);
+            result = addToCategoryForRecord(category, type);
+            break;
         }
 
         case Type.TypeKind.Table: {
             assertIsCategoryForType<Type.TTable, TableCategory>(category, type);
 
-            return addToCategoryForTable(category, type);
+            result = addToCategoryForTable(category, type);
+            break;
         }
 
         case Type.TypeKind.Text: {
             assertIsCategoryForType<Type.TText, TextCategory>(category, type);
 
-            return addToCategoryForText(category, type);
+            result = addToCategoryForText(category, type);
+            break;
         }
 
         case Type.TypeKind.Time:
-            return addToCategoryForPrimitive(category, type);
+            result = addToCategoryForPrimitive(category, type);
+            break;
 
         case Type.TypeKind.Type: {
             assertIsCategoryForType<Type.TType, TypeCategory>(category, type);
 
-            return addTypeIfUniqueType(category, type);
+            result = addTypeIfUniqueType(category, type);
+            break;
         }
 
         case Type.TypeKind.Unknown:
-            return addToCategoryForPrimitive(category, type);
+            result = addToCategoryForPrimitive(category, type);
+            break;
 
         default:
             throw Assert.isNever(type);
     }
+
+    trace.exit();
+
+    return result;
 }
 
 function addTypeIfUniqueAny(category: AnyCategory, type: Type.TAny): AnyCategory {
@@ -550,74 +595,103 @@ function assertIsCategoryForType<PowerQueryType extends Type.TPowerQueryType, Ca
     }
 }
 
-function createCategory(type: Type.TPowerQueryType): TCategory {
+function createCategory(type: Type.TPowerQueryType, traceManager: TraceManager, correlationId: number): TCategory {
+    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.Categorize, createCategory.name, correlationId);
+
+    let result: TCategory;
+
     switch (type.kind) {
         case Type.TypeKind.Action:
-            return createCategoryForPrimitive(type);
+            result = createCategoryForPrimitive(type);
+            break;
 
         case Type.TypeKind.Any:
-            return createCategoryForAny(type);
+            result = createCategoryForAny(type);
+            break;
 
         case Type.TypeKind.AnyNonNull:
-            return createCategoryForPrimitive(type);
+            result = createCategoryForPrimitive(type);
+            break;
 
         case Type.TypeKind.Binary:
-            return createCategoryForPrimitive(type);
+            result = createCategoryForPrimitive(type);
+            break;
 
         case Type.TypeKind.Date:
-            return createCategoryForPrimitive(type);
+            result = createCategoryForPrimitive(type);
+            break;
 
         case Type.TypeKind.DateTime:
-            return createCategoryForPrimitive(type);
+            result = createCategoryForPrimitive(type);
+            break;
 
         case Type.TypeKind.DateTimeZone:
-            return createCategoryForPrimitive(type);
+            result = createCategoryForPrimitive(type);
+            break;
 
         case Type.TypeKind.Duration:
-            return createCategoryForPrimitive(type);
+            result = createCategoryForPrimitive(type);
+            break;
 
         case Type.TypeKind.Function:
-            return createCategoryForFunction(type);
+            result = createCategoryForFunction(type);
+            break;
 
         case Type.TypeKind.List:
-            return createCategoryForList(type);
+            result = createCategoryForList(type);
+            break;
 
         case Type.TypeKind.Logical:
-            return createCategoryForLogical(type);
+            result = createCategoryForLogical(type);
+            break;
 
         case Type.TypeKind.None:
-            return createCategoryForPrimitive(type);
+            result = createCategoryForPrimitive(type);
+            break;
 
         case Type.TypeKind.NotApplicable:
-            return createCategoryForPrimitive(type);
+            result = createCategoryForPrimitive(type);
+            break;
 
         case Type.TypeKind.Null:
-            return createCategoryForPrimitive(type);
+            result = createCategoryForPrimitive(type);
+            break;
 
         case Type.TypeKind.Number:
-            return createCategoryForNumber(type);
+            result = createCategoryForNumber(type);
+            break;
 
         case Type.TypeKind.Record:
-            return createCategoryForRecord(type);
+            result = createCategoryForRecord(type);
+            break;
 
         case Type.TypeKind.Table:
-            return createCategoryForTable(type);
+            result = createCategoryForTable(type);
+            break;
 
         case Type.TypeKind.Text:
-            return createCategoryForText(type);
+            result = createCategoryForText(type);
+            break;
 
         case Type.TypeKind.Time:
-            return createCategoryForPrimitive(type);
+            result = createCategoryForPrimitive(type);
+            break;
 
         case Type.TypeKind.Type:
-            return createCategoryForType(type);
+            result = createCategoryForType(type);
+            break;
 
         case Type.TypeKind.Unknown:
-            return createCategoryForPrimitive(type);
+            result = createCategoryForPrimitive(type);
+            break;
 
         default:
             throw Assert.isNever(type);
     }
+
+    trace.exit();
+
+    return result;
 }
 
 function createCategoryForAny(type: Type.TAny): AnyCategory {

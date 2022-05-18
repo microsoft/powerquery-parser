@@ -3,9 +3,10 @@
 
 import "mocha";
 import { expect } from "chai";
-import { OrderedMap } from "../../../../powerquery-parser";
 
 import { Type, TypeUtils } from "../../../../powerquery-parser/language";
+import { NoOpTraceManagerInstance } from "../../../../powerquery-parser/common/trace";
+import { OrderedMap } from "../../../../powerquery-parser";
 
 interface AbridgedType {
     readonly kind: Type.TypeKind;
@@ -33,11 +34,19 @@ function createAbridgedTypes(types: ReadonlyArray<Type.TPowerQueryType>): Readon
     return types.map(typeToAbridged);
 }
 
+const localSimplify: (types: ReadonlyArray<Type.TPowerQueryType>) => ReadonlyArray<Type.TPowerQueryType> = (
+    types: ReadonlyArray<Type.TPowerQueryType>,
+) => TypeUtils.simplify(types, NoOpTraceManagerInstance, undefined);
+
+const localCreateAnyUnion: (types: ReadonlyArray<Type.TPowerQueryType>) => Type.TPowerQueryType = (
+    types: ReadonlyArray<Type.TPowerQueryType>,
+) => TypeUtils.createAnyUnion(types, NoOpTraceManagerInstance, undefined);
+
 describe(`TypeUtils`, () => {
     describe(`simplify`, () => {
         it(`generic, identical nullability should reduce to single type`, () => {
             const actual: ReadonlyArray<AbridgedType> = createAbridgedTypes(
-                TypeUtils.simplify([Type.RecordInstance, Type.RecordInstance]),
+                localSimplify([Type.RecordInstance, Type.RecordInstance]),
             );
 
             const expected: ReadonlyArray<AbridgedType> = [abridgedPrimitiveType(Type.TypeKind.Record, false)];
@@ -48,7 +57,7 @@ describe(`TypeUtils`, () => {
 
         it(`generic, mixed nullability should reduce to nullable`, () => {
             const actual: ReadonlyArray<AbridgedType> = createAbridgedTypes(
-                TypeUtils.simplify([Type.RecordInstance, Type.NullableRecordInstance]),
+                localSimplify([Type.RecordInstance, Type.NullableRecordInstance]),
             );
 
             const expected: ReadonlyArray<AbridgedType> = [abridgedPrimitiveType(Type.TypeKind.Record, true)];
@@ -59,7 +68,7 @@ describe(`TypeUtils`, () => {
 
         it(`early return with Any primitive`, () => {
             const actual: ReadonlyArray<AbridgedType> = createAbridgedTypes(
-                TypeUtils.simplify([Type.AnyInstance, Type.NullableRecordInstance]),
+                localSimplify([Type.AnyInstance, Type.NullableRecordInstance]),
             );
 
             const expected: ReadonlyArray<AbridgedType> = [Type.AnyInstance];
@@ -68,7 +77,7 @@ describe(`TypeUtils`, () => {
 
         it(`simplify literal and primitive to primitive`, () => {
             const actual: ReadonlyArray<AbridgedType> = createAbridgedTypes(
-                TypeUtils.simplify([Type.NumberInstance, TypeUtils.createNumberLiteral(false, 1)]),
+                localSimplify([Type.NumberInstance, TypeUtils.createNumberLiteral(false, 1)]),
             );
 
             const expected: ReadonlyArray<AbridgedType> = [Type.NumberInstance];
@@ -76,7 +85,7 @@ describe(`TypeUtils`, () => {
         });
 
         it(`retain multiple unique literals`, () => {
-            const actual: ReadonlyArray<AbridgedType> = TypeUtils.simplify([
+            const actual: ReadonlyArray<AbridgedType> = localSimplify([
                 TypeUtils.createNumberLiteral(false, 1),
                 TypeUtils.createNumberLiteral(false, 2),
             ]);
@@ -90,13 +99,13 @@ describe(`TypeUtils`, () => {
         });
 
         it(`simplify true | false to boolean`, () => {
-            const actual: ReadonlyArray<AbridgedType> = TypeUtils.simplify([Type.FalseInstance, Type.TrueInstance]);
+            const actual: ReadonlyArray<AbridgedType> = localSimplify([Type.FalseInstance, Type.TrueInstance]);
             const expected: ReadonlyArray<AbridgedType> = [Type.LogicalInstance];
             expect(actual).deep.equal(expected);
         });
 
         it(`prefer nullable in boolean simplification`, () => {
-            const actual: ReadonlyArray<AbridgedType> = TypeUtils.simplify([
+            const actual: ReadonlyArray<AbridgedType> = localSimplify([
                 Type.FalseInstance,
                 Type.TrueInstance,
                 Type.NullableFalseInstance,
@@ -108,7 +117,7 @@ describe(`TypeUtils`, () => {
         });
 
         it(`dedupe duplicate literals`, () => {
-            const actual: ReadonlyArray<AbridgedType> = TypeUtils.simplify([
+            const actual: ReadonlyArray<AbridgedType> = localSimplify([
                 TypeUtils.createNumberLiteral(false, 1),
                 TypeUtils.createNumberLiteral(false, 1),
             ]);
@@ -118,9 +127,9 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, combine into a single primitive type`, () => {
-            const simplified: ReadonlyArray<Type.TPowerQueryType> = TypeUtils.simplify([
-                TypeUtils.createAnyUnion([Type.RecordInstance, Type.RecordInstance]),
-                TypeUtils.createAnyUnion([Type.RecordInstance, Type.RecordInstance]),
+            const simplified: ReadonlyArray<Type.TPowerQueryType> = localSimplify([
+                localCreateAnyUnion([Type.RecordInstance, Type.RecordInstance]),
+                localCreateAnyUnion([Type.RecordInstance, Type.RecordInstance]),
             ]);
 
             expect(simplified.length).to.equal(1);
@@ -131,9 +140,9 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, dedupe primitive types across AnyUnion`, () => {
-            const simplified: ReadonlyArray<Type.TPowerQueryType> = TypeUtils.simplify([
-                TypeUtils.createAnyUnion([Type.RecordInstance, Type.NullableTableInstance]),
-                TypeUtils.createAnyUnion([Type.RecordInstance, Type.NullableTableInstance]),
+            const simplified: ReadonlyArray<Type.TPowerQueryType> = localSimplify([
+                localCreateAnyUnion([Type.RecordInstance, Type.NullableTableInstance]),
+                localCreateAnyUnion([Type.RecordInstance, Type.NullableTableInstance]),
             ]);
 
             expect(simplified.length).to.equal(2);
@@ -149,9 +158,9 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, mixed nullability`, () => {
-            const simplified: ReadonlyArray<Type.TPowerQueryType> = TypeUtils.simplify([
-                TypeUtils.createAnyUnion([Type.NullableRecordInstance, Type.NullableTableInstance]),
-                TypeUtils.createAnyUnion([Type.RecordInstance, Type.TableInstance]),
+            const simplified: ReadonlyArray<Type.TPowerQueryType> = localSimplify([
+                localCreateAnyUnion([Type.NullableRecordInstance, Type.NullableTableInstance]),
+                localCreateAnyUnion([Type.RecordInstance, Type.TableInstance]),
             ]);
 
             expect(simplified.length).to.equal(4);
@@ -169,12 +178,12 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, dedupe across multi level AnyUnion`, () => {
-            const simplified: ReadonlyArray<Type.TPowerQueryType> = TypeUtils.simplify([
-                TypeUtils.createAnyUnion([
+            const simplified: ReadonlyArray<Type.TPowerQueryType> = localSimplify([
+                localCreateAnyUnion([
                     Type.RecordInstance,
-                    TypeUtils.createAnyUnion([Type.RecordInstance, Type.NumberInstance]),
+                    localCreateAnyUnion([Type.RecordInstance, Type.NumberInstance]),
                 ]),
-                TypeUtils.createAnyUnion([Type.RecordInstance]),
+                localCreateAnyUnion([Type.RecordInstance]),
             ]);
 
             expect(simplified.length).to.equal(2);
@@ -190,12 +199,12 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, short circuit with Any primitive in AnyUnion`, () => {
-            const simplified: ReadonlyArray<Type.TPowerQueryType> = TypeUtils.simplify([
-                TypeUtils.createAnyUnion([
+            const simplified: ReadonlyArray<Type.TPowerQueryType> = localSimplify([
+                localCreateAnyUnion([
                     Type.RecordInstance,
-                    TypeUtils.createAnyUnion([Type.AnyInstance, Type.NumberInstance]),
+                    localCreateAnyUnion([Type.AnyInstance, Type.NumberInstance]),
                 ]),
-                TypeUtils.createAnyUnion([Type.RecordInstance]),
+                localCreateAnyUnion([Type.RecordInstance]),
             ]);
 
             expect(simplified.length).to.equal(1);
@@ -407,16 +416,13 @@ describe(`TypeUtils`, () => {
         describe(`extended`, () => {
             describe(`${Type.ExtendedTypeKind.AnyUnion}`, () => {
                 it(`primitives`, () => {
-                    const type: Type.TPowerQueryType = TypeUtils.createAnyUnion([
-                        Type.NumberInstance,
-                        Type.ListInstance,
-                    ]);
+                    const type: Type.TPowerQueryType = localCreateAnyUnion([Type.NumberInstance, Type.ListInstance]);
 
                     expect(TypeUtils.nameOf(type)).to.equal(`list | number`);
                 });
 
                 it(`complex`, () => {
-                    const type: Type.TPowerQueryType = TypeUtils.createAnyUnion([
+                    const type: Type.TPowerQueryType = localCreateAnyUnion([
                         TypeUtils.createDefinedRecord(false, new Map([["foo", Type.NumberInstance]]), false),
                         TypeUtils.createDefinedList(false, [Type.TextInstance]),
                         TypeUtils.createDefinedTable(false, new OrderedMap([["bar", Type.TextInstance]]), true),
