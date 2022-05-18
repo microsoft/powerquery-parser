@@ -25,7 +25,7 @@ export function simplify(
     traceManager: TraceManager,
     maybeCorrelationId: number | undefined,
 ): ReadonlyArray<Type.TPowerQueryType> {
-    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.Categorize, categorize.name, maybeCorrelationId);
+    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.Simplify, simplify.name, maybeCorrelationId);
 
     const categorized: CategorizedPowerQueryTypes = categorize(types, traceManager, trace.id);
 

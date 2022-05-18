@@ -24,7 +24,11 @@ export function createAnyUnion(
     traceManager: TraceManager,
     maybeCorrelationId: number | undefined,
 ): Type.TPowerQueryType {
-    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.Categorize, createAnyUnion.name, maybeCorrelationId);
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.CreateAnyUnion,
+        createAnyUnion.name,
+        maybeCorrelationId,
+    );
 
     const simplified: ReadonlyArray<Type.TPowerQueryType> = simplify(unionedTypePairs, traceManager, trace.id);
 
