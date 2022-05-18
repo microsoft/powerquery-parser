@@ -51,6 +51,63 @@ export const enum TraceConstant {
     Result = "Result",
 }
 
+export class Trace {
+    constructor(
+        protected readonly emitTraceFn: (trace: Trace, message: string, maybeDetails?: object) => void,
+        public readonly phase: string,
+        public readonly task: string,
+        public readonly id: number,
+        public readonly maybeCorrelationId: number | undefined,
+        maybeDetails?: object,
+    ) {
+        this.entry(maybeDetails);
+    }
+
+    public entry(maybeDetails?: object): void {
+        this.trace(TraceConstant.Entry, maybeDetails);
+    }
+
+    public trace(message: string, maybeDetails?: object): void {
+        this.emitTraceFn(this, message, maybeDetails);
+    }
+
+    public exit(maybeDetails?: object): void {
+        this.trace(TraceConstant.Exit, maybeDetails);
+    }
+}
+
+// Tracing entries add the current time to its details field.
+export class BenchmarkTrace extends Trace {
+    constructor(
+        emitTraceFn: (trace: Trace, message: string, maybeDetails?: object) => void,
+        phase: string,
+        task: string,
+        id: number,
+        maybeCorrelationId: number | undefined,
+        maybeDetails?: object,
+    ) {
+        super(emitTraceFn, phase, task, id, maybeCorrelationId, maybeDetails);
+    }
+
+    public override trace(message: string, maybeDetails?: object): void {
+        super.trace(message, maybeDetails);
+    }
+}
+
+export class NoOpTrace extends Trace {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    public override trace(_message: string, _maybeDetails?: object): void {}
+}
+
+export const NoOpTraceInstance: NoOpTrace = new NoOpTrace(
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    (_trace: Trace, _message: string, _maybeDetails?: object) => {},
+    "",
+    "",
+    -1,
+    undefined,
+);
+
 export abstract class TraceManager {
     protected readonly createIdFn: () => number = createAutoIncrementId();
 
@@ -143,73 +200,16 @@ export class NoOpTraceManager extends TraceManager {
     emit(_tracer: Trace, _message: string, _maybeDetails?: object): void {}
 
     protected override create(
-        phase: string,
-        task: string,
-        maybeCorrelationId: number | undefined,
-        maybeDetails?: object,
+        _phase: string,
+        _task: string,
+        _maybeCorrelationId: number | undefined,
+        _maybeDetails?: object,
     ): Trace {
-        return new NoOpTrace(this.emit.bind(this), phase, task, this.createIdFn(), maybeCorrelationId, maybeDetails);
+        return NoOpTraceInstance;
     }
-}
-
-export class Trace {
-    constructor(
-        protected readonly emitTraceFn: (trace: Trace, message: string, maybeDetails?: object) => void,
-        public readonly phase: string,
-        public readonly task: string,
-        public readonly id: number,
-        public readonly maybeCorrelationId: number | undefined,
-        maybeDetails?: object,
-    ) {
-        this.entry(maybeDetails);
-    }
-
-    public entry(maybeDetails?: object): void {
-        this.trace(TraceConstant.Entry, maybeDetails);
-    }
-
-    public trace(message: string, maybeDetails?: object): void {
-        this.emitTraceFn(this, message, maybeDetails);
-    }
-
-    public exit(maybeDetails?: object): void {
-        this.trace(TraceConstant.Exit, maybeDetails);
-    }
-}
-
-// Tracing entries add the current time to its details field.
-export class BenchmarkTrace extends Trace {
-    constructor(
-        emitTraceFn: (trace: Trace, message: string, maybeDetails?: object) => void,
-        phase: string,
-        task: string,
-        id: number,
-        maybeCorrelationId: number | undefined,
-        maybeDetails?: object,
-    ) {
-        super(emitTraceFn, phase, task, id, maybeCorrelationId, maybeDetails);
-    }
-
-    public override trace(message: string, maybeDetails?: object): void {
-        super.trace(message, maybeDetails);
-    }
-}
-
-export class NoOpTrace extends Trace {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    public override trace(_message: string, _maybeDetails?: object): void {}
 }
 
 export const NoOpTraceManagerInstance: NoOpTraceManager = new NoOpTraceManager(undefined, undefined);
-
-export const NoOpTraceInstance: NoOpTrace = new NoOpTrace(
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    (_trace: Trace, _message: string, _maybeDetails?: object) => {},
-    "",
-    "",
-    -1,
-    undefined,
-);
 
 function createAutoIncrementId(): () => number {
     let counter: number = 0;
