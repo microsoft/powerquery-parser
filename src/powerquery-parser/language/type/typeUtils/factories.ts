@@ -33,6 +33,8 @@ export function createAnyUnion(
     const simplified: ReadonlyArray<Type.TPowerQueryType> = simplify(unionedTypePairs, traceManager, trace.id);
 
     if (simplified.length === 1) {
+        trace.exit();
+
         return simplified[0];
     }
 

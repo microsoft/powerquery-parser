@@ -59,7 +59,7 @@ export function isCompatible(
                 break;
 
             case Type.TypeKind.Function:
-                result = isCompatibleWithFunction(left, right);
+                result = isCompatibleWithFunction(left, right, traceManager, trace.id);
                 break;
 
             case Type.TypeKind.List:
@@ -380,21 +380,40 @@ function isCompatibleWithFieldSpecificationList(
     return result;
 }
 
-function isCompatibleWithFunction(left: Type.TPowerQueryType, right: Type.TFunction): boolean {
+function isCompatibleWithFunction(
+    left: Type.TPowerQueryType,
+    right: Type.TFunction,
+    traceManager: TraceManager,
+    correlationId: number,
+): boolean {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleWithFieldSpecificationList.name,
+        correlationId,
+    );
+
+    let result: boolean;
+
     if (left.kind !== right.kind) {
-        return false;
+        result = false;
+    } else {
+        switch (right.maybeExtendedKind) {
+            case undefined:
+                result = true;
+                break;
+
+            case Type.ExtendedTypeKind.DefinedFunction:
+                result = isCompatibleWithFunctionSignature(left, right);
+                break;
+
+            default:
+                throw Assert.isNever(right);
+        }
     }
 
-    switch (right.maybeExtendedKind) {
-        case undefined:
-            return true;
+    trace.exit();
 
-        case Type.ExtendedTypeKind.DefinedFunction:
-            return isCompatibleWithFunctionSignature(left, right);
-
-        default:
-            throw Assert.isNever(right);
-    }
+    return result;
 }
 
 function isCompatibleWithList(
@@ -654,6 +673,8 @@ function isCompatibleWithTableType(
                 throw Assert.isNever(left);
         }
     }
+
+    trace.exit();
 
     return result;
 }
