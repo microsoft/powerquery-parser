@@ -260,15 +260,15 @@ function typeCheckGenericNumber<
         left: Value,
         right: Schema,
         traceManager: TraceManager,
-        maybeCorrelationId: number | undefined,
+        maybeCorrelationId: number,
     ) => boolean | undefined,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): IChecked<number, IMismatch<Value, Schema>> {
     const trace: Trace = traceManager.entry(
         TypeUtilsTraceConstant.TypeCheck,
         typeCheckGenericNumber.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
     const numElements: number = valueElements.length;

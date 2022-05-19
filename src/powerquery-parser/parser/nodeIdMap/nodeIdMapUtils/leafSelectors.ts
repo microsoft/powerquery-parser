@@ -26,6 +26,7 @@ export function assertGetLeftMostXor(nodeIdMapCollection: Collection, nodeId: nu
     );
 }
 
+// Travels down the left most node under the given nodeId by way of the children collection.
 export function maybeLeftMostXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
     const currentNode: TXorNode | undefined = maybeXor(nodeIdMapCollection, nodeId);
 
@@ -44,6 +45,7 @@ export function maybeLeftMostXor(nodeIdMapCollection: Collection, nodeId: number
     return maybeXor(nodeIdMapCollection, currentNodeId);
 }
 
+// Same as maybeLeftMostXor but also checks if it's an Ast node.
 export function maybeLeftMostLeaf(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): Ast.TNode | undefined {
     const maybeXorNode: TXorNode | undefined = maybeLeftMostXor(nodeIdMapCollection, nodeId);
 
@@ -56,11 +58,11 @@ export function maybeLeftMostLeaf(nodeIdMapCollection: NodeIdMap.Collection, nod
 //  * Therefore the right-most child is the most recently read which also appears last in the document.
 export function maybeRightMostLeaf(
     nodeIdMapCollection: Collection,
-    rootId: number,
+    nodeId: number,
     maybeCondition: ((node: Ast.TNode) => boolean) | undefined = undefined,
 ): Promise<Ast.TNode | undefined> {
     const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
-    let nodeIdsToExplore: number[] = [rootId];
+    let nodeIdsToExplore: number[] = [nodeId];
     let maybeRightMost: Ast.TNode | undefined;
 
     while (nodeIdsToExplore.length) {
@@ -124,8 +126,8 @@ export function maybeRightMostLeaf(
 
 export function maybeRightMostLeafWhere(
     nodeIdMapCollection: Collection,
-    rootId: number,
+    nodeId: number,
     maybeCondition: ((node: Ast.TNode) => boolean) | undefined,
 ): Promise<Ast.TNode | undefined> {
-    return maybeRightMostLeaf(nodeIdMapCollection, rootId, maybeCondition);
+    return maybeRightMostLeaf(nodeIdMapCollection, nodeId, maybeCondition);
 }

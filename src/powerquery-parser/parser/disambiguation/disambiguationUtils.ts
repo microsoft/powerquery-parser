@@ -19,7 +19,7 @@ import { ParseError } from "..";
 
 // For each given parse function it'll create a deep copy of the state then parse with the function.
 // Mutates the given state to whatever parse state which matched the most amount of tokens.
-// Ties are resolved in the order of the given parse functions.
+// Ties are resolved by the ordering of the given parse functions.
 export async function readAmbiguous<T extends Ast.TNode>(
     state: ParseState,
     parser: Parser,

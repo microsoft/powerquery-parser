@@ -24,17 +24,16 @@ export function copy(nodeIdMapCollection: Collection): Collection {
 
     return {
         astNodeById: new Map(nodeIdMapCollection.astNodeById),
-        contextNodeById,
-
         childIdsById: new Map(nodeIdMapCollection.childIdsById),
-        idsByNodeKind,
+        contextNodeById,
         leafIds: new Set(nodeIdMapCollection.leafIds),
+        idsByNodeKind,
         maybeRightMostLeaf: nodeIdMapCollection.maybeRightMostLeaf,
         parentIdById: new Map(nodeIdMapCollection.parentIdById),
     };
 }
 
-// Contains at least one parsed token.
+// Checks if the given nodeId contains at least one parsed token.
 export function hasParsedToken(nodeIdMapCollection: Collection, nodeId: number): boolean {
     let maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(nodeId);
 
@@ -69,6 +68,7 @@ export function hasParsedToken(nodeIdMapCollection: Collection, nodeId: number):
     return false;
 }
 
+// Return a XorNodeTokenRange for the given TXorNode.
 export async function xorNodeTokenRange(
     nodeIdMapCollection: Collection,
     xorNode: TXorNode,

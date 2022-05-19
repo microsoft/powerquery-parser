@@ -6,10 +6,11 @@ import { TXorNode, XorNode } from "./xorNode";
 import { Assert } from "../../common";
 import { Ast } from "../../language";
 
-export function assertGetAncestry(nodeIdMapCollection: NodeIdMap.Collection, rootId: number): ReadonlyArray<TXorNode> {
-    const ancestryIds: number[] = [rootId];
+// Builds up an TXorNode path starting from nodeId and goes up to the root of the Ast.
+export function assertGetAncestry(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): ReadonlyArray<TXorNode> {
+    const ancestryIds: number[] = [nodeId];
 
-    let maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(rootId);
+    let maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
 
     while (maybeParentId) {
         const parentId: number = maybeParentId;

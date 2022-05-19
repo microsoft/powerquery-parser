@@ -16,6 +16,7 @@ import { CommonError } from "../../../common";
 
 // Returns the previous sibling of the given recursive expression.
 // Commonly used for things like getting the identifier name used in an InvokeExpression.
+// Returns undefined if there is no previous sibling.
 export function assertGetRecursiveExpressionPreviousSibling<T extends Ast.TNode>(
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
@@ -75,6 +76,8 @@ export function assertGetRecursiveExpressionPreviousSibling<T extends Ast.TNode>
     }
 }
 
+// Asserts the given node is an InvokeExpression,
+// then returns the previous sibling on the condition that it's an identifier.
 export function maybeInvokeExpressionIdentifier(
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
@@ -126,7 +129,8 @@ export function maybeInvokeExpressionIdentifier(
     return headXorNode;
 }
 
-export function maybeParameterName(
+// Unboxes the node if it's a identifier
+export function maybeUnboxIdentifier(
     nodeIdMapCollection: NodeIdMap.Collection,
     functionParameter: TXorNode,
 ): Ast.Identifier | undefined {
@@ -138,15 +142,17 @@ export function maybeParameterName(
     );
 }
 
-export function maybeParameterNameLiteral(
+// Unboxes the identifier literal if it exists.
+export function maybeUnboxIdentifierLiteral(
     nodeIdMapCollection: NodeIdMap.Collection,
     functionParameter: TXorNode,
 ): string | undefined {
-    const maybeIdentifier: Ast.Identifier | undefined = maybeParameterName(nodeIdMapCollection, functionParameter);
+    const maybeIdentifier: Ast.Identifier | undefined = maybeUnboxIdentifier(nodeIdMapCollection, functionParameter);
 
     return maybeIdentifier ? maybeIdentifier.literal : undefined;
 }
 
+// Unboxes the identifier literal for function name if it exists.
 export function maybeInvokeExpressionIdentifierLiteral(
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
