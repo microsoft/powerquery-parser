@@ -8,4 +8,5 @@ export const enum TypeUtilsTraceConstant {
     NameOf = "NameOf",
     Simplify = "Simplify",
     TypeCheck = "TypeCheck",
+    TypeUtils = "TypeUtils",
 }
