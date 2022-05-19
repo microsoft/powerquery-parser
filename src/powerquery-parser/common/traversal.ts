@@ -39,48 +39,8 @@ export interface ITraversalState<T> extends Pick<Settings, "locale" | "maybeCanc
     result: T;
 }
 
-// sets Node and NodesById for tryTraverse
-export function tryTraverseAst<State extends ITraversalState<ResultType>, ResultType>(
-    state: State,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    root: Ast.TNode,
-    strategy: VisitNodeStrategy,
-    visitNodeFn: TVisitNodeFn<State, ResultType, Ast.TNode, void>,
-    expandNodesFn: TExpandNodesFn<State, ResultType, Ast.TNode, NodeIdMap.Collection>,
-    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Ast.TNode> | undefined,
-): Promise<TriedTraverse<ResultType>> {
-    return tryTraverse<State, ResultType, Ast.TNode, NodeIdMap.Collection>(
-        state,
-        nodeIdMapCollection,
-        root,
-        strategy,
-        visitNodeFn,
-        expandNodesFn,
-        maybeEarlyExitFn,
-    );
-}
-
-// sets Node and NodesById for tryTraverse
-export function tryTraverseXor<State extends ITraversalState<ResultType>, ResultType>(
-    state: State,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    root: TXorNode,
-    strategy: VisitNodeStrategy,
-    visitNodeFn: TVisitNodeFn<State, ResultType, TXorNode, void>,
-    expandNodesFn: TExpandNodesFn<State, ResultType, TXorNode, NodeIdMap.Collection>,
-    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, TXorNode> | undefined,
-): Promise<TriedTraverse<ResultType>> {
-    return tryTraverse<State, ResultType, TXorNode, NodeIdMap.Collection>(
-        state,
-        nodeIdMapCollection,
-        root,
-        strategy,
-        visitNodeFn,
-        expandNodesFn,
-        maybeEarlyExitFn,
-    );
-}
-
+// Most commonly used by visiting all nodes (either Ast or TXorNode) with the visitNodeFn,
+// It usually expands all children nodes but can expand the list of nodes to visit through other logic.
 export function tryTraverse<State extends ITraversalState<ResultType>, ResultType, Node, NodesById>(
     state: State,
     nodesById: NodesById,
@@ -106,7 +66,49 @@ export function tryTraverse<State extends ITraversalState<ResultType>, ResultTyp
     }, state.locale);
 }
 
-// a TExpandNodesFn usable by tryTraverseAst which visits all nodes.
+// sets the tryTraverse type parameters: Node and NodesById
+export function tryTraverseAst<State extends ITraversalState<ResultType>, ResultType>(
+    state: State,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    root: Ast.TNode,
+    strategy: VisitNodeStrategy,
+    visitNodeFn: TVisitNodeFn<State, ResultType, Ast.TNode, void>,
+    expandNodesFn: TExpandNodesFn<State, ResultType, Ast.TNode, NodeIdMap.Collection>,
+    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Ast.TNode> | undefined,
+): Promise<TriedTraverse<ResultType>> {
+    return tryTraverse<State, ResultType, Ast.TNode, NodeIdMap.Collection>(
+        state,
+        nodeIdMapCollection,
+        root,
+        strategy,
+        visitNodeFn,
+        expandNodesFn,
+        maybeEarlyExitFn,
+    );
+}
+
+// sets the tryTraverse type parameters: Node and NodesById
+export function tryTraverseXor<State extends ITraversalState<ResultType>, ResultType>(
+    state: State,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    root: TXorNode,
+    strategy: VisitNodeStrategy,
+    visitNodeFn: TVisitNodeFn<State, ResultType, TXorNode, void>,
+    expandNodesFn: TExpandNodesFn<State, ResultType, TXorNode, NodeIdMap.Collection>,
+    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, TXorNode> | undefined,
+): Promise<TriedTraverse<ResultType>> {
+    return tryTraverse<State, ResultType, TXorNode, NodeIdMap.Collection>(
+        state,
+        nodeIdMapCollection,
+        root,
+        strategy,
+        visitNodeFn,
+        expandNodesFn,
+        maybeEarlyExitFn,
+    );
+}
+
+// a TExpandNodesFn usable by tryTraverseAst which visits all Ast nodes.
 // eslint-disable-next-line require-await
 export async function assertGetAllAstChildren<State extends ITraversalState<ResultType>, ResultType>(
     _state: State,
@@ -183,6 +185,7 @@ const enum TraversalTraceConstant {
     Traversal = "Traversal",
 }
 
+// The core logic of a traversal.
 async function traverseRecursion<State extends ITraversalState<ResultType>, ResultType, Node, NodesById>(
     state: State,
     nodesById: NodesById,

@@ -9,7 +9,7 @@ import { LexError } from ".";
 // The lexer is a multiline aware lexer.
 // That in part means multiline tokens are split up into <begin>, <content>, and <end> components.
 // The LexerSnapshot takes those multiline tokens and condenses them into a <begin, content, end> token,
-// along with throwing any multiline errors (eg. a <begin> but not <end>).
+// along with throwing any multiline errors (eg. a <begin> but no <end>).
 //
 // One area for future optimization is to remove this all together by improving the naive parser logic.
 // It would mostly be a memory + code size improvement. The CPU cost is currently relatively minimal.
@@ -79,6 +79,9 @@ export function trySnapshot(state: Lexer.State): TriedLexerSnapshot {
         return ResultUtils.boxError(error);
     }
 }
+
+const ErrorMessageNoEndToken: string =
+    "once a multiline token starts it should either reach a paired end token, or eof";
 
 function createSnapshot(state: Lexer.State): LexerSnapshot {
     // class properties
@@ -214,7 +217,7 @@ function readMultilineComment(
         );
     } else if (maybeTokenEnd.kind !== Token.LineTokenKind.MultilineCommentEnd) {
         const details: { foundTokenEnd: FlatLineToken | undefined } = { foundTokenEnd: maybeTokenEnd };
-        const message: string = `once a multiline token starts it should either reach a paired end token, or eof`;
+        const message: string = ErrorMessageNoEndToken;
         throw new CommonError.InvariantError(message, details);
     } else {
         const tokenEnd: FlatLineToken = maybeTokenEnd;
@@ -257,7 +260,7 @@ function readQuotedIdentifier(
         );
     } else if (maybeTokenEnd.kind !== Token.LineTokenKind.QuotedIdentifierEnd) {
         const details: { foundTokenEnd: FlatLineToken } = { foundTokenEnd: maybeTokenEnd };
-        const message: string = `once a multiline token starts it should either reach a paired end token, or eof`;
+        const message: string = ErrorMessageNoEndToken;
         throw new CommonError.InvariantError(message, details);
     } else {
         const tokenEnd: FlatLineToken = maybeTokenEnd;
@@ -299,7 +302,7 @@ function readTextLiteral(
         );
     } else if (maybeTokenEnd.kind !== Token.LineTokenKind.TextLiteralEnd) {
         const details: { foundTokenEnd: FlatLineToken } = { foundTokenEnd: maybeTokenEnd };
-        const message: string = `once a multiline token starts it should either reach a paired end token, or eof`;
+        const message: string = ErrorMessageNoEndToken;
         throw new CommonError.InvariantError(message, details);
     } else {
         const tokenEnd: FlatLineToken = maybeTokenEnd;
