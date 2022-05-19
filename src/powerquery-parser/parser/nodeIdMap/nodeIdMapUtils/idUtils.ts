@@ -83,7 +83,7 @@ export function updateNodeIds(
         nodeIdMapCollection,
         newIdByOldId,
         xorNodes,
-        maybeCorrelationId,
+        trace.id,
     );
 
     applyDelta(traceManager, nodeIdMapCollection, newIdByOldId, xorNodes, partialDelta, trace.id);
