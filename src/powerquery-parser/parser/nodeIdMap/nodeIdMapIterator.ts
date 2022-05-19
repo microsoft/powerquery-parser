@@ -4,7 +4,7 @@
 import { Assert, MapUtils } from "../../common";
 import { Ast, TextUtils } from "../../language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
-import { maybeParameterName } from "./nodeIdMapUtils";
+import { maybeUnboxIdentifier } from "./nodeIdMapUtils";
 import { XorNode } from "./xorNode";
 
 export type TKeyValuePair = LetKeyValuePair | RecordKeyValuePair | SectionKeyValuePair;
@@ -255,7 +255,7 @@ export function iterFunctionExpressionParameterNames(
     const result: Ast.Identifier[] = [];
 
     for (const parameter of iterFunctionExpressionParameters(nodeIdMapCollection, functionExpression)) {
-        const maybeName: Ast.Identifier | undefined = maybeParameterName(nodeIdMapCollection, parameter);
+        const maybeName: Ast.Identifier | undefined = maybeUnboxIdentifier(nodeIdMapCollection, parameter);
 
         if (maybeName === undefined) {
             break;
