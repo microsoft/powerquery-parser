@@ -110,10 +110,10 @@ export function maybeNextSiblingXor(nodeIdMapCollection: NodeIdMap.Collection, n
 // (givenNode.maybeAttributeIndex + offset) as an XorNode if such a child exists.
 export function maybeNthSiblingXor(
     nodeIdMapCollection: NodeIdMap.Collection,
-    rootId: number,
+    nodeId: number,
     offset: number,
 ): TXorNode | undefined {
-    const childXorNode: TXorNode = NodeIdMapUtils.assertGetXor(nodeIdMapCollection, rootId);
+    const childXorNode: TXorNode = NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId);
 
     if (childXorNode.node.maybeAttributeIndex === undefined) {
         return undefined;
@@ -125,7 +125,7 @@ export function maybeNthSiblingXor(
         return undefined;
     }
 
-    const parentXorNode: TXorNode = NodeIdMapUtils.assertGetParentXor(nodeIdMapCollection, rootId);
+    const parentXorNode: TXorNode = NodeIdMapUtils.assertGetParentXor(nodeIdMapCollection, nodeId);
     const childIds: ReadonlyArray<number> = assertIterChildIds(nodeIdMapCollection.childIdsById, parentXorNode.node.id);
 
     if (childIds.length >= attributeIndex) {
