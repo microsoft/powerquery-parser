@@ -15,9 +15,9 @@ import { TXorNode } from "../xorNode";
 // expected to be consumed by updateNodeIds.
 // Used to restore the nodeId ordering invariant after manual mangling of the Ast.
 export function recalculateIds(
-    traceManager: TraceManager,
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeStart: TXorNode,
+    traceManager: TraceManager,
     maybeCorrelationId: number | undefined,
 ): Map<number, number> {
     const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, recalculateIds.name, maybeCorrelationId);
@@ -57,9 +57,9 @@ export function recalculateIds(
 // Given a mapping of (existingId) => (newId) this mutates the NodeIdMap.Collection and the TXorNodes it holds.
 // Assumes the given arguments are valid as this function does no validation.
 export function updateNodeIds(
-    traceManager: TraceManager,
     nodeIdMapCollection: Collection,
     newIdByOldId: Map<number, number>,
+    traceManager: TraceManager,
     maybeCorrelationId: number | undefined,
 ): void {
     const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, updateNodeIds.name, maybeCorrelationId, {
@@ -79,14 +79,14 @@ export function updateNodeIds(
 
     // Storage for the change delta which is used to mutate nodeIdMapCollection.
     const partialDelta: CollectionDelta = createDelta(
-        traceManager,
         nodeIdMapCollection,
         newIdByOldId,
         xorNodes,
+        traceManager,
         trace.id,
     );
 
-    applyDelta(traceManager, nodeIdMapCollection, newIdByOldId, xorNodes, partialDelta, trace.id);
+    applyDelta(nodeIdMapCollection, newIdByOldId, xorNodes, partialDelta, traceManager, trace.id);
     trace.exit();
 }
 
@@ -98,10 +98,10 @@ const enum IdUtilsTraceConstant {
 type CollectionDelta = Omit<Collection, "leafIds" | "maybeRightMostLeaf" | "idsByNodeKind">;
 
 function createDelta(
-    traceManager: TraceManager,
     nodeIdMapCollection: Collection,
     newIdByOldId: Map<number, number>,
     xorNodes: ReadonlyArray<TXorNode>,
+    traceManager: TraceManager,
     correlationId: number,
 ): CollectionDelta {
     const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, createDelta.name, correlationId, {
@@ -170,11 +170,11 @@ function createDelta(
 }
 
 function applyDelta(
-    traceManager: TraceManager,
     nodeIdMapCollection: Collection,
     newIdByOldId: Map<number, number>,
     xorNodes: ReadonlyArray<TXorNode>,
     delta: CollectionDelta,
+    traceManager: TraceManager,
     correlationId: number,
 ): void {
     const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, applyDelta.name, correlationId);
