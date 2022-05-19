@@ -83,7 +83,7 @@ export function updateNodeIds(
         nodeIdMapCollection,
         newIdByOldId,
         xorNodes,
-        maybeCorrelationId,
+        trace.id,
     );
 
     applyDelta(traceManager, nodeIdMapCollection, newIdByOldId, xorNodes, partialDelta, trace.id);
@@ -102,7 +102,7 @@ function createDelta(
     nodeIdMapCollection: Collection,
     newIdByOldId: Map<number, number>,
     xorNodes: ReadonlyArray<TXorNode>,
-    correlationId: number | undefined,
+    correlationId: number,
 ): CollectionDelta {
     const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, createDelta.name, correlationId, {
         [IdUtilsTraceConstant.MapSize]: newIdByOldId.size,

@@ -3,9 +3,10 @@
 
 import "mocha";
 import { expect } from "chai";
-import { OrderedMap } from "../../../../powerquery-parser";
 
 import { Type, TypeUtils } from "../../../../powerquery-parser/language";
+import { NoOpTraceManagerInstance } from "../../../../powerquery-parser/common/trace";
+import { OrderedMap } from "../../../../powerquery-parser";
 
 interface AbridgedType {
     readonly kind: Type.TypeKind;
@@ -33,11 +34,22 @@ function createAbridgedTypes(types: ReadonlyArray<Type.TPowerQueryType>): Readon
     return types.map(typeToAbridged);
 }
 
+const noopCreateAnyUnion: (types: ReadonlyArray<Type.TPowerQueryType>) => Type.TPowerQueryType = (
+    types: ReadonlyArray<Type.TPowerQueryType>,
+) => TypeUtils.createAnyUnion(types, NoOpTraceManagerInstance, undefined);
+
+const noopNameOf: (type: Type.TPowerQueryType) => string = (type: Type.TPowerQueryType) =>
+    TypeUtils.nameOf(type, NoOpTraceManagerInstance, undefined);
+
+const noopSimplify: (types: ReadonlyArray<Type.TPowerQueryType>) => ReadonlyArray<Type.TPowerQueryType> = (
+    types: ReadonlyArray<Type.TPowerQueryType>,
+) => TypeUtils.simplify(types, NoOpTraceManagerInstance, undefined);
+
 describe(`TypeUtils`, () => {
     describe(`simplify`, () => {
         it(`generic, identical nullability should reduce to single type`, () => {
             const actual: ReadonlyArray<AbridgedType> = createAbridgedTypes(
-                TypeUtils.simplify([Type.RecordInstance, Type.RecordInstance]),
+                noopSimplify([Type.RecordInstance, Type.RecordInstance]),
             );
 
             const expected: ReadonlyArray<AbridgedType> = [abridgedPrimitiveType(Type.TypeKind.Record, false)];
@@ -48,7 +60,7 @@ describe(`TypeUtils`, () => {
 
         it(`generic, mixed nullability should reduce to nullable`, () => {
             const actual: ReadonlyArray<AbridgedType> = createAbridgedTypes(
-                TypeUtils.simplify([Type.RecordInstance, Type.NullableRecordInstance]),
+                noopSimplify([Type.RecordInstance, Type.NullableRecordInstance]),
             );
 
             const expected: ReadonlyArray<AbridgedType> = [abridgedPrimitiveType(Type.TypeKind.Record, true)];
@@ -59,7 +71,7 @@ describe(`TypeUtils`, () => {
 
         it(`early return with Any primitive`, () => {
             const actual: ReadonlyArray<AbridgedType> = createAbridgedTypes(
-                TypeUtils.simplify([Type.AnyInstance, Type.NullableRecordInstance]),
+                noopSimplify([Type.AnyInstance, Type.NullableRecordInstance]),
             );
 
             const expected: ReadonlyArray<AbridgedType> = [Type.AnyInstance];
@@ -68,7 +80,7 @@ describe(`TypeUtils`, () => {
 
         it(`simplify literal and primitive to primitive`, () => {
             const actual: ReadonlyArray<AbridgedType> = createAbridgedTypes(
-                TypeUtils.simplify([Type.NumberInstance, TypeUtils.createNumberLiteral(false, 1)]),
+                noopSimplify([Type.NumberInstance, TypeUtils.createNumberLiteral(false, 1)]),
             );
 
             const expected: ReadonlyArray<AbridgedType> = [Type.NumberInstance];
@@ -76,7 +88,7 @@ describe(`TypeUtils`, () => {
         });
 
         it(`retain multiple unique literals`, () => {
-            const actual: ReadonlyArray<AbridgedType> = TypeUtils.simplify([
+            const actual: ReadonlyArray<AbridgedType> = noopSimplify([
                 TypeUtils.createNumberLiteral(false, 1),
                 TypeUtils.createNumberLiteral(false, 2),
             ]);
@@ -90,13 +102,13 @@ describe(`TypeUtils`, () => {
         });
 
         it(`simplify true | false to boolean`, () => {
-            const actual: ReadonlyArray<AbridgedType> = TypeUtils.simplify([Type.FalseInstance, Type.TrueInstance]);
+            const actual: ReadonlyArray<AbridgedType> = noopSimplify([Type.FalseInstance, Type.TrueInstance]);
             const expected: ReadonlyArray<AbridgedType> = [Type.LogicalInstance];
             expect(actual).deep.equal(expected);
         });
 
         it(`prefer nullable in boolean simplification`, () => {
-            const actual: ReadonlyArray<AbridgedType> = TypeUtils.simplify([
+            const actual: ReadonlyArray<AbridgedType> = noopSimplify([
                 Type.FalseInstance,
                 Type.TrueInstance,
                 Type.NullableFalseInstance,
@@ -108,7 +120,7 @@ describe(`TypeUtils`, () => {
         });
 
         it(`dedupe duplicate literals`, () => {
-            const actual: ReadonlyArray<AbridgedType> = TypeUtils.simplify([
+            const actual: ReadonlyArray<AbridgedType> = noopSimplify([
                 TypeUtils.createNumberLiteral(false, 1),
                 TypeUtils.createNumberLiteral(false, 1),
             ]);
@@ -118,9 +130,9 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, combine into a single primitive type`, () => {
-            const simplified: ReadonlyArray<Type.TPowerQueryType> = TypeUtils.simplify([
-                TypeUtils.createAnyUnion([Type.RecordInstance, Type.RecordInstance]),
-                TypeUtils.createAnyUnion([Type.RecordInstance, Type.RecordInstance]),
+            const simplified: ReadonlyArray<Type.TPowerQueryType> = noopSimplify([
+                noopCreateAnyUnion([Type.RecordInstance, Type.RecordInstance]),
+                noopCreateAnyUnion([Type.RecordInstance, Type.RecordInstance]),
             ]);
 
             expect(simplified.length).to.equal(1);
@@ -131,9 +143,9 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, dedupe primitive types across AnyUnion`, () => {
-            const simplified: ReadonlyArray<Type.TPowerQueryType> = TypeUtils.simplify([
-                TypeUtils.createAnyUnion([Type.RecordInstance, Type.NullableTableInstance]),
-                TypeUtils.createAnyUnion([Type.RecordInstance, Type.NullableTableInstance]),
+            const simplified: ReadonlyArray<Type.TPowerQueryType> = noopSimplify([
+                noopCreateAnyUnion([Type.RecordInstance, Type.NullableTableInstance]),
+                noopCreateAnyUnion([Type.RecordInstance, Type.NullableTableInstance]),
             ]);
 
             expect(simplified.length).to.equal(2);
@@ -149,9 +161,9 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, mixed nullability`, () => {
-            const simplified: ReadonlyArray<Type.TPowerQueryType> = TypeUtils.simplify([
-                TypeUtils.createAnyUnion([Type.NullableRecordInstance, Type.NullableTableInstance]),
-                TypeUtils.createAnyUnion([Type.RecordInstance, Type.TableInstance]),
+            const simplified: ReadonlyArray<Type.TPowerQueryType> = noopSimplify([
+                noopCreateAnyUnion([Type.NullableRecordInstance, Type.NullableTableInstance]),
+                noopCreateAnyUnion([Type.RecordInstance, Type.TableInstance]),
             ]);
 
             expect(simplified.length).to.equal(4);
@@ -169,12 +181,12 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, dedupe across multi level AnyUnion`, () => {
-            const simplified: ReadonlyArray<Type.TPowerQueryType> = TypeUtils.simplify([
-                TypeUtils.createAnyUnion([
+            const simplified: ReadonlyArray<Type.TPowerQueryType> = noopSimplify([
+                noopCreateAnyUnion([
                     Type.RecordInstance,
-                    TypeUtils.createAnyUnion([Type.RecordInstance, Type.NumberInstance]),
+                    noopCreateAnyUnion([Type.RecordInstance, Type.NumberInstance]),
                 ]),
-                TypeUtils.createAnyUnion([Type.RecordInstance]),
+                noopCreateAnyUnion([Type.RecordInstance]),
             ]);
 
             expect(simplified.length).to.equal(2);
@@ -190,12 +202,9 @@ describe(`TypeUtils`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, short circuit with Any primitive in AnyUnion`, () => {
-            const simplified: ReadonlyArray<Type.TPowerQueryType> = TypeUtils.simplify([
-                TypeUtils.createAnyUnion([
-                    Type.RecordInstance,
-                    TypeUtils.createAnyUnion([Type.AnyInstance, Type.NumberInstance]),
-                ]),
-                TypeUtils.createAnyUnion([Type.RecordInstance]),
+            const simplified: ReadonlyArray<Type.TPowerQueryType> = noopSimplify([
+                noopCreateAnyUnion([Type.RecordInstance, noopCreateAnyUnion([Type.AnyInstance, Type.NumberInstance])]),
+                noopCreateAnyUnion([Type.RecordInstance]),
             ]);
 
             expect(simplified.length).to.equal(1);
@@ -210,194 +219,194 @@ describe(`TypeUtils`, () => {
         describe(`non extended`, () => {
             describe("non-nullable", () => {
                 it(`${Type.AnyInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.AnyInstance)).to.equal("any");
+                    expect(noopNameOf(Type.AnyInstance)).to.equal("any");
                 });
 
                 it(`${Type.AnyNonNullInstance.kind}`, () => {
                     // tslint:disable-next-line: chai-vague-errors
-                    expect(TypeUtils.nameOf(Type.AnyNonNullInstance)).to.equal("anynonnull");
+                    expect(noopNameOf(Type.AnyNonNullInstance)).to.equal("anynonnull");
                 });
 
                 it(`${Type.BinaryInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.BinaryInstance)).to.equal("binary");
+                    expect(noopNameOf(Type.BinaryInstance)).to.equal("binary");
                 });
 
                 it(`${Type.DateInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.DateInstance)).to.equal("date");
+                    expect(noopNameOf(Type.DateInstance)).to.equal("date");
                 });
 
                 it(`${Type.DateTimeInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.DateTimeInstance)).to.equal("datetime");
+                    expect(noopNameOf(Type.DateTimeInstance)).to.equal("datetime");
                 });
 
                 it(`${Type.DateTimeZoneInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.DateTimeZoneInstance)).to.equal("datetimezone");
+                    expect(noopNameOf(Type.DateTimeZoneInstance)).to.equal("datetimezone");
                 });
 
                 it(`${Type.DurationInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.DurationInstance)).to.equal("duration");
+                    expect(noopNameOf(Type.DurationInstance)).to.equal("duration");
                 });
 
                 it(`${Type.FunctionInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.FunctionInstance)).to.equal("function");
+                    expect(noopNameOf(Type.FunctionInstance)).to.equal("function");
                 });
 
                 it(`${Type.ListInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.ListInstance)).to.equal("list");
+                    expect(noopNameOf(Type.ListInstance)).to.equal("list");
                 });
 
                 it(`${Type.LogicalInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.LogicalInstance)).to.equal("logical");
+                    expect(noopNameOf(Type.LogicalInstance)).to.equal("logical");
                 });
 
                 it(`${Type.NoneInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.NoneInstance)).to.equal("none");
+                    expect(noopNameOf(Type.NoneInstance)).to.equal("none");
                 });
 
                 it(`${Type.NullInstance.kind}`, () => {
                     // tslint:disable-next-line: chai-vague-errors
-                    expect(TypeUtils.nameOf(Type.NullInstance)).to.equal("null");
+                    expect(noopNameOf(Type.NullInstance)).to.equal("null");
                 });
 
                 it(`${Type.NumberInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.NumberInstance)).to.equal("number");
+                    expect(noopNameOf(Type.NumberInstance)).to.equal("number");
                 });
 
                 it(`${Type.RecordInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.RecordInstance)).to.equal("record");
+                    expect(noopNameOf(Type.RecordInstance)).to.equal("record");
                 });
 
                 it(`${Type.TableInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.TableInstance)).to.equal("table");
+                    expect(noopNameOf(Type.TableInstance)).to.equal("table");
                 });
 
                 it(`${Type.TypePrimitiveInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.TypePrimitiveInstance)).to.equal("type");
+                    expect(noopNameOf(Type.TypePrimitiveInstance)).to.equal("type");
                 });
 
                 it(`${Type.ActionInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.ActionInstance)).to.equal("action");
+                    expect(noopNameOf(Type.ActionInstance)).to.equal("action");
                 });
 
                 it(`${Type.TimeInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.TimeInstance)).to.equal("time");
+                    expect(noopNameOf(Type.TimeInstance)).to.equal("time");
                 });
 
                 it(`${Type.NotApplicableInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.NotApplicableInstance)).to.equal("not applicable");
+                    expect(noopNameOf(Type.NotApplicableInstance)).to.equal("not applicable");
                 });
 
                 it(`${Type.UnknownInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.UnknownInstance)).to.equal("unknown");
+                    expect(noopNameOf(Type.UnknownInstance)).to.equal("unknown");
                 });
             });
 
             describe("nullable", () => {
                 it(`${Type.NullableAnyInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableAnyInstance);
+                    const actual: string = noopNameOf(Type.NullableAnyInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable any");
                 });
 
                 // anynonnull can't be nullable
                 it(`${Type.NullableBinaryInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableBinaryInstance);
+                    const actual: string = noopNameOf(Type.NullableBinaryInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable binary");
                 });
 
                 it(`${Type.NullableDateInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableDateInstance);
+                    const actual: string = noopNameOf(Type.NullableDateInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable date");
                 });
 
                 it(`${Type.NullableDateTimeInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableDateTimeInstance);
+                    const actual: string = noopNameOf(Type.NullableDateTimeInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable datetime");
                 });
 
                 it(`${Type.NullableDateTimeZoneInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableDateTimeZoneInstance);
+                    const actual: string = noopNameOf(Type.NullableDateTimeZoneInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable datetimezone");
                 });
 
                 it(`${Type.NullableDurationInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableDurationInstance);
+                    const actual: string = noopNameOf(Type.NullableDurationInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable duration");
                 });
 
                 it(`${Type.NullableFunctionInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableFunctionInstance);
+                    const actual: string = noopNameOf(Type.NullableFunctionInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable function");
                 });
 
                 it(`${Type.NullableListInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableListInstance);
+                    const actual: string = noopNameOf(Type.NullableListInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable list");
                 });
 
                 it(`${Type.NullableLogicalInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableLogicalInstance);
+                    const actual: string = noopNameOf(Type.NullableLogicalInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable logical");
                 });
 
                 it(`${Type.NullableNoneInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableNoneInstance);
+                    const actual: string = noopNameOf(Type.NullableNoneInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable none");
                 });
 
                 it(`${Type.NullableNumberInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableNumberInstance);
+                    const actual: string = noopNameOf(Type.NullableNumberInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable number");
                 });
 
                 it(`${Type.NullableRecordInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableRecordInstance);
+                    const actual: string = noopNameOf(Type.NullableRecordInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable record");
                 });
 
                 it(`${Type.NullableTableInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableTableInstance);
+                    const actual: string = noopNameOf(Type.NullableTableInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable table");
                 });
 
                 it(`${Type.NullableTypeInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableTypeInstance);
+                    const actual: string = noopNameOf(Type.NullableTypeInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable type");
                 });
 
                 it(`${Type.NullableActionInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableActionInstance);
+                    const actual: string = noopNameOf(Type.NullableActionInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable action");
                 });
 
                 it(`${Type.NullableTimeInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableTimeInstance);
+                    const actual: string = noopNameOf(Type.NullableTimeInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable time");
                 });
 
                 it(`${Type.NullableNotApplicableInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableNotApplicableInstance);
+                    const actual: string = noopNameOf(Type.NullableNotApplicableInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable not applicable");
                 });
 
                 it(`${Type.NullableUnknownInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableUnknownInstance);
+                    const actual: string = noopNameOf(Type.NullableUnknownInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable unknown");
                 });
@@ -407,22 +416,19 @@ describe(`TypeUtils`, () => {
         describe(`extended`, () => {
             describe(`${Type.ExtendedTypeKind.AnyUnion}`, () => {
                 it(`primitives`, () => {
-                    const type: Type.TPowerQueryType = TypeUtils.createAnyUnion([
-                        Type.NumberInstance,
-                        Type.ListInstance,
-                    ]);
+                    const type: Type.TPowerQueryType = noopCreateAnyUnion([Type.NumberInstance, Type.ListInstance]);
 
-                    expect(TypeUtils.nameOf(type)).to.equal(`list | number`);
+                    expect(noopNameOf(type)).to.equal(`list | number`);
                 });
 
                 it(`complex`, () => {
-                    const type: Type.TPowerQueryType = TypeUtils.createAnyUnion([
+                    const type: Type.TPowerQueryType = noopCreateAnyUnion([
                         TypeUtils.createDefinedRecord(false, new Map([["foo", Type.NumberInstance]]), false),
                         TypeUtils.createDefinedList(false, [Type.TextInstance]),
                         TypeUtils.createDefinedTable(false, new OrderedMap([["bar", Type.TextInstance]]), true),
                     ]);
 
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`{text} | [foo: number] | table [bar: text, ...]`);
                 });
             });
@@ -430,7 +436,7 @@ describe(`TypeUtils`, () => {
             describe(`${Type.ExtendedTypeKind.DefinedFunction}`, () => {
                 it(`() => any`, () => {
                     const type: Type.DefinedFunction = TypeUtils.createDefinedFunction(false, [], Type.AnyInstance);
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`() => any`);
                 });
 
@@ -441,7 +447,7 @@ describe(`TypeUtils`, () => {
                         Type.NullableAnyInstance,
                     );
 
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(`() => nullable any`);
                 });
@@ -478,7 +484,7 @@ describe(`TypeUtils`, () => {
                         Type.AnyInstance,
                     );
 
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
 
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(
@@ -490,13 +496,13 @@ describe(`TypeUtils`, () => {
             describe(`${Type.ExtendedTypeKind.DefinedList}`, () => {
                 it(`{}`, () => {
                     const type: Type.DefinedList = TypeUtils.createDefinedList(false, []);
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`{}`);
                 });
 
                 it(`nullable {}`, () => {
                     const type: Type.DefinedList = TypeUtils.createDefinedList(true, []);
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(`nullable {}`);
                 });
@@ -507,7 +513,7 @@ describe(`TypeUtils`, () => {
                         Type.NullableTextInstance,
                     ]);
 
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(`{number, nullable text}`);
                 });
@@ -516,13 +522,13 @@ describe(`TypeUtils`, () => {
             describe(`${Type.ExtendedTypeKind.DefinedListType}`, () => {
                 it(`type {}`, () => {
                     const type: Type.DefinedListType = TypeUtils.createDefinedListType(false, []);
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`type {}`);
                 });
 
                 it(`nullable type {}`, () => {
                     const type: Type.DefinedListType = TypeUtils.createDefinedListType(true, []);
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(`nullable type {}`);
                 });
@@ -533,7 +539,7 @@ describe(`TypeUtils`, () => {
                         Type.NullableTextInstance,
                     ]);
 
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(`type {number, nullable text}`);
                 });
@@ -542,13 +548,13 @@ describe(`TypeUtils`, () => {
             describe(`${Type.ExtendedTypeKind.DefinedRecord}`, () => {
                 it(`[]`, () => {
                     const type: Type.DefinedRecord = TypeUtils.createDefinedRecord(false, new Map(), false);
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`[]`);
                 });
 
                 it(`[...]`, () => {
                     const type: Type.DefinedRecord = TypeUtils.createDefinedRecord(false, new Map(), true);
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`[...]`);
                 });
 
@@ -562,7 +568,7 @@ describe(`TypeUtils`, () => {
                         false,
                     );
 
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(`[foo: number, bar: nullable text]`);
                 });
@@ -577,7 +583,7 @@ describe(`TypeUtils`, () => {
                         true,
                     );
 
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(`[foo: number, bar: nullable text, ...]`);
                 });
@@ -586,13 +592,13 @@ describe(`TypeUtils`, () => {
             describe(`${Type.ExtendedTypeKind.DefinedTable}`, () => {
                 it(`table []`, () => {
                     const type: Type.DefinedTable = TypeUtils.createDefinedTable(false, new OrderedMap(), false);
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`table []`);
                 });
 
                 it(`table [...]`, () => {
                     const type: Type.DefinedTable = TypeUtils.createDefinedTable(false, new OrderedMap(), true);
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`table [...]`);
                 });
 
@@ -606,7 +612,7 @@ describe(`TypeUtils`, () => {
                         false,
                     );
 
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(`table [foo: number, bar: nullable text]`);
                 });
@@ -621,7 +627,7 @@ describe(`TypeUtils`, () => {
                         true,
                     );
 
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(`table [foo: number, bar: nullable text, ...]`);
                 });
@@ -630,7 +636,7 @@ describe(`TypeUtils`, () => {
             describe(`${Type.ExtendedTypeKind.FunctionType}`, () => {
                 it(`type function () any`, () => {
                     const type: Type.FunctionType = TypeUtils.createFunctionType(false, [], Type.AnyInstance);
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`type function () any`);
                 });
 
@@ -666,7 +672,7 @@ describe(`TypeUtils`, () => {
                         Type.AnyInstance,
                     );
 
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
 
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(
@@ -678,7 +684,7 @@ describe(`TypeUtils`, () => {
             describe(`${Type.ExtendedTypeKind.ListType}`, () => {
                 it(`type {text}`, () => {
                     const type: Type.ListType = TypeUtils.createListType(false, Type.TextInstance);
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`type {text}`);
                 });
             });
@@ -690,7 +696,7 @@ describe(`TypeUtils`, () => {
                         Type.TextInstance,
                     );
 
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`type text`);
                 });
             });
@@ -703,13 +709,13 @@ describe(`TypeUtils`, () => {
                         false,
                     );
 
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`type [foo: number]`);
                 });
 
                 it(`type [...]`, () => {
                     const type: Type.RecordType = TypeUtils.createRecordType(false, new Map(), true);
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`type [...]`);
                 });
 
@@ -723,7 +729,7 @@ describe(`TypeUtils`, () => {
                         false,
                     );
 
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(`type [foo: number, bar: nullable text]`);
                 });
@@ -738,7 +744,7 @@ describe(`TypeUtils`, () => {
                         true,
                     );
 
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(`type [foo: number, bar: nullable text, ...]`);
                 });
@@ -752,13 +758,13 @@ describe(`TypeUtils`, () => {
                         false,
                     );
 
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`type table [foo: number]`);
                 });
 
                 it(`type table [...]`, () => {
                     const type: Type.TableType = TypeUtils.createTableType(false, new Map(), true);
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`type table [...]`);
                 });
 
@@ -772,7 +778,7 @@ describe(`TypeUtils`, () => {
                         false,
                     );
 
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(`type table [foo: number, bar: nullable text]`);
                 });
@@ -787,7 +793,7 @@ describe(`TypeUtils`, () => {
                         true,
                     );
 
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(`type table [foo: number, bar: nullable text, ...]`);
                 });
@@ -801,7 +807,7 @@ describe(`TypeUtils`, () => {
                         Type.TextInstance,
                     );
 
-                    const actual: string = TypeUtils.nameOf(type);
+                    const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`type table text`);
                 });
             });

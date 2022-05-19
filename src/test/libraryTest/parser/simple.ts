@@ -15,7 +15,7 @@ import {
     TaskUtils,
     Traverse,
 } from "../../..";
-import { NoOpTraceManager } from "../../../powerquery-parser/common/trace";
+import { NoOpTraceManagerInstance } from "../../../powerquery-parser/common/trace";
 import { TestAssertUtils } from "../../testUtils";
 
 type AbridgedNode = [Language.Ast.NodeKind, number | undefined];
@@ -36,7 +36,7 @@ async function collectAbridgeNodeFromAst(text: string): Promise<ReadonlyArray<Ab
         result: [],
         maybeCancellationToken: undefined,
         maybeInitialCorrelationId: undefined,
-        traceManager: new NoOpTraceManager(),
+        traceManager: NoOpTraceManagerInstance,
     };
 
     const triedTraverse: Traverse.TriedTraverse<AbridgedNode[]> = await Traverse.tryTraverseAst<
@@ -72,7 +72,7 @@ async function assertGetNthNodeOfKind<N extends Language.Ast.TNode>(
         nthRequired,
         maybeCancellationToken: undefined,
         maybeInitialCorrelationId: undefined,
-        traceManager: new NoOpTraceManager(),
+        traceManager: NoOpTraceManagerInstance,
     };
 
     const triedTraverse: Traverse.TriedTraverse<Language.Ast.TNode | undefined> = await Traverse.tryTraverseAst<

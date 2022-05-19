@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CombinatorialParser, Parser, ParseState, ParseStateUtils } from "../parser";
-import { NoOpTraceManager, TraceManager } from "../common/trace";
+import { NoOpTraceManagerInstance, TraceManager } from "../common/trace";
 import { Ast } from "../language";
 import { DefaultLocale } from "../localization";
 import { ICancellationToken } from "../common";
@@ -38,5 +38,5 @@ export const DefaultSettings: Settings = {
     maybeInitialCorrelationId: undefined,
     maybeParserEntryPointFn: undefined,
     parser: CombinatorialParser,
-    traceManager: new NoOpTraceManager(),
+    traceManager: NoOpTraceManagerInstance,
 };

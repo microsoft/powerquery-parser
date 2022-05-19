@@ -4,77 +4,104 @@
 import { Assert, CommonError, MapUtils } from "../../../common";
 import { isEqualFunctionSignature, isEqualType } from "./isEqualType";
 import { isFieldSpecificationList, isFunctionSignature } from "./isType";
+import { Trace, TraceManager } from "../../../common/trace";
 import { Type } from "..";
+import { TypeUtilsTraceConstant } from "./typeTraceConstant";
 
 // Returns `${left} is compatible with ${right}. Eg.
 // `Type.TextInstance is compatible with Type.AnyInstance` -> true
 // `Type.AnyInstance is compatible with Type.TextInstance` -> false
 // `Type.NullInstance is compatible with Type.AnyNonNull` -> false
 // `Type.TextInstance is compatible with Type.AnyUnion([Type.TextInstance, Type.NumberInstance])` -> true
-export function isCompatible(left: Type.TPowerQueryType, right: Type.TPowerQueryType): boolean | undefined {
+export function isCompatible(
+    left: Type.TPowerQueryType,
+    right: Type.TPowerQueryType,
+    traceManager: TraceManager,
+    maybeCorrelationId: number | undefined,
+): boolean | undefined {
+    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.IsCompatible, isCompatible.name, maybeCorrelationId);
+
+    let result: boolean | undefined;
+
     if (
         left.kind === Type.TypeKind.NotApplicable ||
         left.kind === Type.TypeKind.Unknown ||
         right.kind === Type.TypeKind.NotApplicable ||
         right.kind === Type.TypeKind.Unknown
     ) {
-        return undefined;
+        result = undefined;
     } else if (
         left.kind === Type.TypeKind.None ||
         right.kind === Type.TypeKind.None ||
         (left.isNullable && !right.isNullable)
     ) {
-        return false;
+        result = false;
     } else if (left.kind === Type.TypeKind.Null && right.isNullable) {
-        return true;
+        result = true;
+    } else {
+        switch (right.kind) {
+            case Type.TypeKind.Action:
+            case Type.TypeKind.Binary:
+            case Type.TypeKind.Date:
+            case Type.TypeKind.DateTime:
+            case Type.TypeKind.DateTimeZone:
+            case Type.TypeKind.Duration:
+            case Type.TypeKind.Time:
+                result = isEqualType(left, right);
+                break;
+
+            case Type.TypeKind.Any:
+                result = isCompatibleWithAny(left, right, traceManager, trace.id);
+                break;
+
+            case Type.TypeKind.AnyNonNull:
+                result = left.kind !== Type.TypeKind.Null && !left.isNullable;
+                break;
+
+            case Type.TypeKind.Function:
+                result = isCompatibleWithFunction(left, right, traceManager, trace.id);
+                break;
+
+            case Type.TypeKind.List:
+                result = isCompatibleWithList(left, right, traceManager, trace.id);
+                break;
+
+            case Type.TypeKind.Logical:
+                result = isCompatibleWithPrimitiveOrLiteral(left, right);
+                break;
+
+            case Type.TypeKind.Number:
+                result = isCompatibleWithPrimitiveOrLiteral(left, right);
+                break;
+
+            case Type.TypeKind.Null:
+                result = left.kind === Type.TypeKind.Null;
+                break;
+
+            case Type.TypeKind.Record:
+                result = isCompatibleWithRecord(left, right, traceManager, trace.id);
+                break;
+
+            case Type.TypeKind.Table:
+                result = isCompatibleWithTable(left, right, traceManager, trace.id);
+                break;
+
+            case Type.TypeKind.Text:
+                result = isCompatibleWithPrimitiveOrLiteral(left, right);
+                break;
+
+            case Type.TypeKind.Type:
+                result = isCompatibleWithType(left, right, traceManager, trace.id);
+                break;
+
+            default:
+                throw Assert.isNever(right);
+        }
     }
 
-    switch (right.kind) {
-        case Type.TypeKind.Action:
-        case Type.TypeKind.Binary:
-        case Type.TypeKind.Date:
-        case Type.TypeKind.DateTime:
-        case Type.TypeKind.DateTimeZone:
-        case Type.TypeKind.Duration:
-        case Type.TypeKind.Time:
-            return isEqualType(left, right);
+    trace.exit();
 
-        case Type.TypeKind.Any:
-            return isCompatibleWithAny(left, right);
-
-        case Type.TypeKind.AnyNonNull:
-            return left.kind !== Type.TypeKind.Null && !left.isNullable;
-
-        case Type.TypeKind.Function:
-            return isCompatibleWithFunction(left, right);
-
-        case Type.TypeKind.List:
-            return isCompatibleWithList(left, right);
-
-        case Type.TypeKind.Logical:
-            return isCompatibleWithPrimitiveOrLiteral(left, right);
-
-        case Type.TypeKind.Number:
-            return isCompatibleWithPrimitiveOrLiteral(left, right);
-
-        case Type.TypeKind.Null:
-            return left.kind === Type.TypeKind.Null;
-
-        case Type.TypeKind.Record:
-            return isCompatibleWithRecord(left, right);
-
-        case Type.TypeKind.Table:
-            return isCompatibleWithTable(left, right);
-
-        case Type.TypeKind.Text:
-            return isCompatibleWithPrimitiveOrLiteral(left, right);
-
-        case Type.TypeKind.Type:
-            return isCompatibleWithType(left, right);
-
-        default:
-            throw Assert.isNever(right);
-    }
+    return result;
 }
 
 export function isCompatibleWithFunctionSignature(
@@ -107,184 +134,367 @@ export function isCompatibleWithFunctionParameter(
     }
 }
 
-function isCompatibleWithAny(left: Type.TPowerQueryType, right: Type.TAny): boolean | undefined {
+function isCompatibleWithAny(
+    left: Type.TPowerQueryType,
+    right: Type.TAny,
+    traceManager: TraceManager,
+    correlationId: number,
+): boolean | undefined {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleWithAny.name,
+        correlationId,
+    );
+
+    let result: boolean | undefined;
+
     switch (right.maybeExtendedKind) {
         case undefined:
-            return true;
+            result = true;
+            break;
 
         case Type.ExtendedTypeKind.AnyUnion:
-            return isCompatibleWithAnyUnion(left, right);
+            result = isCompatibleWithAnyUnion(left, right, traceManager, trace.id);
+            break;
 
         default:
             throw Assert.isNever(right);
     }
+
+    trace.exit();
+
+    return result;
 }
 
-function isCompatibleWithAnyUnion(left: Type.TPowerQueryType, right: Type.AnyUnion): boolean | undefined {
+function isCompatibleWithAnyUnion(
+    left: Type.TPowerQueryType,
+    right: Type.AnyUnion,
+    traceManager: TraceManager,
+    correlationId: number,
+): boolean | undefined {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleWithAnyUnion.name,
+        correlationId,
+    );
+
     for (const subtype of right.unionedTypePairs) {
-        if (isCompatible(left, subtype)) {
+        if (isCompatible(left, subtype, traceManager, trace.id)) {
+            trace.exit();
+
             return true;
         }
     }
 
+    trace.exit();
+
     return false;
 }
 
-function isCompatibleWithDefinedList(left: Type.TPowerQueryType, right: Type.DefinedList): boolean {
+function isCompatibleWithDefinedList(
+    left: Type.TPowerQueryType,
+    right: Type.DefinedList,
+    traceManager: TraceManager,
+    correlationId: number,
+): boolean {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleWithDefinedList.name,
+        correlationId,
+    );
+
+    let result: boolean;
+
     if (left.kind !== right.kind) {
-        return false;
-    }
+        result = false;
+    } else {
+        switch (left.maybeExtendedKind) {
+            case undefined:
+                result = false;
+                break;
 
-    switch (left.maybeExtendedKind) {
-        case undefined:
-            return false;
+            case Type.ExtendedTypeKind.DefinedList: {
+                result = isCompatibleDefinedListOrDefinedListType(left, right, traceManager, trace.id);
+                break;
+            }
 
-        case Type.ExtendedTypeKind.DefinedList: {
-            return isCompatibleDefinedListOrDefinedListType(left, right);
+            default:
+                throw Assert.isNever(left);
         }
-
-        default:
-            throw Assert.isNever(left);
     }
+
+    trace.exit();
+
+    return result;
 }
 
-function isCompatibleWithDefinedListType(left: Type.TPowerQueryType, right: Type.DefinedListType): boolean {
+function isCompatibleWithDefinedListType(
+    left: Type.TPowerQueryType,
+    right: Type.DefinedListType,
+    traceManager: TraceManager,
+    correlationId: number,
+): boolean {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleWithDefinedListType.name,
+        correlationId,
+    );
+
+    let result: boolean;
+
     if (left.kind !== right.kind) {
-        return false;
-    }
+        result = false;
+    } else {
+        switch (left.maybeExtendedKind) {
+            case Type.ExtendedTypeKind.DefinedListType:
+                result = isCompatibleDefinedListOrDefinedListType(left, right, traceManager, trace.id);
+                break;
 
-    switch (left.maybeExtendedKind) {
-        case Type.ExtendedTypeKind.DefinedListType:
-            return isCompatibleDefinedListOrDefinedListType(left, right);
+            case Type.ExtendedTypeKind.ListType:
+                result = isDefinedListTypeCompatibleWithListType(right, left, traceManager, trace.id);
+                break;
 
-        case Type.ExtendedTypeKind.ListType:
-            return isDefinedListTypeCompatibleWithListType(right, left);
+            case undefined:
+            case Type.ExtendedTypeKind.FunctionType:
+            case Type.ExtendedTypeKind.PrimaryPrimitiveType:
+            case Type.ExtendedTypeKind.RecordType:
+            case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+            case Type.ExtendedTypeKind.TableType:
+                result = false;
+                break;
 
-        case undefined:
-        case Type.ExtendedTypeKind.FunctionType:
-        case Type.ExtendedTypeKind.PrimaryPrimitiveType:
-        case Type.ExtendedTypeKind.RecordType:
-        case Type.ExtendedTypeKind.TableTypePrimaryExpression:
-        case Type.ExtendedTypeKind.TableType:
-            return false;
-
-        default:
-            throw Assert.isNever(left);
-    }
-}
-
-function isCompatibleWithDefinedRecord(left: Type.TPowerQueryType, right: Type.DefinedRecord): boolean {
-    if (left.kind !== right.kind) {
-        return false;
-    }
-
-    switch (left.maybeExtendedKind) {
-        case undefined:
-            return false;
-
-        case Type.ExtendedTypeKind.DefinedRecord:
-            return isCompatibleWithFieldSpecificationList(left, right);
-
-        default:
-            throw Assert.isNever(left);
-    }
-}
-
-function isCompatibleWithDefinedTable(left: Type.TPowerQueryType, right: Type.DefinedTable): boolean {
-    if (left.kind !== right.kind) {
-        return false;
-    }
-
-    switch (left.maybeExtendedKind) {
-        case undefined:
-            return false;
-
-        case Type.ExtendedTypeKind.DefinedTable: {
-            return isCompatibleWithFieldSpecificationList(left, right);
+            default:
+                throw Assert.isNever(left);
         }
-
-        default:
-            throw Assert.isNever(left);
     }
+
+    trace.exit();
+
+    return result;
+}
+
+function isCompatibleWithDefinedRecord(
+    left: Type.TPowerQueryType,
+    right: Type.DefinedRecord,
+    traceManager: TraceManager,
+    correlationId: number,
+): boolean {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleWithDefinedRecord.name,
+        correlationId,
+    );
+
+    let result: boolean;
+
+    if (left.kind !== right.kind) {
+        result = false;
+    } else {
+        switch (left.maybeExtendedKind) {
+            case undefined:
+                result = false;
+                break;
+
+            case Type.ExtendedTypeKind.DefinedRecord:
+                result = isCompatibleWithFieldSpecificationList(left, right, traceManager, trace.id);
+                break;
+
+            default:
+                throw Assert.isNever(left);
+        }
+    }
+
+    trace.exit();
+
+    return result;
+}
+
+function isCompatibleWithDefinedTable(
+    left: Type.TPowerQueryType,
+    right: Type.DefinedTable,
+    traceManager: TraceManager,
+    correlationId: number,
+): boolean {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleWithDefinedTable.name,
+        correlationId,
+    );
+
+    let result: boolean;
+
+    if (left.kind !== right.kind) {
+        result = false;
+    } else {
+        switch (left.maybeExtendedKind) {
+            case undefined:
+                result = false;
+                break;
+
+            case Type.ExtendedTypeKind.DefinedTable: {
+                result = isCompatibleWithFieldSpecificationList(left, right, traceManager, trace.id);
+                break;
+            }
+
+            default:
+                throw Assert.isNever(left);
+        }
+    }
+
+    trace.exit();
+
+    return result;
 }
 
 // TODO: decide what a compatible FieldSpecificationList should look like
 function isCompatibleWithFieldSpecificationList(
     left: Type.TPowerQueryType,
     right: Type.TPowerQueryType & Type.TFieldSpecificationList,
+    traceManager: TraceManager,
+    correlationId: number,
 ): boolean {
-    if (!isFieldSpecificationList(left)) {
-        return false;
-    }
-
-    return MapUtils.isSubsetMap(
-        left.fields,
-        right.fields,
-        (leftValue: Type.TPowerQueryType, rightValue: Type.TPowerQueryType) => {
-            const result: boolean | undefined = isCompatible(leftValue, rightValue);
-
-            return result !== undefined && result;
-        },
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleWithFieldSpecificationList.name,
+        correlationId,
     );
+
+    let result: boolean;
+
+    if (!isFieldSpecificationList(left)) {
+        result = false;
+    } else {
+        result = MapUtils.isSubsetMap(
+            left.fields,
+            right.fields,
+            (leftValue: Type.TPowerQueryType, rightValue: Type.TPowerQueryType) => {
+                const subsetResult: boolean | undefined = isCompatible(leftValue, rightValue, traceManager, trace.id);
+
+                return subsetResult !== undefined && subsetResult;
+            },
+        );
+    }
+
+    trace.exit();
+
+    return result;
 }
 
-function isCompatibleWithFunction(left: Type.TPowerQueryType, right: Type.TFunction): boolean {
+function isCompatibleWithFunction(
+    left: Type.TPowerQueryType,
+    right: Type.TFunction,
+    traceManager: TraceManager,
+    correlationId: number,
+): boolean {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleWithFieldSpecificationList.name,
+        correlationId,
+    );
+
+    let result: boolean;
+
     if (left.kind !== right.kind) {
-        return false;
+        result = false;
+    } else {
+        switch (right.maybeExtendedKind) {
+            case undefined:
+                result = true;
+                break;
+
+            case Type.ExtendedTypeKind.DefinedFunction:
+                result = isCompatibleWithFunctionSignature(left, right);
+                break;
+
+            default:
+                throw Assert.isNever(right);
+        }
     }
 
-    switch (right.maybeExtendedKind) {
-        case undefined:
-            return true;
+    trace.exit();
 
-        case Type.ExtendedTypeKind.DefinedFunction:
-            return isCompatibleWithFunctionSignature(left, right);
-
-        default:
-            throw Assert.isNever(right);
-    }
+    return result;
 }
 
-function isCompatibleWithList(left: Type.TPowerQueryType, right: Type.TList): boolean {
+function isCompatibleWithList(
+    left: Type.TPowerQueryType,
+    right: Type.TList,
+    traceManager: TraceManager,
+    correlationId: number,
+): boolean {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleWithList.name,
+        correlationId,
+    );
+
+    let result: boolean;
+
     if (left.kind !== right.kind) {
-        return false;
+        result = false;
+    } else {
+        switch (right.maybeExtendedKind) {
+            case undefined:
+                result = left.maybeExtendedKind === undefined;
+                break;
+
+            case Type.ExtendedTypeKind.DefinedList:
+                result = isCompatibleWithDefinedList(left, right, traceManager, trace.id);
+                break;
+
+            default:
+                throw Assert.isNever(right);
+        }
     }
 
-    switch (right.maybeExtendedKind) {
-        case undefined:
-            return left.maybeExtendedKind === undefined;
+    trace.exit();
 
-        case Type.ExtendedTypeKind.DefinedList:
-            return isCompatibleWithDefinedList(left, right);
-
-        default:
-            throw Assert.isNever(right);
-    }
+    return result;
 }
 
-function isCompatibleWithListType(left: Type.TPowerQueryType, right: Type.ListType): boolean {
+function isCompatibleWithListType(
+    left: Type.TPowerQueryType,
+    right: Type.ListType,
+    traceManager: TraceManager,
+    correlationId: number,
+): boolean {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleWithListType.name,
+        correlationId,
+    );
+
+    let result: boolean;
+
     if (left.kind !== right.kind) {
-        return false;
+        result = false;
+    } else {
+        switch (left.maybeExtendedKind) {
+            case Type.ExtendedTypeKind.DefinedListType:
+                result = isDefinedListTypeCompatibleWithListType(left, right, traceManager, trace.id);
+                break;
+
+            case Type.ExtendedTypeKind.ListType:
+                result = isEqualType(left.itemType, right.itemType);
+                break;
+
+            case undefined:
+            case Type.ExtendedTypeKind.FunctionType:
+            case Type.ExtendedTypeKind.PrimaryPrimitiveType:
+            case Type.ExtendedTypeKind.RecordType:
+            case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+            case Type.ExtendedTypeKind.TableType:
+                result = false;
+                break;
+
+            default:
+                throw Assert.isNever(left);
+        }
     }
 
-    switch (left.maybeExtendedKind) {
-        case Type.ExtendedTypeKind.DefinedListType:
-            return isDefinedListTypeCompatibleWithListType(left, right);
+    trace.exit();
 
-        case Type.ExtendedTypeKind.ListType:
-            return isEqualType(left.itemType, right.itemType);
-
-        case undefined:
-        case Type.ExtendedTypeKind.FunctionType:
-        case Type.ExtendedTypeKind.PrimaryPrimitiveType:
-        case Type.ExtendedTypeKind.RecordType:
-        case Type.ExtendedTypeKind.TableTypePrimaryExpression:
-        case Type.ExtendedTypeKind.TableType:
-            return false;
-
-        default:
-            throw Assert.isNever(left);
-    }
+    return result;
 }
 
 function isCompatibleWithPrimaryPrimitiveType(left: Type.TPowerQueryType, right: Type.PrimaryPrimitiveType): boolean {
@@ -310,114 +520,208 @@ function isCompatibleWithPrimaryPrimitiveType(left: Type.TPowerQueryType, right:
     }
 }
 
-function isCompatibleWithRecord(left: Type.TPowerQueryType, right: Type.TRecord): boolean {
+function isCompatibleWithRecord(
+    left: Type.TPowerQueryType,
+    right: Type.TRecord,
+    traceManager: TraceManager,
+    correlationId: number,
+): boolean {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleWithRecord.name,
+        correlationId,
+    );
+
+    let result: boolean;
+
     if (left.kind !== right.kind) {
-        return false;
+        result = false;
+    } else {
+        switch (right.maybeExtendedKind) {
+            case undefined:
+                result = true;
+                break;
+
+            case Type.ExtendedTypeKind.DefinedRecord:
+                result = isCompatibleWithDefinedRecord(left, right, traceManager, trace.id);
+                break;
+
+            default:
+                throw Assert.isNever(right);
+        }
     }
 
-    switch (right.maybeExtendedKind) {
-        case undefined:
-            return true;
+    trace.exit();
 
-        case Type.ExtendedTypeKind.DefinedRecord:
-            return isCompatibleWithDefinedRecord(left, right);
-
-        default:
-            throw Assert.isNever(right);
-    }
+    return result;
 }
 
-function isCompatibleWithRecordType(left: Type.TPowerQueryType, right: Type.RecordType): boolean {
+function isCompatibleWithRecordType(
+    left: Type.TPowerQueryType,
+    right: Type.RecordType,
+    traceManager: TraceManager,
+    correlationId: number,
+): boolean {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleWithRecordType.name,
+        correlationId,
+    );
+
+    let result: boolean;
+
     if (left.kind !== right.kind) {
-        return false;
+        result = false;
+    } else {
+        switch (left.maybeExtendedKind) {
+            case Type.ExtendedTypeKind.RecordType:
+                result = isCompatibleWithFieldSpecificationList(left, right, traceManager, trace.id);
+                break;
+
+            case undefined:
+            case Type.ExtendedTypeKind.DefinedListType:
+            case Type.ExtendedTypeKind.PrimaryPrimitiveType:
+            case Type.ExtendedTypeKind.ListType:
+            case Type.ExtendedTypeKind.FunctionType:
+            case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+            case Type.ExtendedTypeKind.TableType:
+                result = false;
+                break;
+
+            default:
+                throw Assert.isNever(left);
+        }
     }
 
-    switch (left.maybeExtendedKind) {
-        case Type.ExtendedTypeKind.RecordType:
-            return isCompatibleWithFieldSpecificationList(left, right);
+    trace.exit();
 
-        case undefined:
-        case Type.ExtendedTypeKind.DefinedListType:
-        case Type.ExtendedTypeKind.PrimaryPrimitiveType:
-        case Type.ExtendedTypeKind.ListType:
-        case Type.ExtendedTypeKind.FunctionType:
-        case Type.ExtendedTypeKind.TableTypePrimaryExpression:
-        case Type.ExtendedTypeKind.TableType:
-            return false;
-
-        default:
-            throw Assert.isNever(left);
-    }
+    return result;
 }
 
-function isCompatibleWithTable(left: Type.TPowerQueryType, right: Type.TTable): boolean {
+function isCompatibleWithTable(
+    left: Type.TPowerQueryType,
+    right: Type.TTable,
+    traceManager: TraceManager,
+    correlationId: number,
+): boolean {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleWithTable.name,
+        correlationId,
+    );
+
+    let result: boolean;
+
     if (left.kind !== right.kind) {
-        return false;
+        result = false;
+    } else {
+        switch (right.maybeExtendedKind) {
+            case undefined:
+                result = true;
+                break;
+
+            case Type.ExtendedTypeKind.DefinedTable:
+                result = isCompatibleWithDefinedTable(left, right, traceManager, trace.id);
+                break;
+
+            default:
+                throw Assert.isNever(right);
+        }
     }
 
-    switch (right.maybeExtendedKind) {
-        case undefined:
-            return true;
+    trace.exit();
 
-        case Type.ExtendedTypeKind.DefinedTable:
-            return isCompatibleWithDefinedTable(left, right);
-
-        default:
-            throw Assert.isNever(right);
-    }
+    return result;
 }
 
-function isCompatibleWithTableType(left: Type.TPowerQueryType, right: Type.TableType): boolean {
+function isCompatibleWithTableType(
+    left: Type.TPowerQueryType,
+    right: Type.TableType,
+    traceManager: TraceManager,
+    correlationId: number,
+): boolean {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleWithTableType.name,
+        correlationId,
+    );
+
+    let result: boolean;
+
     if (left.kind !== right.kind) {
-        return false;
+        result = false;
+    } else {
+        switch (left.maybeExtendedKind) {
+            case undefined:
+                result = false;
+                break;
+
+            case Type.ExtendedTypeKind.TableType:
+                result = isCompatibleWithFieldSpecificationList(left, right, traceManager, trace.id);
+                break;
+
+            case Type.ExtendedTypeKind.DefinedListType:
+            case Type.ExtendedTypeKind.ListType:
+            case Type.ExtendedTypeKind.FunctionType:
+            case Type.ExtendedTypeKind.PrimaryPrimitiveType:
+            case Type.ExtendedTypeKind.RecordType:
+            case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+                result = false;
+                break;
+
+            default:
+                throw Assert.isNever(left);
+        }
     }
 
-    switch (left.maybeExtendedKind) {
-        case undefined:
-            return false;
+    trace.exit();
 
-        case Type.ExtendedTypeKind.TableType:
-            return isCompatibleWithFieldSpecificationList(left, right);
-
-        case Type.ExtendedTypeKind.DefinedListType:
-        case Type.ExtendedTypeKind.ListType:
-        case Type.ExtendedTypeKind.FunctionType:
-        case Type.ExtendedTypeKind.PrimaryPrimitiveType:
-        case Type.ExtendedTypeKind.RecordType:
-        case Type.ExtendedTypeKind.TableTypePrimaryExpression:
-            return false;
-
-        default:
-            throw Assert.isNever(left);
-    }
+    return result;
 }
 
 function isCompatibleWithTableTypePrimaryExpression(
     left: Type.TPowerQueryType,
     right: Type.TableTypePrimaryExpression,
+    traceManager: TraceManager,
+    correlationId: number,
 ): boolean | undefined {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleWithTableTypePrimaryExpression.name,
+        correlationId,
+    );
+
+    let result: boolean | undefined;
+
     if (left.kind !== right.kind) {
-        return false;
+        result = false;
+    } else {
+        switch (left.maybeExtendedKind) {
+            case undefined:
+                result = false;
+                break;
+
+            case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+                result = isCompatible(left.primaryExpression, right.primaryExpression, traceManager, correlationId);
+                break;
+
+            case Type.ExtendedTypeKind.DefinedListType:
+            case Type.ExtendedTypeKind.ListType:
+            case Type.ExtendedTypeKind.FunctionType:
+            case Type.ExtendedTypeKind.PrimaryPrimitiveType:
+            case Type.ExtendedTypeKind.RecordType:
+            case Type.ExtendedTypeKind.TableType:
+                result = false;
+                break;
+
+            default:
+                throw Assert.isNever(left);
+        }
     }
 
-    switch (left.maybeExtendedKind) {
-        case undefined:
-            return false;
+    trace.exit();
 
-        case Type.ExtendedTypeKind.TableTypePrimaryExpression:
-            return isCompatible(left.primaryExpression, right.primaryExpression);
-
-        case Type.ExtendedTypeKind.DefinedListType:
-        case Type.ExtendedTypeKind.ListType:
-        case Type.ExtendedTypeKind.FunctionType:
-        case Type.ExtendedTypeKind.PrimaryPrimitiveType:
-        case Type.ExtendedTypeKind.RecordType:
-        case Type.ExtendedTypeKind.TableType:
-            return false;
-
-        default:
-            throw Assert.isNever(left);
-    }
+    return result;
 }
 
 function isCompatibleWithLiteral<T extends Type.TLiteral>(left: Type.TPowerQueryType, right: T): boolean {
@@ -431,7 +735,15 @@ function isCompatibleWithLiteral<T extends Type.TLiteral>(left: Type.TPowerQuery
 function isCompatibleDefinedListOrDefinedListType<T extends Type.DefinedList | Type.DefinedListType>(
     left: T,
     right: T,
+    traceManager: TraceManager,
+    correlationId: number,
 ): boolean {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleDefinedListOrDefinedListType.name,
+        correlationId,
+    );
+
     let leftElements: ReadonlyArray<Type.TPowerQueryType>;
     let rightElements: ReadonlyArray<Type.TPowerQueryType>;
 
@@ -457,16 +769,22 @@ function isCompatibleDefinedListOrDefinedListType<T extends Type.DefinedList | T
     }
 
     if (leftElements.length !== rightElements.length) {
+        trace.exit();
+
         return false;
     }
 
     const numElements: number = leftElements.length;
 
     for (let index: number = 0; index < numElements; index += 1) {
-        if (!isCompatible(leftElements[index], rightElements[index])) {
+        if (!isCompatible(leftElements[index], rightElements[index], traceManager, trace.id)) {
+            trace.exit();
+
             return false;
         }
     }
+
+    trace.exit();
 
     return true;
 }
@@ -489,47 +807,84 @@ function isCompatibleWithType(
         | Type.TableType
         | Type.TableTypePrimaryExpression
         | Type.Type,
+    traceManager: TraceManager,
+    correlationId: number,
 ): boolean | undefined {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleWithType.name,
+        correlationId,
+    );
+
+    let result: boolean | undefined;
+
     if (left.kind !== right.kind) {
-        return false;
+        result = false;
+    } else {
+        switch (right.maybeExtendedKind) {
+            case undefined:
+                result = true;
+                break;
+
+            case Type.ExtendedTypeKind.FunctionType:
+                result = isCompatibleWithFunctionSignature(left, right);
+                break;
+
+            case Type.ExtendedTypeKind.ListType:
+                result = isCompatibleWithListType(left, right, traceManager, trace.id);
+                break;
+
+            case Type.ExtendedTypeKind.DefinedListType:
+                result = isCompatibleWithDefinedListType(left, right, traceManager, trace.id);
+                break;
+
+            case Type.ExtendedTypeKind.PrimaryPrimitiveType:
+                result = isCompatibleWithPrimaryPrimitiveType(left, right);
+                break;
+
+            case Type.ExtendedTypeKind.RecordType:
+                result = isCompatibleWithRecordType(left, right, traceManager, trace.id);
+                break;
+
+            case Type.ExtendedTypeKind.TableType:
+                result = isCompatibleWithTableType(left, right, traceManager, trace.id);
+                break;
+
+            case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+                result = isCompatibleWithTableTypePrimaryExpression(left, right, traceManager, trace.id);
+                break;
+
+            default:
+                throw Assert.isNever(right);
+        }
     }
 
-    switch (right.maybeExtendedKind) {
-        case undefined:
-            return true;
+    trace.exit();
 
-        case Type.ExtendedTypeKind.FunctionType:
-            return isCompatibleWithFunctionSignature(left, right);
-
-        case Type.ExtendedTypeKind.ListType:
-            return isCompatibleWithListType(left, right);
-
-        case Type.ExtendedTypeKind.DefinedListType:
-            return isCompatibleWithDefinedListType(left, right);
-
-        case Type.ExtendedTypeKind.PrimaryPrimitiveType:
-            return isCompatibleWithPrimaryPrimitiveType(left, right);
-
-        case Type.ExtendedTypeKind.RecordType:
-            return isCompatibleWithRecordType(left, right);
-
-        case Type.ExtendedTypeKind.TableType:
-            return isCompatibleWithTableType(left, right);
-
-        case Type.ExtendedTypeKind.TableTypePrimaryExpression:
-            return isCompatibleWithTableTypePrimaryExpression(left, right);
-
-        default:
-            throw Assert.isNever(right);
-    }
+    return result;
 }
 
-function isDefinedListTypeCompatibleWithListType(definedList: Type.DefinedListType, listType: Type.ListType): boolean {
-    const itemTypeCompatabilities: ReadonlyArray<boolean | undefined> = definedList.itemTypes.map(
-        (itemType: Type.TPowerQueryType) => isCompatible(itemType, listType.itemType),
+function isDefinedListTypeCompatibleWithListType(
+    definedList: Type.DefinedListType,
+    listType: Type.ListType,
+    traceManager: TraceManager,
+    correlationId: number,
+): boolean {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isDefinedListTypeCompatibleWithListType.name,
+        correlationId,
     );
 
-    return Boolean(
+    const itemTypeCompatabilities: ReadonlyArray<boolean | undefined> = definedList.itemTypes.map(
+        (itemType: Type.TPowerQueryType) => isCompatible(itemType, listType.itemType, traceManager, trace.id),
+    );
+
+    const result: boolean = Boolean(
         itemTypeCompatabilities.find((value: boolean | undefined) => value === undefined || value === false),
     );
+
+    trace.exit();
+
+    return result;
 }

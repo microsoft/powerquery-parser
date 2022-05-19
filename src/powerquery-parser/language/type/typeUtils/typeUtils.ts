@@ -3,12 +3,14 @@
 
 import { Ast, AstUtils } from "../..";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, XorNode, XorNodeKind } from "../../../parser";
+import { Trace, TraceManager } from "../../../common/trace";
 import { Assert } from "../../../common";
 import { createPrimitiveType } from "./factories";
 import { isCompatible } from "./isCompatible";
 import { isEqualType } from "./isEqualType";
 import { Type } from "..";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";
+import { TypeUtilsTraceConstant } from "./typeTraceConstant";
 
 export function typeKindFromLiteralKind(literalKind: Ast.LiteralKind): Type.TypeKind {
     switch (literalKind) {
@@ -75,7 +77,15 @@ export function isTypeKind(text: string): text is Type.TypeKind {
 export function isValidInvocation(
     functionType: Type.DefinedFunction,
     args: ReadonlyArray<Type.TPowerQueryType>,
+    traceManager: TraceManager,
+    maybeCorrelationId: number | undefined,
 ): boolean {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.TypeUtils,
+        isValidInvocation.name,
+        maybeCorrelationId,
+    );
+
     // You can't provide more arguments than are on the function signature.
     if (args.length > functionType.parameters.length) {
         return false;
@@ -96,15 +106,21 @@ export function isValidInvocation(
                 Assert.asDefined(parameter.maybeType),
             );
 
-            if (!isCompatible(argType, parameterType)) {
+            if (!isCompatible(argType, parameterType, traceManager, trace.id)) {
+                trace.exit();
+
                 return false;
             }
         }
 
         if (!parameter.isOptional) {
+            trace.exit();
+
             return false;
         }
     }
+
+    trace.exit();
 
     return true;
 }

@@ -8,7 +8,7 @@ import { Assert, Language, TaskUtils, Traverse } from "../../../powerquery-parse
 import { ChildIdsById, IdsByNodeKind, ParentIdById } from "../../../powerquery-parser/parser/nodeIdMap/nodeIdMap";
 import { DefaultSettings, Task } from "../../..";
 import { NodeIdMap, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
-import { NoOpTraceManager } from "../../../powerquery-parser/common/trace";
+import { NoOpTraceManagerInstance } from "../../../powerquery-parser/common/trace";
 
 type TraverseState = Traverse.ITraversalState<undefined> &
     Pick<NodeIdMap.Collection, "leafIds" | "idsByNodeKind"> & { astIds: number[]; contextIds: number[] };
@@ -84,7 +84,7 @@ async function expectLinksMatch(
         idsByNodeKind: new Map(),
         maybeCancellationToken: undefined,
         maybeInitialCorrelationId: undefined,
-        traceManager: new NoOpTraceManager(),
+        traceManager: NoOpTraceManagerInstance,
     };
 
     const triedTraverse: Traverse.TriedTraverse<undefined> = await Traverse.tryTraverseXor(

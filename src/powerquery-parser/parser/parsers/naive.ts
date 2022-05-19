@@ -3447,16 +3447,11 @@ async function readPairedConstant<
     nodeKind: Kind,
     constantReader: () => Ast.TConstant & Ast.IConstant<ConstantKind>,
     pairedReader: () => Promise<Paired>,
-    maybeCorrelationId: number,
+    correlationId: number,
 ): Promise<Ast.IPairedConstant<Kind, ConstantKind, Paired>> {
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readPairedConstant.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readPairedConstant.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
     ParseStateUtils.startContext(state, nodeKind);
 

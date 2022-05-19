@@ -7,7 +7,7 @@ import { ParseContext, ParseContextUtils, ParseError } from "..";
 import { DefaultLocale } from "../../localization";
 import { Disambiguation } from "../disambiguation";
 import { LexerSnapshot } from "../../lexer";
-import { NoOpTraceManager } from "../../common/trace";
+import { NoOpTraceManagerInstance } from "../../common/trace";
 import { ParseState } from "./parseState";
 import { SequenceKind } from "../error";
 
@@ -34,7 +34,7 @@ export function createState(lexerSnapshot: LexerSnapshot, maybeOverrides: Partia
         lexerSnapshot,
         locale: maybeOverrides?.locale ?? DefaultLocale,
         maybeCancellationToken: maybeOverrides?.maybeCancellationToken,
-        traceManager: maybeOverrides?.traceManager ?? new NoOpTraceManager(),
+        traceManager: maybeOverrides?.traceManager ?? NoOpTraceManagerInstance,
         contextState: maybeOverrides?.contextState ?? ParseContextUtils.createState(),
         maybeCurrentToken,
         maybeCurrentContextNode,

@@ -2,9 +2,11 @@
 // Licensed under the MIT license.
 
 import { isCompatible, isCompatibleWithFunctionParameter } from "./isCompatible";
+import { Trace, TraceManager } from "../../../common/trace";
 import { ArrayUtils } from "../../../common";
 import { isEqualFunctionParameter } from "./isEqualType";
 import { Type } from "..";
+import { TypeUtilsTraceConstant } from "./typeTraceConstant";
 
 export type TChecked =
     | CheckedDefinedFunction
@@ -63,28 +65,63 @@ export type InvocationMismatch = IMismatch<Type.TPowerQueryType | undefined, Typ
 export function typeCheckFunction(
     valueType: Type.DefinedFunction,
     schemaType: Type.FunctionType,
+    traceManager: TraceManager,
+    maybeCorrelationId: number | undefined,
 ): CheckedDefinedFunction {
-    return {
-        ...typeCheckFunctionSignature(valueType, schemaType),
-        isReturnTypeCompatible: isCompatible(valueType.returnType, schemaType.returnType) === true,
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.TypeCheck,
+        typeCheckFunction.name,
+        maybeCorrelationId,
+    );
+
+    const result: CheckedDefinedFunction = {
+        ...typeCheckFunctionSignature(valueType, schemaType, traceManager, trace.id),
+        isReturnTypeCompatible:
+            isCompatible(valueType.returnType, schemaType.returnType, traceManager, trace.id) === true,
     };
+
+    trace.exit();
+
+    return result;
 }
 
 export function typeCheckFunctionSignature(
     valueType: Type.FunctionSignature,
     schemaType: Type.FunctionSignature,
+    traceManager: TraceManager,
+    maybeCorrelationId: number | undefined,
 ): CheckedFunctionSignature {
-    return typeCheckGenericNumber<Type.FunctionParameter, Type.FunctionParameter>(
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.TypeCheck,
+        typeCheckFunctionSignature.name,
+        maybeCorrelationId,
+    );
+
+    const result: CheckedFunctionSignature = typeCheckGenericNumber<Type.FunctionParameter, Type.FunctionParameter>(
         valueType.parameters,
         schemaType.parameters,
         (left: Type.FunctionParameter, right: Type.FunctionParameter) => isEqualFunctionParameter(left, right),
+        traceManager,
+        trace.id,
     );
+
+    trace.exit();
+
+    return result;
 }
 
 export function typeCheckInvocation(
     args: ReadonlyArray<Type.TPowerQueryType>,
     definedFunction: Type.DefinedFunction,
+    traceManager: TraceManager,
+    maybeCorrelationId: number | undefined,
 ): CheckedInvocation {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.TypeCheck,
+        typeCheckInvocation.name,
+        maybeCorrelationId,
+    );
+
     const parameters: ReadonlyArray<Type.FunctionParameter> = definedFunction.parameters;
     const numArgs: number = args.length;
     const numParameters: number = parameters.length;
@@ -112,15 +149,30 @@ export function typeCheckInvocation(
         }
     }
 
-    return {
+    const result: CheckedInvocation = {
         valid: validArgs,
         invalid: invalidArgs,
         extraneous: extraneousArgs,
         missing: missingArgs,
     };
+
+    trace.exit();
+
+    return result;
 }
 
-export function typeCheckListWithListType(valueType: Type.DefinedList, schemaType: Type.ListType): CheckedDefinedList {
+export function typeCheckListWithListType(
+    valueType: Type.DefinedList,
+    schemaType: Type.ListType,
+    traceManager: TraceManager,
+    maybeCorrelationId: number | undefined,
+): CheckedDefinedList {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.TypeCheck,
+        typeCheckListWithListType.name,
+        maybeCorrelationId,
+    );
+
     const validArgs: number[] = [];
     const invalidArgs: Map<number, DefinedListMismatch> = new Map();
     const schemaItemType: Type.TPowerQueryType = schemaType.itemType;
@@ -131,7 +183,7 @@ export function typeCheckListWithListType(valueType: Type.DefinedList, schemaTyp
     for (let index: number = 0; index < numElements; index += 1) {
         const element: Type.TPowerQueryType = valueElements[index];
 
-        if (isCompatible(element, schemaItemType)) {
+        if (isCompatible(element, schemaItemType, traceManager, trace.id)) {
             validArgs.push(index);
         } else {
             invalidArgs.set(index, {
@@ -141,27 +193,61 @@ export function typeCheckListWithListType(valueType: Type.DefinedList, schemaTyp
         }
     }
 
-    return {
+    const result: CheckedDefinedList = {
         valid: validArgs,
         invalid: invalidArgs,
         extraneous: [],
         missing: [],
     };
+
+    trace.exit();
+
+    return result;
 }
 
 export function typeCheckListWithDefinedListType(
     valueType: Type.DefinedList,
     schemaType: Type.DefinedListType,
+    traceManager: TraceManager,
+    maybeCorrelationId: number | undefined,
 ): CheckedDefinedList {
-    return typeCheckGenericNumber(valueType.elements, schemaType.itemTypes, isCompatible);
+    return typeCheckGenericNumber(
+        valueType.elements,
+        schemaType.itemTypes,
+        isCompatible,
+        traceManager,
+        maybeCorrelationId,
+    );
 }
 
-export function typeCheckRecord(valueType: Type.DefinedRecord, schemaType: Type.RecordType): CheckedDefinedRecord {
-    return typeCheckRecordOrTable(valueType.fields, schemaType.fields, schemaType.isOpen);
+export function typeCheckRecord(
+    valueType: Type.DefinedRecord,
+    schemaType: Type.RecordType,
+    traceManager: TraceManager,
+    maybeCorrelationId: number | undefined,
+): CheckedDefinedRecord {
+    return typeCheckRecordOrTable(
+        valueType.fields,
+        schemaType.fields,
+        schemaType.isOpen,
+        traceManager,
+        maybeCorrelationId,
+    );
 }
 
-export function typeCheckTable(valueType: Type.DefinedTable, schemaType: Type.TableType): CheckedDefinedTable {
-    return typeCheckRecordOrTable(valueType.fields, schemaType.fields, schemaType.isOpen);
+export function typeCheckTable(
+    valueType: Type.DefinedTable,
+    schemaType: Type.TableType,
+    traceManager: TraceManager,
+    maybeCorrelationId: number | undefined,
+): CheckedDefinedTable {
+    return typeCheckRecordOrTable(
+        valueType.fields,
+        schemaType.fields,
+        schemaType.isOpen,
+        traceManager,
+        maybeCorrelationId,
+    );
 }
 
 function typeCheckGenericNumber<
@@ -170,8 +256,21 @@ function typeCheckGenericNumber<
 >(
     valueElements: ReadonlyArray<Value>,
     schemaItemTypes: ReadonlyArray<Schema>,
-    valueCmpFn: (left: Value, right: Schema) => boolean | undefined,
+    valueCmpFn: (
+        left: Value,
+        right: Schema,
+        traceManager: TraceManager,
+        maybeCorrelationId: number | undefined,
+    ) => boolean | undefined,
+    traceManager: TraceManager,
+    maybeCorrelationId: number | undefined,
 ): IChecked<number, IMismatch<Value, Schema>> {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.TypeCheck,
+        typeCheckGenericNumber.name,
+        maybeCorrelationId,
+    );
+
     const numElements: number = valueElements.length;
     const numItemTypes: number = schemaItemTypes.length;
 
@@ -196,7 +295,7 @@ function typeCheckGenericNumber<
         const element: Value = valueElements[index];
         const schemaItemType: Schema = schemaItemTypes[index];
 
-        if (valueCmpFn(element, schemaItemType)) {
+        if (valueCmpFn(element, schemaItemType, traceManager, trace.id)) {
             validIndices.push(index);
         } else {
             mismatches.set(index, {
@@ -206,19 +305,31 @@ function typeCheckGenericNumber<
         }
     }
 
-    return {
+    const result: IChecked<number, IMismatch<Value, Schema>> = {
         valid: validIndices,
         invalid: mismatches,
         extraneous: extraneousIndices,
         missing: missingIndices,
     };
+
+    trace.exit();
+
+    return result;
 }
 
 function typeCheckRecordOrTable(
     valueFields: Map<string, Type.TPowerQueryType>,
     schemaFields: Map<string, Type.TPowerQueryType>,
     schemaIsOpen: boolean,
+    traceManager: TraceManager,
+    maybeCorrelationId: number | undefined,
 ): IChecked<string, IMismatch<Type.TPowerQueryType, Type.TPowerQueryType>> {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.TypeCheck,
+        typeCheckRecordOrTable.name,
+        maybeCorrelationId,
+    );
+
     const validFields: string[] = [];
     const mismatches: Map<string, IMismatch<Type.TPowerQueryType, Type.TPowerQueryType>> = new Map();
     const extraneousFields: string[] = [];
@@ -233,7 +344,7 @@ function typeCheckRecordOrTable(
         if (maybeSchemaValueType !== undefined) {
             const schemaValueType: Type.TPowerQueryType = maybeSchemaValueType;
 
-            if (isCompatible(type, schemaValueType)) {
+            if (isCompatible(type, schemaValueType, traceManager, trace.id)) {
                 validFields.push(key);
             } else {
                 mismatches.set(key, {
@@ -248,10 +359,14 @@ function typeCheckRecordOrTable(
         }
     }
 
-    return {
+    const result: IChecked<string, IMismatch<Type.TPowerQueryType, Type.TPowerQueryType>> = {
         valid: validFields,
         invalid: mismatches,
         extraneous: extraneousFields,
         missing: missingFields,
     };
+
+    trace.exit();
+
+    return result;
 }

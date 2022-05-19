@@ -15,11 +15,19 @@ import {
     TypeCategory,
 } from "./categorize";
 import { ArrayUtils, ImmutableSet } from "../../../common";
+import { Trace, TraceManager } from "../../../common/trace";
 import { isEqualType } from "./isEqualType";
 import { Type } from "..";
+import { TypeUtilsTraceConstant } from "./typeTraceConstant";
 
-export function simplify(types: ReadonlyArray<Type.TPowerQueryType>): ReadonlyArray<Type.TPowerQueryType> {
-    const categorized: CategorizedPowerQueryTypes = categorize(types);
+export function simplify(
+    types: ReadonlyArray<Type.TPowerQueryType>,
+    traceManager: TraceManager,
+    maybeCorrelationId: number | undefined,
+): ReadonlyArray<Type.TPowerQueryType> {
+    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.Simplify, simplify.name, maybeCorrelationId);
+
+    const categorized: CategorizedPowerQueryTypes = categorize(types, traceManager, trace.id);
 
     // If an `any` exists then that's as simplified as we can make it.
     const maybeAny: Type.Any | undefined = maybeFindAnyPrimitive(categorized);
@@ -57,6 +65,8 @@ export function simplify(types: ReadonlyArray<Type.TPowerQueryType>): ReadonlyAr
             partial.push(flattenedValue);
         }
     }
+
+    trace.exit();
 
     return partial;
 }
