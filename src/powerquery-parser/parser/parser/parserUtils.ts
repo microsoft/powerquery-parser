@@ -19,18 +19,23 @@ export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: Lexe
         parseSettings.maybeInitialCorrelationId,
     );
 
+    const updatedSettings: ParseSettings = {
+        ...parseSettings,
+        maybeInitialCorrelationId: trace.id,
+    };
+
     const maybeParserEntryPointFn:
         | ((state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) => Promise<Ast.TNode>)
-        | undefined = parseSettings?.maybeParserEntryPointFn;
+        | undefined = updatedSettings?.maybeParserEntryPointFn;
 
     if (maybeParserEntryPointFn === undefined) {
-        return await tryParseDocument(parseSettings, lexerSnapshot, trace.id);
+        return await tryParseDocument(updatedSettings, lexerSnapshot);
     }
 
-    const parseState: ParseState = parseSettings.createParseState(lexerSnapshot, defaultOverrides(parseSettings));
+    const parseState: ParseState = updatedSettings.createParseState(lexerSnapshot, defaultOverrides(updatedSettings));
 
     try {
-        const root: Ast.TNode = await maybeParserEntryPointFn(parseState, parseSettings.parser, trace.id);
+        const root: Ast.TNode = await maybeParserEntryPointFn(parseState, updatedSettings.parser, trace.id);
         ParseStateUtils.assertIsDoneParsing(parseState);
 
         return ResultUtils.boxOk({
@@ -41,19 +46,20 @@ export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: Lexe
     } catch (error) {
         Assert.isInstanceofError(error);
 
-        return ResultUtils.boxError(ensureParseError(parseState, error, parseSettings.locale));
+        return ResultUtils.boxError(ensureParseError(parseState, error, updatedSettings.locale));
     }
 }
 
+// Attempts to parse the document both as an expression and section document.
+// Whichever attempt consumed the most tokens is the one returned. Ties go to expression documents.
 export async function tryParseDocument(
     parseSettings: ParseSettings,
     lexerSnapshot: LexerSnapshot,
-    maybeCorrelationId: number | undefined,
 ): Promise<TriedParse> {
     const trace: Trace = parseSettings.traceManager.entry(
         ParserUtilsTraceConstant.ParserUtils,
         tryParseDocument.name,
-        maybeCorrelationId,
+        parseSettings.maybeInitialCorrelationId,
     );
 
     let root: Ast.TNode;

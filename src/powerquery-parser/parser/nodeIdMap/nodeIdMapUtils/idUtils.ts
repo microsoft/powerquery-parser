@@ -12,7 +12,7 @@ import { TXorNode } from "../xorNode";
 // Helper functions which are related to updating / remapping nodeIds for NodeIdMap.Collection
 
 // Returns a map of `oldId -> newId` which follows the ID ordering invariant.
-// Expected to be consumed by updateNodeIds.
+// Expected to be immediately consumed by updateNodeIds.
 // Used to restore the nodeId ordering invariant after manual mangling of the Ast.
 export function recalculateIds(
     nodeIdMapCollection: NodeIdMap.Collection,
