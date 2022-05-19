@@ -3,11 +3,11 @@
 
 import { Ast, AstUtils } from "../..";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, XorNode, XorNodeKind } from "../../../parser";
+import { Trace, TraceManager } from "../../../common/trace";
 import { Assert } from "../../../common";
 import { createPrimitiveType } from "./factories";
 import { isCompatible } from "./isCompatible";
 import { isEqualType } from "./isEqualType";
-import { Trace, TraceManager } from "../../../common/trace";
 import { Type } from "..";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";
 import { TypeUtilsTraceConstant } from "./typeTraceConstant";

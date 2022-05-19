@@ -184,7 +184,7 @@ export function nameOfTypeKind(kind: Type.TypeKind): string {
 function nameOfFieldSpecificationList(
     type: Type.TFieldSpecificationList,
     traceManager: TraceManager,
-    correlationId: number | undefined,
+    correlationId: number,
 ): string {
     const trace: Trace = traceManager.entry(
         TypeUtilsTraceConstant.NameOf,
