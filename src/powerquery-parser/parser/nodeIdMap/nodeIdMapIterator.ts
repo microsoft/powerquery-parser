@@ -71,13 +71,13 @@ export function assertIterChildrenXor(
         return [];
     }
 
-    return assertIterXor(nodeIdMapCollection, maybeChildIds.values());
+    return assertIterXor(nodeIdMapCollection, maybeChildIds);
 }
 
 // Given a list of nodeIds, assert the existence of then return them as XorNodes.
 export function assertIterXor(
     nodeIdMapCollection: NodeIdMap.Collection,
-    nodeIds: IterableIterator<number>,
+    nodeIds: ReadonlyArray<number>,
 ): ReadonlyArray<TXorNode> {
     const result: TXorNode[] = [];
 
