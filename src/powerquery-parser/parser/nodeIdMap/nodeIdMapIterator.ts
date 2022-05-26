@@ -79,13 +79,7 @@ export function assertIterXor(
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeIds: ReadonlyArray<number>,
 ): ReadonlyArray<TXorNode> {
-    const result: TXorNode[] = [];
-
-    for (const nodeId of nodeIds) {
-        result.push(NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId));
-    }
-
-    return result;
+    return nodeIds.map((nodeId: number) => NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId));
 }
 
 // If any exist, returns all Ast nodes under the given node.
