@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, Assert, CommonError, Result } from ".";
-import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind, XorNodeUtils } from "../parser";
+import { CommonError, Result } from ".";
+import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../parser";
 import { Ast } from "../language";
 import { ResultUtils } from "./result";
 import { Settings } from "..";
@@ -117,13 +117,9 @@ export async function assertGetAllAstChildren<State extends ITraversalState<Resu
 ): Promise<ReadonlyArray<Ast.TNode>> {
     const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(astNode.id);
 
-    if (maybeChildIds) {
-        const childIds: ReadonlyArray<number> = maybeChildIds;
-
-        return childIds.map((nodeId: number) => NodeIdMapUtils.assertUnboxAst(nodeIdMapCollection.astNodeById, nodeId));
-    } else {
-        return [];
-    }
+    return maybeChildIds
+        ? maybeChildIds.map((nodeId: number) => NodeIdMapUtils.assertUnboxAst(nodeIdMapCollection.astNodeById, nodeId))
+        : [];
 }
 
 // a TExpandNodesFn usable by tryTraverseXor which visits all nodes.
@@ -133,41 +129,7 @@ export async function assertGetAllXorChildren<State extends ITraversalState<Resu
     xorNode: TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): Promise<ReadonlyArray<TXorNode>> {
-    switch (xorNode.kind) {
-        case XorNodeKind.Ast: {
-            const astNode: Ast.TNode = xorNode.node;
-
-            const children: ReadonlyArray<Ast.TNode> = await assertGetAllAstChildren(
-                _state,
-                astNode,
-                nodeIdMapCollection,
-            );
-
-            return ArrayUtils.mapAsync(children, (value: Ast.TNode) => Promise.resolve(XorNodeUtils.boxAst(value)));
-        }
-
-        case XorNodeKind.Context: {
-            const result: TXorNode[] = [];
-            const contextNode: ParseContext.TNode = xorNode.node;
-
-            const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(
-                contextNode.id,
-            );
-
-            if (maybeChildIds !== undefined) {
-                const childIds: ReadonlyArray<number> = maybeChildIds;
-
-                for (const childId of childIds) {
-                    result.push(NodeIdMapUtils.assertGetXor(nodeIdMapCollection, childId));
-                }
-            }
-
-            return result;
-        }
-
-        default:
-            throw Assert.isNever(xorNode);
-    }
+    return NodeIdMapIterator.assertIterChildrenXor(nodeIdMapCollection, xorNode.node.id);
 }
 
 // Returns the TXorNode's parent if one exists.

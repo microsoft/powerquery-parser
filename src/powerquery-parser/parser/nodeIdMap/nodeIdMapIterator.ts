@@ -71,9 +71,7 @@ export function assertIterChildrenXor(
         return [];
     }
 
-    const childIds: ReadonlyArray<number> = maybeChildIds;
-
-    return assertIterXor(nodeIdMapCollection, childIds);
+    return assertIterXor(nodeIdMapCollection, maybeChildIds);
 }
 
 // Given a list of nodeIds, assert the existence of then return them as XorNodes.
@@ -95,11 +93,9 @@ export function maybeIterChildrenAst(
         return undefined;
     }
 
-    const childIds: ReadonlyArray<number> = maybeChildIds;
-
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
 
-    return childIds.map((childId: number) => NodeIdMapUtils.assertUnboxAst(astNodeById, childId));
+    return maybeChildIds.map((childId: number) => NodeIdMapUtils.assertUnboxAst(astNodeById, childId));
 }
 
 export function maybeNextSiblingXor(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): TXorNode | undefined {
