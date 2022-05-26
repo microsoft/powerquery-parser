@@ -18,7 +18,7 @@ export function assertGetAncestry(nodeIdMapCollection: NodeIdMap.Collection, nod
         maybeParentId = nodeIdMapCollection.parentIdById.get(parentId);
     }
 
-    return NodeIdMapIterator.assertIterXor(nodeIdMapCollection, ancestryIds);
+    return NodeIdMapIterator.assertIterXor(nodeIdMapCollection, ancestryIds.values());
 }
 
 export function assertGetLeaf(ancestry: ReadonlyArray<TXorNode>): TXorNode {

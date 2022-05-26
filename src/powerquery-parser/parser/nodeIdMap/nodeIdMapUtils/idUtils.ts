@@ -73,9 +73,7 @@ export function updateNodeIds(
     }
 
     // We'll be iterating over them twice, so grab them once.
-    const xorNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterXor(nodeIdMapCollection, [
-        ...newIdByOldId.keys(),
-    ]);
+    const xorNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterXor(nodeIdMapCollection, newIdByOldId.keys());
 
     // Storage for the change delta which is used to mutate nodeIdMapCollection.
     const partialDelta: CollectionDelta = createDelta(
