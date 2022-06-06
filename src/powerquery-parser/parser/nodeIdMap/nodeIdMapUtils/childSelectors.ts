@@ -216,7 +216,7 @@ export function maybeUnboxIfAstChecked<C extends Ast.TWrapped["content"]>(
     nodeIdMapCollection: Collection,
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<C["kind"]> | C["kind"],
-): Ast.TNode | undefined {
+): C | undefined {
     const maybeXorNode: TXorNode | undefined = maybeXor(nodeIdMapCollection, nodeId);
 
     return maybeXorNode && XorNodeUtils.isAstXorChecked(maybeXorNode, expectedNodeKinds)
