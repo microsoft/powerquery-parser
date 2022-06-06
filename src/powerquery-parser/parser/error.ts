@@ -97,8 +97,8 @@ export class ExpectedGeneralizedIdentifierError extends Error {
 
 export class InvalidCatchExpression extends Error {
     constructor(locale: string) {
-        super(Localization.error_parse_invalidPrimitiveType(LocalizationUtils.getLocalizationTemplates(locale), token));
-        Object.setPrototypeOf(this, InvalidPrimitiveTypeError.prototype);
+        super(Localization.error_parse_invalidCatchFunction(LocalizationUtils.getLocalizationTemplates(locale)));
+        Object.setPrototypeOf(this, InvalidCatchExpression.prototype);
     }
 }
 

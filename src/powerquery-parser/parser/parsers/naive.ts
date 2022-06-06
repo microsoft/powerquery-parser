@@ -2695,6 +2695,15 @@ export async function readErrorHandlingExpression(
             trace.id,
         );
 
+        const maybeError: ParseError.InvalidCatchExpression | undefined = testCatchFunction(
+            state,
+            catchExpression.paired,
+        );
+
+        if (maybeError) {
+            throw maybeError;
+        }
+
         const errorHandlingCatchExpression: Ast.ErrorHandlingCatchExpression = {
             ...ParseStateUtils.assertGetContextNodeMetadata(state),
             kind: nodeKind,
@@ -3949,4 +3958,20 @@ function testCsvContinuationDanglingCommaForParenthesis(
     return ParseStateUtils.testCsvContinuationDanglingComma(state, Token.TokenKind.RightParenthesis);
 }
 
-function testCatchExpression(): ParseError.InvalidCatchExpression | undefined {}
+function testCatchFunction(
+    state: ParseState,
+    catchFunction: Ast.FunctionExpression,
+): ParseError.InvalidCatchExpression | undefined {
+    const parameters: ReadonlyArray<Ast.ICsv<Ast.IParameter<Ast.AsNullablePrimitiveType | undefined>>> =
+        catchFunction.parameters.content.elements;
+
+    if (
+        parameters.length > 1 ||
+        (parameters.length === 1 && parameters[0].node.maybeParameterType) ||
+        catchFunction.maybeFunctionReturnType
+    ) {
+        return new ParseError.InvalidCatchExpression(state.locale);
+    }
+
+    return undefined;
+}

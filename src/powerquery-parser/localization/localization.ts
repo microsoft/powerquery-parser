@@ -47,6 +47,7 @@ interface ILocalization {
         expectedTokenKind: Token.TokenKind,
         maybeFoundToken: TokenWithColumnNumber | undefined,
     ) => string;
+    readonly error_parse_invalidCatchFunction: (templates: ILocalizationTemplates) => string;
     readonly error_parse_invalidPrimitiveType: (templates: ILocalizationTemplates, token: Token.Token) => string;
     readonly error_parse_requiredParameterAfterOptional: (templates: ILocalizationTemplates) => string;
     readonly error_parse_unterminated_sequence: (
@@ -378,6 +379,8 @@ export const Localization: ILocalization = {
             );
         }
     },
+
+    error_parse_invalidCatchFunction: (templates: ILocalizationTemplates) => templates.error_parse_invalidCatchFunction,
 
     error_parse_invalidPrimitiveType: (templates: ILocalizationTemplates, token: Token.Token) =>
         StringUtils.assertGetFormatted(
