@@ -95,6 +95,9 @@
     "error_parse_expectTokenKind_2_endOfStream": "Expected to find a {expectedTokenKind}, but the end-of-stream was reached instead",
     "_error_parse_expectTokenKind_2_endOfStream.comment": "A common parser error where expectedTokenKind is a localized tokenKind string. Expected to be user facing.",
 
+    "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
+    "_error_parse_invalidCatchFunction.comment": "A common parser error where the user has created an invalid lambda as a catch expression. Expected to be user facing.",
+
     "error_parse_invalidPrimitiveType": "Expected to find a primitive literal, but a {foundTokenKind} was found instead",
     "_error_parse_invalidPrimitiveType.comment": "A common parser error where foundTokenKind is a localized tokenKind string. Expected to be user facing.",
 
