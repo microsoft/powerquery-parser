@@ -25,7 +25,7 @@ export function assertAsEqualityExpression(node: Ast.TNode): Ast.EqualityExpress
     return assertAs(node, [Ast.NodeKind.EqualityExpression]);
 }
 
-export function assertAsErrorHandlingExpression(node: Ast.TNode): Ast.ErrorHandlingExpression {
+export function assertAsErrorHandlingExpression(node: Ast.TNode): Ast.TErrorHandlingExpression {
     return assertAs(node, [Ast.NodeKind.ErrorHandlingExpression]);
 }
 
@@ -278,7 +278,7 @@ export function assertIsEqualityExpression(node: Ast.TNode): asserts node is Ast
     assertIsNodeKind(node, Ast.NodeKind.EqualityExpression);
 }
 
-export function assertIsErrorHandlingExpression(node: Ast.TNode): asserts node is Ast.ErrorHandlingExpression {
+export function assertIsErrorHandlingExpression(node: Ast.TNode): asserts node is Ast.TErrorHandlingExpression {
     assertIsNodeKind(node, Ast.NodeKind.ErrorHandlingExpression);
 }
 

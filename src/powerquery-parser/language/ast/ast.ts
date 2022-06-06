@@ -10,6 +10,7 @@ export const enum NodeKind {
     AsExpression = "AsExpression",
     AsNullablePrimitiveType = "AsNullablePrimitiveType",
     AsType = "AsType",
+    CatchExpression = "CatchExpression",
     Constant = "Constant",
     Csv = "Csv",
     EachExpression = "EachExpression",
@@ -161,6 +162,7 @@ export type TKeyValuePairNodeKind =
 export type TPairedConstant =
     | AsNullablePrimitiveType
     | AsType
+    | CatchExpression
     | EachExpression
     | ErrorRaisingExpression
     | IsNullablePrimitiveType
@@ -171,6 +173,7 @@ export type TPairedConstant =
 export type TPairedConstantNodeKind =
     | NodeKind.AsNullablePrimitiveType
     | NodeKind.AsType
+    | NodeKind.CatchExpression
     | NodeKind.EachExpression
     | NodeKind.ErrorRaisingExpression
     | NodeKind.IsNullablePrimitiveType
@@ -247,7 +250,7 @@ export type TExpression =
     | LetExpression
     | IfExpression
     | ErrorRaisingExpression
-    | ErrorHandlingExpression;
+    | TErrorHandlingExpression;
 
 // --------------------------------------------------
 // ---------- 12.2.3.2 Logical expressions ----------
@@ -553,13 +556,34 @@ export type ErrorRaisingExpression = IPairedConstant<
 // ---------- 12.2.3.27 Error handling expression ----------
 // ---------------------------------------------------------
 
-export interface ErrorHandlingExpression extends INode {
+export const enum ErrorHandlerKind {
+    Catch = "Catch",
+    Otherwise = "Otherwise",
+}
+
+export interface IErrorHandlingExpression<T extends ErrorHandlerKind> extends INode {
     readonly kind: NodeKind.ErrorHandlingExpression;
+    readonly handlerKind: T;
     readonly isLeaf: false;
     readonly tryConstant: IConstant<Constant.KeywordConstant.Try>;
     readonly protectedExpression: TExpression;
+}
+
+export interface ErrorHandlingCatchExpression extends IErrorHandlingExpression<ErrorHandlerKind.Catch> {
+    readonly catchExpression: CatchExpression | undefined;
+}
+
+export interface ErrorHandlingOtherwiseExpression extends IErrorHandlingExpression<ErrorHandlerKind.Otherwise> {
     readonly maybeOtherwiseExpression: OtherwiseExpression | undefined;
 }
+
+export type TErrorHandlingExpression = ErrorHandlingCatchExpression | ErrorHandlingOtherwiseExpression;
+
+export type CatchExpression = IPairedConstant<
+    NodeKind.CatchExpression,
+    Constant.LanguageConstant.Catch,
+    FunctionExpression
+>;
 
 export type OtherwiseExpression = IPairedConstant<
     NodeKind.OtherwiseExpression,

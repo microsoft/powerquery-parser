@@ -28,6 +28,7 @@ export type TBinOpExpressionOperator =
 // ---------------------------------
 
 export const enum LanguageConstant {
+    Catch = "catch",
     Nullable = "nullable",
     Optional = "optional",
 }

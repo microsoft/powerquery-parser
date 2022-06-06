@@ -2659,7 +2659,7 @@ export async function readErrorHandlingExpression(
     state: ParseState,
     parser: Parser,
     maybeCorrelationId: number | undefined,
-): Promise<Ast.ErrorHandlingExpression> {
+): Promise<Ast.TErrorHandlingExpression> {
     const nodeKind: Ast.NodeKind.ErrorHandlingExpression = Ast.NodeKind.ErrorHandlingExpression;
 
     const trace: Trace = state.traceManager.entry(
@@ -2683,36 +2683,62 @@ export async function readErrorHandlingExpression(
 
     const protectedExpression: Ast.TExpression = await parser.readExpression(state, parser, trace.id);
 
-    const otherwiseExpressionNodeKind: Ast.NodeKind.OtherwiseExpression = Ast.NodeKind.OtherwiseExpression;
+    let result: Ast.TErrorHandlingExpression;
 
-    const maybeOtherwiseExpression: Ast.OtherwiseExpression | undefined = await maybeReadPairedConstant(
-        state,
-        otherwiseExpressionNodeKind,
-        () => ParseStateUtils.isOnTokenKind(state, Token.TokenKind.KeywordOtherwise),
-        () =>
-            readTokenKindAsConstant(
-                state,
-                Token.TokenKind.KeywordOtherwise,
-                Constant.KeywordConstant.Otherwise,
-                trace.id,
-            ),
-        () => parser.readExpression(state, parser, trace.id),
-        trace.id,
-    );
+    // if `try 1/0 catch () => "error"`
+    if (ParseStateUtils.isOnConstantKind(state, Constant.LanguageConstant.Catch)) {
+        const catchExpression: Ast.CatchExpression = await readPairedConstant(
+            state,
+            Ast.NodeKind.CatchExpression,
+            () => readTokenKindAsConstant(state, Token.TokenKind.Identifier, Constant.LanguageConstant.Catch, trace.id),
+            () => parser.readFunctionExpression(state, parser, trace.id),
+            trace.id,
+        );
 
-    const errorHandlingExpression: Ast.ErrorHandlingExpression = {
-        ...ParseStateUtils.assertGetContextNodeMetadata(state),
-        kind: nodeKind,
-        isLeaf: false,
-        tryConstant,
-        protectedExpression,
-        maybeOtherwiseExpression,
-    };
+        const errorHandlingCatchExpression: Ast.ErrorHandlingCatchExpression = {
+            ...ParseStateUtils.assertGetContextNodeMetadata(state),
+            kind: nodeKind,
+            handlerKind: Ast.ErrorHandlerKind.Catch,
+            isLeaf: false,
+            tryConstant,
+            protectedExpression,
+            catchExpression,
+        };
 
-    ParseStateUtils.endContext(state, errorHandlingExpression);
+        result = errorHandlingCatchExpression;
+    } else {
+        const maybeOtherwiseExpression: Ast.OtherwiseExpression | undefined = await maybeReadPairedConstant(
+            state,
+            Ast.NodeKind.OtherwiseExpression,
+            () => ParseStateUtils.isOnTokenKind(state, Token.TokenKind.KeywordOtherwise),
+            () =>
+                readTokenKindAsConstant(
+                    state,
+                    Token.TokenKind.KeywordOtherwise,
+                    Constant.KeywordConstant.Otherwise,
+                    trace.id,
+                ),
+            () => parser.readExpression(state, parser, trace.id),
+            trace.id,
+        );
+
+        const errorHandlingOtherwiseExpression: Ast.ErrorHandlingOtherwiseExpression = {
+            ...ParseStateUtils.assertGetContextNodeMetadata(state),
+            kind: nodeKind,
+            handlerKind: Ast.ErrorHandlerKind.Otherwise,
+            isLeaf: false,
+            tryConstant,
+            protectedExpression,
+            maybeOtherwiseExpression,
+        };
+
+        result = errorHandlingOtherwiseExpression;
+    }
+
+    ParseStateUtils.endContext(state, result);
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
-    return errorHandlingExpression;
+    return result;
 }
 
 // -----------------------------------------------

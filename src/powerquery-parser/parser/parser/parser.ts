@@ -343,7 +343,7 @@ export interface Parser {
         state: ParseState,
         parser: Parser,
         maybeCorrelationId: number | undefined,
-    ) => Promise<Ast.ErrorHandlingExpression>;
+    ) => Promise<Ast.TErrorHandlingExpression>;
 
     // 12.2.4 Literal Attributes
     readonly readRecordLiteral: (
