@@ -3948,3 +3948,5 @@ function testCsvContinuationDanglingCommaForParenthesis(
 ): ParseError.ExpectedCsvContinuationError | undefined {
     return ParseStateUtils.testCsvContinuationDanglingComma(state, Token.TokenKind.RightParenthesis);
 }
+
+function testCatchExpression(): ParseError.InvalidCatchExpression | undefined {}

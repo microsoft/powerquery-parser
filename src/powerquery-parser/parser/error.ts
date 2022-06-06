@@ -95,6 +95,13 @@ export class ExpectedGeneralizedIdentifierError extends Error {
     }
 }
 
+export class InvalidCatchExpression extends Error {
+    constructor(locale: string) {
+        super(Localization.error_parse_invalidPrimitiveType(LocalizationUtils.getLocalizationTemplates(locale), token));
+        Object.setPrototypeOf(this, InvalidPrimitiveTypeError.prototype);
+    }
+}
+
 export class InvalidPrimitiveTypeError extends Error {
     constructor(readonly token: Token.Token, readonly positionStart: StringUtils.GraphemePosition, locale: string) {
         super(Localization.error_parse_invalidPrimitiveType(LocalizationUtils.getLocalizationTemplates(locale), token));

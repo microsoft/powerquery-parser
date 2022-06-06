@@ -391,6 +391,51 @@ describe("Parser.AbridgedNode", () => {
 
             await assertAbridgeNodes(text, expected);
         });
+
+        it(`try 1 catch () => 1`, async () => {
+            const text: string = `try 1 catch () => 1`;
+
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Language.Ast.NodeKind.ErrorHandlingExpression, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 1],
+                [Language.Ast.NodeKind.CatchExpression, 2],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.FunctionExpression, 1],
+                [Language.Ast.NodeKind.ParameterList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.LiteralExpression, 3],
+            ];
+
+            await assertAbridgeNodes(text, expected);
+        });
+
+        it(`try 1 catch (x) => 1`, async () => {
+            const text: string = `try 1 catch (x) => 1`;
+
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Language.Ast.NodeKind.ErrorHandlingExpression, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 1],
+                [Language.Ast.NodeKind.CatchExpression, 2],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.FunctionExpression, 1],
+                [Language.Ast.NodeKind.ParameterList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.Parameter, 0],
+                [Language.Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.LiteralExpression, 3],
+            ];
+
+            await assertAbridgeNodes(text, expected);
+        });
     });
 
     it(`${Language.Ast.NodeKind.ErrorRaisingExpression}`, async () => {
