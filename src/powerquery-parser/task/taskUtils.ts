@@ -62,7 +62,7 @@ export function assertIsLexStageError(task: TTask): asserts task is LexTaskError
 
 export function assertIsOk(task: TTask): asserts task is LexTaskOk | ParseTaskOk {
     if (!isOk(task)) {
-        throw new CommonError.InvariantError(`assert failed, expected a different task result kind`, {
+        throw new CommonError.InvariantError(`test`, {
             expectedResultKind: ResultKind.Ok,
             actualResultKind: task.resultKind,
         });
