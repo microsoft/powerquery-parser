@@ -570,7 +570,7 @@ export interface IErrorHandlingExpression<T extends ErrorHandlerKind> extends IN
 }
 
 export interface ErrorHandlingCatchExpression extends IErrorHandlingExpression<ErrorHandlerKind.Catch> {
-    readonly catchExpression: CatchExpression | undefined;
+    readonly catchExpression: CatchExpression;
 }
 
 export interface ErrorHandlingOtherwiseExpression extends IErrorHandlingExpression<ErrorHandlerKind.Otherwise> {
