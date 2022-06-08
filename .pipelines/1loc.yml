@@ -14,12 +14,6 @@ schedules:
               - master
       always: true
 
-resources:
-    repositories:
-        - repository: self
-          type: git
-          ref: master
-
 jobs:
     - job: Job_1
       displayName: Agent job 1
@@ -31,6 +25,7 @@ jobs:
             displayName: "Localization Build: src/powerquery-parser-localization/LocProject.json"
             inputs:
                 locProj: "src/powerquery-parser/localization/LocProject.json"
+                isCreatePrSelected: true
                 repoType: gitHub
                 gitHubPatVariable: "$(GitHubPat)"
                 packageSourceAuth: patAuth
