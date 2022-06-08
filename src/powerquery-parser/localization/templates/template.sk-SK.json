@@ -31,6 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Očakávalo sa, že sa nájde zovšeobecnený identifikátor, ale skôr sa dosiahol koniec streamu",
   "error_parse_expectTokenKind_1_other": "Očakávalo sa, že sa nájde hodnota {expectedTokenKind}, ale namiesto toho sa našla hodnota {foundTokenKind}",
   "error_parse_expectTokenKind_2_endOfStream": "Očakávalo sa, že nájde hodnota {expectedTokenKind}, no namiesto toho sa dosiahol koniec streamu",
+  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
   "error_parse_invalidPrimitiveType": "Očakávalo sa, že sa nájde primitívny literál, ale namiesto toho sa našla hodnota {foundTokenKind}",
   "error_parse_requiredParameterAfterOptional": "Za voliteľným parametrom nemôžete mať nevoliteľný parameter",
   "error_parse_unterminated_sequence_bracket": "Neukončená hranatá zátvorka",

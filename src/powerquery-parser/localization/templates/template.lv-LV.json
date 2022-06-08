@@ -31,6 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Tika gaidīts, ka tiks atrasts vispārinātais identifikators, bet vispirms tika sasniegtas straumes beigas",
   "error_parse_expectTokenKind_1_other": "Tika gaidīts, ka tiks atrasts: {expectedTokenKind}, bet tā vietā tika atrasts: {foundTokenKind}",
   "error_parse_expectTokenKind_2_endOfStream": "Tika gaidīts, ka tiks atrasts: {expectedTokenKind}, bet tā vietā tika sasniegtas straumes beigas",
+  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
   "error_parse_invalidPrimitiveType": "Tika gaidīts, ka tiks atrasts primitīvs literālis, bet tā vietā tika atrasts: {foundTokenKind}",
   "error_parse_requiredParameterAfterOptional": "Pēc neobligāta parametra nevar būt parametrs, kas nav neobligāts",
   "error_parse_unterminated_sequence_bracket": "Nenoslēgta kvadrātiekava",

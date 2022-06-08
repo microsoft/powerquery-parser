@@ -31,6 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "किसी सामान्यीकृत आइडेंटिफ़ायर के मिलने की अपेक्षा थी, लेकिन पहले एंड-ऑफ़-स्ट्रीम तक पहुँच गए",
   "error_parse_expectTokenKind_1_other": "{expectedTokenKind} के मिलने की अपेक्षा थी, लेकिन इसके बजाय {foundTokenKind} मिला",
   "error_parse_expectTokenKind_2_endOfStream": "{expectedTokenKind} के मिलने की अपेक्षा थी, लेकिन इसके बजाय एंड-ऑफ़-स्ट्रीम तक पहुँच गए",
+  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
   "error_parse_invalidPrimitiveType": "किसी प्रारंभिक अक्षरशः के मिलने की अपेक्षा थी, लेकिन इसके बजाय एक {foundTokenKind} मिला",
   "error_parse_requiredParameterAfterOptional": "कोई वैकल्पिक पैरामीटर के बाद आपके पास कोई गैर-वैकल्पिक पैरामीटर नहीं हो सकता है",
   "error_parse_unterminated_sequence_bracket": "अनिर्धारित कोष्ठक",
