@@ -31,6 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Genelleştirilmiş bir tanımlayıcı bulunması bekleniyordu ancak bundan önce akışın sonuna ulaşıldı",
   "error_parse_expectTokenKind_1_other": "{expectedTokenKind} bulunması bekleniyordu, ancak bunun yerine {foundTokenKind} bulundu",
   "error_parse_expectTokenKind_2_endOfStream": "{expectedTokenKind} bulunması bekleniyordu, ancak bunun yerine akışın sonuna ulaşıldı",
+  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
   "error_parse_invalidPrimitiveType": "Basit bir değişmez değer bulunması bekleniyordu, ancak bunun yerine bir {foundTokenKind} bulundu",
   "error_parse_requiredParameterAfterOptional": "İsteğe bağlı bir parametreden sonra isteğe bağlı olmayan bir parametre gelemez",
   "error_parse_unterminated_sequence_bracket": "Sonlandırılmamış köşeli ayraç",

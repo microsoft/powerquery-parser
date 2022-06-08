@@ -31,6 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "一般化された識別子が必要ですが、最初にストリームの末尾に到達しました",
   "error_parse_expectTokenKind_1_other": "{expectedTokenKind} が必要ですが、{foundTokenKind} が見つかりました",
   "error_parse_expectTokenKind_2_endOfStream": "{expectedTokenKind} が必要ですが、ストリームの末尾に到達しました",
+  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
   "error_parse_invalidPrimitiveType": "プリミティブ リテラルが必要ですが、{foundTokenKind} が見つかりました",
   "error_parse_requiredParameterAfterOptional": "省略可能なパラメーターの後に省略不可能なパラメーターを指定することはできません",
   "error_parse_unterminated_sequence_bracket": "角かっこが終了していません",

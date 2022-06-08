@@ -31,6 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Очакваше се да се открие генерализиран идентификатор, но пръв беше достигнат краят на потока",
   "error_parse_expectTokenKind_1_other": "Очакваше се да се намери {expectedTokenKind}, но вместо това се откри {foundTokenKind}",
   "error_parse_expectTokenKind_2_endOfStream": "Очакваше се да се открие {expectedTokenKind}, но вместо това е достигнат краят на потока",
+  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
   "error_parse_invalidPrimitiveType": "Очакваше се да се открие примитивен литерал, но вместо това е открит {foundTokenKind}",
   "error_parse_requiredParameterAfterOptional": "Не може да има задължителен параметър след незадължителен параметър",
   "error_parse_unterminated_sequence_bracket": "Незатворена квадратна скоба",
