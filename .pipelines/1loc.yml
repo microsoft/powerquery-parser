@@ -33,3 +33,5 @@ jobs:
                 SYSTEM_ACCESSTOKEN: $(System.AccessToken)
           - task: PublishBuildArtifacts@1
             displayName: "Publish Artifact: drop"
+
+pr: none
