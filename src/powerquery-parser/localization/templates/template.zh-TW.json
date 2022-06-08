@@ -31,6 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "應找到通用識別項，但已先達資料流結尾",
   "error_parse_expectTokenKind_1_other": "應找到 {expectedTokenKind}，卻找到 {foundTokenKind}",
   "error_parse_expectTokenKind_2_endOfStream": "應找到 {expectedTokenKind}，但已達資料流結尾",
+  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
   "error_parse_invalidPrimitiveType": "應找到基本常值，卻找到 {foundTokenKind}",
   "error_parse_requiredParameterAfterOptional": "選擇性參數後面不能有非選擇性參數",
   "error_parse_unterminated_sequence_bracket": "未結束的中括號",

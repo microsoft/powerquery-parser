@@ -31,6 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "A rendszer egy általánosított azonosító előfordulását várta, de előbb ért a stream végére",
   "error_parse_expectTokenKind_1_other": "A rendszer egy {expectedTokenKind} előfordulását várta, de ehelyett a talált elem {foundTokenKind}",
   "error_parse_expectTokenKind_2_endOfStream": "A rendszer egy {expectedTokenKind} előfordulását várta, de helyette a stream végére ért",
+  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
   "error_parse_invalidPrimitiveType": "A rendszer egy primitív literál előfordulását várta, de ehelyett a talált elem {foundTokenKind}",
   "error_parse_requiredParameterAfterOptional": "Nem kötelező paraméter után nem állhat kötelező paraméter",
   "error_parse_unterminated_sequence_bracket": "Lezáratlan kapcsos zárójel",

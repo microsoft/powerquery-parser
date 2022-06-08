@@ -31,6 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Esperava-se encontrar um identificador genérico, mas o fim do fluxo foi alcançado primeiro",
   "error_parse_expectTokenKind_1_other": "Esperava-se encontrar um {expectedTokenKind}, porém, um {foundTokenKind} foi encontrado",
   "error_parse_expectTokenKind_2_endOfStream": "Esperava-se encontrar um {expectedTokenKind}, mas o fim do fluxo foi alcançado em vez disso",
+  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
   "error_parse_invalidPrimitiveType": "Esperava-se encontrar um literal primitivo, mas um {foundTokenKind} foi encontrado em vez disso",
   "error_parse_requiredParameterAfterOptional": "Não é possível ter um parâmetro não opcional após um parâmetro opcional",
   "error_parse_unterminated_sequence_bracket": "Colchete não terminado",

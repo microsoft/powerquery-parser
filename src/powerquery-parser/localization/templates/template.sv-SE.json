@@ -31,6 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Förväntade hitta en generaliserad identifierare, men slutet på dataströmmen nåddes först",
   "error_parse_expectTokenKind_1_other": "En {expectedTokenKind} förväntades, men en {foundTokenKind} hittades i stället",
   "error_parse_expectTokenKind_2_endOfStream": "En {expectedTokenKind} förväntades, men slutet på dataströmmen nåddes i stället",
+  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
   "error_parse_invalidPrimitiveType": "Förväntade hitta en primitiv literal, men en {foundTokenKind} hittades i stället",
   "error_parse_requiredParameterAfterOptional": "Det går inte att ha en icke-valfri parameter efter en valfri parameter",
   "error_parse_unterminated_sequence_bracket": "Oavslutad hakparentes",
