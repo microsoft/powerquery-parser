@@ -13,6 +13,7 @@ export type TInnerParseError =
     | ExpectedCsvContinuationError
     | ExpectedGeneralizedIdentifierError
     | ExpectedTokenKindError
+    | InvalidCatchExpression
     | InvalidPrimitiveTypeError
     | RequiredParameterAfterOptionalParameterError
     | UnterminatedSequence
@@ -179,6 +180,7 @@ export function isTInnerParseError(x: any): x is TInnerParseError {
         x instanceof ExpectedCsvContinuationError ||
         x instanceof ExpectedGeneralizedIdentifierError ||
         x instanceof ExpectedTokenKindError ||
+        x instanceof InvalidCatchExpression ||
         x instanceof InvalidPrimitiveTypeError ||
         x instanceof RequiredParameterAfterOptionalParameterError ||
         x instanceof UnterminatedSequence ||
