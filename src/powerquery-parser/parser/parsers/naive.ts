@@ -2685,7 +2685,7 @@ export async function readErrorHandlingExpression(
 
     let result: Ast.TErrorHandlingExpression;
 
-    // if `try 1/0 catch () => "error"`
+    // If the literal "catch" is present then read it as a CatchExpression
     if (ParseStateUtils.isOnConstantKind(state, Constant.LanguageConstant.Catch)) {
         const catchExpression: Ast.CatchExpression = await readPairedConstant(
             state,
@@ -2701,6 +2701,11 @@ export async function readErrorHandlingExpression(
         );
 
         if (maybeError) {
+            trace.exit({
+                [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+                [TraceConstant.IsError]: true,
+            });
+
             throw maybeError;
         }
 
@@ -2715,7 +2720,9 @@ export async function readErrorHandlingExpression(
         };
 
         result = errorHandlingCatchExpression;
-    } else {
+    }
+    // optionally read OtherwiseExpression
+    else {
         const maybeOtherwiseExpression: Ast.OtherwiseExpression | undefined = await maybeReadPairedConstant(
             state,
             Ast.NodeKind.OtherwiseExpression,
@@ -3958,6 +3965,9 @@ function testCsvContinuationDanglingCommaForParenthesis(
     return ParseStateUtils.testCsvContinuationDanglingComma(state, Token.TokenKind.RightParenthesis);
 }
 
+// It must:
+//  - have [0, 1] arguments
+//  - no typing for either the argument or return
 function testCatchFunction(
     state: ParseState,
     catchFunction: Ast.FunctionExpression,
