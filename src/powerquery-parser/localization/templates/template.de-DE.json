@@ -31,6 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Es wurde ein generalisierter Bezeichner erwartet, aber vorher wurde das Streamende erreicht.",
   "error_parse_expectTokenKind_1_other": "Erwartet: {expectedTokenKind}, gefunden: {foundTokenKind}.",
   "error_parse_expectTokenKind_2_endOfStream": "Es wurde ein Token vom Typ \"{expectedTokenKind}\" erwartet, aber stattdessen wurde das Streamende erreicht.",
+  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
   "error_parse_invalidPrimitiveType": "Es wurde ein primitives Literal erwartet, stattdessen jedoch ein Token vom Typ \"{foundTokenKind}\" gefunden.",
   "error_parse_requiredParameterAfterOptional": "Nach einem optionalen Parameter darf kein nicht optionaler Parameter vorhanden sein.",
   "error_parse_unterminated_sequence_bracket": "Nicht abgeschlossene eckige Klammer.",

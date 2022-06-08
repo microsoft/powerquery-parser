@@ -31,6 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "ต้องการค้นหาตัวระบุทั่วไปแต่ถึงจุดสิ้นสุดของสตรีมก่อน",
   "error_parse_expectTokenKind_1_other": "ต้องการค้นหา {expectedTokenKind} แต่พบ {foundTokenKind} แทน",
   "error_parse_expectTokenKind_2_endOfStream": "ต้องการค้นหา {expectedTokenKind} แต่ถึงจุดสิ้นสุดของสตรีมแทน",
+  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
   "error_parse_invalidPrimitiveType": "ต้องการค้นหาสัญพจน์ดั้งเดิม แต่พบ {foundTokenKind} แทน",
   "error_parse_requiredParameterAfterOptional": "คุณไม่สามารถมีพารามิเตอร์ที่จำเป็นหลังพารามิเตอร์ที่เป็นตัวเลือกได้",
   "error_parse_unterminated_sequence_bracket": "วงเล็บเหลี่ยมที่ไม่มีจุดสิ้นสุด",

@@ -31,6 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Oczekiwano identyfikatora uogólnionego, ale osiągnięto wcześniej koniec strumienia",
   "error_parse_expectTokenKind_1_other": "Oczekiwano tokenu {expectedTokenKind}, ale znaleziono token {foundTokenKind}",
   "error_parse_expectTokenKind_2_endOfStream": "Oczekiwano tokenu {expectedTokenKind}, a osiągnięto koniec strumienia",
+  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
   "error_parse_invalidPrimitiveType": "Oczekiwano podstawowego literału, ale znaleziono token {foundTokenKind}",
   "error_parse_requiredParameterAfterOptional": "Nieopcjonalny parametr nie może występować po opcjonalnym parametrze",
   "error_parse_unterminated_sequence_bracket": "Niezakończony nawias kwadratowy",

@@ -31,6 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "S'esperava trobar un identificador generalitzat, però s'ha arribat al final de flux.",
   "error_parse_expectTokenKind_1_other": "S'esperava trobar un valor {expectedTokenKind}, però s'ha trobat el valor {foundTokenKind}.",
   "error_parse_expectTokenKind_2_endOfStream": "S'esperava trobar el valor {expectedTokenKind}, però s'ha arribat al final de flux.",
+  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
   "error_parse_invalidPrimitiveType": "S'esperava trobar un literal primitiu, però s'ha trobat el valor {foundTokenKind}.",
   "error_parse_requiredParameterAfterOptional": "No podeu tenir un paràmetre no opcional després d'un paràmetre opcional.",
   "error_parse_unterminated_sequence_bracket": "Claudàtor sense tancar",

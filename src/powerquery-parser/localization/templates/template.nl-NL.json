@@ -31,6 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Er wordt een gegeneraliseerde id verwacht, maar end-of-stream is het eerst bereikt",
   "error_parse_expectTokenKind_1_other": "Er wordt een {expectedTokenKind} verwacht, maar er is een {foundTokenKind} gevonden",
   "error_parse_expectTokenKind_2_endOfStream": "Er wordt een {expectedTokenKind} verwacht, maar end-of-stream is bereikt",
+  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
   "error_parse_invalidPrimitiveType": "Er wordt een primitieve letterlijke waarde verwacht, maar er is een {foundTokenKind} gevonden",
   "error_parse_requiredParameterAfterOptional": "Een niet-optionele parameter kan niet na een optionele parameter worden gebruikt",
   "error_parse_unterminated_sequence_bracket": "Niet-afgesloten vierkante haak",

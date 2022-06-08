@@ -31,6 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "应找到通用化标识符，但先到达了流结尾",
   "error_parse_expectTokenKind_1_other": "应找到 {expectedTokenKind}，但找到的却是 {foundTokenKind}",
   "error_parse_expectTokenKind_2_endOfStream": "应找到 {expectedTokenKind}，但却到达了流结尾",
+  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
   "error_parse_invalidPrimitiveType": "应找到基元文本，但找到的却是 {foundTokenKind}",
   "error_parse_requiredParameterAfterOptional": "可选参数后面不得有非可选参数",
   "error_parse_unterminated_sequence_bracket": "未终止的方括号",
