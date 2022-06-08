@@ -3970,7 +3970,15 @@ function testCatchFunction(
         (parameters.length === 1 && parameters[0].node.maybeParameterType) ||
         catchFunction.maybeFunctionReturnType
     ) {
-        return new ParseError.InvalidCatchExpression(state.locale);
+        const tokenStart: Token.Token = Assert.asDefined(
+            state.lexerSnapshot.tokens[catchFunction.tokenRange.tokenIndexStart],
+        );
+
+        return new ParseError.InvalidCatchExpression(
+            tokenStart,
+            state.lexerSnapshot.graphemePositionStartFrom(tokenStart),
+            state.locale,
+        );
     }
 
     return undefined;

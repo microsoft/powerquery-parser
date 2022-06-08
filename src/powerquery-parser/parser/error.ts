@@ -96,7 +96,11 @@ export class ExpectedGeneralizedIdentifierError extends Error {
 }
 
 export class InvalidCatchExpression extends Error {
-    constructor(locale: string) {
+    constructor(
+        readonly startToken: Token.Token,
+        readonly positionStart: StringUtils.GraphemePosition,
+        locale: string,
+    ) {
         super(Localization.error_parse_invalidCatchFunction(LocalizationUtils.getLocalizationTemplates(locale)));
         Object.setPrototypeOf(this, InvalidCatchExpression.prototype);
     }
