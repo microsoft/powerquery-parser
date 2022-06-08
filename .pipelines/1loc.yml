@@ -34,4 +34,4 @@ jobs:
           - task: PublishBuildArtifacts@1
             displayName: "Publish Artifact: drop"
 
-pr: none
+trigger: none
