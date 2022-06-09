@@ -31,7 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Diharapkan menemukan pengidentifikasi umum tetapi akhir aliran telah tercapai terlebih dahulu",
   "error_parse_expectTokenKind_1_other": "Diharapkan menemukan {expectedTokenKind}, tetapi {foundTokenKind} ditemukan sebagai gantinya",
   "error_parse_expectTokenKind_2_endOfStream": "Diharapkan menemukan {expectedTokenKind}, tetapi akhir aliran telah tercapai sebagai gantinya",
-  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
+  "error_parse_invalidCatchFunction": "Klausul 'catch' dari ekspresi try/catch harus diikuti oleh definisi fungsi dengan argumen 0 atau 1 dan tanpa batasan tipe",
   "error_parse_invalidPrimitiveType": "Diharapkan menemukan literal primitif, tetapi {foundTokenKind} ditemukan sebagai gantinya",
   "error_parse_requiredParameterAfterOptional": "Anda tidak dapat memiliki parameter non-opsional setelah parameter opsional",
   "error_parse_unterminated_sequence_bracket": "Kurung siku tidak diakhiri",

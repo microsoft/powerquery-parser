@@ -31,7 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Očekivalo se da će se pronaći poopćeni identifikator, ali je prije toga dostignut kraj toka",
   "error_parse_expectTokenKind_1_other": "Očekivalo se da će se pronaći {expectedTokenKind}, no umjesto toga je pronađena {foundTokenKind}",
   "error_parse_expectTokenKind_2_endOfStream": "Očekivalo se da će se pronaći {expectedTokenKind}, ali umjesto toga je dostignut kraj toka",
-  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
+  "error_parse_invalidCatchFunction": "Iza uvjeta „catch“ izraza try/catch mora slijediti definicija funkcije s argumentima 0 ili 1 i bez ograničenja vrste.",
   "error_parse_invalidPrimitiveType": "Očekivalo se da će se pronaći primitivna doslovna vrijednost, no umjesto toga je pronađen {foundTokenKind}",
   "error_parse_requiredParameterAfterOptional": "Nakon neobaveznog parametra ne može doći parametar koji nije neobavezan",
   "error_parse_unterminated_sequence_bracket": "Nezatvorena uglata zagrada",
