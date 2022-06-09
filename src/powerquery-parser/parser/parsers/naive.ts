@@ -2716,7 +2716,7 @@ export async function readErrorHandlingExpression(
             isLeaf: false,
             tryConstant,
             protectedExpression,
-            catchExpression,
+            maybeHandler: catchExpression,
         };
 
         result = errorHandlingCatchExpression;
@@ -2745,7 +2745,7 @@ export async function readErrorHandlingExpression(
             isLeaf: false,
             tryConstant,
             protectedExpression,
-            maybeOtherwiseExpression,
+            maybeHandler: maybeOtherwiseExpression,
         };
 
         result = errorHandlingOtherwiseExpression;
