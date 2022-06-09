@@ -561,21 +561,21 @@ export const enum ErrorHandlerKind {
     Otherwise = "Otherwise",
 }
 
-export interface IErrorHandlingExpression<T extends ErrorHandlerKind> extends INode {
+export interface IErrorHandlingExpression<K extends ErrorHandlerKind, H> extends INode {
     readonly kind: NodeKind.ErrorHandlingExpression;
-    readonly handlerKind: T;
+    readonly handlerKind: K;
     readonly isLeaf: false;
     readonly tryConstant: IConstant<Constant.KeywordConstant.Try>;
     readonly protectedExpression: TExpression;
+    readonly maybeHandler: H | undefined;
 }
 
-export interface ErrorHandlingCatchExpression extends IErrorHandlingExpression<ErrorHandlerKind.Catch> {
-    readonly catchExpression: CatchExpression;
-}
+export type ErrorHandlingCatchExpression = IErrorHandlingExpression<ErrorHandlerKind.Catch, CatchExpression>;
 
-export interface ErrorHandlingOtherwiseExpression extends IErrorHandlingExpression<ErrorHandlerKind.Otherwise> {
-    readonly maybeOtherwiseExpression: OtherwiseExpression | undefined;
-}
+export type ErrorHandlingOtherwiseExpression = IErrorHandlingExpression<
+    ErrorHandlerKind.Otherwise,
+    OtherwiseExpression
+>;
 
 export type TErrorHandlingExpression = ErrorHandlingCatchExpression | ErrorHandlingOtherwiseExpression;
 
