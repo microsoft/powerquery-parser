@@ -2695,7 +2695,7 @@ export async function readErrorHandlingExpression(
             trace.id,
         );
 
-        const maybeError: ParseError.InvalidCatchExpression | undefined = testCatchFunction(
+        const maybeError: ParseError.InvalidCatchFunction | undefined = testCatchFunction(
             state,
             catchExpression.paired,
         );
@@ -3971,7 +3971,7 @@ function testCsvContinuationDanglingCommaForParenthesis(
 function testCatchFunction(
     state: ParseState,
     catchFunction: Ast.FunctionExpression,
-): ParseError.InvalidCatchExpression | undefined {
+): ParseError.InvalidCatchFunction | undefined {
     const parameters: ReadonlyArray<Ast.ICsv<Ast.IParameter<Ast.AsNullablePrimitiveType | undefined>>> =
         catchFunction.parameters.content.elements;
 
@@ -3984,7 +3984,7 @@ function testCatchFunction(
             state.lexerSnapshot.tokens[catchFunction.tokenRange.tokenIndexStart],
         );
 
-        return new ParseError.InvalidCatchExpression(
+        return new ParseError.InvalidCatchFunction(
             tokenStart,
             state.lexerSnapshot.graphemePositionStartFrom(tokenStart),
             state.locale,
