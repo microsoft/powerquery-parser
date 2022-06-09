@@ -13,6 +13,7 @@ export type TInnerParseError =
     | ExpectedCsvContinuationError
     | ExpectedGeneralizedIdentifierError
     | ExpectedTokenKindError
+    | InvalidCatchFunction
     | InvalidPrimitiveTypeError
     | RequiredParameterAfterOptionalParameterError
     | UnterminatedSequence
@@ -95,6 +96,17 @@ export class ExpectedGeneralizedIdentifierError extends Error {
     }
 }
 
+export class InvalidCatchFunction extends Error {
+    constructor(
+        readonly startToken: Token.Token,
+        readonly positionStart: StringUtils.GraphemePosition,
+        locale: string,
+    ) {
+        super(Localization.error_parse_invalidCatchFunction(LocalizationUtils.getLocalizationTemplates(locale)));
+        Object.setPrototypeOf(this, InvalidCatchFunction.prototype);
+    }
+}
+
 export class InvalidPrimitiveTypeError extends Error {
     constructor(readonly token: Token.Token, readonly positionStart: StringUtils.GraphemePosition, locale: string) {
         super(Localization.error_parse_invalidPrimitiveType(LocalizationUtils.getLocalizationTemplates(locale), token));
@@ -168,6 +180,7 @@ export function isTInnerParseError(x: any): x is TInnerParseError {
         x instanceof ExpectedCsvContinuationError ||
         x instanceof ExpectedGeneralizedIdentifierError ||
         x instanceof ExpectedTokenKindError ||
+        x instanceof InvalidCatchFunction ||
         x instanceof InvalidPrimitiveTypeError ||
         x instanceof RequiredParameterAfterOptionalParameterError ||
         x instanceof UnterminatedSequence ||

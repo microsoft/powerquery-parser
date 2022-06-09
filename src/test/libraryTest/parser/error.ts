@@ -206,4 +206,34 @@ describe("Parser.Error", () => {
             ),
         );
     });
+
+    it(`catch doesn't allow parameter typing`, async () => {
+        const text: string = `try 1 catch (x as number) => 0`;
+
+        const innerError: ParseError.TInnerParseError = (
+            await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+        ).innerError;
+
+        expect(innerError instanceof ParseError.InvalidCatchFunction).to.equal(true, innerError.message);
+    });
+
+    it(`catch doesn't allow return typing`, async () => {
+        const text: string = `try 1 catch (x) as number => 0`;
+
+        const innerError: ParseError.TInnerParseError = (
+            await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+        ).innerError;
+
+        expect(innerError instanceof ParseError.InvalidCatchFunction).to.equal(true, innerError.message);
+    });
+
+    it(`catch doesn't allow multiple parameters`, async () => {
+        const text: string = `try 1 catch (x, y) => 0`;
+
+        const innerError: ParseError.TInnerParseError = (
+            await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+        ).innerError;
+
+        expect(innerError instanceof ParseError.InvalidCatchFunction).to.equal(true, innerError.message);
+    });
 });

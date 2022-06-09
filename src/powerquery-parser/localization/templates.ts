@@ -168,6 +168,7 @@ export interface ILocalizationTemplates {
     readonly error_parse_expectGeneralizedIdentifier_2_endOfStream: string;
     readonly error_parse_expectTokenKind_1_other: string;
     readonly error_parse_expectTokenKind_2_endOfStream: string;
+    readonly error_parse_invalidCatchFunction: string;
     readonly error_parse_invalidPrimitiveType: string;
     readonly error_parse_requiredParameterAfterOptional: string;
     readonly error_parse_unterminated_sequence_bracket: string;

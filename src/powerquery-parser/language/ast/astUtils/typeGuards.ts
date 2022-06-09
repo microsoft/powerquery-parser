@@ -27,7 +27,7 @@ export function isEqualityExpression(node: Ast.TNode): node is Ast.EqualityExpre
     return node.kind === Ast.NodeKind.EqualityExpression;
 }
 
-export function isErrorHandlingExpression(node: Ast.TNode): node is Ast.ErrorHandlingExpression {
+export function isErrorHandlingExpression(node: Ast.TNode): node is Ast.TErrorHandlingExpression {
     return node.kind === Ast.NodeKind.ErrorHandlingExpression;
 }
 
