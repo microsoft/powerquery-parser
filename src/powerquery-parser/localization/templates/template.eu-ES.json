@@ -31,7 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Identifikatzaile orokor bat espero zen, baina korrontearen amaierara iritsi da",
   "error_parse_expectTokenKind_1_other": "{expectedTokenKind} bat espero zen, baina {foundTokenKind} bat aurkitu da",
   "error_parse_expectTokenKind_2_endOfStream": "{expectedTokenKind} bat espero zen, baina korrontearen amaierara iritsi da",
-  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
+  "error_parse_invalidCatchFunction": "0 edo 1 argumentu duen eta mota-murriztapenik ez duen funtzio-definizio baten aurretik egon behar du \"try/catch\" adierazpeneko \"catch\" klausulak.",
   "error_parse_invalidPrimitiveType": "Jatorrizko balio literal bat espero zen, baina {foundTokenKind} bat aurkitu da",
   "error_parse_requiredParameterAfterOptional": "Ezin duzu idatzi aukerakoa ez den parametrorik aukerako parametro baten ondoren",
   "error_parse_unterminated_sequence_bracket": "Amaitu gabeko kortxetea",

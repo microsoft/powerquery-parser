@@ -31,7 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Đã dự kiến tìm thấy mã định danh khái quát nhưng lại đi đến cuối luồng trước",
   "error_parse_expectTokenKind_1_other": "Đã dự kiến tìm thấy {expectedTokenKind} nhưng lại tìm thấy {foundTokenKind}",
   "error_parse_expectTokenKind_2_endOfStream": "Đã dự kiến tìm thấy {expectedTokenKind} nhưng lại đi đến cuối luồng",
-  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
+  "error_parse_invalidCatchFunction": "Theo sau mệnh đề \"catch\" của biểu thức try/catch phải là định nghĩa hàm với các đối số 0 hoặc 1 và không có ràng buộc về kiểu",
   "error_parse_invalidPrimitiveType": "Đã dự kiến sẽ tìm thấy một ký tự gốc nhưng lại tìm thấy {foundTokenKind}",
   "error_parse_requiredParameterAfterOptional": "Bạn không thể đặt tham số bắt buộc sau tham số tùy chọn",
   "error_parse_unterminated_sequence_bracket": "Dấu ngoặc vuông chưa hoàn thiện",

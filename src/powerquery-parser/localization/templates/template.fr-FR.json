@@ -31,7 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Identificateur généralisé attendu, mais la fin de flux a été atteinte en premier",
   "error_parse_expectTokenKind_1_other": "{expectedTokenKind} attendu, mais un {foundTokenKind} a été trouvé à la place",
   "error_parse_expectTokenKind_2_endOfStream": "{expectedTokenKind} attendue, mais la fin de flux a été atteinte à la place",
-  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
+  "error_parse_invalidCatchFunction": "La clause 'catch' d’une expression try/catch doit être suivie d’une définition de fonction avec 0 ou 1 arguments et aucune contrainte de type",
   "error_parse_invalidPrimitiveType": "Littéral primitif attendu, mais un {foundTokenKind} a été trouvé à la place",
   "error_parse_requiredParameterAfterOptional": "Vous ne pouvez pas avoir un paramètre non facultatif après un paramètre facultatif",
   "error_parse_unterminated_sequence_bracket": "Crochet inachevé",

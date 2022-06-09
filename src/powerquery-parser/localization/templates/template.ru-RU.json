@@ -31,7 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Ожидался общий идентификатор, но был достигнут конец потока.",
   "error_parse_expectTokenKind_1_other": "Ожидалось: {expectedTokenKind}. Однако обнаружено: {foundTokenKind}.",
   "error_parse_expectTokenKind_2_endOfStream": "Достигнут конец потока, но ожидалось следующее: {expectedTokenKind}.",
-  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
+  "error_parse_invalidCatchFunction": "За предложением catch в выражении try или catch должно следовать определение функции с аргументами 0 или 1 и без ограничений типа",
   "error_parse_invalidPrimitiveType": "Ожидался примитивный литерал, но вместо него обнаружено: {foundTokenKind}.",
   "error_parse_requiredParameterAfterOptional": "Обязательный параметр недопустимо указывать после необязательного.",
   "error_parse_unterminated_sequence_bracket": "Не закрыта квадратная скобка.",

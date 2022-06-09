@@ -31,7 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "일반화된 식별자가 필요하나 먼저 스트림 끝에 도달했습니다.",
   "error_parse_expectTokenKind_1_other": "{expectedTokenKind}이(가) 필요하나 {foundTokenKind}이(가) 발견되었습니다.",
   "error_parse_expectTokenKind_2_endOfStream": "{expectedTokenKind}이(가) 필요하나 스트림 끝에 도달했습니다.",
-  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
+  "error_parse_invalidCatchFunction": "try/catch 식의 'catch' 절 뒤에는 인수가 0개 또는 1개이고 형식 제약 조건이 없는 함수 정의가 와야 합니다.",
   "error_parse_invalidPrimitiveType": "기본 리터럴이 필요하나 대신 {foundTokenKind}이(가) 발견되었습니다.",
   "error_parse_requiredParameterAfterOptional": "선택적 매개 변수 뒤에는 선택 사항이 아닌 매개 변수를 사용할 수 없습니다.",
   "error_parse_unterminated_sequence_bracket": "종결되지 않은 대괄호",
