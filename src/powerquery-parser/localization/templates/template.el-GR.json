@@ -31,7 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Αναμενόταν να βρεθεί ένα γενικό αναγνωριστικό, αλλά έφτασε πρώτα το τέλος της ροής",
   "error_parse_expectTokenKind_1_other": "Αναμενόταν να βρεθεί {expectedTokenKind}, αλλά βρέθηκε {foundTokenKind}",
   "error_parse_expectTokenKind_2_endOfStream": "Αναμενόταν να βρεθεί {expectedTokenKind}, αλλά έφτασε το τέλος της ροής",
-  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
+  "error_parse_invalidCatchFunction": "Ο όρος 'catch' μιας έκφρασης try/catch πρέπει να ακολουθείται από έναν ορισμό συνάρτησης με 0 ή 1 ορίσματα και χωρίς περιορισμούς τύπου.",
   "error_parse_invalidPrimitiveType": "Αναμενόταν να βρεθεί στοιχειώδης λεκτική σταθερά, αλλά βρέθηκε {foundTokenKind}",
   "error_parse_requiredParameterAfterOptional": "Δεν είναι δυνατή η ύπαρξη μη προαιρετικής παραμέτρου μετά από προαιρετική παράμετρο",
   "error_parse_unterminated_sequence_bracket": "Μη τερματισμένη αγκύλη",

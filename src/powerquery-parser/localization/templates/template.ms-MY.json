@@ -31,7 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Dijangka menemui pengecam umum sebaliknya penghujung strim telah dicapai dahulu",
   "error_parse_expectTokenKind_1_other": "Dijangka menemui {expectedTokenKind}, tetapi {foundTokenKind} telah ditemui sebaliknya",
   "error_parse_expectTokenKind_2_endOfStream": "Dijangka menemui {expectedTokenKind}, sebaliknya penghujung strim telah dicapai",
-  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
+  "error_parse_invalidCatchFunction": "Fasal 'tangkap' bagi ungkapan cuba/tangkap mesti diikuti oleh definisi fungsi dengan argumen 0 atau 1 dan tiada kekangan jenis",
   "error_parse_invalidPrimitiveType": "Dijangka mencari literal primitif, tetapi {foundTokenKind} telah ditemui sebaliknya",
   "error_parse_requiredParameterAfterOptional": "Anda tidak boleh mempunyai parameter bukan pilihan selepas parameter pilihan",
   "error_parse_unterminated_sequence_bracket": "Kurungan tidak ditamatkan",

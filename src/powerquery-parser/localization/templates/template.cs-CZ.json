@@ -31,7 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Očekávalo se, že se najde zobecněný identifikátor, ale dosáhlo se konce streamu.",
   "error_parse_expectTokenKind_1_other": "Očekávalo se, že se najde hodnota {expectedTokenKind}, ale místo ní se našlo {foundTokenKind}.",
   "error_parse_expectTokenKind_2_endOfStream": "Očekávalo se, že se najde {expectedTokenKind}, ale místo toho se dosáhlo konce streamu.",
-  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
+  "error_parse_invalidCatchFunction": "Za klauzulí catch výrazu try/catch musí následovat definice funkce s žádným nebo jedním argumentem a bez omezení typu.",
   "error_parse_invalidPrimitiveType": "Očekávalo se, že se najde primitivní literál, ale místo něj se našlo {foundTokenKind}.",
   "error_parse_requiredParameterAfterOptional": "Za volitelným parametrem nemůže následovat povinný parametr.",
   "error_parse_unterminated_sequence_bracket": "Neukončená hranatá závorka",

@@ -304,6 +304,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";error_parse_invalidCatchFunction" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[try/catch 表达式的 “catch” 子句必须后跟具有 0 或 1 个参数且没有类型约束的函数定义]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";error_parse_invalidPrimitiveType" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Expected to find a primitive literal, but a {foundTokenKind} was found instead]]></Val>

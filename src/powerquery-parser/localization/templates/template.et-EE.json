@@ -31,7 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Eeldati, et leitakse üldistatud identifikaator, kuid esimesena jõudis kätte voo lõpp",
   "error_parse_expectTokenKind_1_other": "Eeldati, et leitakse {expectedTokenKind}, kuid selle asemel leiti {foundTokenKind}",
   "error_parse_expectTokenKind_2_endOfStream": "Eeldati, et leitakse {expectedTokenKind}, kuid selle asemel jõudis kätte voo lõpp",
-  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
+  "error_parse_invalidCatchFunction": "Try/catch avaldise „catch“ klauslile peab järgnema funktsiooni definitsioon, millel on 0 või 1 argumenti ja tüübipiirangud puuduvad",
   "error_parse_invalidPrimitiveType": "Eeldati, et leitakse lihtne literaal, kuid selle asemel leiti {foundTokenKind}",
   "error_parse_requiredParameterAfterOptional": "Mittevalikuline parameeter ei saa järgneda valikulisele parameetrile",
   "error_parse_unterminated_sequence_bracket": "Lõpetamata nurksulg",

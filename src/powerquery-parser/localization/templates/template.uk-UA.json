@@ -31,7 +31,7 @@
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Очікувалося знайти узагальнений ідентифікатор, але досягнуто кінця потоку",
   "error_parse_expectTokenKind_1_other": "Очікувалося знайти {expectedTokenKind}, але натомість знайдено {foundTokenKind}",
   "error_parse_expectTokenKind_2_endOfStream": "Очікувалося знайти {expectedTokenKind}, але натомість досягнуто кінця потоку",
-  "error_parse_invalidCatchFunction": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
+  "error_parse_invalidCatchFunction": "У виразі типу \"try/catch\" після речення \"catch\" має бути визначення функції з 0 або 1 аргументом і без обмежень типу",
   "error_parse_invalidPrimitiveType": "Очікувалося знайти простий літерал, але натомість знайдено {foundTokenKind}",
   "error_parse_requiredParameterAfterOptional": "Обов’язковий параметр не може слідувати за необов’язковим",
   "error_parse_unterminated_sequence_bracket": "Незакрита квадратна дужка",
