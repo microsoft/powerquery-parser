@@ -8,7 +8,7 @@ import { IConstant } from "../../language/ast/ast";
 import { maybeUnboxIdentifier } from "./nodeIdMapUtils";
 import { XorNode } from "./xorNode";
 
-export type TKeyValuePair = LetKeyValuePair | RecordKeyValuePair | SectionKeyValuePair;
+export type TKeyValuePair = FieldSpecificationKeyValuePair | LetKeyValuePair | RecordKeyValuePair | SectionKeyValuePair;
 
 export interface IKeyValuePair<Key extends Ast.GeneralizedIdentifier | Ast.Identifier> {
     readonly source: TXorNode;
@@ -19,17 +19,17 @@ export interface IKeyValuePair<Key extends Ast.GeneralizedIdentifier | Ast.Ident
     readonly maybeValue: TXorNode | undefined;
 }
 
+export interface FieldSpecificationKeyValuePair extends IKeyValuePair<Ast.GeneralizedIdentifier> {
+    readonly pairKind: PairKind.FieldSpecification;
+    readonly maybeOptional: IConstant<Constant.LanguageConstant.Optional> | undefined;
+}
+
 export interface LetKeyValuePair extends IKeyValuePair<Ast.Identifier> {
     readonly pairKind: PairKind.LetExpression;
 }
 
 export interface RecordKeyValuePair extends IKeyValuePair<Ast.GeneralizedIdentifier> {
     readonly pairKind: PairKind.Record;
-}
-
-export interface FieldSpecificationKeyValuePair extends IKeyValuePair<Ast.GeneralizedIdentifier> {
-    readonly pairKind: PairKind.FieldSpecification;
-    readonly maybeOptional: IConstant<Constant.LanguageConstant.Optional> | undefined;
 }
 
 export interface SectionKeyValuePair extends IKeyValuePair<Ast.Identifier> {
