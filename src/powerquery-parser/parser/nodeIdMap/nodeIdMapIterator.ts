@@ -2,8 +2,9 @@
 // Licensed under the MIT license.
 
 import { Assert, MapUtils } from "../../common";
-import { Ast, TextUtils } from "../../language";
+import { Ast, Constant, TextUtils } from "../../language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
+import { IConstant } from "../../language/ast/ast";
 import { maybeUnboxIdentifier } from "./nodeIdMapUtils";
 import { XorNode } from "./xorNode";
 
@@ -26,11 +27,17 @@ export interface RecordKeyValuePair extends IKeyValuePair<Ast.GeneralizedIdentif
     readonly pairKind: PairKind.Record;
 }
 
+export interface FieldSpecificationKeyValuePair extends IKeyValuePair<Ast.GeneralizedIdentifier> {
+    readonly pairKind: PairKind.FieldSpecification;
+    readonly maybeOptional: IConstant<Constant.LanguageConstant.Optional> | undefined;
+}
+
 export interface SectionKeyValuePair extends IKeyValuePair<Ast.Identifier> {
     readonly pairKind: PairKind.SectionMember;
 }
 
 export const enum PairKind {
+    FieldSpecification = "RecordType",
     LetExpression = "LetExpression",
     Record = "Record",
     SectionMember = "Section",
@@ -273,16 +280,59 @@ export function iterFunctionExpressionParameterNameLiterals(
 }
 
 // Return all FieldSpecification children under the given FieldSpecificationList.
-export function iterFieldSpecification(
+export function iterFieldSpecificationList(
     nodeIdMapCollection: NodeIdMap.Collection,
     fieldSpecificationList: TXorNode,
-): ReadonlyArray<TXorNode> {
+): ReadonlyArray<FieldSpecificationKeyValuePair> {
     XorNodeUtils.assertIsNodeKind<Ast.FieldSpecificationList>(
         fieldSpecificationList,
         Ast.NodeKind.FieldSpecificationList,
     );
 
-    return iterArrayWrapperInWrappedContent(nodeIdMapCollection, fieldSpecificationList);
+    const result: FieldSpecificationKeyValuePair[] = [];
+
+    for (const fieldSpecification of iterArrayWrapperInWrappedContent(nodeIdMapCollection, fieldSpecificationList)) {
+        const maybeKey: Ast.GeneralizedIdentifier | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
+            nodeIdMapCollection,
+            fieldSpecification.node.id,
+            1,
+            Ast.NodeKind.GeneralizedIdentifier,
+        );
+
+        if (maybeKey === undefined) {
+            break;
+        }
+
+        const maybeOptional: Ast.IConstant<Constant.LanguageConstant.Optional> | undefined =
+            NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.IConstant<Constant.LanguageConstant.Optional>>(
+                nodeIdMapCollection,
+                fieldSpecification.node.id,
+                0,
+                Ast.NodeKind.Constant,
+            );
+
+        const maybeValue: XorNode<Ast.FieldSpecification> | undefined =
+            NodeIdMapUtils.maybeNthChildChecked<Ast.FieldSpecification>(
+                nodeIdMapCollection,
+                fieldSpecification.node.id,
+                2,
+                Ast.NodeKind.FieldSpecification,
+            );
+
+        const keyLiteral: string = maybeKey.literal;
+
+        result.push({
+            key: maybeKey,
+            keyLiteral,
+            maybeOptional,
+            maybeValue,
+            normalizedKeyLiteral: TextUtils.normalizeIdentifier(keyLiteral),
+            pairKind: PairKind.FieldSpecification,
+            source: fieldSpecification,
+        });
+    }
+
+    return result;
 }
 
 export function iterInvokeExpression(
@@ -345,6 +395,27 @@ export function iterRecord(
         maybeArrayWrapper,
         PairKind.Record,
     );
+}
+
+export function iterRecordType(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    recordType: TXorNode,
+): ReadonlyArray<FieldSpecificationKeyValuePair> {
+    XorNodeUtils.assertIsRecordType(recordType);
+
+    const maybeFields: XorNode<Ast.FieldSpecificationList> | undefined =
+        NodeIdMapUtils.maybeNthChildChecked<Ast.FieldSpecificationList>(
+            nodeIdMapCollection,
+            recordType.node.id,
+            1,
+            Ast.NodeKind.FieldSpecificationList,
+        );
+
+    if (maybeFields === undefined) {
+        return [];
+    }
+
+    return iterFieldSpecificationList(nodeIdMapCollection, maybeFields);
 }
 
 // Return all key-value-pair children under the given Section.
