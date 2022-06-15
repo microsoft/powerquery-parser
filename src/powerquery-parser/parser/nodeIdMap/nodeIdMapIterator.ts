@@ -407,7 +407,7 @@ export function iterRecordType(
         NodeIdMapUtils.maybeNthChildChecked<Ast.FieldSpecificationList>(
             nodeIdMapCollection,
             recordType.node.id,
-            1,
+            0,
             Ast.NodeKind.FieldSpecificationList,
         );
 
