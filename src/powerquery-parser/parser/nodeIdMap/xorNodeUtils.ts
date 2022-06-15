@@ -150,6 +150,10 @@ export function assertIsRecord(
     assertIsNodeKind(xorNode, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);
 }
 
+export function assertIsRecordType(xorNode: TXorNode): asserts xorNode is XorNode<Ast.RecordType> {
+    assertIsNodeKind(xorNode, Ast.NodeKind.RecordType);
+}
+
 export function assertIsFieldSpecificationList(
     xorNode: TXorNode,
 ): asserts xorNode is XorNode<Ast.FieldSpecificationList> {

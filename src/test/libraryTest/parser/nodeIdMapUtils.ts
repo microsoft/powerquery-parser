@@ -7,6 +7,10 @@ import { expect } from "chai";
 import { Assert, Language, MapUtils, Parser } from "../../../powerquery-parser";
 import { DefaultSettings, Task } from "../../..";
 import {
+    FieldSpecificationKeyValuePair,
+    RecordKeyValuePair,
+} from "../../../powerquery-parser/parser/nodeIdMap/nodeIdMapIterator";
+import {
     NodeIdMap,
     NodeIdMapIterator,
     NodeIdMapUtils,
@@ -15,37 +19,9 @@ import {
     XorNodeUtils,
 } from "../../../powerquery-parser/parser";
 import { Ast } from "../../../powerquery-parser/language";
-import { RecordKeyValuePair } from "../../../powerquery-parser/parser/nodeIdMap/nodeIdMapIterator";
 import { TestAssertUtils } from "../../testUtils";
 
 describe("nodeIdMapIterator", () => {
-    describe(`iterRecord`, () => {
-        it(`normalize record key`, async () => {
-            const text: string = `let key = [#"foo" = bar] in key`;
-            const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
-
-            const recordIds: Set<number> = MapUtils.assertGet(
-                parseOk.nodeIdMapCollection.idsByNodeKind,
-                Ast.NodeKind.RecordExpression,
-            );
-
-            expect(recordIds.size).to.equal(1);
-
-            const recordId: number = Assert.asDefined([...recordIds.values()][0]);
-            const record: TXorNode = NodeIdMapUtils.assertGetXor(parseOk.nodeIdMapCollection, recordId);
-
-            const recordKeyValuePairs: ReadonlyArray<RecordKeyValuePair> = NodeIdMapIterator.iterRecord(
-                parseOk.nodeIdMapCollection,
-                record,
-            );
-
-            expect(recordKeyValuePairs.length).to.equal(1);
-
-            const keyValuePair: RecordKeyValuePair = recordKeyValuePairs[0];
-            expect(keyValuePair.normalizedKeyLiteral).to.equal("foo");
-        });
-    });
-
     describe(`iterFunctionExpressionParameters`, () => {
         it(`ast`, async () => {
             const text: string = `(x, y as number) => x + y`;
@@ -174,6 +150,61 @@ describe("nodeIdMapIterator", () => {
 
             expect(parameterNames).to.deep.equal(["x", "y"]);
         });
+    });
+
+    describe(`iterRecord`, () => {
+        it(`normalize record key`, async () => {
+            const text: string = `let key = [#"foo" = bar] in key`;
+            const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+
+            const recordIds: Set<number> = MapUtils.assertGet(
+                parseOk.nodeIdMapCollection.idsByNodeKind,
+                Ast.NodeKind.RecordExpression,
+            );
+
+            expect(recordIds.size).to.equal(1);
+
+            const recordId: number = Assert.asDefined([...recordIds.values()][0]);
+            const record: TXorNode = NodeIdMapUtils.assertGetXor(parseOk.nodeIdMapCollection, recordId);
+
+            const recordKeyValuePairs: ReadonlyArray<RecordKeyValuePair> = NodeIdMapIterator.iterRecord(
+                parseOk.nodeIdMapCollection,
+                record,
+            );
+
+            expect(recordKeyValuePairs.length).to.equal(1);
+
+            const keyValuePair: RecordKeyValuePair = recordKeyValuePairs[0];
+            expect(keyValuePair.normalizedKeyLiteral).to.equal("foo");
+        });
+    });
+
+    describe(`iterRecordType`, async () => {
+        const text: string = `type [foo = number, optional bar = logical]`;
+        const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+
+        const recordTypeIds: Set<number> = MapUtils.assertGet(
+            parseOk.nodeIdMapCollection.idsByNodeKind,
+            Ast.NodeKind.RecordType,
+        );
+
+        expect(recordTypeIds.size).to.equal(1);
+
+        const recordTypeId: number = Assert.asDefined([...recordTypeIds.values()][0]);
+        const recordType: TXorNode = NodeIdMapUtils.assertGetXor(parseOk.nodeIdMapCollection, recordTypeId);
+
+        const fieldSpecificationKeyValuePairs: ReadonlyArray<FieldSpecificationKeyValuePair> =
+            NodeIdMapIterator.iterFieldSpecificationList(parseOk.nodeIdMapCollection, recordType);
+
+        expect(fieldSpecificationKeyValuePairs.length).to.equal(1);
+
+        const firstKeyValuePair: FieldSpecificationKeyValuePair = fieldSpecificationKeyValuePairs[0];
+        expect(firstKeyValuePair.maybeOptional).to.equal(undefined);
+        expect(firstKeyValuePair.normalizedKeyLiteral).to.equal("foo");
+
+        const secondKeyValuePair: FieldSpecificationKeyValuePair = fieldSpecificationKeyValuePairs[1];
+        expect(Boolean(secondKeyValuePair.maybeOptional)).to.equal(true);
+        expect(secondKeyValuePair.normalizedKeyLiteral).to.equal("bar");
     });
 
     describe("maybeUnboxWrappedContent", () => {
