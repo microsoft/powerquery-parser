@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/powerquery-parser",
-    "version": "0.9.3",
+    "version": "0.9.4",
     "description": "A parser for the Power Query/M formula language.",
     "author": "Microsoft",
     "license": "MIT",
