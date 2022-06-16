@@ -22,6 +22,38 @@ import { Ast } from "../../../powerquery-parser/language";
 import { TestAssertUtils } from "../../testUtils";
 
 describe("nodeIdMapIterator", () => {
+    it(`iterFieldSpecficationList`, async () => {
+        const text: string = `type [foo = number, optional bar = logical]`;
+        const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+
+        const fieldSpecificationListIds: Set<number> = MapUtils.assertGet(
+            parseOk.nodeIdMapCollection.idsByNodeKind,
+            Ast.NodeKind.FieldSpecificationList,
+        );
+
+        expect(fieldSpecificationListIds.size).to.equal(1);
+
+        const fieldSpecificationListId: number = Assert.asDefined([...fieldSpecificationListIds.values()][0]);
+
+        const fieldSpecificationList: TXorNode = NodeIdMapUtils.assertGetXor(
+            parseOk.nodeIdMapCollection,
+            fieldSpecificationListId,
+        );
+
+        const fieldSpecificationKeyValuePairs: ReadonlyArray<FieldSpecificationKeyValuePair> =
+            NodeIdMapIterator.iterFieldSpecificationList(parseOk.nodeIdMapCollection, fieldSpecificationList);
+
+        expect(fieldSpecificationKeyValuePairs.length).to.equal(2);
+
+        const firstKeyValuePair: FieldSpecificationKeyValuePair = fieldSpecificationKeyValuePairs[0];
+        expect(firstKeyValuePair.maybeOptional).to.equal(undefined);
+        expect(firstKeyValuePair.normalizedKeyLiteral).to.equal("foo");
+
+        const secondKeyValuePair: FieldSpecificationKeyValuePair = fieldSpecificationKeyValuePairs[1];
+        expect(Boolean(secondKeyValuePair.maybeOptional)).to.equal(true);
+        expect(secondKeyValuePair.normalizedKeyLiteral).to.equal("bar");
+    });
+
     describe(`iterFunctionExpressionParameters`, () => {
         it(`ast`, async () => {
             const text: string = `(x, y as number) => x + y`;
@@ -179,7 +211,7 @@ describe("nodeIdMapIterator", () => {
         });
     });
 
-    describe(`iterRecordType`, async () => {
+    it(`iterRecordType`, async () => {
         const text: string = `type [foo = number, optional bar = logical]`;
         const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
 
@@ -194,9 +226,9 @@ describe("nodeIdMapIterator", () => {
         const recordType: TXorNode = NodeIdMapUtils.assertGetXor(parseOk.nodeIdMapCollection, recordTypeId);
 
         const fieldSpecificationKeyValuePairs: ReadonlyArray<FieldSpecificationKeyValuePair> =
-            NodeIdMapIterator.iterFieldSpecificationList(parseOk.nodeIdMapCollection, recordType);
+            NodeIdMapIterator.iterRecordType(parseOk.nodeIdMapCollection, recordType);
 
-        expect(fieldSpecificationKeyValuePairs.length).to.equal(1);
+        expect(fieldSpecificationKeyValuePairs.length).to.equal(2);
 
         const firstKeyValuePair: FieldSpecificationKeyValuePair = fieldSpecificationKeyValuePairs[0];
         expect(firstKeyValuePair.maybeOptional).to.equal(undefined);
