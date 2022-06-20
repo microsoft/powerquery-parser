@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Перед 'in' не может идти запятая.",
   "error_parse_expectAnyTokenKind_1_other": "Обнаружено: {foundTokenKind}. Однако ожидалось что-либо из следующего: {expectedAnyTokenKinds}.",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Достигнут конец потока, но ожидалось что-либо из следующего: {expectedAnyTokenKinds}.",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Ожидался общий идентификатор.",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Ожидался общий идентификатор, но был достигнут конец потока.",
   "error_parse_expectTokenKind_1_other": "Ожидалось: {expectedTokenKind}. Однако обнаружено: {foundTokenKind}.",

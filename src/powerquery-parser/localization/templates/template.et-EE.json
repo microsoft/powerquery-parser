@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Koma ei saa järgneda sõnale 'in'",
   "error_parse_expectAnyTokenKind_1_other": "Eeldati, et leitakse üks järgmistest, kuid selle asemel leiti {foundTokenKind}: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Eeldati, et leitakse üks järgmistest, kuid selle asemel jõudis kätte voo lõpp: {expectedAnyTokenKinds}",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Eeldati, et leitakse üldistatud identifikaator",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Eeldati, et leitakse üldistatud identifikaator, kuid esimesena jõudis kätte voo lõpp",
   "error_parse_expectTokenKind_1_other": "Eeldati, et leitakse {expectedTokenKind}, kuid selle asemel leiti {foundTokenKind}",

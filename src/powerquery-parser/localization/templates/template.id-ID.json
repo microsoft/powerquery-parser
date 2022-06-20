@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Koma tidak dapat memproses 'in'",
   "error_parse_expectAnyTokenKind_1_other": "Diharapkan menemukan salah satu dari berikut, tetapi {foundTokenKind} ditemukan sebagai gantinya: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Diharapkan menemukan salah satu dari berikut ini, tetapi akhir aliran tercapai sebagai gantinya: {expectedAnyTokenKinds}",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Diharapkan menemukan pengidentifikasi umum",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Diharapkan menemukan pengidentifikasi umum tetapi akhir aliran telah tercapai terlebih dahulu",
   "error_parse_expectTokenKind_1_other": "Diharapkan menemukan {expectedTokenKind}, tetapi {foundTokenKind} ditemukan sebagai gantinya",

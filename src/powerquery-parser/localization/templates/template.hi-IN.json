@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "एक अल्पविराम 'in' को जारी नहीं रख सकता",
   "error_parse_expectAnyTokenKind_1_other": "निम्न में से किसी एक के मिलने की अपेक्षा थी, लेकिन इसके बजाय एक {foundTokenKind} मिला: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "निम्न में से किसी एक के मिलने की अपेक्षा थी, लेकिन इसके बजाय एंड-ऑफ़-स्ट्रीम तक पहुँच गए: {expectedAnyTokenKinds}",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "एक सामान्यीकृत आइडेंटिफ़ायर के मिलने की अपेक्षा थी",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "किसी सामान्यीकृत आइडेंटिफ़ायर के मिलने की अपेक्षा थी, लेकिन पहले एंड-ऑफ़-स्ट्रीम तक पहुँच गए",
   "error_parse_expectTokenKind_1_other": "{expectedTokenKind} के मिलने की अपेक्षा थी, लेकिन इसके बजाय {foundTokenKind} मिला",
