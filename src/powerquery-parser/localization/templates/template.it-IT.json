@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Una virgola non può precedere 'in'",
   "error_parse_expectAnyTokenKind_1_other": "È previsto uno degli elementi seguenti {expectedAnyTokenKinds}, ma invece è stato trovato {foundTokenKind}.",
   "error_parse_expectAnyTokenKind_2_endOfStream": "È previsto uno degli elementi seguenti {expectedAnyTokenKinds}, ma invece è stata raggiunta la fine del flusso",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "È previsto un identificatore generalizzato",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "È previsto un identificatore generalizzato, ma è prima stata raggiunta la fine del flusso",
   "error_parse_expectTokenKind_1_other": "È previsto un elemento {expectedTokenKind}, ma invece è stato trovato {foundTokenKind}",

@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Před klíčovým slovem in nemůže být čárka.",
   "error_parse_expectAnyTokenKind_1_other": "Očekávalo se, že se najde jedna z následujících hodnot, ale místo ní se našla hodnota {foundTokenKind}: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Očekávalo se, že se najde jedna z následujících hodnot, ale místo ní se dosáhlo konce streamu: {expectedAnyTokenKinds}",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Očekávalo se, že se najde zobecněný identifikátor.",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Očekávalo se, že se najde zobecněný identifikátor, ale dosáhlo se konce streamu.",
   "error_parse_expectTokenKind_1_other": "Očekávalo se, že se najde hodnota {expectedTokenKind}, ale místo ní se našlo {foundTokenKind}.",

@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Үтір 'in' болмауы керек",
   "error_parse_expectAnyTokenKind_1_other": "Мыналардың біреуін табу күтілді, бірақ оның орнына {foundTokenKind} табылды: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Мыналардың біреуін табу күтілді, бірақ оның орнына ағынның соңына жетті: {expectedAnyTokenKinds}",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Жалпыланған идентификаторды табу күтілді",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Жалпыланған идентификаторды табу күтілді, бірақ алдымен ағынның соңына жетті",
   "error_parse_expectTokenKind_1_other": "{expectedTokenKind} табу күтілді, бірақ оның орнына {foundTokenKind} табылды",
