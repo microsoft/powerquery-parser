@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Зарез не може да дође иза 'in'",
   "error_parse_expectAnyTokenKind_1_other": "Требало је да се пронађе нека од следећих ставки, али је пронађено {foundTokenKind}: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Требало је да се пронађе нека од следећих ставки, али се дошло до краја тока: {expectedAnyTokenKinds}",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Требало је да се пронађе генерализовани идентификатор",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Требало је да се пронађе генерализовани идентификатор, али се прво дошло до краја тока",
   "error_parse_expectTokenKind_1_other": "Требало је да се пронађе {expectedTokenKind}, али је пронађено {foundTokenKind}",

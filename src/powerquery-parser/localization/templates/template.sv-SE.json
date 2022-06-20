@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Ett kommatecken kan inte komma efter en in",
   "error_parse_expectAnyTokenKind_1_other": "Förväntade hitta ett av följande, men en {foundTokenKind} hittades i stället: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Förväntade hitta ett av följande, men slutet på dataströmmen nåddes i stället: {expectedAnyTokenKinds}",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Förväntade hitta en generaliserad identifierare",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Förväntade hitta en generaliserad identifierare, men slutet på dataströmmen nåddes först",
   "error_parse_expectTokenKind_1_other": "En {expectedTokenKind} förväntades, men en {foundTokenKind} hittades i stället",

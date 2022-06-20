@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "'in' 앞에 쉼표가 올 수 없습니다.",
   "error_parse_expectAnyTokenKind_1_other": "{expectedAnyTokenKinds} 중 하나가 필요하나 대신 {foundTokenKind}이(가) 발견되었습니다.",
   "error_parse_expectAnyTokenKind_2_endOfStream": "{expectedAnyTokenKinds} 중 하나가 필요하나 대신 스트림 끝에 도달했습니다.",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "일반화된 식별자가 필요합니다.",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "일반화된 식별자가 필요하나 먼저 스트림 끝에 도달했습니다.",
   "error_parse_expectTokenKind_1_other": "{expectedTokenKind}이(가) 필요하나 {foundTokenKind}이(가) 발견되었습니다.",

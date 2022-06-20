@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Een komma kan geen 'in' uitvoeren",
   "error_parse_expectAnyTokenKind_1_other": "Er wordt een van de volgende typen tokens verwacht, maar er is een {foundTokenKind} gevonden: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Er wordt een van de volgende typen tokens verwacht, maar end-of-stream is bereikt: {expectedAnyTokenKinds}",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Er wordt een gegeneraliseerde id verwacht",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Er wordt een gegeneraliseerde id verwacht, maar end-of-stream is het eerst bereikt",
   "error_parse_expectTokenKind_1_other": "Er wordt een {expectedTokenKind} verwacht, maar er is een {foundTokenKind} gevonden",
