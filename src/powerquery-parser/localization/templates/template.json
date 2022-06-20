@@ -83,6 +83,9 @@
     "error_parse_expectAnyTokenKind_2_endOfStream": "Expected to find one of the following, but the end-of-stream was reached instead: {expectedAnyTokenKinds}",
     "_error_parse_expectAnyTokenKind_2_endOfStream.comment": "A common parser error where foundTokenKind is a localized tokenKind string. Expected to be user facing.",
 
+    "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
+    "_error_parse_expectedCommaOrTokenKind.comment": "A common parser error where the user needs either a comma or a closing token. Expected to be user facing.",
+
     "error_parse_expectGeneralizedIdentifier_1_other": "Expected to find a generalized identifier",
     "_error_parse_expectGeneralizedIdentifier_1_other.comment": "A common parser error. Expected to be user facing.",
 
