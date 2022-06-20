@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Egy „in” típusú művelet nem folytatódhat vesszővel",
   "error_parse_expectAnyTokenKind_1_other": "A rendszer a következők egyikének előfordulását várta, de ehelyett a talált elem {foundTokenKind}: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "A rendszer a következők egyikének előfordulását várta, de ehelyett a stream végére ért: {expectedAnyTokenKinds}",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "A rendszer egy általánosított azonosító előfordulását várta",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "A rendszer egy általánosított azonosító előfordulását várta, de előbb ért a stream végére",
   "error_parse_expectTokenKind_1_other": "A rendszer egy {expectedTokenKind} előfordulását várta, de ehelyett a talált elem {foundTokenKind}",

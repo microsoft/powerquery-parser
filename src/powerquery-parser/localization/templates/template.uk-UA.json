@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Кома не може слідувати за 'in'",
   "error_parse_expectAnyTokenKind_1_other": "Очікувалося знайти одне з наведеного нижче, але натомість знайдено {foundTokenKind}: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Очікувалося знайти одне з наведеного нижче, але натомість досягнуто кінця потоку: {expectedAnyTokenKinds}",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Очікувалося знайти узагальнений ідентифікатор",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Очікувалося знайти узагальнений ідентифікатор, але досягнуто кінця потоку",
   "error_parse_expectTokenKind_1_other": "Очікувалося знайти {expectedTokenKind}, але натомість знайдено {foundTokenKind}",

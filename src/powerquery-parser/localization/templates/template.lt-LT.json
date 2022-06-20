@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Prieš 'in' negalima dėti kablelio",
   "error_parse_expectAnyTokenKind_1_other": "Tikėtasi rasti vieną iš toliau pateiktų elementų, bet buvo rastas {foundTokenKind}: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Tikėtasi rasti vieną iš toliau nurodytų elementų, bet buvo pasiekta srauto pabaiga: {expectedAnyTokenKinds}",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Tikėtasi rasti apibendrintąjį identifikatorių",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Tikėtasi rasti apibendrintąjį identifikatorių, bet buvo pasiekta srauto pabaiga",
   "error_parse_expectTokenKind_1_other": "Tikėtasi rasti {expectedTokenKind}, bet buvo rastas {foundTokenKind}",

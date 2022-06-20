@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Zarez ne može stajati ispred 'in'",
   "error_parse_expectAnyTokenKind_1_other": "Očekuje se da će se pronaći jedna od sljedećih vrijednosti, no umjesto toga pronađena je {foundTokenKind}: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Očekivalo se da će se pronaći nešto od sljedećih podataka, ali je dostignut kraj toka: {expectedAnyTokenKinds}",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Očekivalo se da će se pronaći poopćeni identifikator",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Očekivalo se da će se pronaći poopćeni identifikator, ali je prije toga dostignut kraj toka",
   "error_parse_expectTokenKind_1_other": "Očekivalo se da će se pronaći {expectedTokenKind}, no umjesto toga je pronađena {foundTokenKind}",

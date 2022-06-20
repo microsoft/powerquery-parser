@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Une virgule ne peut pas suivre un mot clé « in »",
   "error_parse_expectAnyTokenKind_1_other": "L'un des éléments suivants était attendu, mais un {foundTokenKind} a été trouvé à la place : {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "L'un des éléments suivants était attendu, mais la fin de flux a été atteinte à la place : {expectedAnyTokenKinds}",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Identificateur généralisé attendu",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Identificateur généralisé attendu, mais la fin de flux a été atteinte en premier",
   "error_parse_expectTokenKind_1_other": "{expectedTokenKind} attendu, mais un {foundTokenKind} a été trouvé à la place",

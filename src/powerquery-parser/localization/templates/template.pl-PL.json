@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Przecinek nie może poprzedzać operatora 'in'",
   "error_parse_expectAnyTokenKind_1_other": "Znaleziono token {foundTokenKind}, a oczekiwano jednego z następujących tokenów: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Osiągnięto koniec strumienia, a oczekiwano jednego z następujących tokenów: {expectedAnyTokenKinds}",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Oczekiwano identyfikatora uogólnionego",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Oczekiwano identyfikatora uogólnionego, ale osiągnięto wcześniej koniec strumienia",
   "error_parse_expectTokenKind_1_other": "Oczekiwano tokenu {expectedTokenKind}, ale znaleziono token {foundTokenKind}",
