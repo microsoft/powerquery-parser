@@ -65,6 +65,18 @@ export class ExpectedAnyTokenKindError extends Error {
     }
 }
 
+export class ExpectedCommaOrKind extends Error {
+    constructor(
+        readonly expectedTokenKind: Token.TokenKind,
+        readonly maybeFoundToken: TokenWithColumnNumber | undefined,
+        locale: string,
+    ) {
+        super(Localization.error_parse_expectCommaOrKind(LocalizationUtils.getLocalizationTemplates(locale)));
+
+        Object.setPrototypeOf(this, ExpectedAnyTokenKindError.prototype);
+    }
+}
+
 export class ExpectedTokenKindError extends Error {
     constructor(
         readonly expectedTokenKind: Token.TokenKind,

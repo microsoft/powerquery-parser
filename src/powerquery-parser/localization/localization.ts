@@ -38,6 +38,7 @@ interface ILocalization {
         expectedAnyTokenKinds: ReadonlyArray<Token.TokenKind>,
         maybeFoundToken: TokenWithColumnNumber | undefined,
     ) => string;
+    readonly error_parse_expectCommaOrKind: (templates: ILocalizationTemplates) => string;
     readonly error_parse_expectGeneralizedIdentifier: (
         templates: ILocalizationTemplates,
         maybeFoundToken: TokenWithColumnNumber | undefined,
@@ -344,6 +345,10 @@ export const Localization: ILocalization = {
                 new Map([["expectedAnyTokenKinds", localizedExpectedAnyTokenKinds]]),
             );
         }
+    },
+
+    error_parse_expectCommaOrKind: (_templates: ILocalizationTemplates) => {
+        throw new Error("Function not implemented.");
     },
 
     error_parse_expectGeneralizedIdentifier: (

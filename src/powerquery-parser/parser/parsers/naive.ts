@@ -1935,6 +1935,14 @@ export async function readLetExpression(
             trace.id,
         );
 
+    if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.Identifier)) {
+        throw new ParseError.ExpectedCommaOrKind(
+            Token.TokenKind.KeywordIn,
+            ParseStateUtils.maybeTokenWithColumnNumber(state, state.tokenIndex),
+            state.locale,
+        );
+    }
+
     const inConstant: Ast.IConstant<Constant.KeywordConstant.In> = readTokenKindAsConstant(
         state,
         Token.TokenKind.KeywordIn,
