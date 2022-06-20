@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Pred výrazom in nemôže byť čiarka",
   "error_parse_expectAnyTokenKind_1_other": "Očakávalo sa, že sa nájde niektorá z nasledujúcich hodnôt, ale namiesto toho sa našla hodnota {foundTokenKind}: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Očakávalo sa, že sa nájde niektorá z nasledujúcich hodnôt, ale namiesto toho sa dosiahol koniec streamu: {expectedAnyTokenKinds}",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Očakávalo sa, že sa nájde zovšeobecnený identifikátor",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Očakávalo sa, že sa nájde zovšeobecnený identifikátor, ale skôr sa dosiahol koniec streamu",
   "error_parse_expectTokenKind_1_other": "Očakávalo sa, že sa nájde hodnota {expectedTokenKind}, ale namiesto toho sa našla hodnota {foundTokenKind}",

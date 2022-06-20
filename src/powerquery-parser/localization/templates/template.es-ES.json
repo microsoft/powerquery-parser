@@ -27,6 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "No puede haber una coma detrás de \"in\".",
   "error_parse_expectAnyTokenKind_1_other": "Se esperaba encontrar uno de los siguientes elementos, pero se ha encontrado {foundTokenKind} en su lugar: {expectedAnyTokenKinds}.",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Se esperaba encontrar uno de los siguientes elementos, pero se ha alcanzado el fin de flujo en su lugar: {expectedAnyTokenKinds}.",
+  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Se esperaba encontrar un identificador generalizado.",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Se esperaba encontrar un identificador generalizado, pero se ha alcanzado primero el fin de flujo.",
   "error_parse_expectTokenKind_1_other": "Se esperaba encontrar {expectedTokenKind}, pero se ha encontrado {foundTokenKind} en su lugar.",
