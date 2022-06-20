@@ -214,7 +214,7 @@ describe("Parser.Error", () => {
             await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
         ).innerError;
 
-        expect(innerError instanceof ParseError.InvalidCatchFunction).to.equal(true, innerError.message);
+        expect(innerError instanceof ParseError.InvalidCatchFunctionError).to.equal(true, innerError.message);
     });
 
     it(`catch doesn't allow return typing`, async () => {
@@ -224,7 +224,7 @@ describe("Parser.Error", () => {
             await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
         ).innerError;
 
-        expect(innerError instanceof ParseError.InvalidCatchFunction).to.equal(true, innerError.message);
+        expect(innerError instanceof ParseError.InvalidCatchFunctionError).to.equal(true, innerError.message);
     });
 
     it(`catch doesn't allow multiple parameters`, async () => {
@@ -234,6 +234,6 @@ describe("Parser.Error", () => {
             await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
         ).innerError;
 
-        expect(innerError instanceof ParseError.InvalidCatchFunction).to.equal(true, innerError.message);
+        expect(innerError instanceof ParseError.InvalidCatchFunctionError).to.equal(true, innerError.message);
     });
 });
