@@ -279,6 +279,21 @@ export function testCsvContinuationDanglingComma(
 // ---------- Asserts / Tests ----------
 // -------------------------------------
 
+export function testCommaOrTokenKind(
+    state: ParseState,
+    expectedTokenKind: Token.TokenKind,
+): ParseError.ExpectedCommaOrTokenKind | undefined {
+    if (isOnTokenKind(state, expectedTokenKind)) {
+        return undefined;
+    }
+
+    return new ParseError.ExpectedCommaOrTokenKind(
+        expectedTokenKind,
+        maybeCurrentTokenWithColumnNumber(state),
+        state.locale,
+    );
+}
+
 export function testIsOnTokenKind(
     state: ParseState,
     expectedTokenKind: Token.TokenKind,

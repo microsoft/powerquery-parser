@@ -10,6 +10,7 @@ export type TParseError = CommonError.CommonError | ParseError;
 
 export type TInnerParseError =
     | ExpectedAnyTokenKindError
+    | ExpectedCommaOrTokenKind
     | ExpectedCsvContinuationError
     | ExpectedGeneralizedIdentifierError
     | ExpectedTokenKindError
@@ -65,15 +66,20 @@ export class ExpectedAnyTokenKindError extends Error {
     }
 }
 
-export class ExpectedCommaOrKind extends Error {
+export class ExpectedCommaOrTokenKind extends Error {
     constructor(
         readonly expectedTokenKind: Token.TokenKind,
         readonly maybeFoundToken: TokenWithColumnNumber | undefined,
         locale: string,
     ) {
-        super(Localization.error_parse_expectCommaOrKind(LocalizationUtils.getLocalizationTemplates(locale)));
+        super(
+            Localization.error_parse_expectCommaOrKind(
+                LocalizationUtils.getLocalizationTemplates(locale),
+                expectedTokenKind,
+            ),
+        );
 
-        Object.setPrototypeOf(this, ExpectedAnyTokenKindError.prototype);
+        Object.setPrototypeOf(this, ExpectedCommaOrTokenKind.prototype);
     }
 }
 
@@ -189,6 +195,7 @@ export function isTParseError(error: any): error is TParseError {
 export function isTInnerParseError(x: any): x is TInnerParseError {
     return (
         x instanceof ExpectedAnyTokenKindError ||
+        x instanceof ExpectedCommaOrTokenKind ||
         x instanceof ExpectedCsvContinuationError ||
         x instanceof ExpectedGeneralizedIdentifierError ||
         x instanceof ExpectedTokenKindError ||
@@ -202,13 +209,13 @@ export function isTInnerParseError(x: any): x is TInnerParseError {
 
 export function maybeTokenFrom(error: TInnerParseError): Token.Token | undefined {
     if (
-        (error instanceof ExpectedAnyTokenKindError ||
-            error instanceof ExpectedCsvContinuationError ||
-            error instanceof ExpectedGeneralizedIdentifierError ||
-            error instanceof ExpectedTokenKindError) &&
-        error.maybeFoundToken
+        error instanceof ExpectedAnyTokenKindError ||
+        error instanceof ExpectedCommaOrTokenKind ||
+        error instanceof ExpectedCsvContinuationError ||
+        error instanceof ExpectedGeneralizedIdentifierError ||
+        error instanceof ExpectedTokenKindError
     ) {
-        return error.maybeFoundToken.token;
+        return error.maybeFoundToken?.token;
     } else if (error instanceof InvalidPrimitiveTypeError) {
         return error.token;
     } else if (error instanceof RequiredParameterAfterOptionalParameterError) {
@@ -217,7 +224,9 @@ export function maybeTokenFrom(error: TInnerParseError): Token.Token | undefined
         return error.startToken;
     } else if (error instanceof UnusedTokensRemainError) {
         return error.firstUnusedToken;
-    } else {
+    } else if (error instanceof InvalidCatchFunctionError) {
         return undefined;
+    } else {
+        throw Assert.isNever(error);
     }
 }

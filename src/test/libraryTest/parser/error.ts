@@ -129,6 +129,16 @@ describe("Parser.Error", () => {
         );
     });
 
+    it(`Expected Comma for LetExpression`, async () => {
+        const text: string = "let foo = 1 bar = 1 in foo + bar";
+
+        const innerError: ParseError.TInnerParseError = (
+            await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+        ).innerError;
+
+        expect(innerError instanceof ParseError.ExpectedCommaOrTokenKind).to.equal(true, innerError.message);
+    });
+
     it(`Dangling Comma for ListExpression`, async () => {
         const text: string = "{1, }";
 
