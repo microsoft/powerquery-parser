@@ -352,7 +352,7 @@ export const Localization: ILocalization = {
 
     error_parse_expectCommaOrKind: (templates: ILocalizationTemplates, expectedTokenKind: Token.TokenKind) =>
         StringUtils.assertGetFormatted(
-            templates.error_parse_expectedCommaOrTokenKind,
+            templates.error_parse_expectClosingTokenKindOrComma,
             new Map([
                 ["localizedComma", localizeTokenKind(templates, Token.TokenKind.Comma)],
                 ["localizedAlternative", localizeTokenKind(templates, expectedTokenKind)],
