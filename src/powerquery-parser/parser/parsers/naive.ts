@@ -1941,6 +1941,11 @@ export async function readLetExpression(
     );
 
     if (maybeError) {
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [TraceConstant.IsThrowing]: true,
+        });
+
         throw maybeError;
     }
 
