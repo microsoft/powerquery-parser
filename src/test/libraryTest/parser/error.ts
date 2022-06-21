@@ -139,6 +139,26 @@ describe("Parser.Error", () => {
         expect(innerError instanceof ParseError.ExpectedCommaOrTokenKind).to.equal(true, innerError.message);
     });
 
+    it(`WIP Expected Comma for RecordExpression`, async () => {
+        const text: string = "[foo = 1 bar = 1]";
+
+        const innerError: ParseError.TInnerParseError = (
+            await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+        ).innerError;
+
+        expect(innerError instanceof ParseError.ExpectedCommaOrTokenKind).to.equal(true, innerError.message);
+    });
+
+    it(`Expected Comma for RecordType`, async () => {
+        const text: string = "type [foo = number bar = number]";
+
+        const innerError: ParseError.TInnerParseError = (
+            await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+        ).innerError;
+
+        expect(innerError instanceof ParseError.ExpectedCommaOrTokenKind).to.equal(true, innerError.message);
+    });
+
     it(`Dangling Comma for ListExpression`, async () => {
         const text: string = "{1, }";
 
