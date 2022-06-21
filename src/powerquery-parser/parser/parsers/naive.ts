@@ -1460,7 +1460,13 @@ export async function readListExpression(
                 testCsvContinuationDanglingCommaForBrace,
                 trace.id,
             ),
-        () => readTokenKindAsConstant(state, Token.TokenKind.RightBrace, Constant.WrapperConstant.RightBrace, trace.id),
+        () =>
+            readClosingTokenKindAsConstant(
+                state,
+                Token.TokenKind.RightBrace,
+                Constant.WrapperConstant.RightBrace,
+                trace.id,
+            ),
         false,
         trace.id,
     );
@@ -1561,7 +1567,7 @@ export async function readRecordExpression(
                 trace.id,
             ),
         () =>
-            readTokenKindAsConstant(
+            readClosingTokenKindAsConstant(
                 state,
                 Token.TokenKind.RightBracket,
                 Constant.WrapperConstant.RightBracket,
@@ -1935,7 +1941,7 @@ export async function readLetExpression(
             trace.id,
         );
 
-    const maybeError: ParseError.ExpectedCommaOrTokenKind | undefined = ParseStateUtils.testCommaOrTokenKind(
+    const maybeError: ParseError.ExpectedClosingTokenKind | undefined = ParseStateUtils.testClosingTokenKind(
         state,
         Token.TokenKind.KeywordIn,
     );
@@ -2366,7 +2372,7 @@ export async function readFieldSpecificationList(
         );
     }
 
-    const rightBracketConstant: Ast.IConstant<Constant.WrapperConstant.RightBracket> = readTokenKindAsConstant(
+    const rightBracketConstant: Ast.IConstant<Constant.WrapperConstant.RightBracket> = readClosingTokenKindAsConstant(
         state,
         Token.TokenKind.RightBracket,
         Constant.WrapperConstant.RightBracket,
@@ -2812,7 +2818,7 @@ export async function readRecordLiteral(
                 trace.id,
             ),
         () =>
-            readTokenKindAsConstant(
+            readClosingTokenKindAsConstant(
                 state,
                 Token.TokenKind.RightBracket,
                 Constant.WrapperConstant.RightBracket,
@@ -3794,12 +3800,56 @@ export function readToken(state: ParseState): string {
     return data;
 }
 
-export function readTokenKindAsConstant<ConstantKind extends Constant.TConstant>(
+export function readClosingTokenKindAsConstant<C extends Constant.TConstant>(
     state: ParseState,
     tokenKind: Token.TokenKind,
-    constantKind: ConstantKind,
+    constantKind: C,
     maybeCorrelationId: number | undefined,
-): Ast.TConstant & Ast.IConstant<ConstantKind> {
+): Ast.TConstant & Ast.IConstant<C> {
+    const trace: Trace = state.traceManager.entry(
+        NaiveTraceConstant.Parse,
+        readTokenKindAsConstant.name,
+        maybeCorrelationId,
+        {
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+        },
+    );
+
+    const maybeError: ParseError.ExpectedClosingTokenKind | undefined = ParseStateUtils.testClosingTokenKind(
+        state,
+        tokenKind,
+    );
+
+    if (maybeError !== undefined) {
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [TraceConstant.IsThrowing]: true,
+        });
+
+        throw maybeError;
+    }
+
+    const result: Ast.TConstant & Ast.IConstant<C> = readTokenKindAsConstant<C>(
+        state,
+        tokenKind,
+        constantKind,
+        trace.id,
+    );
+
+    trace.exit({
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+        [TraceConstant.IsError]: false,
+    });
+
+    return result;
+}
+
+export function readTokenKindAsConstant<C extends Constant.TConstant>(
+    state: ParseState,
+    tokenKind: Token.TokenKind,
+    constantKind: C,
+    maybeCorrelationId: number | undefined,
+): Ast.TConstant & Ast.IConstant<C> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readTokenKindAsConstant.name,
@@ -3829,7 +3879,7 @@ export function readTokenKindAsConstant<ConstantKind extends Constant.TConstant>
     const tokenData: string = readToken(state);
     Assert.isTrue(tokenData === constantKind, `expected tokenData to equal constantKind`, { tokenData, constantKind });
 
-    const constant: Ast.TConstant & Ast.IConstant<ConstantKind> = {
+    const constant: Ast.TConstant & Ast.IConstant<C> = {
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
         kind: Ast.NodeKind.Constant,
         isLeaf: true,
@@ -3840,7 +3890,7 @@ export function readTokenKindAsConstant<ConstantKind extends Constant.TConstant>
 
     trace.exit({
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        [TraceConstant.IsError]: true,
+        [TraceConstant.IsError]: false,
     });
 
     return constant;
