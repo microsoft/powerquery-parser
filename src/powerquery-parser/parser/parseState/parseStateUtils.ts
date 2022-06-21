@@ -279,15 +279,17 @@ export function testCsvContinuationDanglingComma(
 // ---------- Asserts / Tests ----------
 // -------------------------------------
 
-export function testCommaOrTokenKind(
+// This test is run after seeing no additional commas in a CsvArray,
+// when a closing terminator is expected.
+export function testClosingTokenKind(
     state: ParseState,
     expectedTokenKind: Token.TokenKind,
-): ParseError.ExpectedCommaOrTokenKind | undefined {
+): ParseError.ExpectedClosingTokenKind | undefined {
     if (isOnTokenKind(state, expectedTokenKind)) {
         return undefined;
     }
 
-    return new ParseError.ExpectedCommaOrTokenKind(
+    return new ParseError.ExpectedClosingTokenKind(
         expectedTokenKind,
         maybeCurrentTokenWithColumnNumber(state),
         state.locale,

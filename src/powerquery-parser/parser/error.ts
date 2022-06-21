@@ -10,7 +10,7 @@ export type TParseError = CommonError.CommonError | ParseError;
 
 export type TInnerParseError =
     | ExpectedAnyTokenKindError
-    | ExpectedCommaOrTokenKind
+    | ExpectedClosingTokenKind
     | ExpectedCsvContinuationError
     | ExpectedGeneralizedIdentifierError
     | ExpectedTokenKindError
@@ -66,7 +66,7 @@ export class ExpectedAnyTokenKindError extends Error {
     }
 }
 
-export class ExpectedCommaOrTokenKind extends Error {
+export class ExpectedClosingTokenKind extends Error {
     constructor(
         readonly expectedTokenKind: Token.TokenKind,
         readonly maybeFoundToken: TokenWithColumnNumber | undefined,
@@ -79,7 +79,7 @@ export class ExpectedCommaOrTokenKind extends Error {
             ),
         );
 
-        Object.setPrototypeOf(this, ExpectedCommaOrTokenKind.prototype);
+        Object.setPrototypeOf(this, ExpectedClosingTokenKind.prototype);
     }
 }
 
@@ -195,7 +195,7 @@ export function isTParseError(error: any): error is TParseError {
 export function isTInnerParseError(x: any): x is TInnerParseError {
     return (
         x instanceof ExpectedAnyTokenKindError ||
-        x instanceof ExpectedCommaOrTokenKind ||
+        x instanceof ExpectedClosingTokenKind ||
         x instanceof ExpectedCsvContinuationError ||
         x instanceof ExpectedGeneralizedIdentifierError ||
         x instanceof ExpectedTokenKindError ||
@@ -210,7 +210,7 @@ export function isTInnerParseError(x: any): x is TInnerParseError {
 export function maybeTokenFrom(error: TInnerParseError): Token.Token | undefined {
     if (
         error instanceof ExpectedAnyTokenKindError ||
-        error instanceof ExpectedCommaOrTokenKind ||
+        error instanceof ExpectedClosingTokenKind ||
         error instanceof ExpectedCsvContinuationError ||
         error instanceof ExpectedGeneralizedIdentifierError ||
         error instanceof ExpectedTokenKindError

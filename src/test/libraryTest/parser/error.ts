@@ -116,125 +116,173 @@ describe("Parser.Error", () => {
         });
     });
 
-    it(`Dangling Comma for LetExpression`, async () => {
-        const text: string = "let a = 1, in 1";
+    describe(`Dangling comma`, () => {
+        it(`LetExpression`, async () => {
+            const text: string = "let a = 1, in 1";
 
-        const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(text);
+            const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
+                text,
+            );
 
-        expect(continuationError.message).to.equal(
-            Localization.error_parse_csvContinuation(
-                Templates.DefaultTemplates,
-                ParseError.CsvContinuationKind.LetExpression,
-            ),
-        );
+            expect(continuationError.message).to.equal(
+                Localization.error_parse_csvContinuation(
+                    Templates.DefaultTemplates,
+                    ParseError.CsvContinuationKind.LetExpression,
+                ),
+            );
+        });
+
+        it(`ListExpression`, async () => {
+            const text: string = "{1, }";
+
+            const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
+                text,
+            );
+
+            expect(continuationError.message).to.equal(
+                Localization.error_parse_csvContinuation(
+                    Templates.DefaultTemplates,
+                    ParseError.CsvContinuationKind.DanglingComma,
+                ),
+            );
+        });
+
+        it(`FunctionExpression`, async () => {
+            const text: string = "(a, ) => a";
+
+            const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
+                text,
+            );
+
+            expect(continuationError.message).to.equal(
+                Localization.error_parse_csvContinuation(
+                    Templates.DefaultTemplates,
+                    ParseError.CsvContinuationKind.DanglingComma,
+                ),
+            );
+        });
+
+        it(`FunctionType`, async () => {
+            const text: string = "type function (a as number, ) as number";
+
+            const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
+                text,
+            );
+
+            expect(continuationError.message).to.equal(
+                Localization.error_parse_csvContinuation(
+                    Templates.DefaultTemplates,
+                    ParseError.CsvContinuationKind.DanglingComma,
+                ),
+            );
+        });
+
+        it(`RecordExpression`, async () => {
+            const text: string = "[a = 1,]";
+
+            const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
+                text,
+            );
+
+            expect(continuationError.message).to.equal(
+                Localization.error_parse_csvContinuation(
+                    Templates.DefaultTemplates,
+                    ParseError.CsvContinuationKind.DanglingComma,
+                ),
+            );
+        });
+
+        it(`RecordType`, async () => {
+            const text: string = "type [a = 1,]";
+
+            const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
+                text,
+            );
+
+            expect(continuationError.message).to.equal(
+                Localization.error_parse_csvContinuation(
+                    Templates.DefaultTemplates,
+                    ParseError.CsvContinuationKind.DanglingComma,
+                ),
+            );
+        });
+
+        it(`TableType`, async () => {
+            const text: string = "type table [a = 1,]";
+
+            const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
+                text,
+            );
+
+            expect(continuationError.message).to.equal(
+                Localization.error_parse_csvContinuation(
+                    Templates.DefaultTemplates,
+                    ParseError.CsvContinuationKind.DanglingComma,
+                ),
+            );
+        });
     });
 
-    it(`Expected Comma for LetExpression`, async () => {
-        const text: string = "let foo = 1 bar = 1 in foo + bar";
+    describe(`Expected comma`, () => {
+        it(`LetExpression`, async () => {
+            const text: string = "let foo = 1 bar = 1 in foo + bar";
 
-        const innerError: ParseError.TInnerParseError = (
-            await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
-        ).innerError;
+            const innerError: ParseError.TInnerParseError = (
+                await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+            ).innerError;
 
-        expect(innerError instanceof ParseError.ExpectedCommaOrTokenKind).to.equal(true, innerError.message);
-    });
+            expect(innerError instanceof ParseError.ExpectedClosingTokenKind).to.equal(true, innerError.message);
+        });
 
-    it(`WIP Expected Comma for RecordExpression`, async () => {
-        const text: string = "[foo = 1 bar = 1]";
+        it(`ListExpression`, async () => {
+            const text: string = "{1 2}";
 
-        const innerError: ParseError.TInnerParseError = (
-            await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
-        ).innerError;
+            const innerError: ParseError.TInnerParseError = (
+                await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+            ).innerError;
 
-        expect(innerError instanceof ParseError.ExpectedCommaOrTokenKind).to.equal(true, innerError.message);
-    });
+            expect(innerError instanceof ParseError.ExpectedClosingTokenKind).to.equal(true, innerError.message);
+        });
 
-    it(`Expected Comma for RecordType`, async () => {
-        const text: string = "type [foo = number bar = number]";
+        it(`RecordExpression`, async () => {
+            const text: string = "[foo = 1 bar = 1]";
 
-        const innerError: ParseError.TInnerParseError = (
-            await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
-        ).innerError;
+            const innerError: ParseError.TInnerParseError = (
+                await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+            ).innerError;
 
-        expect(innerError instanceof ParseError.ExpectedCommaOrTokenKind).to.equal(true, innerError.message);
-    });
+            expect(innerError instanceof ParseError.ExpectedClosingTokenKind).to.equal(true, innerError.message);
+        });
 
-    it(`Dangling Comma for ListExpression`, async () => {
-        const text: string = "{1, }";
+        it(`RecordLiteral`, async () => {
+            const text: string = "[foo = 1 bar = 2]section baz;";
 
-        const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(text);
+            const innerError: ParseError.TInnerParseError = (
+                await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+            ).innerError;
 
-        expect(continuationError.message).to.equal(
-            Localization.error_parse_csvContinuation(
-                Templates.DefaultTemplates,
-                ParseError.CsvContinuationKind.DanglingComma,
-            ),
-        );
-    });
+            expect(innerError instanceof ParseError.ExpectedClosingTokenKind).to.equal(true, innerError.message);
+        });
 
-    it(`Dangling Comma for FunctionExpression`, async () => {
-        const text: string = "(a, ) => a";
+        it(`RecordType`, async () => {
+            const text: string = "type [foo = number bar = number]";
 
-        const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(text);
+            const innerError: ParseError.TInnerParseError = (
+                await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+            ).innerError;
 
-        expect(continuationError.message).to.equal(
-            Localization.error_parse_csvContinuation(
-                Templates.DefaultTemplates,
-                ParseError.CsvContinuationKind.DanglingComma,
-            ),
-        );
-    });
+            expect(innerError instanceof ParseError.ExpectedClosingTokenKind).to.equal(true, innerError.message);
+        });
 
-    it(`Dangling Comma for FunctionType`, async () => {
-        const text: string = "type function (a as number, ) as number";
+        it(`TableType`, async () => {
+            const text: string = "type table [a = 1 b = 2]";
 
-        const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(text);
+            const innerError: ParseError.TInnerParseError = (
+                await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+            ).innerError;
 
-        expect(continuationError.message).to.equal(
-            Localization.error_parse_csvContinuation(
-                Templates.DefaultTemplates,
-                ParseError.CsvContinuationKind.DanglingComma,
-            ),
-        );
-    });
-
-    it(`Dangling Comma for RecordExpression`, async () => {
-        const text: string = "[a = 1,]";
-
-        const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(text);
-
-        expect(continuationError.message).to.equal(
-            Localization.error_parse_csvContinuation(
-                Templates.DefaultTemplates,
-                ParseError.CsvContinuationKind.DanglingComma,
-            ),
-        );
-    });
-
-    it(`Dangling Comma for RecordType`, async () => {
-        const text: string = "type [a = 1,]";
-
-        const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(text);
-
-        expect(continuationError.message).to.equal(
-            Localization.error_parse_csvContinuation(
-                Templates.DefaultTemplates,
-                ParseError.CsvContinuationKind.DanglingComma,
-            ),
-        );
-    });
-
-    it(`Dangling Comma for TableType`, async () => {
-        const text: string = "type table [a = 1,]";
-
-        const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(text);
-
-        expect(continuationError.message).to.equal(
-            Localization.error_parse_csvContinuation(
-                Templates.DefaultTemplates,
-                ParseError.CsvContinuationKind.DanglingComma,
-            ),
-        );
+            expect(innerError instanceof ParseError.ExpectedClosingTokenKind).to.equal(true, innerError.message);
+        });
     });
 
     it(`catch doesn't allow parameter typing`, async () => {
