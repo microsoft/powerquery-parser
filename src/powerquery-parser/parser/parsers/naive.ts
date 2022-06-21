@@ -2853,11 +2853,7 @@ export async function readFieldNamePairedAnyLiterals(
     const csvArray: Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral> = await readCsvArray(
         state,
         () =>
-            readKeyValuePair<
-                Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
-                Ast.GeneralizedIdentifier,
-                Ast.TAnyLiteral
-            >(
+            readKeyValuePair<Ast.GeneralizedIdentifierPairedAnyLiteral>(
                 state,
                 Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
                 () => parser.readGeneralizedIdentifier(state, parser, trace.id),
@@ -3178,17 +3174,14 @@ export async function readGeneralizedIdentifierPairedExpression(
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const generalizedIdentifierPairedExpression: Ast.GeneralizedIdentifierPairedExpression = await readKeyValuePair<
-        Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-        Ast.GeneralizedIdentifier,
-        Ast.TExpression
-    >(
-        state,
-        Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-        () => parser.readGeneralizedIdentifier(state, parser, trace.id),
-        () => parser.readExpression(state, parser, trace.id),
-        trace.id,
-    );
+    const generalizedIdentifierPairedExpression: Ast.GeneralizedIdentifierPairedExpression =
+        await readKeyValuePair<Ast.GeneralizedIdentifierPairedExpression>(
+            state,
+            Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+            () => parser.readGeneralizedIdentifier(state, parser, trace.id),
+            () => parser.readExpression(state, parser, trace.id),
+            trace.id,
+        );
 
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
@@ -3211,18 +3204,15 @@ export async function readIdentifierPairedExpression(
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const identifierPairedExpression: Ast.IdentifierPairedExpression = await readKeyValuePair<
-        Ast.NodeKind.IdentifierPairedExpression,
-        Ast.Identifier,
-        Ast.TExpression
-    >(
-        state,
-        Ast.NodeKind.IdentifierPairedExpression,
-        // eslint-disable-next-line require-await
-        async () => parser.readIdentifier(state, parser, Ast.IdentifierContextKind.Key, trace.id),
-        async () => await parser.readExpression(state, parser, trace.id),
-        trace.id,
-    );
+    const identifierPairedExpression: Ast.IdentifierPairedExpression =
+        await readKeyValuePair<Ast.IdentifierPairedExpression>(
+            state,
+            Ast.NodeKind.IdentifierPairedExpression,
+            // eslint-disable-next-line require-await
+            async () => parser.readIdentifier(state, parser, Ast.IdentifierContextKind.Key, trace.id),
+            async () => await parser.readExpression(state, parser, trace.id),
+            trace.id,
+        );
 
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
@@ -3455,20 +3445,20 @@ async function readCsvArray<T extends Ast.TCsvType>(
     return csvArray;
 }
 
-async function readKeyValuePair<Kind extends Ast.TKeyValuePairNodeKind, Key, Value>(
+async function readKeyValuePair<KVP extends Ast.TKeyValuePair>(
     state: ParseState,
-    nodeKind: Kind,
-    keyReader: () => Promise<Key>,
-    valueReader: () => Promise<Value>,
+    nodeKind: KVP["kind"],
+    keyReader: () => Promise<KVP["key"]>,
+    valueReader: () => Promise<KVP["value"]>,
     maybeCorrelationId: number | undefined,
-): Promise<Ast.IKeyValuePair<Kind, Key, Value>> {
+): Promise<KVP> {
     ParseStateUtils.startContext(state, nodeKind);
 
     const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readKeyValuePair.name, maybeCorrelationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    const key: Key = await keyReader();
+    const key: KVP["key"] = await keyReader();
 
     const equalConstant: Ast.IConstant<Constant.MiscConstant.Equal> = readTokenKindAsConstant(
         state,
@@ -3477,18 +3467,18 @@ async function readKeyValuePair<Kind extends Ast.TKeyValuePairNodeKind, Key, Val
         trace.id,
     );
 
-    const value: Value = await valueReader();
+    const value: KVP["value"] = await valueReader();
 
-    const keyValuePair: Ast.IKeyValuePair<Kind, Key, Value> = {
+    const keyValuePair: KVP = {
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: false,
         key,
         equalConstant,
         value,
-    };
+    } as KVP;
 
-    ParseStateUtils.endContext(state, keyValuePair as unknown as Ast.TKeyValuePair);
+    ParseStateUtils.endContext(state, keyValuePair);
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return keyValuePair;
