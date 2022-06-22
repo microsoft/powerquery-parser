@@ -27,7 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Koma tidak boleh meneruskan 'in'",
   "error_parse_expectAnyTokenKind_1_other": "Dijangka menemui satu daripada yang berikut, tetapi {foundTokenKind} telah ditemui bukannya: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Dijangka menemui satu daripada yang berikut, sebaliknya penghujung strim telah dicapai: {expectedAnyTokenKinds}",
-  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
+  "error_parse_expectedCommaOrTokenKind": "Dijangka menemui sama ada {localizedComma} atau {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Dijangka menemui pengecam umum",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Dijangka menemui pengecam umum sebaliknya penghujung strim telah dicapai dahulu",
   "error_parse_expectTokenKind_1_other": "Dijangka menemui {expectedTokenKind}, tetapi {foundTokenKind} telah ditemui sebaliknya",

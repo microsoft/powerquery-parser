@@ -27,7 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Et komma kan ikke komme efter et \"in\"",
   "error_parse_expectAnyTokenKind_1_other": "Forventede at finde en af følgende, men der blev fundet en {foundTokenKind} i stedet: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Forventede at finde en af følgende, men slutningen af streamen blev nået i stedet: {expectedAnyTokenKinds}",
-  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
+  "error_parse_expectedCommaOrTokenKind": "Forventede at finde enten en {localizedComma} eller {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Forventede at finde en generaliseret identifikator",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Forventede at finde et generaliseret id, men slutningen af streamen er nået først",
   "error_parse_expectTokenKind_1_other": "Forventede at finde en {expectedTokenKind}, men der blev fundet en {foundTokenKind} i stedet for",

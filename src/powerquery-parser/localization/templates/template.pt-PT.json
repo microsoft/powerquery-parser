@@ -27,7 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Uma vírgula não pode estar depois de um 'in'",
   "error_parse_expectAnyTokenKind_1_other": "Era esperado encontrar um dos seguintes, mas, em vez disso, foi encontrado um {foundTokenKind}: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Era esperado encontrar um dos seguintes, mas, em vez disso, o fim de fluxo foi alcançado: {expectedAnyTokenKinds}",
-  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
+  "error_parse_expectedCommaOrTokenKind": "Era esperado encontrar uma {localizedComma} ou {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Era esperado encontrar um identificador generalizado",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Era esperado encontrar um identificador generalizado, mas, em vez disso, o fim de fluxo foi alcançado primeiro",
   "error_parse_expectTokenKind_1_other": "Era esperado encontrar um {expectedTokenKind}, mas, em vez disso, foi encontrado um {foundTokenKind}",

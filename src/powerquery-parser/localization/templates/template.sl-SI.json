@@ -27,7 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Vejica ne sme biti pred 'in'",
   "error_parse_expectAnyTokenKind_1_other": "Najden je bil žeton {foundTokenKind}, vendar je bilo pričakovano, da bo najden eden od teh žetonov: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Dosežen je bil konec toka, vendar je bilo pričakovano, da bo najden eden od teh žetonov: {expectedAnyTokenKinds}",
-  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
+  "error_parse_expectedCommaOrTokenKind": "Pričakovali smo bodisi {localizedComma} bodisi {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Pričakovano je, da bo najden splošni identifikator",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Pričakovano je, da bo najden splošni identifikator, vendar je bil najprej dosežen konec toka",
   "error_parse_expectTokenKind_1_other": "Pričakovano je, da bo najden žeton {expectedTokenKind}, vendar je bil najden žeton {foundTokenKind}",
