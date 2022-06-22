@@ -27,7 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Kohteen 'in' edellä ei voi olla pilkkua",
   "error_parse_expectAnyTokenKind_1_other": "Odotettiin löytyvän yksi seuraavista, mutta {foundTokenKind} löytyi sen sijaan: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Odotettiin löytyvän yksi seuraavista, mutta sen sijaan saavutettiin tietovirran loppu: {expectedAnyTokenKinds}",
-  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
+  "error_parse_expectedCommaOrTokenKind": "Odotettiin löydettävän joko {localizedComma} tai {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Odotettiin löytyvän yleistunniste",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Odotettiin löytyvän yleistunniste, mutta saavutettiin ensin tietovirran loppu",
   "error_parse_expectTokenKind_1_other": "Odotettiin löytyvän {expectedTokenKind}, mutta sen sijaan löytyi {foundTokenKind}",
