@@ -164,6 +164,7 @@ export interface ILocalizationTemplates {
     readonly error_parse_csvContinuation_2_letExpression: string;
     readonly error_parse_expectAnyTokenKind_1_other: string;
     readonly error_parse_expectAnyTokenKind_2_endOfStream: string;
+    readonly error_parse_expectedCommaOrTokenKind: string;
     readonly error_parse_expectGeneralizedIdentifier_1_other: string;
     readonly error_parse_expectGeneralizedIdentifier_2_endOfStream: string;
     readonly error_parse_expectTokenKind_1_other: string;

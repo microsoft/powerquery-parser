@@ -38,6 +38,10 @@ interface ILocalization {
         expectedAnyTokenKinds: ReadonlyArray<Token.TokenKind>,
         maybeFoundToken: TokenWithColumnNumber | undefined,
     ) => string;
+    readonly error_parse_expectCommaOrKind: (
+        templates: ILocalizationTemplates,
+        expectedTokenKind: Token.TokenKind,
+    ) => string;
     readonly error_parse_expectGeneralizedIdentifier: (
         templates: ILocalizationTemplates,
         maybeFoundToken: TokenWithColumnNumber | undefined,
@@ -345,6 +349,15 @@ export const Localization: ILocalization = {
             );
         }
     },
+
+    error_parse_expectCommaOrKind: (templates: ILocalizationTemplates, expectedTokenKind: Token.TokenKind) =>
+        StringUtils.assertGetFormatted(
+            templates.error_parse_expectedCommaOrTokenKind,
+            new Map([
+                ["localizedComma", localizeTokenKind(templates, Token.TokenKind.Comma)],
+                ["localizedAlternative", localizeTokenKind(templates, expectedTokenKind)],
+            ]),
+        ),
 
     error_parse_expectGeneralizedIdentifier: (
         templates: ILocalizationTemplates,

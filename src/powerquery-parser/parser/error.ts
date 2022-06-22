@@ -10,10 +10,11 @@ export type TParseError = CommonError.CommonError | ParseError;
 
 export type TInnerParseError =
     | ExpectedAnyTokenKindError
+    | ExpectedClosingTokenKind
     | ExpectedCsvContinuationError
     | ExpectedGeneralizedIdentifierError
     | ExpectedTokenKindError
-    | InvalidCatchFunction
+    | InvalidCatchFunctionError
     | InvalidPrimitiveTypeError
     | RequiredParameterAfterOptionalParameterError
     | UnterminatedSequence
@@ -65,6 +66,23 @@ export class ExpectedAnyTokenKindError extends Error {
     }
 }
 
+export class ExpectedClosingTokenKind extends Error {
+    constructor(
+        readonly expectedTokenKind: Token.TokenKind,
+        readonly maybeFoundToken: TokenWithColumnNumber | undefined,
+        locale: string,
+    ) {
+        super(
+            Localization.error_parse_expectCommaOrKind(
+                LocalizationUtils.getLocalizationTemplates(locale),
+                expectedTokenKind,
+            ),
+        );
+
+        Object.setPrototypeOf(this, ExpectedClosingTokenKind.prototype);
+    }
+}
+
 export class ExpectedTokenKindError extends Error {
     constructor(
         readonly expectedTokenKind: Token.TokenKind,
@@ -96,14 +114,14 @@ export class ExpectedGeneralizedIdentifierError extends Error {
     }
 }
 
-export class InvalidCatchFunction extends Error {
+export class InvalidCatchFunctionError extends Error {
     constructor(
         readonly startToken: Token.Token,
         readonly positionStart: StringUtils.GraphemePosition,
         locale: string,
     ) {
         super(Localization.error_parse_invalidCatchFunction(LocalizationUtils.getLocalizationTemplates(locale)));
-        Object.setPrototypeOf(this, InvalidCatchFunction.prototype);
+        Object.setPrototypeOf(this, InvalidCatchFunctionError.prototype);
     }
 }
 
@@ -177,10 +195,11 @@ export function isTParseError(error: any): error is TParseError {
 export function isTInnerParseError(x: any): x is TInnerParseError {
     return (
         x instanceof ExpectedAnyTokenKindError ||
+        x instanceof ExpectedClosingTokenKind ||
         x instanceof ExpectedCsvContinuationError ||
         x instanceof ExpectedGeneralizedIdentifierError ||
         x instanceof ExpectedTokenKindError ||
-        x instanceof InvalidCatchFunction ||
+        x instanceof InvalidCatchFunctionError ||
         x instanceof InvalidPrimitiveTypeError ||
         x instanceof RequiredParameterAfterOptionalParameterError ||
         x instanceof UnterminatedSequence ||
@@ -190,13 +209,13 @@ export function isTInnerParseError(x: any): x is TInnerParseError {
 
 export function maybeTokenFrom(error: TInnerParseError): Token.Token | undefined {
     if (
-        (error instanceof ExpectedAnyTokenKindError ||
-            error instanceof ExpectedCsvContinuationError ||
-            error instanceof ExpectedGeneralizedIdentifierError ||
-            error instanceof ExpectedTokenKindError) &&
-        error.maybeFoundToken
+        error instanceof ExpectedAnyTokenKindError ||
+        error instanceof ExpectedClosingTokenKind ||
+        error instanceof ExpectedCsvContinuationError ||
+        error instanceof ExpectedGeneralizedIdentifierError ||
+        error instanceof ExpectedTokenKindError
     ) {
-        return error.maybeFoundToken.token;
+        return error.maybeFoundToken?.token;
     } else if (error instanceof InvalidPrimitiveTypeError) {
         return error.token;
     } else if (error instanceof RequiredParameterAfterOptionalParameterError) {
@@ -205,7 +224,9 @@ export function maybeTokenFrom(error: TInnerParseError): Token.Token | undefined
         return error.startToken;
     } else if (error instanceof UnusedTokensRemainError) {
         return error.firstUnusedToken;
-    } else {
+    } else if (error instanceof InvalidCatchFunctionError) {
         return undefined;
+    } else {
+        throw Assert.isNever(error);
     }
 }
