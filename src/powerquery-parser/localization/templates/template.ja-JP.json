@@ -27,7 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "コンマの後に 'in' を使用することはできません",
   "error_parse_expectAnyTokenKind_1_other": "{expectedAnyTokenKinds} のいずれかが必要ですが、{foundTokenKind} が見つかりました。",
   "error_parse_expectAnyTokenKind_2_endOfStream": "{expectedAnyTokenKinds} のいずれかが必要ですが、ストリームの末尾に到達しました。",
-  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
+  "error_parse_expectedCommaOrTokenKind": "{localizedComma} または {localizedAlternative} のいずれかが必要です。",
   "error_parse_expectGeneralizedIdentifier_1_other": "一般化された識別子が必要です",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "一般化された識別子が必要ですが、最初にストリームの末尾に到達しました",
   "error_parse_expectTokenKind_1_other": "{expectedTokenKind} が必要ですが、{foundTokenKind} が見つかりました",

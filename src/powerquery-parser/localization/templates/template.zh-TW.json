@@ -27,7 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "'in' 前面不能有逗號",
   "error_parse_expectAnyTokenKind_1_other": "應找到下列其中一項，卻找到 {foundTokenKind}: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "應找到下列其中一項，但已達資料流結尾: {expectedAnyTokenKinds}",
-  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
+  "error_parse_expectedCommaOrTokenKind": "必須有 {localizedComma} 或 {localizedAlternative}。",
   "error_parse_expectGeneralizedIdentifier_1_other": "應找到通用識別項",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "應找到通用識別項，但已先達資料流結尾",
   "error_parse_expectTokenKind_1_other": "應找到 {expectedTokenKind}，卻找到 {foundTokenKind}",

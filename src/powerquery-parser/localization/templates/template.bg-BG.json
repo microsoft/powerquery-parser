@@ -27,7 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Запетаята не може да предхожда „in“",
   "error_parse_expectAnyTokenKind_1_other": "Очакваше се да се открие едно от следните, но вместо това се откри {foundTokenKind}: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Очакваше се да се открие едно от следните, но вместо това е достигнат краят на потока: {expectedAnyTokenKinds}",
-  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
+  "error_parse_expectedCommaOrTokenKind": "Очаква се да се намери или {localizedComma}, или {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Очакваше се да се открие генерализиран идентификатор",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Очакваше се да се открие генерализиран идентификатор, но пръв беше достигнат краят на потока",
   "error_parse_expectTokenKind_1_other": "Очакваше се да се намери {expectedTokenKind}, но вместо това се откри {foundTokenKind}",
