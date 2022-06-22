@@ -27,7 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "O virgulă nu poate preceda un 'in'",
   "error_parse_expectAnyTokenKind_1_other": "Se aștepta una dintre următoarele, dar s-a găsit un tip {foundTokenKind} în schimb: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Se aștepta una dintre următoarele, dar s-a atins sfârșitul de flux în schimb: {expectedAnyTokenKinds}",
-  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
+  "error_parse_expectedCommaOrTokenKind": "Se aștepta o {localizedComma} sau o {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Se aștepta un identificator generalizat",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Se aștepta un identificator generalizat, dar s-a atins sfârșitul de flux mai întâi",
   "error_parse_expectTokenKind_1_other": "Se aștepta tipul {expectedTokenKind}, dar s-a găsit un tip {foundTokenKind} în schimb",
