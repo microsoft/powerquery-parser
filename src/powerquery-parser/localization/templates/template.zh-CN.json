@@ -27,7 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "逗号无法继续执行 'in'",
   "error_parse_expectAnyTokenKind_1_other": "应找到以下项之一，但找到的却是 {foundTokenKind}: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "应找到以下项之一，但却到达了流结尾: {expectedAnyTokenKinds}",
-  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
+  "error_parse_expectedCommaOrTokenKind": "应查找 {localizedComma} 或 {localizedAlternative}。",
   "error_parse_expectGeneralizedIdentifier_1_other": "应找到通用化标识符",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "应找到通用化标识符，但先到达了流结尾",
   "error_parse_expectTokenKind_1_other": "应找到 {expectedTokenKind}，但找到的却是 {foundTokenKind}",
