@@ -27,7 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Ένα κόμμα δεν είναι δυνατό να προηγείται ενός 'in'",
   "error_parse_expectAnyTokenKind_1_other": "Αναμενόταν να βρεθεί ένα από τα ακόλουθα, αλλά βρέθηκε {foundTokenKind}: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Αναμενόταν να βρεθεί ένα από τα ακόλουθα, αλλά έφτασε το τέλος της ροής: {expectedAnyTokenKinds}",
-  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
+  "error_parse_expectedCommaOrTokenKind": "Αναμενόταν να βρεθεί είτε {localizedComma} είτε {localizedAlternative}.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Αναμενόταν να βρεθεί ένα γενικό αναγνωριστικό",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Αναμενόταν να βρεθεί ένα γενικό αναγνωριστικό, αλλά έφτασε πρώτα το τέλος της ροής",
   "error_parse_expectTokenKind_1_other": "Αναμενόταν να βρεθεί {expectedTokenKind}, αλλά βρέθηκε {foundTokenKind}",
