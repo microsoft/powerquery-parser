@@ -1941,21 +1941,7 @@ export async function readLetExpression(
             trace.id,
         );
 
-    const maybeError: ParseError.ExpectedClosingTokenKind | undefined = ParseStateUtils.testClosingTokenKind(
-        state,
-        Token.TokenKind.KeywordIn,
-    );
-
-    if (maybeError) {
-        trace.exit({
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-            [TraceConstant.IsThrowing]: true,
-        });
-
-        throw maybeError;
-    }
-
-    const inConstant: Ast.IConstant<Constant.KeywordConstant.In> = readTokenKindAsConstant(
+    const inConstant: Ast.IConstant<Constant.KeywordConstant.In> = readClosingTokenKindAsConstant(
         state,
         Token.TokenKind.KeywordIn,
         Constant.KeywordConstant.In,
@@ -3806,6 +3792,9 @@ export function readClosingTokenKindAsConstant<C extends Constant.TConstant>(
     constantKind: C,
     maybeCorrelationId: number | undefined,
 ): Ast.TConstant & Ast.IConstant<C> {
+    state.maybeCancellationToken?.throwIfCancelled();
+    ParseStateUtils.startContext(state, Ast.NodeKind.Constant);
+
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readTokenKindAsConstant.name,
@@ -3829,17 +3818,14 @@ export function readClosingTokenKindAsConstant<C extends Constant.TConstant>(
         throw maybeError;
     }
 
-    const result: Ast.TConstant & Ast.IConstant<C> = readTokenKindAsConstant<C>(
+    const result: Ast.TConstant & Ast.IConstant<C> = readTokenKindAsConstantShared<C>(
         state,
         tokenKind,
         constantKind,
         trace.id,
     );
 
-    trace.exit({
-        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        [TraceConstant.IsError]: false,
-    });
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return result;
 }
@@ -3861,6 +3847,35 @@ export function readTokenKindAsConstant<C extends Constant.TConstant>(
 
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, Ast.NodeKind.Constant);
+
+    const result: Ast.TConstant & Ast.IConstant<C> = readTokenKindAsConstantShared(
+        state,
+        tokenKind,
+        constantKind,
+        trace.id,
+    );
+
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
+
+    return result;
+}
+
+// Shares logic common to readTokenKindAsConstant and readClosingTokenKindAsConstant.
+// Assumes the caller started a context for `Ast.NodeKInd.Constant`.
+export function readTokenKindAsConstantShared<C extends Constant.TConstant>(
+    state: ParseState,
+    tokenKind: Token.TokenKind,
+    constantKind: C,
+    correlationId: number,
+): Ast.TConstant & Ast.IConstant<C> {
+    const trace: Trace = state.traceManager.entry(
+        NaiveTraceConstant.Parse,
+        readTokenKindAsConstant.name,
+        correlationId,
+        {
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+        },
+    );
 
     const maybeError: ParseError.ExpectedTokenKindError | undefined = ParseStateUtils.testIsOnTokenKind(
         state,
