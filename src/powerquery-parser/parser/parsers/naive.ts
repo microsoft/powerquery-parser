@@ -3818,7 +3818,7 @@ export function readClosingTokenKindAsConstant<C extends Constant.TConstant>(
         throw maybeError;
     }
 
-    const result: Ast.TConstant & Ast.IConstant<C> = readTokenKindAsConstantShared<C>(
+    const result: Ast.TConstant & Ast.IConstant<C> = readTokenKindAsConstantInternal<C>(
         state,
         tokenKind,
         constantKind,
@@ -3848,7 +3848,7 @@ export function readTokenKindAsConstant<C extends Constant.TConstant>(
     state.maybeCancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, Ast.NodeKind.Constant);
 
-    const result: Ast.TConstant & Ast.IConstant<C> = readTokenKindAsConstantShared(
+    const result: Ast.TConstant & Ast.IConstant<C> = readTokenKindAsConstantInternal(
         state,
         tokenKind,
         constantKind,
@@ -3862,7 +3862,7 @@ export function readTokenKindAsConstant<C extends Constant.TConstant>(
 
 // Shares logic common to readTokenKindAsConstant and readClosingTokenKindAsConstant.
 // Assumes the caller started a context for `Ast.NodeKInd.Constant`.
-export function readTokenKindAsConstantShared<C extends Constant.TConstant>(
+function readTokenKindAsConstantInternal<C extends Constant.TConstant>(
     state: ParseState,
     tokenKind: Token.TokenKind,
     constantKind: C,

@@ -15,9 +15,9 @@ import {
     TaskUtils,
     Traverse,
 } from "../../..";
+import { TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
 import { NoOpTraceManagerInstance } from "../../../powerquery-parser/common/trace";
 import { TestAssertUtils } from "../../testUtils";
-import { TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
 
 type AbridgedNode = [Language.Ast.NodeKind, number | undefined];
 
