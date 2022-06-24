@@ -304,6 +304,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";error_parse_expectedCommaOrTokenKind" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Expected to find either a {localizedComma} or {localizedAlternative}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Oczekiwano znalezienia {localizedComma} lub {localizedAlternative}.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";error_parse_invalidCatchFunction" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints]]></Val>

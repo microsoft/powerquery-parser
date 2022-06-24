@@ -27,7 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Ein Komma darf nicht vor \"in\" stehen",
   "error_parse_expectAnyTokenKind_1_other": "{foundTokenKind} gefunden, aber eines der folgenden Token erwartet: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Streamende erreicht, aber eines der folgenden Token erwartet: {expectedAnyTokenKinds}",
-  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
+  "error_parse_expectedCommaOrTokenKind": "Es wird erwartet, entweder ein {localizedComma} oder {localizedAlternative} zu finden.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Es wurde ein generalisierter Bezeichner erwartet.",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Es wurde ein generalisierter Bezeichner erwartet, aber vorher wurde das Streamende erreicht.",
   "error_parse_expectTokenKind_1_other": "Erwartet: {expectedTokenKind}, gefunden: {foundTokenKind}.",

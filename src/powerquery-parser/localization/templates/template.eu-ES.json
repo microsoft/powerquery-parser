@@ -27,7 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Ezin da idatzi komarik \"in\" eta gero",
   "error_parse_expectAnyTokenKind_1_other": "Token hauetako bat espero zen, baina {foundTokenKind} bat aurkitu da: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Token hauetako bat espero zen, baina korrontearen amaierara iritsi da: {expectedAnyTokenKinds}",
-  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
+  "error_parse_expectedCommaOrTokenKind": "{localizedComma} edo {localizedAlternative} balioa aurkitzea espero zen.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Identifikatzaile orokor bat espero zen",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Identifikatzaile orokor bat espero zen, baina korrontearen amaierara iritsi da",
   "error_parse_expectTokenKind_1_other": "{expectedTokenKind} bat espero zen, baina {foundTokenKind} bat aurkitu da",
