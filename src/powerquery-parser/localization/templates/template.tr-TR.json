@@ -27,7 +27,7 @@
   "error_parse_csvContinuation_2_letExpression": "Virgülün arkasından 'in' gelemez",
   "error_parse_expectAnyTokenKind_1_other": "Şunlardan birinin bulunması bekleniyordu, ancak bunun yerine bir {foundTokenKind} bulundu: {expectedAnyTokenKinds}",
   "error_parse_expectAnyTokenKind_2_endOfStream": "Şunlardan birinin bulunması bekleniyordu ancak bunun yerine akışın sonuna ulaşıldı: {expectedAnyTokenKinds}",
-  "error_parse_expectedCommaOrTokenKind": "Expected to find either a {localizedComma} or {localizedAlternative}.",
+  "error_parse_expectedCommaOrTokenKind": "Bir {localizedComma} veya {localizedAlternative} bulunması bekleniyor.",
   "error_parse_expectGeneralizedIdentifier_1_other": "Genelleştirilmiş bir tanımlayıcı bulunması bekleniyordu",
   "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Genelleştirilmiş bir tanımlayıcı bulunması bekleniyordu ancak bundan önce akışın sonuna ulaşıldı",
   "error_parse_expectTokenKind_1_other": "{expectedTokenKind} bulunması bekleniyordu, ancak bunun yerine {foundTokenKind} bulundu",
