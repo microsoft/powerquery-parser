@@ -16,6 +16,16 @@ export async function assertGetLexParseOk(
     return triedLexParseTask;
 }
 
+export async function assertGetLexParseError(
+    settings: LexSettings & ParseSettings,
+    text: string,
+): Promise<Task.ParseTaskParseError> {
+    const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(settings, text);
+    TaskUtils.assertIsParseStageParseError(triedLexParseTask);
+
+    return triedLexParseTask;
+}
+
 export async function assertGetParseError(
     settings: LexSettings & ParseSettings,
     text: string,
