@@ -16,6 +16,7 @@ import {
     NodeIdMapUtils,
     ParseError,
     TXorNode,
+    XorNode,
     XorNodeUtils,
 } from "../../../powerquery-parser/parser";
 import { Ast } from "../../../powerquery-parser/language";
@@ -237,6 +238,55 @@ describe("nodeIdMapIterator", () => {
         const secondKeyValuePair: FieldSpecificationKeyValuePair = fieldSpecificationKeyValuePairs[1];
         expect(Boolean(secondKeyValuePair.maybeOptional)).to.equal(true);
         expect(secondKeyValuePair.normalizedKeyLiteral).to.equal("bar");
+    });
+});
+
+describe(`nodeIdMapUtils`, () => {
+    describe(`maybeInvokeExpressionIdentifier`, () => {
+        it(`Ast`, async () => {
+            const text: string = `Foo(1)`;
+            const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+            const nodeIdMapCollection: NodeIdMap.Collection = parseOk.nodeIdMapCollection;
+
+            const invokeExpressionNodeIds: Set<number> = Assert.asDefined(
+                nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.InvokeExpression),
+            );
+
+            expect(invokeExpressionNodeIds.size).to.equal(1);
+            const invokeExpressionNodeId: number = invokeExpressionNodeIds.values().next().value;
+
+            const invokeExpressionIdentifier: XorNode<Ast.IdentifierExpression> = Assert.asDefined(
+                NodeIdMapUtils.maybeInvokeExpressionIdentifier(nodeIdMapCollection, invokeExpressionNodeId),
+            );
+
+            XorNodeUtils.assertIsAstXor(invokeExpressionIdentifier);
+            expect(invokeExpressionIdentifier.node.identifier.literal).to.equal("Foo");
+        });
+
+        it(`Context`, async () => {
+            const text: string = `Foo(1, `;
+
+            const parseError: Task.ParseTaskParseError = await TestAssertUtils.assertGetLexParseError(
+                DefaultSettings,
+                text,
+            );
+
+            const nodeIdMapCollection: NodeIdMap.Collection = parseError.error.state.contextState.nodeIdMapCollection;
+
+            const invokeExpressionNodeIds: Set<number> = Assert.asDefined(
+                nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.InvokeExpression),
+            );
+
+            expect(invokeExpressionNodeIds.size).to.equal(1);
+            const invokeExpressionNodeId: number = invokeExpressionNodeIds.values().next().value;
+
+            const invokeExpressionIdentifier: XorNode<Ast.IdentifierExpression> = Assert.asDefined(
+                NodeIdMapUtils.maybeInvokeExpressionIdentifier(nodeIdMapCollection, invokeExpressionNodeId),
+            );
+
+            XorNodeUtils.assertIsAstXor(invokeExpressionIdentifier);
+            expect(invokeExpressionIdentifier.node.identifier.literal).to.equal("Foo");
+        });
     });
 
     describe("maybeUnboxWrappedContent", () => {

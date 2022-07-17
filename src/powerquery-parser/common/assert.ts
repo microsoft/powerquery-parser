@@ -34,7 +34,10 @@ export function isNever(_: never): never {
 
 export function isInstanceofError<T>(value: T | Error): asserts value is Error {
     if (!(value instanceof Error)) {
-        throw new CommonError.InvariantError(`Expected value to be instanceof Error`, { typeof: typeof value });
+        throw new CommonError.InvariantError(`Expected value to be instanceof Error`, {
+            typeof: typeof value,
+            value,
+        });
     }
 }
 
