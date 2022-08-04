@@ -172,24 +172,33 @@ export function maybeNewlineKindAt(text: string, index: number): NewlineKind | u
 }
 
 export function maybeNormalizeNumber(text: string): string | undefined {
-    let isPositive: boolean = true;
-    let charOffset: number = 0;
-    let char: string | undefined = text[charOffset];
+    const [isPositive, charOffset]: [boolean, number] = getSign(text);
+    const allButUnaryOperators: string = text.slice(charOffset);
 
-    while (char === "+" || char === "-") {
-        if (char === "-") {
-            isPositive = !isPositive;
-        }
+    if (isHex(allButUnaryOperators)) {
+        return isPositive ? allButUnaryOperators.toLocaleLowerCase() : `-${allButUnaryOperators.toLocaleLowerCase()}`;
+    } else if (maybeRegexMatchLength(Pattern.Numeric, allButUnaryOperators, 0) !== allButUnaryOperators.length) {
+        return undefined;
+    } else {
+        return isPositive === true ? allButUnaryOperators : `-${allButUnaryOperators}`;
+    }
+}
+
+export function isHex(text: string): boolean {
+    return maybeRegexMatchLength(Pattern.Hex, text, 0) === text.length;
+}
+
+export function getSign(text: string): [boolean, number] {
+    let char: string = text[0];
+    let charOffset: number = 0;
+    let isPositive: boolean = true;
+
+    while (char === "-" || char === "+") {
+        isPositive = char === "-" ? !isPositive : isPositive;
 
         charOffset += 1;
         char = text[charOffset];
     }
 
-    const allButUnaryOperators: string = text.slice(charOffset);
-
-    if (maybeRegexMatchLength(Pattern.Numeric, allButUnaryOperators, 0) !== allButUnaryOperators.length) {
-        return undefined;
-    }
-
-    return isPositive === true ? allButUnaryOperators : `-${allButUnaryOperators}`;
+    return [isPositive, charOffset];
 }

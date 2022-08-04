@@ -102,5 +102,9 @@ describe("StringUtils", () => {
         it(`-+1`, () => expect(StringUtils.maybeNormalizeNumber(`-+1`)).to.equal("-1"));
         it(`+-1`, () => expect(StringUtils.maybeNormalizeNumber(`+-1`)).to.equal("-1"));
         it(`--1E1`, () => expect(StringUtils.maybeNormalizeNumber(`--1E1`)).to.equal("1E1"));
+        it(`0x1`, () => expect(StringUtils.maybeNormalizeNumber(`0x1`)).to.equal("0x1"));
+        it(`-0x1`, () => expect(StringUtils.maybeNormalizeNumber(`-0x1`)).to.equal("-0x1"));
+        it(`0X1`, () => expect(StringUtils.maybeNormalizeNumber(`0X1`)).to.equal("0x1"));
+        it(`-0X1`, () => expect(StringUtils.maybeNormalizeNumber(`-0X1`)).to.equal("-0x1"));
     });
 });
