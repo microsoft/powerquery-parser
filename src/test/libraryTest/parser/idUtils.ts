@@ -82,8 +82,8 @@ async function expectLinksMatch(
         contextIds: [],
         leafIds: new Set<number>(),
         idsByNodeKind: new Map(),
-        maybeCancellationToken: undefined,
-        maybeInitialCorrelationId: undefined,
+        cancellationToken: undefined,
+        initialCorrelationId: undefined,
         traceManager: NoOpTraceManagerInstance,
     };
 

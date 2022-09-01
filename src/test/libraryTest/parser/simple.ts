@@ -35,8 +35,8 @@ async function collectAbridgeNodeFromAst(text: string): Promise<ReadonlyArray<Ab
     const state: CollectAbridgeNodeState = {
         locale: DefaultLocale,
         result: [],
-        maybeCancellationToken: undefined,
-        maybeInitialCorrelationId: undefined,
+        cancellationToken: undefined,
+        initialCorrelationId: undefined,
         traceManager: NoOpTraceManagerInstance,
     };
 
@@ -64,8 +64,8 @@ async function collectAbridgeNodeFromContext(text: string): Promise<ReadonlyArra
     const state: CollectAbridgeNodeState = {
         locale: DefaultLocale,
         result: [],
-        maybeCancellationToken: undefined,
-        maybeInitialCorrelationId: undefined,
+        cancellationToken: undefined,
+        initialCorrelationId: undefined,
         traceManager: NoOpTraceManagerInstance,
     };
 
@@ -100,8 +100,8 @@ async function assertGetNthNodeOfKind<N extends Language.Ast.TNode>(
         nodeKind,
         nthCounter: 0,
         nthRequired,
-        maybeCancellationToken: undefined,
-        maybeInitialCorrelationId: undefined,
+        cancellationToken: undefined,
+        initialCorrelationId: undefined,
         traceManager: NoOpTraceManagerInstance,
     };
 

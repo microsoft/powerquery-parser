@@ -207,7 +207,7 @@ export function isErrorLine(line: TLine): line is TErrorLine {
     }
 }
 
-export function maybeErrorLineMap(state: State): ErrorLineMap | undefined {
+export function errorLineMap(state: State): ErrorLineMap | undefined {
     const errorLines: ErrorLineMap = state.lines.reduce((errorLineMap: ErrorLineMap, line: TLine, index: number) => {
         if (isErrorLine(line)) {
             errorLineMap.set(index, line);
@@ -312,13 +312,13 @@ function lex(settings: LexSettings, text: string): State {
         splitLines,
         LineMode.Default,
         settings.locale,
-        settings.maybeCancellationToken,
+        settings.cancellationToken,
     );
 
     return {
         lines: tokenizedLines,
         locale: settings.locale,
-        maybeCancellationToken: settings.maybeCancellationToken,
+        maybeCancellationToken: settings.cancellationToken,
     };
 }
 
@@ -924,7 +924,7 @@ function drainWhitespace(text: string, position: number): number {
     let continueDraining: boolean = text[position] !== undefined;
 
     while (continueDraining) {
-        const maybeLength: number | undefined = StringUtils.maybeRegexMatchLength(Pattern.Whitespace, text, position);
+        const maybeLength: number | undefined = StringUtils.regexMatchLength(Pattern.Whitespace, text, position);
 
         if (maybeLength) {
             position += maybeLength;
@@ -1141,7 +1141,7 @@ function readRestOfLine(lineTokenKind: Token.LineTokenKind, text: string, positi
 }
 
 function maybeIndexOfRegexEnd(pattern: RegExp, text: string, positionStart: number): number | undefined {
-    const maybeLength: number | undefined = StringUtils.maybeRegexMatchLength(pattern, text, positionStart);
+    const maybeLength: number | undefined = StringUtils.regexMatchLength(pattern, text, positionStart);
 
     return maybeLength !== undefined ? positionStart + maybeLength : undefined;
 }

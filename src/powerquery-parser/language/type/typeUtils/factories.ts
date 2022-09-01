@@ -171,7 +171,7 @@ export function createNumberLiteral(isNullable: boolean, literal: string | numbe
         normalizedLiteral = literal;
     } else {
         parsedLiteral = literal;
-        normalizedLiteral = Number.parseFloat(Assert.asDefined(StringUtils.maybeNormalizeNumber(literal)));
+        normalizedLiteral = Number.parseFloat(Assert.asDefined(StringUtils.normalizeNumber(literal)));
     }
 
     return {

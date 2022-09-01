@@ -7,6 +7,6 @@ import { ICancellationToken } from "../common";
 export function createDefaultSettings(maybeCancellationToken: ICancellationToken | undefined): Settings {
     return {
         ...DefaultSettings,
-        maybeCancellationToken,
+        cancellationToken: maybeCancellationToken,
     };
 }

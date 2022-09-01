@@ -7,7 +7,7 @@ import { Assert, CommonError, Pattern } from ".";
 
 export const graphemeSplitter: GraphemeSplitter = new GraphemeSplitter();
 
-export interface FoundQuote {
+export interface FoundQuotes {
     readonly indexStart: number;
     readonly indexEnd: number;
     // Spans [indexStart, indexEnd)
@@ -23,7 +23,7 @@ export interface GraphemePosition {
     readonly lineNumber: number;
     readonly lineCodeUnit: number;
     readonly columnNumber: number;
-    readonly maybeCodeUnit: number | undefined;
+    readonly codeUnit: number | undefined;
 }
 
 // A quick and dirty way to do string formatting.
@@ -41,7 +41,7 @@ export function assertGetFormatted(template: string, args: Map<string, string>):
 }
 
 export function ensureQuoted(text: string): string {
-    if (maybefindQuote(text, 0)) {
+    if (findQuotes(text, 0)) {
         return text;
     }
 
@@ -78,21 +78,21 @@ export function graphemePositionFrom(
     text: string,
     lineCodeUnit: number,
     lineNumber: number,
-    maybeCodeUnit: number | undefined,
+    codeUnit: number | undefined,
 ): GraphemePosition {
     return {
         lineCodeUnit,
         lineNumber,
         columnNumber: columnNumberFrom(text, lineCodeUnit),
-        maybeCodeUnit,
+        codeUnit,
     };
 }
 
 export function isNumeric(text: string): boolean {
-    return maybeRegexMatchLength(Pattern.Numeric, text, 0) === text.length;
+    return regexMatchLength(Pattern.Numeric, text, 0) === text.length;
 }
 
-export function maybeRegexMatchLength(pattern: RegExp, text: string, index: number): number | undefined {
+export function regexMatchLength(pattern: RegExp, text: string, index: number): number | undefined {
     pattern.lastIndex = index;
     const matches: RegExpExecArray | null = pattern.exec(text);
 
@@ -101,7 +101,7 @@ export function maybeRegexMatchLength(pattern: RegExp, text: string, index: numb
 
 // Attempt to find quoted text at the given starting index.
 // Return undefined if the starting index isn't a quote or if there is no closing quotes.
-export function maybefindQuote(text: string, indexStart: number): FoundQuote | undefined {
+export function findQuotes(text: string, indexStart: number): FoundQuotes | undefined {
     const textLength: number = text.length;
 
     if (
@@ -171,13 +171,13 @@ export function maybeNewlineKindAt(text: string, index: number): NewlineKind | u
     }
 }
 
-export function maybeNormalizeNumber(text: string): string | undefined {
+export function normalizeNumber(text: string): string | undefined {
     const [isPositive, charOffset]: [boolean, number] = getSign(text);
     const allButUnaryOperators: string = text.slice(charOffset);
 
     if (isHex(allButUnaryOperators)) {
         return isPositive ? allButUnaryOperators.toLocaleLowerCase() : `-${allButUnaryOperators.toLocaleLowerCase()}`;
-    } else if (maybeRegexMatchLength(Pattern.Numeric, allButUnaryOperators, 0) !== allButUnaryOperators.length) {
+    } else if (regexMatchLength(Pattern.Numeric, allButUnaryOperators, 0) !== allButUnaryOperators.length) {
         return undefined;
     } else {
         return isPositive === true ? allButUnaryOperators : `-${allButUnaryOperators}`;
@@ -185,7 +185,7 @@ export function maybeNormalizeNumber(text: string): string | undefined {
 }
 
 export function isHex(text: string): boolean {
-    return maybeRegexMatchLength(Pattern.Hex, text, 0) === text.length;
+    return regexMatchLength(Pattern.Hex, text, 0) === text.length;
 }
 
 export function getSign(text: string): [boolean, number] {

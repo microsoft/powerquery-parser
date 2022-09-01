@@ -9,9 +9,9 @@ import { ICancellationToken } from "../common";
 import { LexerSnapshot } from "../lexer";
 
 export interface CommonSettings {
+    readonly cancellationToken: ICancellationToken | undefined;
+    readonly initialCorrelationId: number | undefined;
     readonly locale: string;
-    readonly maybeCancellationToken: ICancellationToken | undefined;
-    readonly maybeInitialCorrelationId: number | undefined;
     readonly traceManager: TraceManager;
 }
 
@@ -19,7 +19,7 @@ export type LexSettings = CommonSettings;
 
 export interface ParseSettings extends CommonSettings {
     readonly parser: Parser;
-    readonly createParseState: (
+    readonly createParseStateFn: (
         lexerSnapshot: LexerSnapshot,
         maybeOverrides: Partial<ParseState> | undefined,
     ) => ParseState;
@@ -31,11 +31,11 @@ export interface ParseSettings extends CommonSettings {
 export type Settings = LexSettings & ParseSettings;
 
 export const DefaultSettings: Settings = {
-    createParseState: (lexerSnapshot: LexerSnapshot, maybeOverrides: Partial<ParseState> | undefined) =>
+    createParseStateFn: (lexerSnapshot: LexerSnapshot, maybeOverrides: Partial<ParseState> | undefined) =>
         ParseStateUtils.createState(lexerSnapshot, maybeOverrides),
     locale: DefaultLocale,
-    maybeCancellationToken: undefined,
-    maybeInitialCorrelationId: undefined,
+    cancellationToken: undefined,
+    initialCorrelationId: undefined,
     maybeParserEntryPointFn: undefined,
     parser: CombinatorialParser,
     traceManager: NoOpTraceManagerInstance,

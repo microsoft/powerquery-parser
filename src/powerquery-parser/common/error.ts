@@ -22,8 +22,8 @@ export class CancellationError extends Error {
 }
 
 export class InvariantError extends Error {
-    constructor(readonly invariantBroken: string, readonly maybeDetails?: object) {
-        super(Localization.error_common_invariantError(Templates.DefaultTemplates, invariantBroken, maybeDetails));
+    constructor(readonly invariantBroken: string, readonly details?: object) {
+        super(Localization.error_common_invariantError(Templates.DefaultTemplates, invariantBroken, details));
         Object.setPrototypeOf(this, InvariantError.prototype);
     }
 }

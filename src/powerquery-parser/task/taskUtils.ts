@@ -174,7 +174,7 @@ export function tryLex(settings: LexSettings, text: string): TriedLexTask {
     }
 
     const state: Lexer.State = triedLex.value;
-    const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(state);
+    const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.errorLineMap(state);
 
     if (maybeErrorLineMap) {
         return createLexTaskError(
@@ -207,12 +207,12 @@ export async function tryLexParse(settings: LexSettings & ParseSettings, text: s
     const trace: Trace = settings.traceManager.entry(
         TaskUtilsTraceConstant.LexParse,
         tryLexParse.name,
-        settings.maybeInitialCorrelationId,
+        settings.initialCorrelationId,
     );
 
     const updatedSettings: LexSettings & ParseSettings = {
         ...settings,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     const triedLexTask: TriedLexTask = tryLex(updatedSettings, text);

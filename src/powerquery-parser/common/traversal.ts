@@ -13,7 +13,7 @@ export type TriedTraverse<ResultType> = Result<ResultType, CommonError.CommonErr
 export type TVisitNodeFn<State extends ITraversalState<ResultType>, ResultType, Node, Return> = (
     state: State,
     node: Node,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ) => Promise<Return>;
 
 export type TEarlyExitFn<State extends ITraversalState<ResultType>, ResultType, Node> = TVisitNodeFn<
@@ -34,8 +34,8 @@ export const enum VisitNodeStrategy {
     DepthFirst = "DepthFirst",
 }
 
-export interface ITraversalState<T> extends Pick<Settings, "locale" | "maybeCancellationToken" | "traceManager"> {
-    readonly maybeInitialCorrelationId: number | undefined;
+export interface ITraversalState<T> extends Pick<Settings, "locale" | "cancellationToken" | "traceManager"> {
+    readonly initialCorrelationId: number | undefined;
     result: T;
 }
 
@@ -48,7 +48,7 @@ export function tryTraverse<State extends ITraversalState<ResultType>, ResultTyp
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<State, ResultType, Node, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
-    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
+    earlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
 ): Promise<TriedTraverse<ResultType>> {
     return ResultUtils.ensureResultAsync(async () => {
         await traverseRecursion<State, ResultType, Node, NodesById>(
@@ -58,8 +58,8 @@ export function tryTraverse<State extends ITraversalState<ResultType>, ResultTyp
             strategy,
             visitNodeFn,
             expandNodesFn,
-            maybeEarlyExitFn,
-            state.maybeInitialCorrelationId,
+            earlyExitFn,
+            state.initialCorrelationId,
         );
 
         return state.result;
@@ -74,7 +74,7 @@ export function tryTraverseAst<State extends ITraversalState<ResultType>, Result
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<State, ResultType, Ast.TNode, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, Ast.TNode, NodeIdMap.Collection>,
-    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Ast.TNode> | undefined,
+    earlyExitFn: TEarlyExitFn<State, ResultType, Ast.TNode> | undefined,
 ): Promise<TriedTraverse<ResultType>> {
     return tryTraverse<State, ResultType, Ast.TNode, NodeIdMap.Collection>(
         state,
@@ -83,7 +83,7 @@ export function tryTraverseAst<State extends ITraversalState<ResultType>, Result
         strategy,
         visitNodeFn,
         expandNodesFn,
-        maybeEarlyExitFn,
+        earlyExitFn,
     );
 }
 
@@ -95,7 +95,7 @@ export function tryTraverseXor<State extends ITraversalState<ResultType>, Result
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<State, ResultType, TXorNode, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, TXorNode, NodeIdMap.Collection>,
-    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, TXorNode> | undefined,
+    earlyExitFn: TEarlyExitFn<State, ResultType, TXorNode> | undefined,
 ): Promise<TriedTraverse<ResultType>> {
     return tryTraverse<State, ResultType, TXorNode, NodeIdMap.Collection>(
         state,
@@ -104,7 +104,7 @@ export function tryTraverseXor<State extends ITraversalState<ResultType>, Result
         strategy,
         visitNodeFn,
         expandNodesFn,
-        maybeEarlyExitFn,
+        earlyExitFn,
     );
 }
 
@@ -115,10 +115,10 @@ export async function assertGetAllAstChildren<State extends ITraversalState<Resu
     astNode: Ast.TNode,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): Promise<ReadonlyArray<Ast.TNode>> {
-    const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(astNode.id);
+    const childIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(astNode.id);
 
-    return maybeChildIds
-        ? maybeChildIds.map((nodeId: number) => NodeIdMapUtils.assertUnboxAst(nodeIdMapCollection.astNodeById, nodeId))
+    return childIds
+        ? childIds.map((nodeId: number) => NodeIdMapUtils.assertUnboxAst(nodeIdMapCollection.astNodeById, nodeId))
         : [];
 }
 
@@ -133,7 +133,7 @@ export async function assertGetAllXorChildren<State extends ITraversalState<Resu
 }
 
 // Returns the TXorNode's parent if one exists.
-export function maybeExpandXorParent<T>(
+export function expandXorParent<T>(
     _state: T,
     xorNode: TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -156,15 +156,15 @@ async function traverseRecursion<State extends ITraversalState<ResultType>, Resu
     visitNodeFn: TVisitNodeFn<State, ResultType, Node, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
     maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<void> {
     const trace: Trace = state.traceManager.entry(
         TraversalTraceConstant.Traversal,
         traverseRecursion.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     if (maybeEarlyExitFn && (await maybeEarlyExitFn(state, node, trace.id))) {
         return;

@@ -3,20 +3,20 @@
 
 import { Assert } from ".";
 
-export function assertDelete<K, V>(map: Map<K, V>, key: K, maybeMessage?: string, maybeDetails?: object): void {
-    Assert.isTrue(map.delete(key), maybeMessage ?? `failed to delete, key is absent`, maybeDetails ?? { key });
+export function assertDelete<K, V>(map: Map<K, V>, key: K, message?: string, details?: object): void {
+    Assert.isTrue(map.delete(key), message ?? `failed to delete, key is absent`, details ?? { key });
 }
 
-export function assertGet<K, V>(map: Map<K, V>, key: K, maybeMessage?: string, maybeDetails?: object): V {
-    return Assert.asDefined(map.get(key), maybeMessage ?? `key not found in given map`, maybeDetails ?? { key });
+export function assertGet<K, V>(map: Map<K, V>, key: K, message?: string, details?: object): V {
+    return Assert.asDefined(map.get(key), message ?? `key not found in given map`, details ?? { key });
 }
 
-export function assertIn<K, V>(map: Map<K, V>, key: K, maybeMessage?: string): void {
-    Assert.isTrue(map.has(key), maybeMessage ?? `key is absent`, { key });
+export function assertIn<K, V>(map: Map<K, V>, key: K, message?: string): void {
+    Assert.isTrue(map.has(key), message ?? `key is absent`, { key });
 }
 
-export function assertNotIn<K, V>(map: Map<K, V>, key: K, maybeMessage?: string): void {
-    Assert.isFalse(map.has(key), maybeMessage ?? `key is present`, { key });
+export function assertNotIn<K, V>(map: Map<K, V>, key: K, message?: string): void {
+    Assert.isFalse(map.has(key), message ?? `key is present`, { key });
 }
 
 export function isEqualMap<K, V>(
@@ -29,11 +29,9 @@ export function isEqualMap<K, V>(
     }
 
     for (const [leftKey, leftValue] of left.entries()) {
-        const maybeRightValue: V | undefined = right.get(leftKey);
+        const value: V | undefined = right.get(leftKey);
 
-        if (maybeRightValue === undefined) {
-            return false;
-        } else if (valueCmpFn(leftValue, maybeRightValue) === false) {
+        if (value === undefined || !valueCmpFn(leftValue, value)) {
             return false;
         }
     }
@@ -51,9 +49,9 @@ export function isSubsetMap<K, V>(
     }
 
     for (const [key, leftType] of left.entries()) {
-        const maybeRightType: V | undefined = right.get(key);
+        const rightType: V | undefined = right.get(key);
 
-        if (maybeRightType === undefined || !valueCmpFn(leftType, maybeRightType)) {
+        if (rightType === undefined || !valueCmpFn(leftType, rightType)) {
             return false;
         }
     }

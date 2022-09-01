@@ -126,7 +126,7 @@ export function assertGetLexOk(text: string): Lexer.State {
     const lexerState: Lexer.State = triedLex.value;
 
     if (Lexer.isErrorState(lexerState)) {
-        const errorLineMap: Lexer.ErrorLineMap = Assert.asDefined(Lexer.maybeErrorLineMap(lexerState));
+        const errorLineMap: Lexer.ErrorLineMap = Assert.asDefined(Lexer.errorLineMap(lexerState));
         const errorLines: ReadonlyArray<number> = [...errorLineMap.keys()];
 
         const details: { errorLines: ReadonlyArray<number> } = { errorLines };

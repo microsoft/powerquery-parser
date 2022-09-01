@@ -14,14 +14,14 @@ import performanceNow = require("performance-now");
 // id:
 //      Dynamic number.
 //      Used to help identify uniqueness. Auto incrementing integer.
-// maybeCorrelationId:
+// correlationId:
 //      Can be undefined. If truthy then it refers to a previously generated 'id' number.
 //      Used to track execution flow.
 // message:
 //      Static string.
 //      Identifies what portion of a task you're in.
 //      Examples: 'entry', 'partialEvaluation', 'traceExit'.
-// maybeDetails:
+// details:
 //      Nullable object that is JSON serializable.
 //      Contains dynamic data, such as function arguments.
 //      If null, then `[Empty]` is used instead.
@@ -53,55 +53,55 @@ export const enum TraceConstant {
 
 export class Trace {
     constructor(
-        protected readonly emitTraceFn: (trace: Trace, message: string, maybeDetails?: object) => void,
+        protected readonly emitTraceFn: (trace: Trace, message: string, details?: object) => void,
         public readonly phase: string,
         public readonly task: string,
         public readonly id: number,
-        public readonly maybeCorrelationId: number | undefined,
-        maybeDetails?: object,
+        public readonly correlationId: number | undefined,
+        details?: object,
     ) {
-        this.entry(maybeDetails);
+        this.entry(details);
     }
 
-    public entry(maybeDetails?: object): void {
-        this.trace(TraceConstant.Entry, maybeDetails);
+    public entry(details?: object): void {
+        this.trace(TraceConstant.Entry, details);
     }
 
-    public trace(message: string, maybeDetails?: object): void {
-        this.emitTraceFn(this, message, maybeDetails);
+    public trace(message: string, details?: object): void {
+        this.emitTraceFn(this, message, details);
     }
 
-    public exit(maybeDetails?: object): void {
-        this.trace(TraceConstant.Exit, maybeDetails);
+    public exit(details?: object): void {
+        this.trace(TraceConstant.Exit, details);
     }
 }
 
 // Tracing entries add the current time to its details field.
 export class BenchmarkTrace extends Trace {
     constructor(
-        emitTraceFn: (trace: Trace, message: string, maybeDetails?: object) => void,
+        emitTraceFn: (trace: Trace, message: string, details?: object) => void,
         phase: string,
         task: string,
         id: number,
-        maybeCorrelationId: number | undefined,
-        maybeDetails?: object,
+        correlationId: number | undefined,
+        details?: object,
     ) {
-        super(emitTraceFn, phase, task, id, maybeCorrelationId, maybeDetails);
+        super(emitTraceFn, phase, task, id, correlationId, details);
     }
 
-    public override trace(message: string, maybeDetails?: object): void {
-        super.trace(message, maybeDetails);
+    public override trace(message: string, details?: object): void {
+        super.trace(message, details);
     }
 }
 
 export class NoOpTrace extends Trace {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    public override trace(_message: string, _maybeDetails?: object): void {}
+    public override trace(_message: string, _details?: object): void {}
 }
 
 export const NoOpTraceInstance: NoOpTrace = new NoOpTrace(
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    (_trace: Trace, _message: string, _maybeDetails?: object) => {},
+    (_trace: Trace, _message: string, _details?: object) => {},
     "",
     "",
     -1,
@@ -113,20 +113,20 @@ export abstract class TraceManager {
 
     constructor(protected readonly valueDelimiter: string = ",", protected readonly newline: "\n" | "\r\n" = "\r\n") {}
 
-    abstract emit(trace: Trace, message: string, maybeDetails?: object): void;
+    abstract emit(trace: Trace, message: string, details?: object): void;
 
     // Creates a new Trace instance and call its entry method.
     // Traces should be created at the start of a function, and further calls are made on Trace instance.
-    public entry(phase: string, task: string, maybeCorrelationId: number | undefined, maybeDetails?: object): Trace {
-        return this.create(phase, task, maybeCorrelationId, maybeDetails);
+    public entry(phase: string, task: string, correlationId: number | undefined, details?: object): Trace {
+        return this.create(phase, task, correlationId, details);
     }
 
     // Defaults to simple concatenation.
-    protected formatMessage(trace: Trace, message: string, maybeDetails?: object): string {
-        const details: string = maybeDetails !== undefined ? this.safeJsonStringify(maybeDetails) : TraceConstant.Empty;
+    protected formatMessage(trace: Trace, message: string, details?: object): string {
+        const detailsJson: string = details !== undefined ? this.safeJsonStringify(details) : TraceConstant.Empty;
 
         return (
-            [trace.phase, trace.task, trace.id, trace.maybeCorrelationId, performanceNow(), message, details].join(
+            [trace.phase, trace.task, trace.id, trace.correlationId, performanceNow(), message, detailsJson].join(
                 this.valueDelimiter,
             ) + this.newline
         );
@@ -135,13 +135,8 @@ export abstract class TraceManager {
     // The return to the TraceManager.start function.
     // Subclass this when the TraceManager needs a different subclass of Trace.
     // Eg. BenchmarkTraceManager returns a BenchmarkTrace instance.
-    protected create(
-        phase: string,
-        task: string,
-        maybeCorrelationId: number | undefined,
-        maybeDetails?: object,
-    ): Trace {
-        return new Trace(this.emit.bind(this), phase, task, this.createIdFn(), maybeCorrelationId, maybeDetails);
+    protected create(phase: string, task: string, correlationId: number | undefined, details?: object): Trace {
+        return new Trace(this.emit.bind(this), phase, task, this.createIdFn(), correlationId, details);
     }
 
     // Copied signature from `JSON.stringify`.
@@ -166,8 +161,8 @@ export class ReportTraceManager extends TraceManager {
         super(valueDelimiter);
     }
 
-    emit(trace: Trace, message: string, maybeDetails?: object): void {
-        this.outputFn(this.formatMessage(trace, message, maybeDetails));
+    emit(trace: Trace, message: string, details?: object): void {
+        this.outputFn(this.formatMessage(trace, message, details));
     }
 }
 
@@ -180,30 +175,23 @@ export class BenchmarkTraceManager extends ReportTraceManager {
     protected override create(
         phase: string,
         task: string,
-        maybeCorrelationId: number | undefined,
-        maybeDetails?: object,
+        correlationId: number | undefined,
+        details?: object,
     ): BenchmarkTrace {
-        return new BenchmarkTrace(
-            this.emit.bind(this),
-            phase,
-            task,
-            this.createIdFn(),
-            maybeCorrelationId,
-            maybeDetails,
-        );
+        return new BenchmarkTrace(this.emit.bind(this), phase, task, this.createIdFn(), correlationId, details);
     }
 }
 
 // The TraceManager for DefaultSettings.
 export class NoOpTraceManager extends TraceManager {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    emit(_tracer: Trace, _message: string, _maybeDetails?: object): void {}
+    emit(_tracer: Trace, _message: string, _details?: object): void {}
 
     protected override create(
         _phase: string,
         _task: string,
-        _maybeCorrelationId: number | undefined,
-        _maybeDetails?: object,
+        _correlationId: number | undefined,
+        _details?: object,
     ): Trace {
         return NoOpTraceInstance;
     }

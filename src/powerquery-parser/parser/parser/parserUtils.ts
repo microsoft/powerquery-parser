@@ -16,12 +16,12 @@ export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: Lexe
     const trace: Trace = parseSettings.traceManager.entry(
         ParserUtilsTraceConstant.ParserUtils,
         tryParse.name,
-        parseSettings.maybeInitialCorrelationId,
+        parseSettings.initialCorrelationId,
     );
 
     const updatedSettings: ParseSettings = {
         ...parseSettings,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     const maybeParserEntryPointFn:
@@ -32,7 +32,7 @@ export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: Lexe
         return await tryParseDocument(updatedSettings, lexerSnapshot);
     }
 
-    const parseState: ParseState = updatedSettings.createParseState(lexerSnapshot, defaultOverrides(updatedSettings));
+    const parseState: ParseState = updatedSettings.createParseStateFn(lexerSnapshot, defaultOverrides(updatedSettings));
 
     try {
         const root: Ast.TNode = await maybeParserEntryPointFn(parseState, updatedSettings.parser, trace.id);
@@ -59,12 +59,12 @@ export async function tryParseDocument(
     const trace: Trace = parseSettings.traceManager.entry(
         ParserUtilsTraceConstant.ParserUtils,
         tryParseDocument.name,
-        parseSettings.maybeInitialCorrelationId,
+        parseSettings.initialCorrelationId,
     );
 
     let root: Ast.TNode;
 
-    const expressionDocumentState: ParseState = parseSettings.createParseState(
+    const expressionDocumentState: ParseState = parseSettings.createParseStateFn(
         lexerSnapshot,
         defaultOverrides(parseSettings),
     );
@@ -82,7 +82,7 @@ export async function tryParseDocument(
     } catch (expressionDocumentError) {
         Assert.isInstanceofError(expressionDocumentError);
 
-        const sectionDocumentState: ParseState = parseSettings.createParseState(
+        const sectionDocumentState: ParseState = parseSettings.createParseStateFn(
             lexerSnapshot,
             defaultOverrides(parseSettings),
         );
@@ -204,7 +204,7 @@ function ensureParseError(state: ParseState, error: Error, locale: string): Pars
 function defaultOverrides(parseSettings: ParseSettings): Partial<ParseState> {
     return {
         locale: parseSettings.locale,
-        maybeCancellationToken: parseSettings.maybeCancellationToken,
+        maybeCancellationToken: parseSettings.cancellationToken,
         traceManager: parseSettings.traceManager,
     };
 }

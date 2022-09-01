@@ -59,7 +59,7 @@ export function maybeIdentifierLength(text: string, index: number, allowTrailing
 
         switch (state) {
             case IdentifierRegexpState.Start:
-                maybeMatchLength = StringUtils.maybeRegexMatchLength(Pattern.IdentifierStartCharacter, text, index);
+                maybeMatchLength = StringUtils.regexMatchLength(Pattern.IdentifierStartCharacter, text, index);
 
                 if (maybeMatchLength === undefined) {
                     state = IdentifierRegexpState.Done;
@@ -76,7 +76,7 @@ export function maybeIdentifierLength(text: string, index: number, allowTrailing
                     index += 1;
                 }
 
-                maybeMatchLength = StringUtils.maybeRegexMatchLength(Pattern.IdentifierPartCharacters, text, index);
+                maybeMatchLength = StringUtils.regexMatchLength(Pattern.IdentifierPartCharacters, text, index);
 
                 if (maybeMatchLength === undefined) {
                     state = IdentifierRegexpState.Done;
@@ -118,7 +118,7 @@ export function maybeGeneralizedIdentifierLength(text: string, index: number): n
 
             index += 1;
         } else {
-            const maybeMatchLength: number | undefined = StringUtils.maybeRegexMatchLength(
+            const maybeMatchLength: number | undefined = StringUtils.regexMatchLength(
                 Pattern.IdentifierPartCharacters,
                 text,
                 index,
@@ -140,12 +140,12 @@ export function maybeGeneralizedIdentifierLength(text: string, index: number): n
     return index !== startingIndex ? index - startingIndex : undefined;
 }
 
-export function maybeQuotedIdentifier(text: string, index: number): StringUtils.FoundQuote | undefined {
+export function maybeQuotedIdentifier(text: string, index: number): StringUtils.FoundQuotes | undefined {
     if (text[index] !== "#") {
         return undefined;
     }
 
-    return StringUtils.maybefindQuote(text, index + 1);
+    return StringUtils.findQuotes(text, index + 1);
 }
 
 export function normalizeIdentifier(text: string): string {
