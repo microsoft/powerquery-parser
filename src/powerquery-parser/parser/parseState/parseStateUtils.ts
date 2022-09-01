@@ -11,34 +11,33 @@ import { NoOpTraceManagerInstance } from "../../common/trace";
 import { ParseState } from "./parseState";
 import { SequenceKind } from "../error";
 
-export function createState(lexerSnapshot: LexerSnapshot, maybeOverrides: Partial<ParseState> | undefined): ParseState {
-    const tokenIndex: number = maybeOverrides?.tokenIndex ?? 0;
-    const maybeCurrentToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
-    const maybeCurrentTokenKind: Token.TokenKind | undefined = maybeCurrentToken?.kind;
-    const contextState: ParseContext.State = maybeOverrides?.contextState ?? ParseContextUtils.createState();
+export function createState(lexerSnapshot: LexerSnapshot, overrides: Partial<ParseState> | undefined): ParseState {
+    const tokenIndex: number = overrides?.tokenIndex ?? 0;
+    const currentToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
+    const currentTokenKind: Token.TokenKind | undefined = currentToken?.kind;
+    const contextState: ParseContext.State = overrides?.contextState ?? ParseContextUtils.createState();
 
-    const maybeCurrentContextNodeId: number | undefined =
+    const currentContextNodeId: number | undefined =
         contextState.nodeIdMapCollection.contextNodeById.size > 0
             ? Math.max(...contextState.nodeIdMapCollection.contextNodeById.keys())
             : undefined;
 
-    const maybeCurrentContextNode: ParseContext.TNode | undefined =
-        maybeCurrentContextNodeId !== undefined
-            ? MapUtils.assertGet(contextState.nodeIdMapCollection.contextNodeById, maybeCurrentContextNodeId)
+    const currentContextNode: ParseContext.TNode | undefined =
+        currentContextNodeId !== undefined
+            ? MapUtils.assertGet(contextState.nodeIdMapCollection.contextNodeById, currentContextNodeId)
             : undefined;
 
     return {
-        ...maybeOverrides,
-        disambiguationBehavior:
-            maybeOverrides?.disambiguationBehavior ?? Disambiguation.DismabiguationBehavior.Thorough,
+        ...overrides,
+        disambiguationBehavior: overrides?.disambiguationBehavior ?? Disambiguation.DismabiguationBehavior.Thorough,
         lexerSnapshot,
-        locale: maybeOverrides?.locale ?? DefaultLocale,
-        cancellationToken: maybeOverrides?.cancellationToken,
-        traceManager: maybeOverrides?.traceManager ?? NoOpTraceManagerInstance,
-        contextState: maybeOverrides?.contextState ?? ParseContextUtils.createState(),
-        currentToken: maybeCurrentToken,
-        currentContextNode: maybeCurrentContextNode,
-        currentTokenKind: maybeCurrentTokenKind,
+        locale: overrides?.locale ?? DefaultLocale,
+        cancellationToken: overrides?.cancellationToken,
+        traceManager: overrides?.traceManager ?? NoOpTraceManagerInstance,
+        contextState: overrides?.contextState ?? ParseContextUtils.createState(),
+        currentToken,
+        currentContextNode,
+        currentTokenKind,
         tokenIndex,
     };
 }
@@ -80,29 +79,25 @@ export function endContext<T extends Ast.TNode>(state: ParseState, astNode: T): 
         `can't end a context if one doesn't exist`,
     );
 
-    const maybeParentOfContextNode: ParseContext.TNode | undefined = ParseContextUtils.endContext(
+    const parentOfContextNode: ParseContext.TNode | undefined = ParseContextUtils.endContext(
         state.contextState,
         contextNode,
         astNode,
     );
 
-    state.currentContextNode = maybeParentOfContextNode;
+    state.currentContextNode = parentOfContextNode;
 }
 
-export function deleteContext(state: ParseState, maybeNodeId: number | undefined): void {
-    let nodeId: number;
-
-    if (maybeNodeId === undefined) {
+export function deleteContext(state: ParseState, nodeId: number | undefined): void {
+    if (nodeId === undefined) {
         nodeId = Assert.asDefined(state.currentContextNode, `can't delete a context if one doesn't exist`).id;
-    } else {
-        nodeId = maybeNodeId;
     }
 
     state.currentContextNode = ParseContextUtils.deleteContext(state.contextState, nodeId);
 }
 
 export function incrementAttributeCounter(state: ParseState): void {
-    Assert.asDefined(state.currentContextNode, `state.maybeCurrentContextNode`).attributeCounter += 1;
+    Assert.asDefined(state.currentContextNode, `state.currentContextNode`).attributeCounter += 1;
 }
 
 // -------------------------
@@ -143,13 +138,13 @@ export function isOnConstantKind(state: ParseState, constantKind: Constant.TCons
 }
 
 export function isOnGeneralizedIdentifierStart(state: ParseState, tokenIndex: number = state.tokenIndex): boolean {
-    const maybeTokenKind: Token.TokenKind | undefined = state.lexerSnapshot.tokens[tokenIndex]?.kind;
+    const tokenKind: Token.TokenKind | undefined = state.lexerSnapshot.tokens[tokenIndex]?.kind;
 
-    if (maybeTokenKind === undefined) {
+    if (tokenKind === undefined) {
         return false;
     }
 
-    switch (maybeTokenKind) {
+    switch (tokenKind) {
         case Token.TokenKind.Identifier:
         case Token.TokenKind.KeywordAnd:
         case Token.TokenKind.KeywordAs:
@@ -234,9 +229,9 @@ export function assertGetContextNodeMetadata(state: ParseState): ContextNodeMeta
 
 export function assertGetTokenAt(state: ParseState, tokenIndex: number): Token.Token {
     const lexerSnapshot: LexerSnapshot = state.lexerSnapshot;
-    const maybeToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
+    const token: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
 
-    return Assert.asDefined(maybeToken, undefined, { tokenIndex });
+    return Assert.asDefined(token, undefined, { tokenIndex });
 }
 
 // -------------------------------
@@ -252,7 +247,7 @@ export function testCsvContinuationLetExpression(
     if (state.currentTokenKind === Token.TokenKind.KeywordIn) {
         return new ParseError.ExpectedCsvContinuationError(
             ParseError.CsvContinuationKind.LetExpression,
-            maybeCurrentTokenWithColumnNumber(state),
+            currentTokenWithColumnNumber(state),
             state.locale,
         );
     }
@@ -267,7 +262,7 @@ export function testCsvContinuationDanglingComma(
     if (state.currentTokenKind === tokenKind) {
         return new ParseError.ExpectedCsvContinuationError(
             ParseError.CsvContinuationKind.DanglingComma,
-            maybeCurrentTokenWithColumnNumber(state),
+            currentTokenWithColumnNumber(state),
             state.locale,
         );
     } else {
@@ -291,7 +286,7 @@ export function testClosingTokenKind(
 
     return new ParseError.ExpectedClosingTokenKind(
         expectedTokenKind,
-        maybeCurrentTokenWithColumnNumber(state),
+        currentTokenWithColumnNumber(state),
         state.locale,
     );
 }
@@ -301,9 +296,9 @@ export function testIsOnTokenKind(
     expectedTokenKind: Token.TokenKind,
 ): ParseError.ExpectedTokenKindError | undefined {
     if (expectedTokenKind !== state.currentTokenKind) {
-        const maybeToken: ParseError.TokenWithColumnNumber | undefined = maybeCurrentTokenWithColumnNumber(state);
+        const token: ParseError.TokenWithColumnNumber | undefined = currentTokenWithColumnNumber(state);
 
-        return new ParseError.ExpectedTokenKindError(expectedTokenKind, maybeToken, state.locale);
+        return new ParseError.ExpectedTokenKindError(expectedTokenKind, token, state.locale);
     } else {
         return undefined;
     }
@@ -317,9 +312,9 @@ export function testIsOnAnyTokenKind(
         state.currentTokenKind === undefined || !expectedAnyTokenKinds.includes(state.currentTokenKind);
 
     if (isError) {
-        const maybeToken: ParseError.TokenWithColumnNumber | undefined = maybeCurrentTokenWithColumnNumber(state);
+        const token: ParseError.TokenWithColumnNumber | undefined = currentTokenWithColumnNumber(state);
 
-        return new ParseError.ExpectedAnyTokenKindError(expectedAnyTokenKinds, maybeToken, state.locale);
+        return new ParseError.ExpectedAnyTokenKindError(expectedAnyTokenKinds, token, state.locale);
     } else {
         return undefined;
     }
@@ -376,21 +371,21 @@ function unterminatedSequence(state: ParseState, sequenceKind: SequenceKind): Pa
 // ---------- Column number factories ----------
 // ---------------------------------------------
 
-export function maybeCurrentTokenWithColumnNumber(state: ParseState): ParseError.TokenWithColumnNumber | undefined {
-    return maybeTokenWithColumnNumber(state, state.tokenIndex);
+export function currentTokenWithColumnNumber(state: ParseState): ParseError.TokenWithColumnNumber | undefined {
+    return tokenWithColumnNumber(state, state.tokenIndex);
 }
 
-export function maybeTokenWithColumnNumber(
+export function tokenWithColumnNumber(
     state: ParseState,
     tokenIndex: number,
 ): ParseError.TokenWithColumnNumber | undefined {
-    const maybeToken: Token.Token | undefined = state.lexerSnapshot.tokens[tokenIndex];
+    const token: Token.Token | undefined = state.lexerSnapshot.tokens[tokenIndex];
 
-    if (maybeToken === undefined) {
+    if (!token) {
         return undefined;
     }
 
-    const currentToken: Token.Token = maybeToken;
+    const currentToken: Token.Token = token;
 
     return {
         token: currentToken,

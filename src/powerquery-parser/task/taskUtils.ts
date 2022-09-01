@@ -174,11 +174,11 @@ export function tryLex(settings: LexSettings, text: string): TriedLexTask {
     }
 
     const state: Lexer.State = triedLex.value;
-    const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.errorLineMap(state);
+    const errorLineMap: Lexer.ErrorLineMap | undefined = Lexer.errorLineMap(state);
 
-    if (maybeErrorLineMap) {
+    if (errorLineMap) {
         return createLexTaskError(
-            new Lexer.LexError.LexError(new Lexer.LexError.ErrorLineMapError(maybeErrorLineMap, settings.locale)),
+            new Lexer.LexError.LexError(new Lexer.LexError.ErrorLineMapError(errorLineMap, settings.locale)),
         );
     }
 

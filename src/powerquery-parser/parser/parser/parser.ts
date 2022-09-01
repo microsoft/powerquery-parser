@@ -10,7 +10,7 @@ export type TriedParse = Result<ParseOk, ParseError.TParseError>;
 export interface ParseStateCheckpoint {
     readonly tokenIndex: number;
     readonly contextStateIdCounter: number;
-    readonly maybeContextNodeId: number | undefined;
+    readonly contextNodeId: number | undefined;
 }
 
 export interface ParseOk {

@@ -116,19 +116,18 @@ async function readBinOpExpression(
         await parser.readUnaryExpression(state, parser, trace.id),
     ];
 
-    let maybeOperator: Constant.TBinOpExpressionOperator | undefined = ConstantUtils.binOpExpressionOperatorKindFrom(
+    let operator: Constant.TBinOpExpressionOperator | undefined = ConstantUtils.binOpExpressionOperatorKindFrom(
         state.currentTokenKind,
     );
 
-    while (maybeOperator !== undefined) {
-        const operator: Constant.TBinOpExpressionOperator = maybeOperator;
+    while (operator !== undefined) {
         operators.push(operator);
 
         operatorConstants.push(
             NaiveParseSteps.readTokenKindAsConstant<Constant.TBinOpExpressionOperator>(
                 state,
                 Assert.asDefined(state.currentTokenKind),
-                maybeOperator,
+                operator,
                 trace.id,
             ),
         );
@@ -145,7 +144,7 @@ async function readBinOpExpression(
                 expressions.push(await parser.readUnaryExpression(state, parser, trace.id));
         }
 
-        maybeOperator = ConstantUtils.binOpExpressionOperatorKindFrom(state.currentTokenKind);
+        operator = ConstantUtils.binOpExpressionOperatorKindFrom(state.currentTokenKind);
     }
 
     // There was a single TUnaryExpression, not a TBinOpExpression.
@@ -204,7 +203,7 @@ async function readBinOpExpression(
         const newBinOpExpression: Ast.TBinOpExpression = {
             kind: binOpExpressionNodeKindFrom(operator),
             id: newBinOpExpressionId,
-            // maybeAttributeIndex is fixed after all TBinOpExpressions have been created.
+            // attributeIndex is fixed after all TBinOpExpressions have been created.
             attributeIndex: 0,
             tokenRange: {
                 tokenIndexStart: leftTokenRange.tokenIndexStart,
@@ -237,12 +236,12 @@ async function readBinOpExpression(
         nodeIdMapCollection.childIdsById.set(newBinOpExpressionId, [left.id, operatorConstant.id, right.id]);
         nodeIdMapCollection.astNodeById.set(newBinOpExpressionId, newBinOpExpression);
 
-        const maybeIdsForSpecificNodeKind: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
+        const idsForSpecificNodeKind: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
             newBinOpExpression.kind,
         );
 
-        if (maybeIdsForSpecificNodeKind) {
-            maybeIdsForSpecificNodeKind.add(newBinOpExpression.id);
+        if (idsForSpecificNodeKind) {
+            idsForSpecificNodeKind.add(newBinOpExpression.id);
         } else {
             nodeIdMapCollection.idsByNodeKind.set(newBinOpExpression.kind, new Set([newBinOpExpression.id]));
         }
@@ -331,22 +330,22 @@ async function readUnaryExpression(
 
     state.cancellationToken?.throwIfCancelled();
 
-    let maybePrimaryExpression: Ast.TPrimaryExpression | undefined;
+    let primaryExpression: Ast.TPrimaryExpression | undefined;
 
     // LL(1)
     switch (state.currentTokenKind) {
         // PrimaryExpression
         case Token.TokenKind.AtSign:
         case Token.TokenKind.Identifier:
-            maybePrimaryExpression = NaiveParseSteps.readIdentifierExpression(state, parser, trace.id);
+            primaryExpression = NaiveParseSteps.readIdentifierExpression(state, parser, trace.id);
             break;
 
         case Token.TokenKind.LeftParenthesis:
-            maybePrimaryExpression = await NaiveParseSteps.readParenthesizedExpression(state, parser, trace.id);
+            primaryExpression = await NaiveParseSteps.readParenthesizedExpression(state, parser, trace.id);
             break;
 
         case Token.TokenKind.LeftBracket:
-            maybePrimaryExpression = await DisambiguationUtils.readAmbiguousBracket(
+            primaryExpression = await DisambiguationUtils.readAmbiguousBracket(
                 state,
                 parser,
                 [
@@ -360,11 +359,11 @@ async function readUnaryExpression(
             break;
 
         case Token.TokenKind.LeftBrace:
-            maybePrimaryExpression = await NaiveParseSteps.readListExpression(state, parser, trace.id);
+            primaryExpression = await NaiveParseSteps.readListExpression(state, parser, trace.id);
             break;
 
         case Token.TokenKind.Ellipsis:
-            maybePrimaryExpression = NaiveParseSteps.readNotImplementedExpression(state, parser, trace.id);
+            primaryExpression = NaiveParseSteps.readNotImplementedExpression(state, parser, trace.id);
             break;
 
         // LiteralExpression
@@ -393,7 +392,7 @@ async function readUnaryExpression(
         case Token.TokenKind.KeywordHashDuration:
         case Token.TokenKind.KeywordHashTable:
         case Token.TokenKind.KeywordHashTime:
-            maybePrimaryExpression = parser.readKeyword(state, parser, trace.id);
+            primaryExpression = parser.readKeyword(state, parser, trace.id);
             break;
 
         // Let Naive throw an error.
@@ -402,9 +401,6 @@ async function readUnaryExpression(
 
             return await NaiveParseSteps.readUnaryExpression(state, parser, trace.id);
     }
-
-    // We should only reach this code block if a primary expression was read.
-    const primaryExpression: Ast.TPrimaryExpression = maybePrimaryExpression;
 
     if (ParseStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex)) {
         trace.exit();

@@ -24,18 +24,18 @@ export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: Lexe
         initialCorrelationId: trace.id,
     };
 
-    const maybeParserEntryPointFn:
+    const parserEntryPointFn:
         | ((state: ParseState, parser: Parser, correlationId: number | undefined) => Promise<Ast.TNode>)
-        | undefined = updatedSettings?.maybeParserEntryPointFn;
+        | undefined = updatedSettings?.parserEntryPointFn;
 
-    if (maybeParserEntryPointFn === undefined) {
+    if (parserEntryPointFn === undefined) {
         return await tryParseDocument(updatedSettings, lexerSnapshot);
     }
 
     const parseState: ParseState = updatedSettings.createParseStateFn(lexerSnapshot, defaultOverrides(updatedSettings));
 
     try {
-        const root: Ast.TNode = await maybeParserEntryPointFn(parseState, updatedSettings.parser, trace.id);
+        const root: Ast.TNode = await parserEntryPointFn(parseState, updatedSettings.parser, trace.id);
         ParseStateUtils.assertIsDoneParsing(parseState);
 
         return ResultUtils.boxOk({
@@ -132,7 +132,7 @@ export async function createCheckpoint(state: ParseState): Promise<ParseStateChe
     return {
         tokenIndex: state.tokenIndex,
         contextStateIdCounter: state.contextState.idCounter,
-        maybeContextNodeId: state.currentContextNode?.id,
+        contextNodeId: state.currentContextNode?.id,
     };
 }
 
@@ -168,8 +168,8 @@ export async function restoreCheckpoint(state: ParseState, checkpoint: ParseStat
     const reverseNumberSort: (left: number, right: number) => number = (left: number, right: number) => right - left;
 
     for (const nodeId of newAstNodeIds.sort(reverseNumberSort)) {
-        const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
-        const parentWillBeDeleted: boolean = maybeParentId !== undefined && maybeParentId >= backupIdCounter;
+        const parentId: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
+        const parentWillBeDeleted: boolean = parentId !== undefined && parentId >= backupIdCounter;
         ParseContextUtils.deleteAst(state.contextState, nodeId, parentWillBeDeleted);
     }
 
@@ -177,10 +177,10 @@ export async function restoreCheckpoint(state: ParseState, checkpoint: ParseStat
         ParseContextUtils.deleteContext(state.contextState, nodeId);
     }
 
-    if (checkpoint.maybeContextNodeId) {
+    if (checkpoint.contextNodeId) {
         state.currentContextNode = NodeIdMapUtils.assertUnboxContext(
             state.contextState.nodeIdMapCollection.contextNodeById,
-            checkpoint.maybeContextNodeId,
+            checkpoint.contextNodeId,
         );
     } else {
         state.currentContextNode = undefined;

@@ -15,7 +15,7 @@ describe("StringUtils", () => {
         it(`"a"`, () => expect(StringUtils.ensureQuoted(`"a"`)).to.equal(`"a"`));
     });
 
-    describe(`maybeFindQuote`, () => {
+    describe(`findQuote`, () => {
         it(`""`, () => {
             const actual: StringUtils.FoundQuotes | undefined = StringUtils.findQuotes(`""`, 0);
 
@@ -92,7 +92,7 @@ describe("StringUtils", () => {
         });
     });
 
-    describe(`maybeNormalizeNumber`, () => {
+    describe(`normalizeNumber`, () => {
         // tslint:disable-next-line: chai-vague-errors
         it(`foo`, () => expect(StringUtils.normalizeNumber(`foo`)).to.be.undefined);
         it(`1`, () => expect(StringUtils.normalizeNumber(`1`)).to.equal("1"));

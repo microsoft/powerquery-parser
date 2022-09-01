@@ -5,77 +5,71 @@ import { AstNodeById, Collection } from "../nodeIdMap";
 import { NodeIdMap, XorNodeUtils } from "..";
 import { Assert } from "../../../common";
 import { Ast } from "../../../language";
-import { maybeXor } from "./commonSelectors";
 import { TXorNode } from "../xorNode";
+import { xor } from "./commonSelectors";
 
 export function assertUnboxLeftMostLeaf(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
     return XorNodeUtils.assertUnboxAst(
-        Assert.asDefined(
-            maybeLeftMostXor(nodeIdMapCollection, nodeId),
-            `nodeId does not exist in nodeIdMapCollection`,
-            { nodeId },
-        ),
+        Assert.asDefined(leftMostXor(nodeIdMapCollection, nodeId), `nodeId does not exist in nodeIdMapCollection`, {
+            nodeId,
+        }),
     );
 }
 
 export function assertGetLeftMostXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
-    return Assert.asDefined(
-        maybeLeftMostXor(nodeIdMapCollection, nodeId),
-        `nodeId does not exist in nodeIdMapCollection`,
-        { nodeId },
-    );
+    return Assert.asDefined(leftMostXor(nodeIdMapCollection, nodeId), `nodeId does not exist in nodeIdMapCollection`, {
+        nodeId,
+    });
 }
 
 // Travels down the left most node under the given nodeId by way of the children collection.
-export function maybeLeftMostXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
-    const currentNode: TXorNode | undefined = maybeXor(nodeIdMapCollection, nodeId);
+export function leftMostXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
+    const currentNode: TXorNode | undefined = xor(nodeIdMapCollection, nodeId);
 
     if (currentNode === undefined) {
         return undefined;
     }
 
     let currentNodeId: number = currentNode.node.id;
-    let maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(currentNodeId);
+    let childIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(currentNodeId);
 
-    while (maybeChildIds?.length) {
-        currentNodeId = maybeChildIds[0];
-        maybeChildIds = nodeIdMapCollection.childIdsById.get(currentNodeId);
+    while (childIds?.length) {
+        currentNodeId = childIds[0];
+        childIds = nodeIdMapCollection.childIdsById.get(currentNodeId);
     }
 
-    return maybeXor(nodeIdMapCollection, currentNodeId);
+    return xor(nodeIdMapCollection, currentNodeId);
 }
 
-// Same as maybeLeftMostXor but also checks if it's an Ast node.
-export function maybeLeftMostLeaf(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): Ast.TNode | undefined {
-    const maybeXorNode: TXorNode | undefined = maybeLeftMostXor(nodeIdMapCollection, nodeId);
+// Same as leftMostXor but also checks if it's an Ast node.
+export function leftMostLeaf(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): Ast.TNode | undefined {
+    const xorNode: TXorNode | undefined = leftMostXor(nodeIdMapCollection, nodeId);
 
-    return maybeXorNode && XorNodeUtils.isAstXor(maybeXorNode) ? maybeXorNode.node : undefined;
+    return xorNode && XorNodeUtils.isAstXor(xorNode) ? xorNode.node : undefined;
 }
 
 // There are a few assumed invariants about children:
 //  * Children were read left to right.
 //  * Children were placed in childIdsById in the order they were read.
 //  * Therefore the right-most child is the most recently read which also appears last in the document.
-export function maybeRightMostLeaf(
+export function rightMostLeaf(
     nodeIdMapCollection: Collection,
     nodeId: number,
-    maybeCondition: ((node: Ast.TNode) => boolean) | undefined = undefined,
+    predicateFn: ((node: Ast.TNode) => boolean) | undefined = undefined,
 ): Promise<Ast.TNode | undefined> {
     const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
     let nodeIdsToExplore: number[] = [nodeId];
-    let maybeRightMost: Ast.TNode | undefined;
+    let rightMost: Ast.TNode | undefined;
 
     while (nodeIdsToExplore.length) {
         const nodeId: number = Assert.asDefined(nodeIdsToExplore.pop());
-        const maybeAstNode: Ast.TNode | undefined = astNodeById.get(nodeId);
+        const astNode: Ast.TNode | undefined = astNodeById.get(nodeId);
 
         let addChildren: boolean = false;
 
         // Check if Ast.TNode or ParserContext.Node
-        if (maybeAstNode !== undefined) {
-            const astNode: Ast.TNode = maybeAstNode;
-
-            if (maybeCondition && !maybeCondition(astNode)) {
+        if (astNode !== undefined) {
+            if (predicateFn && !predicateFn(astNode)) {
                 continue;
             }
 
@@ -83,22 +77,22 @@ export function maybeRightMostLeaf(
             // As it's a leaf there are no children to add.
             if (astNode.isLeaf) {
                 // Is the first leaf encountered.
-                if (maybeRightMost === undefined) {
-                    maybeRightMost = astNode;
+                if (rightMost === undefined) {
+                    rightMost = astNode;
                 }
                 // Compare current leaf node to the existing record.
-                else if (astNode.tokenRange.tokenIndexStart > maybeRightMost.tokenRange.tokenIndexStart) {
-                    maybeRightMost = astNode;
+                else if (astNode.tokenRange.tokenIndexStart > rightMost.tokenRange.tokenIndexStart) {
+                    rightMost = astNode;
                 }
             }
             // Is not a leaf, no previous record exists.
             // Add all children to the queue.
-            else if (maybeRightMost === undefined) {
+            else if (rightMost === undefined) {
                 addChildren = true;
             }
             // Is not a leaf, previous record exists.
             // Check if we can cull the branch, otherwise add all children to the queue.
-            else if (astNode.tokenRange.tokenIndexEnd > maybeRightMost.tokenRange.tokenIndexStart) {
+            else if (astNode.tokenRange.tokenIndexEnd > rightMost.tokenRange.tokenIndexStart) {
                 addChildren = true;
             }
         }
@@ -109,11 +103,10 @@ export function maybeRightMostLeaf(
         }
 
         if (addChildren) {
-            const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(nodeId);
+            const childIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(nodeId);
 
-            if (maybeChildIds !== undefined) {
+            if (childIds !== undefined) {
                 // Add the child ids in reversed order to prioritize visiting the right most nodes first.
-                const childIds: ReadonlyArray<number> = maybeChildIds;
                 const reversedChildIds: number[] = [...childIds];
                 reversedChildIds.reverse();
                 nodeIdsToExplore = [...reversedChildIds, ...nodeIdsToExplore];
@@ -121,13 +114,13 @@ export function maybeRightMostLeaf(
         }
     }
 
-    return Promise.resolve(maybeRightMost);
+    return Promise.resolve(rightMost);
 }
 
-export function maybeRightMostLeafWhere(
+export function rightMostLeafWhere(
     nodeIdMapCollection: Collection,
     nodeId: number,
-    maybeCondition: ((node: Ast.TNode) => boolean) | undefined,
+    predicateFn: ((node: Ast.TNode) => boolean) | undefined,
 ): Promise<Ast.TNode | undefined> {
-    return maybeRightMostLeaf(nodeIdMapCollection, nodeId, maybeCondition);
+    return rightMostLeaf(nodeIdMapCollection, nodeId, predicateFn);
 }

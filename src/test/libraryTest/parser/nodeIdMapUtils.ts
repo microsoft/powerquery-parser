@@ -47,11 +47,11 @@ describe("nodeIdMapIterator", () => {
         expect(fieldSpecificationKeyValuePairs.length).to.equal(2);
 
         const firstKeyValuePair: FieldSpecificationKeyValuePair = fieldSpecificationKeyValuePairs[0];
-        expect(firstKeyValuePair.maybeOptional).to.equal(undefined);
+        expect(firstKeyValuePair.optional).to.equal(undefined);
         expect(firstKeyValuePair.normalizedKeyLiteral).to.equal("foo");
 
         const secondKeyValuePair: FieldSpecificationKeyValuePair = fieldSpecificationKeyValuePairs[1];
-        expect(Boolean(secondKeyValuePair.maybeOptional)).to.equal(true);
+        expect(Boolean(secondKeyValuePair.optional)).to.equal(true);
         expect(secondKeyValuePair.normalizedKeyLiteral).to.equal("bar");
     });
 
@@ -232,17 +232,17 @@ describe("nodeIdMapIterator", () => {
         expect(fieldSpecificationKeyValuePairs.length).to.equal(2);
 
         const firstKeyValuePair: FieldSpecificationKeyValuePair = fieldSpecificationKeyValuePairs[0];
-        expect(firstKeyValuePair.maybeOptional).to.equal(undefined);
+        expect(firstKeyValuePair.optional).to.equal(undefined);
         expect(firstKeyValuePair.normalizedKeyLiteral).to.equal("foo");
 
         const secondKeyValuePair: FieldSpecificationKeyValuePair = fieldSpecificationKeyValuePairs[1];
-        expect(Boolean(secondKeyValuePair.maybeOptional)).to.equal(true);
+        expect(Boolean(secondKeyValuePair.optional)).to.equal(true);
         expect(secondKeyValuePair.normalizedKeyLiteral).to.equal("bar");
     });
 });
 
 describe(`nodeIdMapUtils`, () => {
-    describe(`maybeInvokeExpressionIdentifier`, () => {
+    describe(`invokeExpressionIdentifier`, () => {
         it(`Ast`, async () => {
             const text: string = `Foo(1)`;
             const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
@@ -256,7 +256,7 @@ describe(`nodeIdMapUtils`, () => {
             const invokeExpressionNodeId: number = invokeExpressionNodeIds.values().next().value;
 
             const invokeExpressionIdentifier: XorNode<Ast.IdentifierExpression> = Assert.asDefined(
-                NodeIdMapUtils.maybeInvokeExpressionIdentifier(nodeIdMapCollection, invokeExpressionNodeId),
+                NodeIdMapUtils.invokeExpressionIdentifier(nodeIdMapCollection, invokeExpressionNodeId),
             );
 
             XorNodeUtils.assertIsAstXor(invokeExpressionIdentifier);
@@ -281,7 +281,7 @@ describe(`nodeIdMapUtils`, () => {
             const invokeExpressionNodeId: number = invokeExpressionNodeIds.values().next().value;
 
             const invokeExpressionIdentifier: XorNode<Ast.IdentifierExpression> = Assert.asDefined(
-                NodeIdMapUtils.maybeInvokeExpressionIdentifier(nodeIdMapCollection, invokeExpressionNodeId),
+                NodeIdMapUtils.invokeExpressionIdentifier(nodeIdMapCollection, invokeExpressionNodeId),
             );
 
             XorNodeUtils.assertIsAstXor(invokeExpressionIdentifier);
@@ -289,7 +289,7 @@ describe(`nodeIdMapUtils`, () => {
         });
     });
 
-    describe("maybeUnboxWrappedContent", () => {
+    describe("unboxWrappedContent", () => {
         it("Ast", async () => {
             const text: string = `[a = 1]`;
             const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);

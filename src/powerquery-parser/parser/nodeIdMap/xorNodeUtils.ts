@@ -256,32 +256,30 @@ export function isTWrapped(xorNode: TXorNode): xorNode is XorNode<Ast.TWrapped> 
     ]);
 }
 
-export function maybeIdentifierExpressionLiteral(xorNode: TXorNode): string | undefined {
-    const maybeIdentifierExpression: Ast.IdentifierExpression | undefined = maybeUnboxAstChecked(
+export function identifierExpressionLiteral(xorNode: TXorNode): string | undefined {
+    const identifierExpression: Ast.IdentifierExpression | undefined = unboxAstChecked(
         xorNode,
         Ast.NodeKind.IdentifierExpression,
     );
 
-    if (maybeIdentifierExpression === undefined) {
+    if (identifierExpression === undefined) {
         return undefined;
     }
-
-    const identifierExpression: Ast.IdentifierExpression = maybeIdentifierExpression;
 
     return identifierExpression.inclusiveConstant === undefined
         ? identifierExpression.identifier.literal
         : identifierExpression.inclusiveConstant.constantKind + identifierExpression.identifier.literal;
 }
 
-export function maybeUnboxAst(xorNode: TXorNode): Ast.TNode | undefined {
+export function unboxAst(xorNode: TXorNode): Ast.TNode | undefined {
     return isAstXor(xorNode) ? xorNode.node : undefined;
 }
 
-export function maybeUnboxAstChecked<T extends Ast.TNode>(
+export function unboxAstChecked<T extends Ast.TNode>(
     xorNode: TXorNode,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): T | undefined {
-    const maybeAstNode: Ast.TNode | undefined = maybeUnboxAst(xorNode);
+    const astNode: Ast.TNode | undefined = unboxAst(xorNode);
 
-    return maybeAstNode && AstUtils.isNodeKind(maybeAstNode, expectedNodeKinds) ? maybeAstNode : undefined;
+    return astNode && AstUtils.isNodeKind(astNode, expectedNodeKinds) ? astNode : undefined;
 }

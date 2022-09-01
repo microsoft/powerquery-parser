@@ -4,9 +4,9 @@
 import { DefaultSettings, Settings } from "./settings";
 import { ICancellationToken } from "../common";
 
-export function createDefaultSettings(maybeCancellationToken: ICancellationToken | undefined): Settings {
+export function createDefaultSettings(cancellationToken: ICancellationToken | undefined): Settings {
     return {
         ...DefaultSettings,
-        cancellationToken: maybeCancellationToken,
+        cancellationToken,
     };
 }

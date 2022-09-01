@@ -204,10 +204,10 @@ async function traverseVisitNode(state: TraverseState, xorNode: TXorNode): Promi
         state.contextIds.push(xorNode.node.id);
     }
 
-    const maybeNodeIdsByNodeKind: Set<number> | undefined = state.idsByNodeKind.get(xorNode.node.kind);
+    const nodeIdsByNodeKind: Set<number> | undefined = state.idsByNodeKind.get(xorNode.node.kind);
 
-    if (maybeNodeIdsByNodeKind !== undefined) {
-        maybeNodeIdsByNodeKind.add(xorNode.node.id);
+    if (nodeIdsByNodeKind !== undefined) {
+        nodeIdsByNodeKind.add(xorNode.node.id);
     } else {
         state.idsByNodeKind.set(xorNode.node.kind, new Set([xorNode.node.id]));
     }

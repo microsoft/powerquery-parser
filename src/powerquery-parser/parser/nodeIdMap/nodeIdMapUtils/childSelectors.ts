@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError } from "../../../common";
-import { assertGetXor, maybeXor } from "./commonSelectors";
+import { assertGetXor, xor } from "./commonSelectors";
 import { Ast, AstUtils } from "../../../language";
 import { ChildIdsById, Collection } from "../nodeIdMap";
 import { ParseContext, ParseContextUtils } from "../../context";
@@ -15,7 +15,7 @@ import { XorNodeUtils } from "..";
 //  * a literal operator constant `+` as the second attribute.
 //  * a literal node `2` as the third attribute.
 //
-// The `INode` interface has the nullable field `maybeAttributeIndex`.
+// The `INode` interface has the nullable field `attributeIndex`.
 // A truthy value indicates it contains a parent and if so what attribute number it is under the parent.
 
 export function assertGetChildren(childIdsById: ChildIdsById, parentId: number): ReadonlyArray<number> {
@@ -154,9 +154,9 @@ export function nthChildIfContext(
     parentId: number,
     attributeIndex: number,
 ): ParseContext.TNode | undefined {
-    const maybeXorNode: TXorNode | undefined = nthChild(nodeIdMapCollection, parentId, attributeIndex);
+    const xorNode: TXorNode | undefined = nthChild(nodeIdMapCollection, parentId, attributeIndex);
 
-    return maybeXorNode && XorNodeUtils.isContextXor(maybeXorNode) ? maybeXorNode.node : undefined;
+    return xorNode && XorNodeUtils.isContextXor(xorNode) ? xorNode.node : undefined;
 }
 
 export function unboxArrayWrapper(
@@ -193,21 +193,19 @@ export function unboxNthChildIfContextChecked<T extends Ast.TNode>(
     attributeIndex: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): ParseContext.Node<T> | undefined {
-    const maybeContextNode: ParseContext.TNode | undefined = nthChildIfContext(
+    const contextNode: ParseContext.TNode | undefined = nthChildIfContext(
         nodeIdMapCollection,
         parentId,
         attributeIndex,
     );
 
-    return maybeContextNode && ParseContextUtils.isNodeKind(maybeContextNode, expectedNodeKinds)
-        ? maybeContextNode
-        : undefined;
+    return contextNode && ParseContextUtils.isNodeKind(contextNode, expectedNodeKinds) ? contextNode : undefined;
 }
 
 export function unboxIfAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode | undefined {
-    const maybeXorNode: TXorNode | undefined = maybeXor(nodeIdMapCollection, nodeId);
+    const xorNode: TXorNode | undefined = xor(nodeIdMapCollection, nodeId);
 
-    return maybeXorNode && XorNodeUtils.isAstXor(maybeXorNode) ? maybeXorNode.node : undefined;
+    return xorNode && XorNodeUtils.isAstXor(xorNode) ? xorNode.node : undefined;
 }
 
 export function unboxIfAstChecked<T extends Ast.TNode>(
@@ -215,17 +213,15 @@ export function unboxIfAstChecked<T extends Ast.TNode>(
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): T | undefined {
-    const maybeXorNode: TXorNode | undefined = maybeXor(nodeIdMapCollection, nodeId);
+    const xorNode: TXorNode | undefined = xor(nodeIdMapCollection, nodeId);
 
-    return maybeXorNode && XorNodeUtils.isAstXorChecked(maybeXorNode, expectedNodeKinds)
-        ? maybeXorNode.node
-        : undefined;
+    return xorNode && XorNodeUtils.isAstXorChecked(xorNode, expectedNodeKinds) ? xorNode.node : undefined;
 }
 
 export function unboxWrappedContent(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
-    const maybeWrapperXorNode: TXorNode | undefined = maybeXor(nodeIdMapCollection, nodeId);
+    const wrapperXorNode: TXorNode | undefined = xor(nodeIdMapCollection, nodeId);
 
-    if (maybeWrapperXorNode === undefined || !XorNodeUtils.isTWrapped(maybeWrapperXorNode)) {
+    if (wrapperXorNode === undefined || !XorNodeUtils.isTWrapped(wrapperXorNode)) {
         return undefined;
     }
 
@@ -237,15 +233,15 @@ export function unboxWrappedContentChecked<C extends Ast.TWrapped["content"]>(
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<C["kind"]> | C["kind"],
 ): XorNode<C> | undefined {
-    const maybeXorNode: TXorNode | undefined = unboxWrappedContent(nodeIdMapCollection, nodeId);
+    const xorNode: TXorNode | undefined = unboxWrappedContent(nodeIdMapCollection, nodeId);
 
-    return maybeXorNode && XorNodeUtils.isNodeKind(maybeXorNode, expectedNodeKinds) ? maybeXorNode : undefined;
+    return xorNode && XorNodeUtils.isNodeKind(xorNode, expectedNodeKinds) ? xorNode : undefined;
 }
 
 export function unboxWrappedContentIfAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode | undefined {
-    const maybeXorNode: TXorNode | undefined = unboxWrappedContent(nodeIdMapCollection, nodeId);
+    const xorNode: TXorNode | undefined = unboxWrappedContent(nodeIdMapCollection, nodeId);
 
-    return maybeXorNode && XorNodeUtils.isAstXor(maybeXorNode) ? maybeXorNode.node : undefined;
+    return xorNode && XorNodeUtils.isAstXor(xorNode) ? xorNode.node : undefined;
 }
 
 export function unboxWrappedContentIfAstChecked<C extends Ast.TWrapped["content"]>(
@@ -253,7 +249,7 @@ export function unboxWrappedContentIfAstChecked<C extends Ast.TWrapped["content"
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<C["kind"]> | C["kind"],
 ): C | undefined {
-    const maybeAstNode: Ast.TNode | undefined = unboxWrappedContentIfAst(nodeIdMapCollection, nodeId);
+    const astNode: Ast.TNode | undefined = unboxWrappedContentIfAst(nodeIdMapCollection, nodeId);
 
-    return maybeAstNode && AstUtils.isNodeKind<C>(maybeAstNode, expectedNodeKinds) ? maybeAstNode : undefined;
+    return astNode && AstUtils.isNodeKind<C>(astNode, expectedNodeKinds) ? astNode : undefined;
 }

@@ -126,7 +126,7 @@ describe(`TypeUtils.typeCheck`, () => {
             expect(actual).to.deep.equal(expected);
         });
 
-        it(`maybeType === null translates to any`, () => {
+        it(`type === null translates to any`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.NumberInstance];
 
             const definedFunction: Language.Type.DefinedFunction = TypeUtils.createDefinedFunction(
@@ -154,7 +154,7 @@ describe(`TypeUtils.typeCheck`, () => {
             expect(actual).to.deep.equal(expected);
         });
 
-        it(`paramter.maybeType === any allows any type`, () => {
+        it(`paramter.type === any allows any type`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.NumberInstance];
 
             const definedFunction: Language.Type.DefinedFunction = TypeUtils.createDefinedFunction(

@@ -9,7 +9,7 @@ import { TXorNode, XorNode } from "../xorNode";
 import { XorNodeUtils } from "..";
 
 export function assertGetXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
-    return Assert.asDefined(maybeXor(nodeIdMapCollection, nodeId), undefined, { nodeId });
+    return Assert.asDefined(xor(nodeIdMapCollection, nodeId), undefined, { nodeId });
 }
 
 export function assertGetXorChecked<T extends Ast.TNode>(
@@ -17,7 +17,7 @@ export function assertGetXorChecked<T extends Ast.TNode>(
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> {
-    return Assert.asDefined(maybeXorChecked(nodeIdMapCollection, nodeId, expectedNodeKinds), undefined, {
+    return Assert.asDefined(xorChecked(nodeIdMapCollection, nodeId, expectedNodeKinds), undefined, {
         nodeId,
         expectedNodeKinds,
     });
@@ -61,28 +61,28 @@ export function assertUnboxContextChecked<T extends Ast.TNode>(
     return contextNode;
 }
 
-export function maybeXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
-    const maybeAstNode: Ast.TNode | undefined = nodeIdMapCollection.astNodeById.get(nodeId);
+export function xor(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
+    const astNode: Ast.TNode | undefined = nodeIdMapCollection.astNodeById.get(nodeId);
 
-    if (maybeAstNode !== undefined) {
-        return XorNodeUtils.boxAst(maybeAstNode);
+    if (astNode !== undefined) {
+        return XorNodeUtils.boxAst(astNode);
     }
 
-    const maybeContextNode: ParseContext.TNode | undefined = nodeIdMapCollection.contextNodeById.get(nodeId);
+    const contextNode: ParseContext.TNode | undefined = nodeIdMapCollection.contextNodeById.get(nodeId);
 
-    if (maybeContextNode !== undefined) {
-        return XorNodeUtils.boxContext(maybeContextNode);
+    if (contextNode !== undefined) {
+        return XorNodeUtils.boxContext(contextNode);
     }
 
     return undefined;
 }
 
-export function maybeXorChecked<T extends Ast.TNode>(
+export function xorChecked<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> | undefined {
-    const maybeXorNode: TXorNode | undefined = maybeXor(nodeIdMapCollection, nodeId);
+    const xorNode: TXorNode | undefined = xor(nodeIdMapCollection, nodeId);
 
-    return maybeXorNode && XorNodeUtils.isNodeKind(maybeXorNode, expectedNodeKinds) ? maybeXorNode : undefined;
+    return xorNode && XorNodeUtils.isNodeKind(xorNode, expectedNodeKinds) ? xorNode : undefined;
 }
