@@ -75,7 +75,7 @@ async function collectAbridgeNodeFromContext(text: string): Promise<ReadonlyArra
     >(
         state,
         parseError.nodeIdMapCollection,
-        XorNodeUtils.boxContext(Assert.asDefined(parseError.parseState.contextState.maybeRoot)),
+        XorNodeUtils.boxContext(Assert.asDefined(parseError.parseState.contextState.root)),
         Traverse.VisitNodeStrategy.BreadthFirst,
         collectAbridgeXorNodeVisit,
         Traverse.assertGetAllXorChildren,
@@ -125,12 +125,12 @@ async function assertGetNthNodeOfKind<N extends Language.Ast.TNode>(
 
 // eslint-disable-next-line require-await
 async function collectAbridgeAstNodeVisit(state: CollectAbridgeNodeState, node: Language.Ast.TNode): Promise<void> {
-    state.result.push([node.kind, node.maybeAttributeIndex]);
+    state.result.push([node.kind, node.attributeIndex]);
 }
 
 // eslint-disable-next-line require-await
 async function collectAbridgeXorNodeVisit(state: CollectAbridgeNodeState, xorNode: TXorNode): Promise<void> {
-    state.result.push([xorNode.node.kind, xorNode.node.maybeAttributeIndex]);
+    state.result.push([xorNode.node.kind, xorNode.node.attributeIndex]);
 }
 
 // eslint-disable-next-line require-await

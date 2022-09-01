@@ -79,7 +79,7 @@ describe(`TypeUtils.typeCheck`, () => {
                     {
                         isNullable: false,
                         isOptional: false,
-                        maybeType: Language.Type.TypeKind.Number,
+                        type: Language.Type.TypeKind.Number,
                         nameLiteral: "foo",
                     },
                 ],
@@ -107,7 +107,7 @@ describe(`TypeUtils.typeCheck`, () => {
                     {
                         isNullable: false,
                         isOptional: true,
-                        maybeType: Language.Type.TypeKind.Number,
+                        type: Language.Type.TypeKind.Number,
                         nameLiteral: "foo",
                     },
                 ],
@@ -135,7 +135,7 @@ describe(`TypeUtils.typeCheck`, () => {
                     {
                         isNullable: true,
                         isOptional: false,
-                        maybeType: undefined,
+                        type: undefined,
                         nameLiteral: "foo",
                     },
                 ],
@@ -163,7 +163,7 @@ describe(`TypeUtils.typeCheck`, () => {
                     {
                         isNullable: false,
                         isOptional: false,
-                        maybeType: Language.Type.TypeKind.Any,
+                        type: Language.Type.TypeKind.Any,
                         nameLiteral: "foo",
                     },
                 ],
@@ -191,7 +191,7 @@ describe(`TypeUtils.typeCheck`, () => {
                     {
                         isNullable: false,
                         isOptional: false,
-                        maybeType: Language.Type.TypeKind.Text,
+                        type: Language.Type.TypeKind.Text,
                         nameLiteral: "foo",
                     },
                 ],
@@ -219,7 +219,7 @@ describe(`TypeUtils.typeCheck`, () => {
                     {
                         isNullable: false,
                         isOptional: false,
-                        maybeType: Language.Type.TypeKind.Number,
+                        type: Language.Type.TypeKind.Number,
                         nameLiteral: "foo",
                     },
                 ],
@@ -250,13 +250,13 @@ describe(`TypeUtils.typeCheck`, () => {
                     {
                         isNullable: false,
                         isOptional: false,
-                        maybeType: Language.Type.TypeKind.Number,
+                        type: Language.Type.TypeKind.Number,
                         nameLiteral: "foo",
                     },
                     {
                         isNullable: false,
                         isOptional: false,
-                        maybeType: Language.Type.TypeKind.Text,
+                        type: Language.Type.TypeKind.Text,
                         nameLiteral: "bar",
                     },
                 ],
@@ -284,7 +284,7 @@ describe(`TypeUtils.typeCheck`, () => {
                     {
                         isNullable: false,
                         isOptional: false,
-                        maybeType: Language.Type.TypeKind.Number,
+                        type: Language.Type.TypeKind.Number,
                         nameLiteral: "foo",
                     },
                 ],
@@ -320,7 +320,7 @@ describe(`TypeUtils.typeCheck`, () => {
                     {
                         isNullable: true,
                         isOptional: false,
-                        maybeType: Language.Type.TypeKind.Number,
+                        type: Language.Type.TypeKind.Number,
                         nameLiteral: "foo",
                     },
                 ],
@@ -348,7 +348,7 @@ describe(`TypeUtils.typeCheck`, () => {
                     {
                         isNullable: false,
                         isOptional: false,
-                        maybeType: Language.Type.TypeKind.Number,
+                        type: Language.Type.TypeKind.Number,
                         nameLiteral: "foo",
                     },
                 ],
@@ -376,7 +376,7 @@ describe(`TypeUtils.typeCheck`, () => {
                     {
                         isNullable: false,
                         isOptional: false,
-                        maybeType: Language.Type.TypeKind.Number,
+                        type: Language.Type.TypeKind.Number,
                         nameLiteral: "foo",
                     },
                 ],
@@ -407,13 +407,13 @@ describe(`TypeUtils.typeCheck`, () => {
                     {
                         isNullable: false,
                         isOptional: false,
-                        maybeType: Language.Type.TypeKind.Number,
+                        type: Language.Type.TypeKind.Number,
                         nameLiteral: "foo",
                     },
                     {
                         isNullable: false,
                         isOptional: false,
-                        maybeType: Language.Type.TypeKind.Text,
+                        type: Language.Type.TypeKind.Text,
                         nameLiteral: "bar",
                     },
                 ],

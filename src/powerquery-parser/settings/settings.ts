@@ -24,7 +24,7 @@ export interface ParseSettings extends CommonSettings {
         maybeOverrides: Partial<ParseState> | undefined,
     ) => ParseState;
     readonly maybeParserEntryPointFn:
-        | ((state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) => Promise<Ast.TNode>)
+        | ((state: ParseState, parser: Parser, correlationId: number | undefined) => Promise<Ast.TNode>)
         | undefined;
 }
 

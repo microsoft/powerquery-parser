@@ -61,7 +61,7 @@ async function expectLinksMatch(
         xorNode = XorNodeUtils.boxAst(triedLexParse.ast);
     } else if (TaskUtils.isParseStageParseError(triedLexParse)) {
         nodeIdMapCollection = triedLexParse.nodeIdMapCollection;
-        xorNode = XorNodeUtils.boxContext(Assert.asDefined(triedLexParse.error.state.contextState.maybeRoot));
+        xorNode = XorNodeUtils.boxContext(Assert.asDefined(triedLexParse.error.state.contextState.root));
     } else {
         throw new Error(`expected TriedLexParse to be Ok`);
     }

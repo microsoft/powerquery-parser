@@ -28,7 +28,7 @@ export function copy(nodeIdMapCollection: Collection): Collection {
         contextNodeById,
         leafIds: new Set(nodeIdMapCollection.leafIds),
         idsByNodeKind,
-        maybeRightMostLeaf: nodeIdMapCollection.maybeRightMostLeaf,
+        rightMostLeaf: nodeIdMapCollection.rightMostLeaf,
         parentIdById: new Map(nodeIdMapCollection.parentIdById),
     };
 }

@@ -25,7 +25,7 @@ export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: Lexe
     };
 
     const maybeParserEntryPointFn:
-        | ((state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) => Promise<Ast.TNode>)
+        | ((state: ParseState, parser: Parser, correlationId: number | undefined) => Promise<Ast.TNode>)
         | undefined = updatedSettings?.maybeParserEntryPointFn;
 
     if (maybeParserEntryPointFn === undefined) {
@@ -132,7 +132,7 @@ export async function createCheckpoint(state: ParseState): Promise<ParseStateChe
     return {
         tokenIndex: state.tokenIndex,
         contextStateIdCounter: state.contextState.idCounter,
-        maybeContextNodeId: state.maybeCurrentContextNode?.id,
+        maybeContextNodeId: state.currentContextNode?.id,
     };
 }
 
@@ -142,8 +142,8 @@ export async function createCheckpoint(state: ParseState): Promise<ParseStateChe
 // eslint-disable-next-line require-await
 export async function restoreCheckpoint(state: ParseState, checkpoint: ParseStateCheckpoint): Promise<void> {
     state.tokenIndex = checkpoint.tokenIndex;
-    state.maybeCurrentToken = state.lexerSnapshot.tokens[state.tokenIndex];
-    state.maybeCurrentTokenKind = state.maybeCurrentToken?.kind;
+    state.currentToken = state.lexerSnapshot.tokens[state.tokenIndex];
+    state.currentTokenKind = state.currentToken?.kind;
 
     const contextState: ParseContext.State = state.contextState;
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
@@ -178,12 +178,12 @@ export async function restoreCheckpoint(state: ParseState, checkpoint: ParseStat
     }
 
     if (checkpoint.maybeContextNodeId) {
-        state.maybeCurrentContextNode = NodeIdMapUtils.assertUnboxContext(
+        state.currentContextNode = NodeIdMapUtils.assertUnboxContext(
             state.contextState.nodeIdMapCollection.contextNodeById,
             checkpoint.maybeContextNodeId,
         );
     } else {
-        state.maybeCurrentContextNode = undefined;
+        state.currentContextNode = undefined;
     }
 }
 
@@ -204,7 +204,7 @@ function ensureParseError(state: ParseState, error: Error, locale: string): Pars
 function defaultOverrides(parseSettings: ParseSettings): Partial<ParseState> {
     return {
         locale: parseSettings.locale,
-        maybeCancellationToken: parseSettings.cancellationToken,
+        cancellationToken: parseSettings.cancellationToken,
         traceManager: parseSettings.traceManager,
     };
 }

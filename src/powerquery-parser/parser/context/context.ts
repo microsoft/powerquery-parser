@@ -17,7 +17,7 @@ import { NodeIdMap } from "..";
 // For each sub-Ast.TNode that begins evaluation another Context is created and linked as a child of the original.
 // This means if a Ast.TNode has N attributes of type Ast.TNode, then the Ast.TNode is fully evaluated there should be N
 // child contexts created belonging under the original Context.
-// Once the Ast.TNode evaluation is complete the result is saved on the Context under its maybeAstNode attribute.
+// Once the Ast.TNode evaluation is complete the result is saved on the Context under its astNode attribute.
 //
 // Back to the scenario listed above, where the user has entered `{1,}`, you could examine the context state to find:
 //  An incomplete ListExpression context with 3 children
@@ -27,7 +27,7 @@ import { NodeIdMap } from "..";
 
 export interface State {
     readonly nodeIdMapCollection: NodeIdMap.Collection;
-    maybeRoot: Node<Ast.TNode> | undefined;
+    root: Node<Ast.TNode> | undefined;
     idCounter: number;
     leafIds: Set<number>;
 }
@@ -36,11 +36,11 @@ export interface Node<T extends Ast.TNode> {
     readonly id: number;
     readonly kind: T["kind"];
     readonly tokenIndexStart: number;
-    readonly maybeTokenStart: Token.Token | undefined;
+    readonly tokenStart: Token.Token | undefined;
     // Incremented for each child context created with the Node as its parent,
     // and decremented for each child context deleted.
     attributeCounter: number;
-    maybeAttributeIndex: number | undefined;
+    attributeIndex: number | undefined;
     isClosed: boolean;
 }
 

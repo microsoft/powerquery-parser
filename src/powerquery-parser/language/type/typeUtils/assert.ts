@@ -231,7 +231,7 @@ export function assertIsAction(type: Type.TPowerQueryType): asserts type is Type
     if (!isType.isAction(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Action,
             expectedExtendedTypeKind: undefined,
         };
@@ -244,7 +244,7 @@ export function assertIsAny(type: Type.TPowerQueryType): asserts type is Type.An
     if (!isType.isAny(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Any,
             expectedExtendedTypeKind: [undefined, Type.ExtendedTypeKind.AnyUnion],
         };
@@ -257,7 +257,7 @@ export function assertIsAnyUnion(type: Type.TPowerQueryType): asserts type is Ty
     if (!isType.isAnyUnion(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Any,
             expectedExtendedTypeKind: [Type.ExtendedTypeKind.AnyUnion],
         };
@@ -270,7 +270,7 @@ export function assertIsAnyNonNull(type: Type.TPowerQueryType): asserts type is 
     if (!isType.isAnyNonNull(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.AnyNonNull,
             expectedExtendedTypeKind: undefined,
         };
@@ -283,7 +283,7 @@ export function assertIsBinary(type: Type.TPowerQueryType): asserts type is Type
     if (!isType.isBinary(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Binary,
             expectedExtendedTypeKind: undefined,
         };
@@ -296,7 +296,7 @@ export function assertIsDate(type: Type.TPowerQueryType): asserts type is Type.D
     if (!isType.isDate(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Date,
             expectedExtendedTypeKind: undefined,
         };
@@ -309,7 +309,7 @@ export function assertIsDateTime(type: Type.TPowerQueryType): asserts type is Ty
     if (!isType.isDateTime(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.DateTime,
             expectedExtendedTypeKind: undefined,
         };
@@ -322,7 +322,7 @@ export function assertIsDateTimeZone(type: Type.TPowerQueryType): asserts type i
     if (!isType.isDateTimeZone(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.DateTimeZone,
             expectedExtendedTypeKind: undefined,
         };
@@ -335,7 +335,7 @@ export function assertIsDefinedFunction(type: Type.TPowerQueryType): asserts typ
     if (!isType.isDefinedFunction(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Function,
             expectedExtendedTypeKind: [Type.ExtendedTypeKind.DefinedFunction],
         };
@@ -348,7 +348,7 @@ export function assertIsDefinedList(type: Type.TPowerQueryType): asserts type is
     if (!isType.isDefinedList(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.List,
             expectedExtendedTypeKind: [Type.ExtendedTypeKind.DefinedList],
         };
@@ -361,7 +361,7 @@ export function assertIsDefinedListType(type: Type.TPowerQueryType): asserts typ
     if (!isType.isDefinedListType(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Type,
             expectedExtendedTypeKind: [Type.ExtendedTypeKind.DefinedListType],
         };
@@ -374,7 +374,7 @@ export function assertIsDefinedRecord(type: Type.TPowerQueryType): asserts type 
     if (!isType.isDefinedRecord(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Record,
             expectedExtendedTypeKind: [Type.ExtendedTypeKind.DefinedRecord],
         };
@@ -387,7 +387,7 @@ export function assertIsDefinedTable(type: Type.TPowerQueryType): asserts type i
     if (!isType.isDefinedTable(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Table,
             expectedExtendedTypeKind: [Type.ExtendedTypeKind.DefinedTable],
         };
@@ -400,7 +400,7 @@ export function assertIsDuration(type: Type.TPowerQueryType): asserts type is Ty
     if (!isType.isDuration(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Duration,
             expectedExtendedTypeKind: undefined,
         };
@@ -413,7 +413,7 @@ export function assertIsFunction(type: Type.TPowerQueryType): asserts type is Ty
     if (!isType.isFunction(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Function,
             expectedExtendedTypeKind: [undefined, Type.ExtendedTypeKind.DefinedFunction],
         };
@@ -426,7 +426,7 @@ export function assertIsFunctionType(type: Type.TPowerQueryType): asserts type i
     if (!isType.isFunctionType(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Type,
             expectedExtendedTypeKind: [Type.ExtendedTypeKind.FunctionType],
         };
@@ -439,7 +439,7 @@ export function assertIsList(type: Type.TPowerQueryType): asserts type is Type.T
     if (!isType.isList(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.List,
             expectedExtendedTypeKind: [undefined, Type.ExtendedTypeKind.DefinedList],
         };
@@ -452,7 +452,7 @@ export function assertIsLiteral(type: Type.TPowerQueryType): asserts type is Typ
     if (!isType.isLiteral(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: [Type.TypeKind.Number, Type.TypeKind.Text],
             expectedExtendedTypeKind: [Type.ExtendedTypeKind.NumberLiteral, Type.ExtendedTypeKind.TextLiteral],
         };
@@ -465,7 +465,7 @@ export function assertIsLogical(type: Type.TPowerQueryType): asserts type is Typ
     if (!isType.isLogical(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Logical,
             expectedExtendedTypeKind: [undefined, Type.ExtendedTypeKind.LogicalLiteral],
         };
@@ -478,7 +478,7 @@ export function assertIsLogicalLiteral(type: Type.TPowerQueryType): asserts type
     if (!isType.isLogicalLiteral(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Logical,
             expectedExtendedTypeKind: [Type.ExtendedTypeKind.LogicalLiteral],
         };
@@ -491,7 +491,7 @@ export function assertIsNone(type: Type.TPowerQueryType): asserts type is Type.N
     if (!isType.isNone(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.None,
             expectedExtendedTypeKind: undefined,
         };
@@ -504,7 +504,7 @@ export function assertIsNotApplicable(type: Type.TPowerQueryType): asserts type 
     if (!isType.isNotApplicable(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.NotApplicable,
             expectedExtendedTypeKind: undefined,
         };
@@ -517,7 +517,7 @@ export function assertIsNull(type: Type.TPowerQueryType): asserts type is Type.N
     if (!isType.isNull(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Null,
             expectedExtendedTypeKind: undefined,
         };
@@ -530,7 +530,7 @@ export function assertIsNumber(type: Type.TPowerQueryType): asserts type is Type
     if (!isType.isNumber(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Number,
             expectedExtendedTypeKind: [undefined, Type.ExtendedTypeKind.NumberLiteral],
         };
@@ -543,7 +543,7 @@ export function assertIsNumberLiteral(type: Type.TPowerQueryType): asserts type 
     if (!isType.isNumber(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Number,
             expectedExtendedTypeKind: [Type.ExtendedTypeKind.NumberLiteral],
         };
@@ -556,7 +556,7 @@ export function assertIsPrimaryPrimitiveType(type: Type.TPowerQueryType): assert
     if (!isType.isPrimaryPrimitiveType(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Type,
             expectedExtendedTypeKind: [Type.ExtendedTypeKind.PrimaryPrimitiveType],
         };
@@ -569,7 +569,7 @@ export function assertIsTPrimitiveType(type: Type.TPowerQueryType): asserts type
     if (!isType.isTPrimitiveType(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: [
                 Type.TypeKind.Action,
                 Type.TypeKind.Any,
@@ -604,7 +604,7 @@ export function assertIsRecord(type: Type.TPowerQueryType): asserts type is Type
     if (!isType.isRecord(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Record,
             expectedExtendedTypeKind: [undefined, Type.ExtendedTypeKind.DefinedRecord],
         };
@@ -617,7 +617,7 @@ export function assertIsRecordType(type: Type.TPowerQueryType): asserts type is 
     if (!isType.isRecordType(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Type,
             expectedExtendedTypeKind: [Type.ExtendedTypeKind.RecordType],
         };
@@ -630,7 +630,7 @@ export function assertIsTable(type: Type.TPowerQueryType): asserts type is Type.
     if (!isType.isTable(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Table,
             expectedExtendedTypeKind: [undefined, Type.ExtendedTypeKind.DefinedTable],
         };
@@ -643,7 +643,7 @@ export function assertIsTableType(type: Type.TPowerQueryType): asserts type is T
     if (!isType.isTableType(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Type,
             expectedExtendedTypeKind: [Type.ExtendedTypeKind.TableType],
         };
@@ -658,7 +658,7 @@ export function assertIsTableTypePrimaryExpression(
     if (!isType.isTableTypePrimaryExpression(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Type,
             expectedExtendedTypeKind: [Type.ExtendedTypeKind.TableTypePrimaryExpression],
         };
@@ -671,7 +671,7 @@ export function assertIsText(type: Type.TPowerQueryType): asserts type is Type.T
     if (!isType.isText(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Text,
             expectedExtendedTypeKind: [undefined, Type.ExtendedTypeKind.TextLiteral],
         };
@@ -684,7 +684,7 @@ export function assertIsTextLiteral(type: Type.TPowerQueryType): asserts type is
     if (!isType.isText(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Text,
             expectedExtendedTypeKind: [Type.ExtendedTypeKind.TextLiteral],
         };
@@ -697,7 +697,7 @@ export function assertIsTime(type: Type.TPowerQueryType): asserts type is Type.T
     if (!isType.isTime(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Time,
             expectedExtendedTypeKind: undefined,
         };
@@ -710,7 +710,7 @@ export function assertIsType(type: Type.TPowerQueryType): asserts type is Type.T
     if (!isType.isType(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Type,
             expectedExtendedTypeKind: undefined,
         };
@@ -723,7 +723,7 @@ export function assertIsUnknown(type: Type.TPowerQueryType): asserts type is Typ
     if (!isType.isUnknown(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
-            givenExtendedTypeKind: type.maybeExtendedKind,
+            givenExtendedTypeKind: type.extendedKind,
             expectedTypeKind: Type.TypeKind.Unknown,
             expectedExtendedTypeKind: undefined,
         };

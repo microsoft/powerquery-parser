@@ -22,7 +22,7 @@ async function assertGetExpectedTokenKindError(text: string): Promise<ParseError
 
 async function assertErrorAt(text: string, lineNumber: number, columnNumber: number, codeUnit: number): Promise<void> {
     const error: ParseError.ExpectedTokenKindError = await assertGetExpectedTokenKindError(text);
-    const foundToken: ParseError.TokenWithColumnNumber = Assert.asDefined(error.maybeFoundToken);
+    const foundToken: ParseError.TokenWithColumnNumber = Assert.asDefined(error.foundToken);
 
     expect(foundToken.token.positionStart.codeUnit).to.equal(codeUnit, "codeUnit");
     expect(foundToken.token.positionStart.lineNumber).to.equal(lineNumber, "lineNumber");

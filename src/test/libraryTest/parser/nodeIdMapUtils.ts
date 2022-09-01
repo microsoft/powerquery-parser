@@ -303,7 +303,7 @@ describe(`nodeIdMapUtils`, () => {
             const recordExpressionNodeId: number = recordExpressionNodeIds.values().next().value;
 
             XorNodeUtils.assertUnboxAstChecked(
-                Assert.asDefined(NodeIdMapUtils.maybeUnboxWrappedContent(nodeIdMapCollection, recordExpressionNodeId)),
+                Assert.asDefined(NodeIdMapUtils.unboxWrappedContent(nodeIdMapCollection, recordExpressionNodeId)),
                 Ast.NodeKind.ArrayWrapper,
             );
         });
@@ -326,7 +326,7 @@ describe(`nodeIdMapUtils`, () => {
             const recordExpressionNodeId: number = recordExpressionNodeIds.values().next().value;
 
             XorNodeUtils.assertUnboxAstChecked(
-                Assert.asDefined(NodeIdMapUtils.maybeUnboxWrappedContent(nodeIdMapCollection, recordExpressionNodeId)),
+                Assert.asDefined(NodeIdMapUtils.unboxWrappedContent(nodeIdMapCollection, recordExpressionNodeId)),
                 Ast.NodeKind.ArrayWrapper,
             );
         });

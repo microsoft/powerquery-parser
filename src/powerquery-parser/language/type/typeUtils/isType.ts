@@ -13,7 +13,7 @@ export function isAny(type: Type.TPowerQueryType): type is Type.TAny {
 }
 
 export function isAnyUnion(type: Type.TPowerQueryType): type is Type.AnyUnion {
-    return type.kind === Type.TypeKind.Any && type.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion;
+    return type.kind === Type.TypeKind.Any && type.extendedKind === Type.ExtendedTypeKind.AnyUnion;
 }
 
 export function isAnyNonNull(type: Type.TPowerQueryType): type is Type.AnyNonNull {
@@ -37,23 +37,23 @@ export function isDateTimeZone(type: Type.TPowerQueryType): type is Type.DateTim
 }
 
 export function isDefinedFunction(type: Type.TPowerQueryType): type is Type.DefinedFunction {
-    return type.kind === Type.TypeKind.Function && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedFunction;
+    return type.kind === Type.TypeKind.Function && type.extendedKind === Type.ExtendedTypeKind.DefinedFunction;
 }
 
 export function isDefinedList(type: Type.TPowerQueryType): type is Type.DefinedList {
-    return type.kind === Type.TypeKind.List && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedList;
+    return type.kind === Type.TypeKind.List && type.extendedKind === Type.ExtendedTypeKind.DefinedList;
 }
 
 export function isDefinedListType(type: Type.TPowerQueryType): type is Type.DefinedListType {
-    return type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedListType;
+    return type.kind === Type.TypeKind.Type && type.extendedKind === Type.ExtendedTypeKind.DefinedListType;
 }
 
 export function isDefinedRecord(type: Type.TPowerQueryType): type is Type.DefinedRecord {
-    return type.kind === Type.TypeKind.Record && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedRecord;
+    return type.kind === Type.TypeKind.Record && type.extendedKind === Type.ExtendedTypeKind.DefinedRecord;
 }
 
 export function isDefinedTable(type: Type.TPowerQueryType): type is Type.DefinedTable {
-    return type.kind === Type.TypeKind.Table && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedTable;
+    return type.kind === Type.TypeKind.Table && type.extendedKind === Type.ExtendedTypeKind.DefinedTable;
 }
 
 export function isDuration(type: Type.TPowerQueryType): type is Type.Duration {
@@ -64,10 +64,10 @@ export function isFieldSpecificationList(
     type: Type.TPowerQueryType,
 ): type is Type.TPowerQueryType & Type.TFieldSpecificationList {
     return (
-        (type.kind === Type.TypeKind.Record && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedRecord) ||
-        (type.kind === Type.TypeKind.Table && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedTable) ||
-        (type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.RecordType) ||
-        (type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.TableType)
+        (type.kind === Type.TypeKind.Record && type.extendedKind === Type.ExtendedTypeKind.DefinedRecord) ||
+        (type.kind === Type.TypeKind.Table && type.extendedKind === Type.ExtendedTypeKind.DefinedTable) ||
+        (type.kind === Type.TypeKind.Type && type.extendedKind === Type.ExtendedTypeKind.RecordType) ||
+        (type.kind === Type.TypeKind.Type && type.extendedKind === Type.ExtendedTypeKind.TableType)
     );
 }
 
@@ -77,13 +77,13 @@ export function isFunction(type: Type.TPowerQueryType): type is Type.TFunction {
 
 export function isFunctionSignature(type: Type.TPowerQueryType): type is Type.TPowerQueryType & Type.FunctionSignature {
     return (
-        (type.kind === Type.TypeKind.Function && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedFunction) ||
-        (type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.FunctionType)
+        (type.kind === Type.TypeKind.Function && type.extendedKind === Type.ExtendedTypeKind.DefinedFunction) ||
+        (type.kind === Type.TypeKind.Type && type.extendedKind === Type.ExtendedTypeKind.FunctionType)
     );
 }
 
 export function isFunctionType(type: Type.TPowerQueryType): type is Type.FunctionType {
-    return type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.FunctionType;
+    return type.kind === Type.TypeKind.Type && type.extendedKind === Type.ExtendedTypeKind.FunctionType;
 }
 
 export function isList(type: Type.TPowerQueryType): type is Type.TList {
@@ -92,9 +92,9 @@ export function isList(type: Type.TPowerQueryType): type is Type.TList {
 
 export function isLiteral(type: Type.TPowerQueryType): type is Type.TLiteral {
     return (
-        type.maybeExtendedKind === Type.ExtendedTypeKind.LogicalLiteral ||
-        type.maybeExtendedKind === Type.ExtendedTypeKind.TextLiteral ||
-        type.maybeExtendedKind === Type.ExtendedTypeKind.NumberLiteral
+        type.extendedKind === Type.ExtendedTypeKind.LogicalLiteral ||
+        type.extendedKind === Type.ExtendedTypeKind.TextLiteral ||
+        type.extendedKind === Type.ExtendedTypeKind.NumberLiteral
     );
 }
 
@@ -103,7 +103,7 @@ export function isLogical(type: Type.TPowerQueryType): type is Type.TLogical {
 }
 
 export function isLogicalLiteral(type: Type.TPowerQueryType): type is Type.LogicalLiteral {
-    return type.kind === Type.TypeKind.Logical && type.maybeExtendedKind === Type.ExtendedTypeKind.LogicalLiteral;
+    return type.kind === Type.TypeKind.Logical && type.extendedKind === Type.ExtendedTypeKind.LogicalLiteral;
 }
 
 export function isNone(type: Type.TPowerQueryType): type is Type.None {
@@ -123,11 +123,11 @@ export function isNumber(type: Type.TPowerQueryType): type is Type.Number {
 }
 
 export function isNumberLiteral(type: Type.TPowerQueryType): type is Type.NumberLiteral {
-    return type.kind === Type.TypeKind.Number && type.maybeExtendedKind === Type.ExtendedTypeKind.NumberLiteral;
+    return type.kind === Type.TypeKind.Number && type.extendedKind === Type.ExtendedTypeKind.NumberLiteral;
 }
 
 export function isPrimaryPrimitiveType(type: Type.TPowerQueryType): type is Type.PrimaryPrimitiveType {
-    return type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.PrimaryPrimitiveType;
+    return type.kind === Type.TypeKind.Type && type.extendedKind === Type.ExtendedTypeKind.PrimaryPrimitiveType;
 }
 
 export function isRecord(type: Type.TPowerQueryType): type is Type.TRecord {
@@ -135,7 +135,7 @@ export function isRecord(type: Type.TPowerQueryType): type is Type.TRecord {
 }
 
 export function isRecordType(type: Type.TPowerQueryType): type is Type.RecordType {
-    return type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.RecordType;
+    return type.kind === Type.TypeKind.Type && type.extendedKind === Type.ExtendedTypeKind.RecordType;
 }
 
 export function isTable(type: Type.TPowerQueryType): type is Type.TTable {
@@ -143,13 +143,11 @@ export function isTable(type: Type.TPowerQueryType): type is Type.TTable {
 }
 
 export function isTableType(type: Type.TPowerQueryType): type is Type.TableType {
-    return type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.TableType;
+    return type.kind === Type.TypeKind.Type && type.extendedKind === Type.ExtendedTypeKind.TableType;
 }
 
 export function isTableTypePrimaryExpression(type: Type.TPowerQueryType): type is Type.TableTypePrimaryExpression {
-    return (
-        type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.TableTypePrimaryExpression
-    );
+    return type.kind === Type.TypeKind.Type && type.extendedKind === Type.ExtendedTypeKind.TableTypePrimaryExpression;
 }
 
 export function isText(type: Type.TPowerQueryType): type is Type.Text {
@@ -157,7 +155,7 @@ export function isText(type: Type.TPowerQueryType): type is Type.Text {
 }
 
 export function isTextLiteral(type: Type.TPowerQueryType): type is Type.TextLiteral {
-    return type.kind === Type.TypeKind.Text && type.maybeExtendedKind === Type.ExtendedTypeKind.TextLiteral;
+    return type.kind === Type.TypeKind.Text && type.extendedKind === Type.ExtendedTypeKind.TextLiteral;
 }
 
 export function isTime(type: Type.TPowerQueryType): type is Type.Time {
@@ -185,7 +183,7 @@ export function isTPrimitiveType(type: Type.TPowerQueryType): type is Type.TPrim
         case Type.TypeKind.Text:
         case Type.TypeKind.Time:
         case Type.TypeKind.Type:
-            return type.maybeExtendedKind === undefined;
+            return type.extendedKind === undefined;
 
         case Type.TypeKind.Unknown:
         case Type.TypeKind.NotApplicable:

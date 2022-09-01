@@ -138,9 +138,9 @@ export function expandXorParent<T>(
     xorNode: TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): Promise<ReadonlyArray<TXorNode>> {
-    const maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXor(nodeIdMapCollection, xorNode.node.id);
+    const parent: TXorNode | undefined = NodeIdMapUtils.parentXor(nodeIdMapCollection, xorNode.node.id);
 
-    return Promise.resolve(maybeParent !== undefined ? [maybeParent] : []);
+    return Promise.resolve(parent !== undefined ? [parent] : []);
 }
 
 const enum TraversalTraceConstant {
@@ -155,7 +155,7 @@ async function traverseRecursion<State extends ITraversalState<ResultType>, Resu
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<State, ResultType, Node, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
-    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
+    earlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
     correlationId: number | undefined,
 ): Promise<void> {
     const trace: Trace = state.traceManager.entry(
@@ -166,7 +166,7 @@ async function traverseRecursion<State extends ITraversalState<ResultType>, Resu
 
     state.cancellationToken?.throwIfCancelled();
 
-    if (maybeEarlyExitFn && (await maybeEarlyExitFn(state, node, trace.id))) {
+    if (earlyExitFn && (await earlyExitFn(state, node, trace.id))) {
         return;
     } else if (strategy === VisitNodeStrategy.BreadthFirst) {
         await visitNodeFn(state, node, trace.id);
@@ -174,16 +174,7 @@ async function traverseRecursion<State extends ITraversalState<ResultType>, Resu
 
     for (const child of await expandNodesFn(state, node, nodesById)) {
         // eslint-disable-next-line no-await-in-loop
-        await traverseRecursion(
-            state,
-            nodesById,
-            child,
-            strategy,
-            visitNodeFn,
-            expandNodesFn,
-            maybeEarlyExitFn,
-            trace.id,
-        );
+        await traverseRecursion(state, nodesById, child, strategy, visitNodeFn, expandNodesFn, earlyExitFn, trace.id);
     }
 
     if (strategy === VisitNodeStrategy.DepthFirst) {

@@ -23,13 +23,13 @@ import { ParseError } from "..";
 export async function readAmbiguous<T extends Ast.TNode>(
     state: ParseState,
     parser: Parser,
-    parseFns: ReadonlyArray<(state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) => Promise<T>>,
-    maybeCorrelationId: number | undefined,
+    parseFns: ReadonlyArray<(state: ParseState, parser: Parser, correlationId: number | undefined) => Promise<T>>,
+    correlationId: number | undefined,
 ): Promise<AmbiguousParse<T>> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         readAmbiguous.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [TraceConstant.Length]: parseFns.length,
         },
@@ -77,12 +77,12 @@ export async function readAmbiguousBracket(
     state: ParseState,
     parser: Parser,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<TAmbiguousBracketNode> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         readAmbiguousBracket.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
     // We might be able to peek at tokens to disambiguate what bracketed expression is next.
@@ -141,12 +141,12 @@ export async function readAmbiguousBracket(
 export async function readAmbiguousParenthesis(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<TAmbiguousParenthesisNode> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         readAmbiguousParenthesis.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
     // We might be able to peek at tokens to disambiguate what parenthesized expression is next.
@@ -203,12 +203,12 @@ export async function readAmbiguousParenthesis(
 export async function maybeDisambiguateParenthesis(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<ParenthesisDisambiguation | undefined> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         maybeDisambiguateParenthesis.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
     const initialTokenIndex: number = state.tokenIndex;
@@ -282,12 +282,12 @@ export async function maybeDisambiguateParenthesis(
 export function maybeDisambiguateBracket(
     state: ParseState,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): BracketDisambiguation | undefined {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         maybeDisambiguateBracket.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
     let offsetTokenIndex: number = state.tokenIndex + 1;
@@ -342,12 +342,12 @@ async function thoroughReadAmbiguousBracket(
     state: ParseState,
     parser: Parser,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<TAmbiguousBracketNode> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         readAmbiguousBracket.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
     const ambiguousBracket: TAmbiguousBracketNode = await thoroughReadAmbiguous(
@@ -368,26 +368,26 @@ async function thoroughReadAmbiguousBracket(
 async function thoroughReadAmbiguousParenthesis(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<TAmbiguousParenthesisNode> {
     return await thoroughReadAmbiguous<TAmbiguousParenthesisNode>(
         state,
         parser,
         [parser.readFunctionExpression, readParenthesizedExpressionOrBinOpExpression],
-        maybeCorrelationId,
+        correlationId,
     );
 }
 
 async function thoroughReadAmbiguous<T extends TAmbiguousBracketNode | TAmbiguousParenthesisNode>(
     state: ParseState,
     parser: Parser,
-    parseFns: ReadonlyArray<(state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) => Promise<T>>,
-    maybeCorrelationId: number | undefined,
+    parseFns: ReadonlyArray<(state: ParseState, parser: Parser, correlationId: number | undefined) => Promise<T>>,
+    correlationId: number | undefined,
 ): Promise<T> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         thoroughReadAmbiguous.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [TraceConstant.Length]: parseFns.length,
         },
@@ -422,7 +422,7 @@ function bracketDisambiguationParseFunctions(
     parser: Parser,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
 ): ReadonlyArray<
-    (state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) => Promise<TAmbiguousBracketNode>
+    (state: ParseState, parser: Parser, correlationId: number | undefined) => Promise<TAmbiguousBracketNode>
 > {
     return allowedVariants.map((bracketDisambiguation: BracketDisambiguation) => {
         switch (bracketDisambiguation) {
@@ -447,12 +447,12 @@ function bracketDisambiguationParseFunctions(
 async function readParenthesizedExpressionOrBinOpExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.ParenthesizedExpression | Ast.TLogicalExpression> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         readParenthesizedExpressionOrBinOpExpression.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
     const node: Ast.TNode = await parser.readLogicalExpression(state, parser, trace.id);
@@ -482,11 +482,11 @@ function unsafeMoveTo(state: ParseState, tokenIndex: number): void {
     state.tokenIndex = tokenIndex;
 
     if (tokenIndex < tokens.length) {
-        state.maybeCurrentToken = tokens[tokenIndex];
-        state.maybeCurrentTokenKind = state.maybeCurrentToken.kind;
+        state.currentToken = tokens[tokenIndex];
+        state.currentTokenKind = state.currentToken.kind;
     } else {
-        state.maybeCurrentToken = undefined;
-        state.maybeCurrentTokenKind = undefined;
+        state.currentToken = undefined;
+        state.currentTokenKind = undefined;
     }
 }
 

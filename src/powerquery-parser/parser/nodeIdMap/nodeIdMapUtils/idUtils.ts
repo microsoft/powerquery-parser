@@ -18,9 +18,9 @@ export function recalculateIds(
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeStart: TXorNode,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Map<number, number> {
-    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, recalculateIds.name, maybeCorrelationId);
+    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, recalculateIds.name, correlationId);
 
     const visitedXorNodes: TXorNode[] = [];
     const nodeIds: number[] = [];
@@ -60,9 +60,9 @@ export function updateNodeIds(
     nodeIdMapCollection: Collection,
     newIdByOldId: Map<number, number>,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): void {
-    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, updateNodeIds.name, maybeCorrelationId, {
+    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, updateNodeIds.name, correlationId, {
         [IdUtilsTraceConstant.MapSize]: newIdByOldId.size,
     });
 

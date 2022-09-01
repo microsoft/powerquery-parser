@@ -31,56 +31,56 @@ export const CombinatorialParser: Parser = {
     restoreCheckpoint: ParserUtils.restoreCheckpoint,
 
     // 12.2.3.2 Logical expressions
-    readLogicalExpression: (state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) =>
+    readLogicalExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
         readBinOpExpression(
             state,
             parser,
             Ast.NodeKind.LogicalExpression,
-            maybeCorrelationId,
+            correlationId,
         ) as Promise<Ast.TLogicalExpression>,
 
     // 12.2.3.3 Is expression
-    readIsExpression: (state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) =>
-        readBinOpExpression(state, parser, Ast.NodeKind.IsExpression, maybeCorrelationId) as Promise<Ast.TIsExpression>,
+    readIsExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
+        readBinOpExpression(state, parser, Ast.NodeKind.IsExpression, correlationId) as Promise<Ast.TIsExpression>,
 
     // 12.2.3.4 As expression
-    readAsExpression: (state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) =>
-        readBinOpExpression(state, parser, Ast.NodeKind.AsExpression, maybeCorrelationId) as Promise<Ast.TAsExpression>,
+    readAsExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
+        readBinOpExpression(state, parser, Ast.NodeKind.AsExpression, correlationId) as Promise<Ast.TAsExpression>,
 
     // 12.2.3.5 Equality expression
-    readEqualityExpression: (state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) =>
+    readEqualityExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
         readBinOpExpression(
             state,
             parser,
             Ast.NodeKind.EqualityExpression,
-            maybeCorrelationId,
+            correlationId,
         ) as Promise<Ast.TEqualityExpression>,
 
     // 12.2.3.6 Relational expression
-    readRelationalExpression: (state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) =>
+    readRelationalExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
         readBinOpExpression(
             state,
             parser,
             Ast.NodeKind.RelationalExpression,
-            maybeCorrelationId,
+            correlationId,
         ) as Promise<Ast.TRelationalExpression>,
 
     // 12.2.3.7 Arithmetic expressions
-    readArithmeticExpression: (state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) =>
+    readArithmeticExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
         readBinOpExpression(
             state,
             parser,
             Ast.NodeKind.ArithmeticExpression,
-            maybeCorrelationId,
+            correlationId,
         ) as Promise<Ast.TArithmeticExpression>,
 
     // 12.2.3.8 Metadata expression
-    readMetadataExpression: (state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) =>
+    readMetadataExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
         readBinOpExpression(
             state,
             parser,
             Ast.NodeKind.MetadataExpression,
-            maybeCorrelationId,
+            correlationId,
         ) as Promise<Ast.TMetadataExpression>,
 
     // 12.2.3.9 Unary expression
@@ -95,17 +95,17 @@ async function readBinOpExpression(
     state: ParseState,
     parser: Parser,
     nodeKind: Ast.NodeKind,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType> {
     const trace: Trace = state.traceManager.entry(
         CombinatorialTraceConstant.CombinatorialParse,
         readBinOpExpression.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
-    const placeholderContextId: number = Assert.asDefined(state.maybeCurrentContextNode).id;
+    const placeholderContextId: number = Assert.asDefined(state.currentContextNode).id;
 
     // operators/operatorConstants are of length N
     // expressions are of length N + 1
@@ -116,8 +116,9 @@ async function readBinOpExpression(
         await parser.readUnaryExpression(state, parser, trace.id),
     ];
 
-    let maybeOperator: Constant.TBinOpExpressionOperator | undefined =
-        ConstantUtils.maybeBinOpExpressionOperatorKindFrom(state.maybeCurrentTokenKind);
+    let maybeOperator: Constant.TBinOpExpressionOperator | undefined = ConstantUtils.binOpExpressionOperatorKindFrom(
+        state.currentTokenKind,
+    );
 
     while (maybeOperator !== undefined) {
         const operator: Constant.TBinOpExpressionOperator = maybeOperator;
@@ -126,7 +127,7 @@ async function readBinOpExpression(
         operatorConstants.push(
             NaiveParseSteps.readTokenKindAsConstant<Constant.TBinOpExpressionOperator>(
                 state,
-                Assert.asDefined(state.maybeCurrentTokenKind),
+                Assert.asDefined(state.currentTokenKind),
                 maybeOperator,
                 trace.id,
             ),
@@ -144,7 +145,7 @@ async function readBinOpExpression(
                 expressions.push(await parser.readUnaryExpression(state, parser, trace.id));
         }
 
-        maybeOperator = ConstantUtils.maybeBinOpExpressionOperatorKindFrom(state.maybeCurrentTokenKind);
+        maybeOperator = ConstantUtils.binOpExpressionOperatorKindFrom(state.currentTokenKind);
     }
 
     // There was a single TUnaryExpression, not a TBinOpExpression.
@@ -193,9 +194,9 @@ async function readBinOpExpression(
             Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType
         > = expressions[minPrecedenceIndex + 1];
 
-        left.maybeAttributeIndex = 0;
-        operatorConstant.maybeAttributeIndex = 1;
-        right.maybeAttributeIndex = 2;
+        left.attributeIndex = 0;
+        operatorConstant.attributeIndex = 1;
+        right.attributeIndex = 2;
 
         const leftTokenRange: Token.TokenRange = left.tokenRange;
         const rightTokenRange: Token.TokenRange = right.tokenRange;
@@ -204,7 +205,7 @@ async function readBinOpExpression(
             kind: binOpExpressionNodeKindFrom(operator),
             id: newBinOpExpressionId,
             // maybeAttributeIndex is fixed after all TBinOpExpressions have been created.
-            maybeAttributeIndex: 0,
+            attributeIndex: 0,
             tokenRange: {
                 tokenIndexStart: leftTokenRange.tokenIndexStart,
                 tokenIndexEnd: rightTokenRange.tokenIndexEnd,
@@ -320,20 +321,20 @@ function binOpExpressionNodeKindFrom(operator: Constant.TBinOpExpressionOperator
 async function readUnaryExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TUnaryExpression> {
     const trace: Trace = state.traceManager.entry(
         CombinatorialTraceConstant.CombinatorialParse,
         readUnaryExpression.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     let maybePrimaryExpression: Ast.TPrimaryExpression | undefined;
 
     // LL(1)
-    switch (state.maybeCurrentTokenKind) {
+    switch (state.currentTokenKind) {
         // PrimaryExpression
         case Token.TokenKind.AtSign:
         case Token.TokenKind.Identifier:

@@ -268,9 +268,9 @@ export function maybeIdentifierExpressionLiteral(xorNode: TXorNode): string | un
 
     const identifierExpression: Ast.IdentifierExpression = maybeIdentifierExpression;
 
-    return identifierExpression.maybeInclusiveConstant === undefined
+    return identifierExpression.inclusiveConstant === undefined
         ? identifierExpression.identifier.literal
-        : identifierExpression.maybeInclusiveConstant.constantKind + identifierExpression.identifier.literal;
+        : identifierExpression.inclusiveConstant.constantKind + identifierExpression.identifier.literal;
 }
 
 export function maybeUnboxAst(xorNode: TXorNode): Ast.TNode | undefined {

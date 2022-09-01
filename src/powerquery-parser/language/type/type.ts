@@ -223,13 +223,13 @@ export const enum ExtendedTypeKind {
 
 export interface IType<T extends TypeKind = TypeKind> {
     readonly kind: T;
-    readonly maybeExtendedKind: ExtendedTypeKind | undefined;
+    readonly extendedKind: ExtendedTypeKind | undefined;
     readonly isNullable: boolean;
 }
 
 export interface IExtendedType extends IType {
     readonly kind: TExtendedTypeKind;
-    readonly maybeExtendedKind: ExtendedTypeKind;
+    readonly extendedKind: ExtendedTypeKind;
 }
 
 export interface IPrimitiveLiteral<T> extends IExtendedType {
@@ -238,7 +238,7 @@ export interface IPrimitiveLiteral<T> extends IExtendedType {
 }
 
 export interface IPrimitiveType<T extends TypeKind = TypeKind> extends IType<T> {
-    readonly maybeExtendedKind: undefined;
+    readonly extendedKind: undefined;
 }
 
 // ------------------------------------------
@@ -266,7 +266,7 @@ export interface FunctionParameter {
     readonly nameLiteral: string;
     readonly isOptional: boolean;
     readonly isNullable: boolean;
-    readonly maybeType: TypeKind | undefined;
+    readonly type: TypeKind | undefined;
 }
 
 // -------------------------------------------
@@ -275,91 +275,91 @@ export interface FunctionParameter {
 
 export interface AnyUnion extends IExtendedType {
     readonly kind: TypeKind.Any;
-    readonly maybeExtendedKind: ExtendedTypeKind.AnyUnion;
+    readonly extendedKind: ExtendedTypeKind.AnyUnion;
     readonly unionedTypePairs: ReadonlyArray<TPowerQueryType>;
 }
 
 export type DefinedFunction = IExtendedType &
     FunctionSignature & {
         readonly kind: TypeKind.Function;
-        readonly maybeExtendedKind: ExtendedTypeKind.DefinedFunction;
+        readonly extendedKind: ExtendedTypeKind.DefinedFunction;
     };
 
 // A list which has a finite number of elements.
 export interface DefinedList extends IExtendedType {
     readonly kind: TypeKind.List;
-    readonly maybeExtendedKind: ExtendedTypeKind.DefinedList;
+    readonly extendedKind: ExtendedTypeKind.DefinedList;
     readonly elements: ReadonlyArray<TPowerQueryType>;
 }
 
 // A ListType for DefinedList
 export interface DefinedListType extends IExtendedType {
     readonly kind: TypeKind.Type;
-    readonly maybeExtendedKind: ExtendedTypeKind.DefinedListType;
+    readonly extendedKind: ExtendedTypeKind.DefinedListType;
     readonly itemTypes: ReadonlyArray<TPowerQueryType>;
 }
 
 export type DefinedRecord = IExtendedType &
     FieldSpecificationList<UnorderedFields> & {
         readonly kind: TypeKind.Record;
-        readonly maybeExtendedKind: ExtendedTypeKind.DefinedRecord;
+        readonly extendedKind: ExtendedTypeKind.DefinedRecord;
     };
 
 export type DefinedTable = IExtendedType &
     FieldSpecificationList<OrderedFields> & {
         readonly kind: TypeKind.Table;
-        readonly maybeExtendedKind: ExtendedTypeKind.DefinedTable;
+        readonly extendedKind: ExtendedTypeKind.DefinedTable;
     };
 
 export type FunctionType = IExtendedType &
     FunctionSignature & {
         readonly kind: TypeKind.Type;
-        readonly maybeExtendedKind: ExtendedTypeKind.FunctionType;
+        readonly extendedKind: ExtendedTypeKind.FunctionType;
     };
 
 export interface ListType extends IExtendedType {
     readonly kind: TypeKind.Type;
-    readonly maybeExtendedKind: ExtendedTypeKind.ListType;
+    readonly extendedKind: ExtendedTypeKind.ListType;
     readonly itemType: TPowerQueryType;
 }
 
 export interface LogicalLiteral extends IPrimitiveLiteral<boolean> {
     readonly kind: TypeKind.Logical;
-    readonly maybeExtendedKind: ExtendedTypeKind.LogicalLiteral;
+    readonly extendedKind: ExtendedTypeKind.LogicalLiteral;
 }
 
 export interface NumberLiteral extends IPrimitiveLiteral<number> {
     readonly kind: TypeKind.Number;
-    readonly maybeExtendedKind: ExtendedTypeKind.NumberLiteral;
+    readonly extendedKind: ExtendedTypeKind.NumberLiteral;
 }
 
 export interface PrimaryPrimitiveType extends IExtendedType {
     readonly kind: TypeKind.Type;
-    readonly maybeExtendedKind: ExtendedTypeKind.PrimaryPrimitiveType;
+    readonly extendedKind: ExtendedTypeKind.PrimaryPrimitiveType;
     readonly primitiveType: TPrimitiveType;
 }
 
 export type RecordType = IExtendedType &
     FieldSpecificationList<UnorderedFields> & {
         readonly kind: TypeKind.Type;
-        readonly maybeExtendedKind: ExtendedTypeKind.RecordType;
+        readonly extendedKind: ExtendedTypeKind.RecordType;
     };
 
 export type TableType = IExtendedType &
     FieldSpecificationList<UnorderedFields> & {
         readonly kind: TypeKind.Type;
-        readonly maybeExtendedKind: ExtendedTypeKind.TableType;
+        readonly extendedKind: ExtendedTypeKind.TableType;
     };
 
 export interface TableTypePrimaryExpression extends IExtendedType {
     readonly kind: TypeKind.Type;
-    readonly maybeExtendedKind: ExtendedTypeKind.TableTypePrimaryExpression;
+    readonly extendedKind: ExtendedTypeKind.TableTypePrimaryExpression;
     readonly primaryExpression: TPowerQueryType;
 }
 
 export interface TextLiteral extends IPrimitiveLiteral<string> {
     readonly kind: TypeKind.Text;
-    readonly maybeExtendedKind: ExtendedTypeKind.TextLiteral;
+    readonly extendedKind: ExtendedTypeKind.TextLiteral;
 }
 
 // -------------------------------------------------------
@@ -435,7 +435,7 @@ export const NullableTrueInstance: LogicalLiteral = createLogicalLiteral(true, t
 
 export const PrimitiveInstance: AnyUnion = {
     kind: TypeKind.Any,
-    maybeExtendedKind: ExtendedTypeKind.AnyUnion,
+    extendedKind: ExtendedTypeKind.AnyUnion,
     isNullable: false,
     unionedTypePairs: [
         ActionInstance,
@@ -463,7 +463,7 @@ export const PrimitiveInstance: AnyUnion = {
 
 export const NullablePrimitiveInstance: AnyUnion = {
     kind: TypeKind.Any,
-    maybeExtendedKind: ExtendedTypeKind.AnyUnion,
+    extendedKind: ExtendedTypeKind.AnyUnion,
     isNullable: true,
     unionedTypePairs: [
         NullableActionInstance,
@@ -489,14 +489,14 @@ export const NullablePrimitiveInstance: AnyUnion = {
 
 export const ExpressionInstance: AnyUnion = {
     kind: TypeKind.Any,
-    maybeExtendedKind: ExtendedTypeKind.AnyUnion,
+    extendedKind: ExtendedTypeKind.AnyUnion,
     isNullable: PrimitiveInstance.isNullable || NullablePrimitiveInstance.isNullable,
     unionedTypePairs: [...PrimitiveInstance.unionedTypePairs, ...NullablePrimitiveInstance.unionedTypePairs],
 };
 
 export const LiteralExpressionInstance: AnyUnion = {
     kind: TypeKind.Any,
-    maybeExtendedKind: ExtendedTypeKind.AnyUnion,
+    extendedKind: ExtendedTypeKind.AnyUnion,
     isNullable:
         LogicalInstance.isNullable || NumberInstance.isNullable || TextInstance.isNullable || NullInstance.isNullable,
     unionedTypePairs: [LogicalInstance, NumberInstance, TextInstance, NullInstance],
@@ -504,35 +504,35 @@ export const LiteralExpressionInstance: AnyUnion = {
 
 export const PrimaryExpressionInstance: AnyUnion = {
     kind: TypeKind.Any,
-    maybeExtendedKind: ExtendedTypeKind.AnyUnion,
+    extendedKind: ExtendedTypeKind.AnyUnion,
     isNullable: LiteralExpressionInstance.isNullable || ListInstance.isNullable || RecordInstance.isNullable,
     unionedTypePairs: [...LiteralExpressionInstance.unionedTypePairs, ListInstance, RecordInstance],
 };
 
 export const PrimaryTypeInstance: AnyUnion = {
     kind: TypeKind.Any,
-    maybeExtendedKind: ExtendedTypeKind.AnyUnion,
+    extendedKind: ExtendedTypeKind.AnyUnion,
     isNullable: true,
     unionedTypePairs: [...PrimitiveInstance.unionedTypePairs, ...NullablePrimitiveInstance.unionedTypePairs],
 };
 
 export const TypeProductionInstance: AnyUnion = {
     kind: TypeKind.Any,
-    maybeExtendedKind: ExtendedTypeKind.AnyUnion,
+    extendedKind: ExtendedTypeKind.AnyUnion,
     isNullable: ExpressionInstance.isNullable || PrimaryTypeInstance.isNullable,
     unionedTypePairs: [...ExpressionInstance.unionedTypePairs, ...PrimaryTypeInstance.unionedTypePairs],
 };
 
 export const TypeExpressionInstance: AnyUnion = {
     kind: TypeKind.Any,
-    maybeExtendedKind: ExtendedTypeKind.AnyUnion,
+    extendedKind: ExtendedTypeKind.AnyUnion,
     isNullable: PrimaryExpressionInstance.isNullable || PrimaryTypeInstance.isNullable,
     unionedTypePairs: [PrimaryExpressionInstance, PrimaryTypeInstance],
 };
 
 export const AnyLiteralInstance: AnyUnion = {
     kind: TypeKind.Any,
-    maybeExtendedKind: ExtendedTypeKind.AnyUnion,
+    extendedKind: ExtendedTypeKind.AnyUnion,
     isNullable:
         RecordInstance.isNullable ||
         ListInstance.isNullable ||
@@ -551,7 +551,7 @@ export const AnyLiteralInstance: AnyUnion = {
 function createPrimitiveType<T extends TypeKind>(typeKind: T, isNullable: boolean): IPrimitiveType<T> {
     return {
         kind: typeKind,
-        maybeExtendedKind: undefined,
+        extendedKind: undefined,
         isNullable,
     };
 }
@@ -560,7 +560,7 @@ function createLogicalLiteral(isNullable: boolean, normalizedLiteral: boolean): 
     return {
         isNullable,
         kind: TypeKind.Logical,
-        maybeExtendedKind: ExtendedTypeKind.LogicalLiteral,
+        extendedKind: ExtendedTypeKind.LogicalLiteral,
         literal: normalizedLiteral ? "true" : "false",
         normalizedLiteral,
     };

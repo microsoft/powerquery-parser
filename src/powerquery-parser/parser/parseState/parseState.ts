@@ -9,14 +9,14 @@ import { Token } from "../../language";
 import { TraceManager } from "../../common/trace";
 
 export interface ParseState {
+    readonly cancellationToken: ICancellationToken | undefined;
     readonly disambiguationBehavior: Disambiguation.DismabiguationBehavior;
     readonly lexerSnapshot: LexerSnapshot;
     readonly locale: string;
-    readonly maybeCancellationToken: ICancellationToken | undefined;
     readonly traceManager: TraceManager;
     contextState: ParseContext.State;
-    maybeCurrentToken: Token.Token | undefined;
-    maybeCurrentContextNode: ParseContext.TNode | undefined;
-    maybeCurrentTokenKind: Token.TokenKind | undefined;
+    currentContextNode: ParseContext.TNode | undefined;
+    currentToken: Token.Token | undefined;
+    currentTokenKind: Token.TokenKind | undefined;
     tokenIndex: number;
 }

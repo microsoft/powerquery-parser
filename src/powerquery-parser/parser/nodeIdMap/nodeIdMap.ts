@@ -26,7 +26,7 @@ export interface Collection {
     readonly parentIdById: ParentIdById;
 
     // The right most Ast in the parse context, which under normal circumstances is the most recently parsed node.
-    readonly maybeRightMostLeaf: Ast.TNode | undefined;
+    readonly rightMostLeaf: Ast.TNode | undefined;
 }
 
 type NumberMap<T> = Map<number, T>;

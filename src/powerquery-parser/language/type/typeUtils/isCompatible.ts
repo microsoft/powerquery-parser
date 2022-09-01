@@ -17,9 +17,9 @@ export function isCompatible(
     left: Type.TPowerQueryType,
     right: Type.TPowerQueryType,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): boolean | undefined {
-    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.IsCompatible, isCompatible.name, maybeCorrelationId);
+    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.IsCompatible, isCompatible.name, correlationId);
 
     let result: boolean | undefined;
 
@@ -125,11 +125,11 @@ export function isCompatibleWithFunctionParameter(
         return false;
     } else {
         return (
-            !right.maybeType ||
-            right.maybeType === Type.TypeKind.Any ||
+            !right.type ||
+            right.type === Type.TypeKind.Any ||
             left.kind === Type.TypeKind.Any ||
             (left.kind === Type.TypeKind.Null && right.isNullable) ||
-            left.kind === right.maybeType
+            left.kind === right.type
         );
     }
 }
@@ -148,7 +148,7 @@ function isCompatibleWithAny(
 
     let result: boolean | undefined;
 
-    switch (right.maybeExtendedKind) {
+    switch (right.extendedKind) {
         case undefined:
             result = true;
             break;
@@ -208,7 +208,7 @@ function isCompatibleWithDefinedList(
     if (left.kind !== right.kind) {
         result = false;
     } else {
-        switch (left.maybeExtendedKind) {
+        switch (left.extendedKind) {
             case undefined:
                 result = false;
                 break;
@@ -245,7 +245,7 @@ function isCompatibleWithDefinedListType(
     if (left.kind !== right.kind) {
         result = false;
     } else {
-        switch (left.maybeExtendedKind) {
+        switch (left.extendedKind) {
             case Type.ExtendedTypeKind.DefinedListType:
                 result = isCompatibleDefinedListOrDefinedListType(left, right, traceManager, trace.id);
                 break;
@@ -290,7 +290,7 @@ function isCompatibleWithDefinedRecord(
     if (left.kind !== right.kind) {
         result = false;
     } else {
-        switch (left.maybeExtendedKind) {
+        switch (left.extendedKind) {
             case undefined:
                 result = false;
                 break;
@@ -326,7 +326,7 @@ function isCompatibleWithDefinedTable(
     if (left.kind !== right.kind) {
         result = false;
     } else {
-        switch (left.maybeExtendedKind) {
+        switch (left.extendedKind) {
             case undefined:
                 result = false;
                 break;
@@ -397,7 +397,7 @@ function isCompatibleWithFunction(
     if (left.kind !== right.kind) {
         result = false;
     } else {
-        switch (right.maybeExtendedKind) {
+        switch (right.extendedKind) {
             case undefined:
                 result = true;
                 break;
@@ -433,9 +433,9 @@ function isCompatibleWithList(
     if (left.kind !== right.kind) {
         result = false;
     } else {
-        switch (right.maybeExtendedKind) {
+        switch (right.extendedKind) {
             case undefined:
-                result = left.maybeExtendedKind === undefined;
+                result = left.extendedKind === undefined;
                 break;
 
             case Type.ExtendedTypeKind.DefinedList:
@@ -469,7 +469,7 @@ function isCompatibleWithListType(
     if (left.kind !== right.kind) {
         result = false;
     } else {
-        switch (left.maybeExtendedKind) {
+        switch (left.extendedKind) {
             case Type.ExtendedTypeKind.DefinedListType:
                 result = isDefinedListTypeCompatibleWithListType(left, right, traceManager, trace.id);
                 break;
@@ -502,7 +502,7 @@ function isCompatibleWithPrimaryPrimitiveType(left: Type.TPowerQueryType, right:
         return false;
     }
 
-    switch (left.maybeExtendedKind) {
+    switch (left.extendedKind) {
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
             return left.primitiveType === right.primitiveType;
 
@@ -537,7 +537,7 @@ function isCompatibleWithRecord(
     if (left.kind !== right.kind) {
         result = false;
     } else {
-        switch (right.maybeExtendedKind) {
+        switch (right.extendedKind) {
             case undefined:
                 result = true;
                 break;
@@ -573,7 +573,7 @@ function isCompatibleWithRecordType(
     if (left.kind !== right.kind) {
         result = false;
     } else {
-        switch (left.maybeExtendedKind) {
+        switch (left.extendedKind) {
             case Type.ExtendedTypeKind.RecordType:
                 result = isCompatibleWithFieldSpecificationList(left, right, traceManager, trace.id);
                 break;
@@ -615,7 +615,7 @@ function isCompatibleWithTable(
     if (left.kind !== right.kind) {
         result = false;
     } else {
-        switch (right.maybeExtendedKind) {
+        switch (right.extendedKind) {
             case undefined:
                 result = true;
                 break;
@@ -651,7 +651,7 @@ function isCompatibleWithTableType(
     if (left.kind !== right.kind) {
         result = false;
     } else {
-        switch (left.maybeExtendedKind) {
+        switch (left.extendedKind) {
             case undefined:
                 result = false;
                 break;
@@ -696,7 +696,7 @@ function isCompatibleWithTableTypePrimaryExpression(
     if (left.kind !== right.kind) {
         result = false;
     } else {
-        switch (left.maybeExtendedKind) {
+        switch (left.extendedKind) {
             case undefined:
                 result = false;
                 break;
@@ -725,7 +725,7 @@ function isCompatibleWithTableTypePrimaryExpression(
 }
 
 function isCompatibleWithLiteral<T extends Type.TLiteral>(left: Type.TPowerQueryType, right: T): boolean {
-    if (left.kind !== right.kind || !left.maybeExtendedKind || left.maybeExtendedKind !== right.maybeExtendedKind) {
+    if (left.kind !== right.kind || !left.extendedKind || left.extendedKind !== right.extendedKind) {
         return false;
     } else {
         return left.normalizedLiteral === right.normalizedLiteral;
@@ -748,14 +748,14 @@ function isCompatibleDefinedListOrDefinedListType<T extends Type.DefinedList | T
     let rightElements: ReadonlyArray<Type.TPowerQueryType>;
 
     if (
-        left.maybeExtendedKind === Type.ExtendedTypeKind.DefinedList &&
-        right.maybeExtendedKind === Type.ExtendedTypeKind.DefinedList
+        left.extendedKind === Type.ExtendedTypeKind.DefinedList &&
+        right.extendedKind === Type.ExtendedTypeKind.DefinedList
     ) {
         leftElements = left.elements;
         rightElements = right.elements;
     } else if (
-        left.maybeExtendedKind === Type.ExtendedTypeKind.DefinedListType &&
-        right.maybeExtendedKind === Type.ExtendedTypeKind.DefinedListType
+        left.extendedKind === Type.ExtendedTypeKind.DefinedListType &&
+        right.extendedKind === Type.ExtendedTypeKind.DefinedListType
     ) {
         leftElements = left.itemTypes;
         rightElements = right.itemTypes;
@@ -763,8 +763,8 @@ function isCompatibleDefinedListOrDefinedListType<T extends Type.DefinedList | T
         throw new CommonError.InvariantError(`unknown scenario for isCompatibleDefinedListOrDefinedListType`, {
             leftTypeKind: left.kind,
             rightTypeKind: right.kind,
-            leftMaybeExtendedTypeKind: left.maybeExtendedKind,
-            rightMaybeExtendedTypeKind: right.maybeExtendedKind,
+            leftExtendedTypeKind: left.extendedKind,
+            rightExtendedTypeKind: right.extendedKind,
         });
     }
 
@@ -793,7 +793,7 @@ function isCompatibleWithPrimitiveOrLiteral(
     left: Type.TPowerQueryType,
     right: Type.TLogical | Type.TText | Type.TNumber,
 ): boolean {
-    return left.kind === right.kind && (!right.maybeExtendedKind || isCompatibleWithLiteral(left, right));
+    return left.kind === right.kind && (!right.extendedKind || isCompatibleWithLiteral(left, right));
 }
 
 function isCompatibleWithType(
@@ -821,7 +821,7 @@ function isCompatibleWithType(
     if (left.kind !== right.kind) {
         result = false;
     } else {
-        switch (right.maybeExtendedKind) {
+        switch (right.extendedKind) {
             case undefined:
                 result = true;
                 break;

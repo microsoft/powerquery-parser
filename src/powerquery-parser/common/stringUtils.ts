@@ -151,7 +151,7 @@ export function findQuotes(text: string, indexStart: number): FoundQuotes | unde
     };
 }
 
-export function maybeNewlineKindAt(text: string, index: number): NewlineKind | undefined {
+export function newlineKindAt(text: string, index: number): NewlineKind | undefined {
     const chr1: string = text[index];
 
     switch (chr1) {

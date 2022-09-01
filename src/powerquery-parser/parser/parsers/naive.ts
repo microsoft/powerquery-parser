@@ -35,7 +35,7 @@ interface WrappedRead<
     Content,
     Close extends Constant.WrapperConstant,
 > extends Ast.IWrapped<Kind, Open, Content, Close> {
-    readonly maybeOptionalConstant: Ast.IConstant<Constant.MiscConstant.QuestionMark> | undefined;
+    readonly optionalConstant: Ast.IConstant<Constant.MiscConstant.QuestionMark> | undefined;
 }
 
 const GeneralizedIdentifierTerminatorTokenKinds: ReadonlyArray<Token.TokenKind> = [
@@ -52,11 +52,11 @@ export function readIdentifier(
     state: ParseState,
     _parser: Parser,
     identifierContextKind: Ast.IdentifierContextKind,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Ast.Identifier {
     const nodeKind: Ast.NodeKind.Identifier = Ast.NodeKind.Identifier;
 
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIdentifier.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIdentifier.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -83,14 +83,14 @@ export function readIdentifier(
 export async function readGeneralizedIdentifier(
     state: ParseState,
     _parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.GeneralizedIdentifier> {
     const nodeKind: Ast.NodeKind.GeneralizedIdentifier = Ast.NodeKind.GeneralizedIdentifier;
 
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readGeneralizedIdentifier.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -101,10 +101,7 @@ export async function readGeneralizedIdentifier(
     const tokenRangeStartIndex: number = state.tokenIndex;
     let tokenRangeEndIndex: number = tokenRangeStartIndex;
 
-    while (
-        state.maybeCurrentTokenKind &&
-        GeneralizedIdentifierTerminatorTokenKinds.indexOf(state.maybeCurrentTokenKind) === -1
-    ) {
+    while (state.currentTokenKind && GeneralizedIdentifierTerminatorTokenKinds.indexOf(state.currentTokenKind) === -1) {
         readToken(state);
         tokenRangeEndIndex = state.tokenIndex;
     }
@@ -160,11 +157,11 @@ export async function readGeneralizedIdentifier(
 export function readKeyword(
     state: ParseState,
     _parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Ast.IdentifierExpression {
     const nodeKind: Ast.NodeKind.IdentifierExpression = Ast.NodeKind.IdentifierExpression;
 
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readKeyword.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readKeyword.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -192,7 +189,7 @@ export function readKeyword(
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: false,
-        maybeInclusiveConstant: undefined,
+        inclusiveConstant: undefined,
         identifier,
     };
 
@@ -209,13 +206,13 @@ export function readKeyword(
 export async function readDocument(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TDocument> {
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readDocument.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readDocument.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     let document: Ast.TDocument;
 
@@ -236,11 +233,11 @@ export async function readDocument(
         // Reset the parser's state.
         state.tokenIndex = 0;
         state.contextState = ParseContextUtils.createState();
-        state.maybeCurrentContextNode = undefined;
+        state.currentContextNode = undefined;
 
         if (state.lexerSnapshot.tokens.length) {
-            state.maybeCurrentToken = state.lexerSnapshot.tokens[0];
-            state.maybeCurrentTokenKind = state.maybeCurrentToken?.kind;
+            state.currentToken = state.lexerSnapshot.tokens[0];
+            state.currentTokenKind = state.currentToken?.kind;
         }
 
         try {
@@ -284,20 +281,15 @@ export async function readDocument(
 export async function readSectionDocument(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.Section> {
     const nodeKind: Ast.NodeKind.Section = Ast.NodeKind.Section;
 
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readSectionDocument.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readSectionDocument.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
     const maybeLiteralAttributes: Ast.RecordLiteral | undefined = await maybeReadLiteralAttributes(
@@ -338,9 +330,9 @@ export async function readSectionDocument(
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: false,
-        maybeLiteralAttributes,
+        literalAttributes: maybeLiteralAttributes,
         sectionConstant,
-        maybeName,
+        name: maybeName,
         semicolonConstant,
         sectionMembers,
     };
@@ -354,20 +346,15 @@ export async function readSectionDocument(
 export async function readSectionMembers(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.IArrayWrapper<Ast.SectionMember>> {
     const nodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
 
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readSectionMembers.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readSectionMembers.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
     const totalTokens: number = state.lexerSnapshot.tokens.length;
@@ -394,20 +381,15 @@ export async function readSectionMembers(
 export async function readSectionMember(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.SectionMember> {
     const nodeKind: Ast.NodeKind.SectionMember = Ast.NodeKind.SectionMember;
 
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readSectionMember.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readSectionMember.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
     const maybeLiteralAttributes: Ast.RecordLiteral | undefined = await maybeReadLiteralAttributes(
@@ -436,8 +418,8 @@ export async function readSectionMember(
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: false,
-        maybeLiteralAttributes,
-        maybeSharedConstant,
+        literalAttributes: maybeLiteralAttributes,
+        sharedConstant: maybeSharedConstant,
         namePairedExpression,
         semicolonConstant,
     };
@@ -459,18 +441,18 @@ export async function readSectionMember(
 export async function readNullCoalescingExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TExpression> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readNullCoalescingExpression.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const expression: Ast.TExpression = await recursiveReadBinOpExpression<
         Ast.NodeKind.NullCoalescingExpression,
@@ -497,17 +479,17 @@ export async function readNullCoalescingExpression(
 export async function readExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TExpression> {
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readExpression.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readExpression.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     let expression: Ast.TExpression;
 
-    switch (state.maybeCurrentTokenKind) {
+    switch (state.currentTokenKind) {
         case Token.TokenKind.KeywordEach:
             expression = await parser.readEachExpression(state, parser, trace.id);
             break;
@@ -549,18 +531,13 @@ export async function readExpression(
 export async function readLogicalExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TLogicalExpression> {
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readLogicalExpression.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readLogicalExpression.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const logicalExpression: Ast.TLogicalExpression = await recursiveReadBinOpExpression<
         Ast.NodeKind.LogicalExpression,
@@ -572,7 +549,7 @@ export async function readLogicalExpression(
         Ast.NodeKind.LogicalExpression,
         () => parser.readIsExpression(state, parser, trace.id),
         (maybeCurrentTokenKind: Token.TokenKind | undefined) =>
-            ConstantUtils.maybeLogicalOperatorKindFrom(maybeCurrentTokenKind),
+            ConstantUtils.logicalOperatorKindFrom(maybeCurrentTokenKind),
         () => parser.readIsExpression(state, parser, trace.id),
         trace.id,
     );
@@ -589,13 +566,13 @@ export async function readLogicalExpression(
 export async function readIsExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TIsExpression> {
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIsExpression.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIsExpression.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const isExpression: Ast.TIsExpression = await recursiveReadBinOpExpression<
         Ast.NodeKind.IsExpression,
@@ -621,18 +598,18 @@ export async function readIsExpression(
 export async function readNullablePrimitiveType(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TNullablePrimitiveType> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readNullablePrimitiveType.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     let nullablePrimitiveType: Ast.TNullablePrimitiveType;
 
@@ -660,13 +637,13 @@ export async function readNullablePrimitiveType(
 export async function readAsExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TAsExpression> {
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readAsExpression.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readAsExpression.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const asExpression: Ast.TAsExpression = await recursiveReadBinOpExpression<
         Ast.NodeKind.AsExpression,
@@ -695,18 +672,18 @@ export async function readAsExpression(
 export async function readEqualityExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TEqualityExpression> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readEqualityExpression.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const equalityExpression: Ast.TEqualityExpression = await recursiveReadBinOpExpression<
         Ast.NodeKind.EqualityExpression,
@@ -718,7 +695,7 @@ export async function readEqualityExpression(
         Ast.NodeKind.EqualityExpression,
         () => parser.readRelationalExpression(state, parser, trace.id),
         (maybeCurrentTokenKind: Token.TokenKind | undefined) =>
-            ConstantUtils.maybeEqualityOperatorKindFrom(maybeCurrentTokenKind),
+            ConstantUtils.equalityOperatorKindFrom(maybeCurrentTokenKind),
         () => parser.readRelationalExpression(state, parser, trace.id),
         trace.id,
     );
@@ -735,18 +712,18 @@ export async function readEqualityExpression(
 export async function readRelationalExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TRelationalExpression> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readRelationalExpression.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const relationalExpression: Ast.TRelationalExpression = await recursiveReadBinOpExpression<
         Ast.NodeKind.RelationalExpression,
@@ -758,7 +735,7 @@ export async function readRelationalExpression(
         Ast.NodeKind.RelationalExpression,
         () => parser.readArithmeticExpression(state, parser, trace.id),
         (maybeCurrentTokenKind: Token.TokenKind | undefined) =>
-            ConstantUtils.maybeRelationalOperatorKindFrom(maybeCurrentTokenKind),
+            ConstantUtils.relationalOperatorKindFrom(maybeCurrentTokenKind),
         () => parser.readArithmeticExpression(state, parser, trace.id),
         trace.id,
     );
@@ -775,18 +752,18 @@ export async function readRelationalExpression(
 export async function readArithmeticExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TArithmeticExpression> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readArithmeticExpression.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const arithmeticExpression: Ast.TArithmeticExpression = await recursiveReadBinOpExpression<
         Ast.NodeKind.ArithmeticExpression,
@@ -798,7 +775,7 @@ export async function readArithmeticExpression(
         Ast.NodeKind.ArithmeticExpression,
         () => parser.readMetadataExpression(state, parser, trace.id),
         (maybeCurrentTokenKind: Token.TokenKind | undefined) =>
-            ConstantUtils.maybeArithmeticOperatorKindFrom(maybeCurrentTokenKind),
+            ConstantUtils.arithmeticOperatorKindFrom(maybeCurrentTokenKind),
         () => parser.readMetadataExpression(state, parser, trace.id),
         trace.id,
     );
@@ -815,20 +792,20 @@ export async function readArithmeticExpression(
 export async function readMetadataExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TMetadataExpression> {
     const nodeKind: Ast.NodeKind.MetadataExpression = Ast.NodeKind.MetadataExpression;
 
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readMetadataExpression.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
     const left: Ast.TUnaryExpression = await parser.readUnaryExpression(state, parser, trace.id);
@@ -879,22 +856,15 @@ export async function readMetadataExpression(
 export async function readUnaryExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TUnaryExpression> {
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readUnaryExpression.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readUnaryExpression.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
-    let maybeOperator: Constant.UnaryOperator | undefined = ConstantUtils.maybeUnaryOperatorKindFrom(
-        state.maybeCurrentTokenKind,
-    );
+    let maybeOperator: Constant.UnaryOperator | undefined = ConstantUtils.unaryOperatorKindFrom(state.currentTokenKind);
 
     if (maybeOperator === undefined) {
         trace.exit({
@@ -915,10 +885,10 @@ export async function readUnaryExpression(
 
     while (maybeOperator) {
         operatorConstants.push(
-            readTokenKindAsConstant(state, state.maybeCurrentTokenKind as Token.TokenKind, maybeOperator, trace.id),
+            readTokenKindAsConstant(state, state.currentTokenKind as Token.TokenKind, maybeOperator, trace.id),
         );
 
-        maybeOperator = ConstantUtils.maybeUnaryOperatorKindFrom(state.maybeCurrentTokenKind);
+        maybeOperator = ConstantUtils.unaryOperatorKindFrom(state.currentTokenKind);
     }
 
     const operators: Ast.IArrayWrapper<Ast.IConstant<Constant.UnaryOperator>> = {
@@ -957,21 +927,16 @@ export async function readUnaryExpression(
 export async function readPrimaryExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TPrimaryExpression> {
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readPrimaryExpression.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readPrimaryExpression.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     let primaryExpression: Ast.TPrimaryExpression | undefined;
-    const maybeCurrentTokenKind: Token.TokenKind | undefined = state.maybeCurrentTokenKind;
+    const maybeCurrentTokenKind: Token.TokenKind | undefined = state.currentTokenKind;
 
     const isIdentifierExpressionNext: boolean =
         maybeCurrentTokenKind === Token.TokenKind.AtSign || maybeCurrentTokenKind === Token.TokenKind.Identifier;
@@ -1044,26 +1009,26 @@ export async function readRecursivePrimaryExpression(
     state: ParseState,
     parser: Parser,
     head: Ast.TPrimaryExpression,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.RecursivePrimaryExpression> {
     const nodeKind: Ast.NodeKind.RecursivePrimaryExpression = Ast.NodeKind.RecursivePrimaryExpression;
 
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readRecursivePrimaryExpression.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
 
     const currentContextNode: ParseContext.TNode = Assert.asDefined(
-        state.maybeCurrentContextNode,
+        state.currentContextNode,
         "state.maybeCurrentContextNode",
     );
 
@@ -1083,12 +1048,12 @@ export async function readRecursivePrimaryExpression(
     const mutableHead: TypeScriptUtils.StripReadonly<Ast.TPrimaryExpression> = head;
 
     // Update token start to match the first parsed node under it, aka the head.
-    mutableContext.maybeTokenStart = state.lexerSnapshot.tokens[newTokenIndexStart];
+    mutableContext.tokenStart = state.lexerSnapshot.tokens[newTokenIndexStart];
     mutableContext.tokenIndexStart = newTokenIndexStart;
 
     // Update attribute counters.
     mutableContext.attributeCounter = 1;
-    mutableHead.maybeAttributeIndex = 0;
+    mutableHead.attributeIndex = 0;
 
     // Recalculate ids after shuffling things around.
     const newNodeIdByOldNodeId: Map<number, number> = NodeIdMapUtils.recalculateIds(
@@ -1111,7 +1076,7 @@ export async function readRecursivePrimaryExpression(
     let continueReadingValues: boolean = true;
 
     while (continueReadingValues) {
-        const maybeCurrentTokenKind: Token.TokenKind | undefined = state.maybeCurrentTokenKind;
+        const maybeCurrentTokenKind: Token.TokenKind | undefined = state.currentTokenKind;
 
         if (maybeCurrentTokenKind === Token.TokenKind.LeftParenthesis) {
             // eslint-disable-next-line no-await-in-loop
@@ -1169,20 +1134,15 @@ export async function readRecursivePrimaryExpression(
 export function readLiteralExpression(
     state: ParseState,
     _parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Ast.LiteralExpression {
     const nodeKind: Ast.NodeKind.LiteralExpression = Ast.NodeKind.LiteralExpression;
 
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readLiteralExpression.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readLiteralExpression.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
     const expectedTokenKinds: ReadonlyArray<Token.TokenKind> = [
@@ -1211,9 +1171,9 @@ export function readLiteralExpression(
     }
 
     const literalKind: Ast.LiteralKind = Assert.asDefined(
-        AstUtils.maybeLiteralKindFrom(state.maybeCurrentTokenKind),
+        AstUtils.literalKindFrom(state.currentTokenKind),
         `couldn't convert TokenKind into LiteralKind`,
-        { maybeCurrentTokenKind: state.maybeCurrentTokenKind },
+        { maybeCurrentTokenKind: state.currentTokenKind },
     );
 
     const literal: string = readToken(state);
@@ -1243,20 +1203,20 @@ export function readLiteralExpression(
 export function readIdentifierExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Ast.IdentifierExpression {
     const nodeKind: Ast.NodeKind.IdentifierExpression = Ast.NodeKind.IdentifierExpression;
 
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readIdentifierExpression.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
     const maybeInclusiveConstant: Ast.IConstant<Constant.MiscConstant.AtSign> | undefined =
@@ -1268,7 +1228,7 @@ export function readIdentifierExpression(
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: false,
-        maybeInclusiveConstant,
+        inclusiveConstant: maybeInclusiveConstant,
         identifier,
     };
 
@@ -1285,18 +1245,18 @@ export function readIdentifierExpression(
 export async function readParenthesizedExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.ParenthesizedExpression> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readParenthesizedExpression.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const parenthesizedExpression: Ast.ParenthesizedExpression = await readWrapped(
         state,
@@ -1332,20 +1292,20 @@ export async function readParenthesizedExpression(
 export function readNotImplementedExpression(
     state: ParseState,
     _parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Ast.NotImplementedExpression {
     const nodeKind: Ast.NodeKind.NotImplementedExpression = Ast.NodeKind.NotImplementedExpression;
 
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readNotImplementedExpression.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
     const ellipsisConstant: Ast.IConstant<Constant.MiscConstant.Ellipsis> = readTokenKindAsConstant(
@@ -1375,18 +1335,13 @@ export function readNotImplementedExpression(
 export async function readInvokeExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.InvokeExpression> {
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readInvokeExpression.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readInvokeExpression.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const continueReadingValues: boolean = !ParseStateUtils.isNextTokenKind(state, Token.TokenKind.RightParenthesis);
 
@@ -1433,18 +1388,13 @@ export async function readInvokeExpression(
 export async function readListExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.ListExpression> {
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readListExpression.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readListExpression.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const continueReadingValues: boolean = !ParseStateUtils.isNextTokenKind(state, Token.TokenKind.RightBrace);
 
@@ -1479,15 +1429,15 @@ export async function readListExpression(
 export async function readListItem(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TListItem> {
     const nodeKind: Ast.NodeKind.RangeExpression = Ast.NodeKind.RangeExpression;
 
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readListItem.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readListItem.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
     const left: Ast.TExpression = await parser.readExpression(state, parser, trace.id);
@@ -1538,18 +1488,13 @@ export async function readListItem(
 export async function readRecordExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.RecordExpression> {
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readRecordExpression.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readRecordExpression.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const continueReadingValues: boolean = !ParseStateUtils.isNextTokenKind(state, Token.TokenKind.RightBracket);
 
@@ -1589,18 +1534,18 @@ export async function readRecordExpression(
 export async function readItemAccessExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.ItemAccessExpression> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readItemAccessExpression.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const itemAccessExpression: Ast.ItemAccessExpression = await readWrapped(
         state,
@@ -1624,18 +1569,13 @@ export async function readItemAccessExpression(
 export async function readFieldSelection(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.FieldSelector> {
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readFieldSelection.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFieldSelection.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const fieldSelector: Ast.FieldSelector = await readFieldSelector(state, parser, true, trace.id);
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
@@ -1646,18 +1586,13 @@ export async function readFieldSelection(
 export async function readFieldProjection(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.FieldProjection> {
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readFieldProjection.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFieldProjection.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const fieldProjection: Ast.FieldProjection = await readWrapped(
         state,
@@ -1692,18 +1627,13 @@ export async function readFieldSelector(
     state: ParseState,
     parser: Parser,
     allowOptional: boolean,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.FieldSelector> {
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readFieldSelector.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFieldSelector.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const fieldSelector: Ast.FieldSelector = await readWrapped(
         state,
@@ -1734,20 +1664,20 @@ export async function readFieldSelector(
 export async function readFunctionExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.FunctionExpression> {
     const nodeKind: Ast.NodeKind.FunctionExpression = Ast.NodeKind.FunctionExpression;
 
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readFunctionExpression.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
     const parameters: Ast.IParameterList<Ast.AsNullablePrimitiveType | undefined> = await parser.readParameterList(
@@ -1776,7 +1706,7 @@ export async function readFunctionExpression(
         kind: nodeKind,
         isLeaf: false,
         parameters,
-        maybeFunctionReturnType,
+        functionReturnType: maybeFunctionReturnType,
         fatArrowConstant,
         expression,
     };
@@ -1790,18 +1720,13 @@ export async function readFunctionExpression(
 export async function readParameterList(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.IParameterList<Ast.AsNullablePrimitiveType | undefined>> {
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readParameterList.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readParameterList.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const parameterList: Ast.IParameterList<Ast.AsNullablePrimitiveType | undefined> = await genericReadParameterList(
         state,
@@ -1818,18 +1743,18 @@ export async function readParameterList(
 async function maybeReadAsNullablePrimitiveType(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.AsNullablePrimitiveType | undefined> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         maybeReadAsNullablePrimitiveType.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const maybeAsNullablePrimitiveType: Ast.AsNullablePrimitiveType | undefined = await maybeReadPairedConstant(
         state,
@@ -1848,13 +1773,13 @@ async function maybeReadAsNullablePrimitiveType(
 export async function readAsType(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.AsType> {
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readAsType.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readAsType.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const asType: Ast.AsType = await readPairedConstant(
         state,
@@ -1876,18 +1801,13 @@ export async function readAsType(
 export async function readEachExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.EachExpression> {
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readEachExpression.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readEachExpression.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const eachExpression: Ast.EachExpression = await readPairedConstant(
         state,
@@ -1909,20 +1829,15 @@ export async function readEachExpression(
 export async function readLetExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.LetExpression> {
     const nodeKind: Ast.NodeKind.LetExpression = Ast.NodeKind.LetExpression;
 
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readLetExpression.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readLetExpression.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
     const letConstant: Ast.IConstant<Constant.KeywordConstant.Let> = readTokenKindAsConstant(
@@ -1973,15 +1888,15 @@ export async function readLetExpression(
 export async function readIfExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.IfExpression> {
     const nodeKind: Ast.NodeKind.IfExpression = Ast.NodeKind.IfExpression;
 
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIfExpression.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readIfExpression.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
     const ifConstant: Ast.IConstant<Constant.KeywordConstant.If> = readTokenKindAsConstant(
@@ -2036,18 +1951,13 @@ export async function readIfExpression(
 export async function readTypeExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TTypeExpression> {
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readTypeExpression.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readTypeExpression.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     let typeExpression: Ast.TTypeExpression;
 
@@ -2071,13 +1981,13 @@ export async function readTypeExpression(
 export async function readType(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TType> {
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readType.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readType.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const triedReadPrimaryType: TriedReadPrimaryType = await tryReadPrimaryType(state, parser, trace.id);
 
@@ -2101,13 +2011,13 @@ export async function readType(
 export async function readPrimaryType(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TPrimaryType> {
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readPrimaryType.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readPrimaryType.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const triedReadPrimaryType: TriedReadPrimaryType = await tryReadPrimaryType(state, parser, trace.id);
 
@@ -2131,15 +2041,15 @@ export async function readPrimaryType(
 export async function readRecordType(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.RecordType> {
     const nodeKind: Ast.NodeKind.RecordType = Ast.NodeKind.RecordType;
 
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readRecordType.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readRecordType.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
     const fields: Ast.FieldSpecificationList = await parser.readFieldSpecificationList(
@@ -2166,15 +2076,15 @@ export async function readRecordType(
 export async function readTableType(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TableType> {
     const nodeKind: Ast.NodeKind.TableType = Ast.NodeKind.TableType;
 
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readTableType.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readTableType.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
     const tableConstant: Ast.IConstant<Constant.PrimitiveTypeConstant.Table> = readConstantKind(
@@ -2182,7 +2092,7 @@ export async function readTableType(
         Constant.PrimitiveTypeConstant.Table,
     );
 
-    const maybeCurrentTokenKind: Token.TokenKind | undefined = state.maybeCurrentTokenKind;
+    const maybeCurrentTokenKind: Token.TokenKind | undefined = state.currentTokenKind;
 
     const isPrimaryExpressionExpected: boolean =
         maybeCurrentTokenKind === Token.TokenKind.AtSign ||
@@ -2222,20 +2132,20 @@ export async function readFieldSpecificationList(
     parser: Parser,
     allowOpenMarker: boolean,
     testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.FieldSpecificationList> {
     const nodeKind: Ast.NodeKind.FieldSpecificationList = Ast.NodeKind.FieldSpecificationList;
 
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readFieldSpecificationList.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
     const leftBracketConstant: Ast.IConstant<Constant.WrapperConstant.LeftBracket> = readTokenKindAsConstant(
@@ -2306,9 +2216,9 @@ export async function readFieldSpecificationList(
                 ...ParseStateUtils.assertGetContextNodeMetadata(state),
                 kind: fieldSpecificationNodeKind,
                 isLeaf: false,
-                maybeOptionalConstant,
+                optionalConstant: maybeOptionalConstant,
                 name,
-                maybeFieldTypeSpecification,
+                fieldTypeSpecification: maybeFieldTypeSpecification,
             };
 
             ParseStateUtils.endContext(state, field);
@@ -2323,7 +2233,7 @@ export async function readFieldSpecificationList(
                 kind: csvNodeKind,
                 isLeaf: false,
                 node: field,
-                maybeCommaConstant,
+                commaConstant: maybeCommaConstant,
             };
 
             ParseStateUtils.endContext(state, csv);
@@ -2371,7 +2281,7 @@ export async function readFieldSpecificationList(
         isLeaf: false,
         openWrapperConstant: leftBracketConstant,
         content: fieldArray,
-        maybeOpenRecordMarkerConstant,
+        openRecordMarkerConstant: maybeOpenRecordMarkerConstant,
         closeWrapperConstant: rightBracketConstant,
     };
 
@@ -2384,20 +2294,20 @@ export async function readFieldSpecificationList(
 async function maybeReadFieldTypeSpecification(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.FieldTypeSpecification | undefined> {
     const nodeKind: Ast.NodeKind.FieldTypeSpecification = Ast.NodeKind.FieldTypeSpecification;
 
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         maybeReadFieldTypeSpecification.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
     const maybeEqualConstant: Ast.IConstant<Constant.MiscConstant.Equal> | undefined = maybeReadTokenKindAsConstant(
@@ -2454,13 +2364,13 @@ function fieldSpecificationListReadError(state: ParseState, allowOpenMarker: boo
 export async function readListType(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.ListType> {
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readListType.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readListType.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const listType: Ast.ListType = await readWrapped(
         state,
@@ -2480,15 +2390,15 @@ export async function readListType(
 export async function readFunctionType(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.FunctionType> {
     const nodeKind: Ast.NodeKind.FunctionType = Ast.NodeKind.FunctionType;
 
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFunctionType.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readFunctionType.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
     const functionConstant: Ast.IConstant<Constant.PrimitiveTypeConstant.Function> = readConstantKind(
@@ -2522,16 +2432,11 @@ export async function readFunctionType(
 async function tryReadPrimaryType(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<TriedReadPrimaryType> {
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        tryReadPrimaryType.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, tryReadPrimaryType.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
     const isTableTypeNext: boolean =
         ParseStateUtils.isOnConstantKind(state, Constant.PrimitiveTypeConstant.Table) &&
@@ -2575,18 +2480,18 @@ async function tryReadPrimaryType(
 export async function readParameterSpecificationList(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.IParameterList<Ast.AsType>> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readParameterSpecificationList.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const parameterList: Ast.IParameterList<Ast.AsType> = await genericReadParameterList(
         state,
@@ -2603,13 +2508,13 @@ export async function readParameterSpecificationList(
 export async function readNullableType(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.NullableType> {
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readNullableType.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readNullableType.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const nullableType: Ast.NullableType = await readPairedConstant(
         state,
@@ -2631,18 +2536,18 @@ export async function readNullableType(
 export async function readErrorRaisingExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.ErrorRaisingExpression> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readErrorRaisingExpression.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const errorRaisingExpression: Ast.ErrorRaisingExpression = await readPairedConstant(
         state,
@@ -2664,20 +2569,20 @@ export async function readErrorRaisingExpression(
 export async function readErrorHandlingExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TErrorHandlingExpression> {
     const nodeKind: Ast.NodeKind.ErrorHandlingExpression = Ast.NodeKind.ErrorHandlingExpression;
 
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readErrorHandlingExpression.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
     const tryConstant: Ast.IConstant<Constant.KeywordConstant.Try> = readTokenKindAsConstant(
@@ -2722,7 +2627,7 @@ export async function readErrorHandlingExpression(
             isLeaf: false,
             tryConstant,
             protectedExpression,
-            maybeHandler: catchExpression,
+            handler: catchExpression,
         };
 
         result = errorHandlingCatchExpression;
@@ -2751,7 +2656,7 @@ export async function readErrorHandlingExpression(
             isLeaf: false,
             tryConstant,
             protectedExpression,
-            maybeHandler: maybeOtherwiseExpression,
+            handler: maybeOtherwiseExpression,
         };
 
         result = errorHandlingOtherwiseExpression;
@@ -2770,18 +2675,13 @@ export async function readErrorHandlingExpression(
 export async function readRecordLiteral(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.RecordLiteral> {
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readRecordLiteral.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readRecordLiteral.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const continueReadingValues: boolean = !ParseStateUtils.isNextTokenKind(state, Token.TokenKind.RightBracket);
 
@@ -2829,18 +2729,18 @@ export async function readFieldNamePairedAnyLiterals(
     parser: Parser,
     continueReadingValues: boolean,
     testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readFieldNamePairedAnyLiterals.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const csvArray: Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral> = await readCsvArray(
         state,
@@ -2865,13 +2765,13 @@ export async function readFieldNamePairedAnyLiterals(
 export async function readListLiteral(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.ListLiteral> {
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readListLiteral.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readListLiteral.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const continueReadingValues: boolean = !ParseStateUtils.isNextTokenKind(state, Token.TokenKind.RightBrace);
 
@@ -2910,13 +2810,13 @@ export async function readListLiteral(
 export async function readAnyLiteral(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TAnyLiteral> {
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readAnyLiteral.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readAnyLiteral.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     let anyLiteral: Ast.TAnyLiteral;
 
@@ -2936,18 +2836,13 @@ export async function readAnyLiteral(
 export async function readPrimitiveType(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.PrimitiveType> {
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        readPrimitiveType.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readPrimitiveType.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const triedReadPrimitiveType: TriedReadPrimitiveType = await tryReadPrimitiveType(state, parser, trace.id);
 
@@ -2971,18 +2866,13 @@ export async function readPrimitiveType(
 async function tryReadPrimitiveType(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<TriedReadPrimitiveType> {
     const nodeKind: Ast.NodeKind.PrimitiveType = Ast.NodeKind.PrimitiveType;
 
-    const trace: Trace = state.traceManager.entry(
-        NaiveTraceConstant.Parse,
-        tryReadPrimitiveType.name,
-        maybeCorrelationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
-    );
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, tryReadPrimitiveType.name, correlationId, {
+        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+    });
 
     ParseStateUtils.startContext(state, nodeKind);
 
@@ -3057,7 +2947,7 @@ async function tryReadPrimitiveType(
         primitiveTypeKind = Constant.PrimitiveTypeConstant.Null;
         readToken(state);
     } else {
-        const details: { tokenKind: Token.TokenKind | undefined } = { tokenKind: state.maybeCurrentTokenKind };
+        const details: { tokenKind: Token.TokenKind | undefined } = { tokenKind: state.currentTokenKind };
         await parser.restoreCheckpoint(state, checkpoint);
 
         trace.exit({
@@ -3096,18 +2986,18 @@ export async function readIdentifierPairedExpressions(
     parser: Parser,
     continueReadingValues: boolean,
     testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.ICsvArray<Ast.IdentifierPairedExpression>> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readIdentifierPairedExpression.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const csvArray: Ast.ICsvArray<Ast.IdentifierPairedExpression> = await readCsvArray(
         state,
@@ -3127,15 +3017,15 @@ export async function readGeneralizedIdentifierPairedExpressions(
     parser: Parser,
     continueReadingValues: boolean,
     testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression>> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readGeneralizedIdentifierPairedExpressions.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const csvArray: Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression> = await readCsvArray(
         state,
@@ -3153,18 +3043,18 @@ export async function readGeneralizedIdentifierPairedExpressions(
 export async function readGeneralizedIdentifierPairedExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.GeneralizedIdentifierPairedExpression> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readGeneralizedIdentifierPairedExpression.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const generalizedIdentifierPairedExpression: Ast.GeneralizedIdentifierPairedExpression =
         await readKeyValuePair<Ast.GeneralizedIdentifierPairedExpression>(
@@ -3183,18 +3073,18 @@ export async function readGeneralizedIdentifierPairedExpression(
 export async function readIdentifierPairedExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.IdentifierPairedExpression> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readIdentifierPairedExpression.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const identifierPairedExpression: Ast.IdentifierPairedExpression =
         await readKeyValuePair<Ast.IdentifierPairedExpression>(
@@ -3231,12 +3121,12 @@ async function recursiveReadBinOpExpression<
     leftReader: () => Promise<Left>,
     maybeOperatorFrom: (tokenKind: Token.TokenKind | undefined) => Op | undefined,
     rightReader: () => Promise<Right>,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Left | Ast.IBinOpExpression<Kind, Left, Op, Right>> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         recursiveReadBinOpExpression.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -3246,7 +3136,7 @@ async function recursiveReadBinOpExpression<
     const left: Left = await leftReader();
 
     // If no operator, return Left
-    const maybeOperator: Op | undefined = maybeOperatorFrom(state.maybeCurrentTokenKind);
+    const maybeOperator: Op | undefined = maybeOperatorFrom(state.currentTokenKind);
 
     if (maybeOperator === undefined) {
         trace.exit({
@@ -3261,7 +3151,7 @@ async function recursiveReadBinOpExpression<
 
     const operatorConstant: Ast.TConstant & Ast.IConstant<Op> = readTokenKindAsConstant(
         state,
-        Assert.asDefined(state.maybeCurrentTokenKind),
+        Assert.asDefined(state.currentTokenKind),
         maybeOperator,
         trace.id,
     );
@@ -3303,12 +3193,12 @@ async function recursiveReadBinOpExpressionHelper<
     nodeKind: Kind,
     maybeOperatorFrom: (tokenKind: Token.TokenKind | undefined) => OperatorKind | undefined,
     rightReader: () => Promise<Right>,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Right | Ast.IBinOpExpression<Kind, Right, OperatorKind, Right>> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         recursiveReadBinOpExpressionHelper.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -3317,7 +3207,7 @@ async function recursiveReadBinOpExpressionHelper<
     ParseStateUtils.startContext(state, nodeKind);
     const rightAsLeft: Right = await rightReader();
 
-    const maybeOperator: OperatorKind | undefined = maybeOperatorFrom(state.maybeCurrentTokenKind);
+    const maybeOperator: OperatorKind | undefined = maybeOperatorFrom(state.currentTokenKind);
 
     if (maybeOperator === undefined) {
         ParseStateUtils.deleteContext(state, undefined);
@@ -3332,7 +3222,7 @@ async function recursiveReadBinOpExpressionHelper<
 
     const operatorConstant: Ast.TConstant & Ast.IConstant<OperatorKind> = readTokenKindAsConstant(
         state,
-        Assert.asDefined(state.maybeCurrentTokenKind),
+        Assert.asDefined(state.currentTokenKind),
         maybeOperator,
         trace.id,
     );
@@ -3370,11 +3260,11 @@ async function readCsvArray<T extends Ast.TCsvType>(
     valueReader: () => Promise<T>,
     continueReadingValues: boolean,
     testPostCommaError: (state: ParseState) => ParseError.TInnerParseError | undefined,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.TCsvArray & Ast.ICsvArray<T>> {
     const nodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
 
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readCsvArray.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readCsvArray.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -3411,7 +3301,7 @@ async function readCsvArray<T extends Ast.TCsvType>(
             kind: csvNodeKind,
             isLeaf: false,
             node,
-            maybeCommaConstant,
+            commaConstant: maybeCommaConstant,
         };
 
         ParseStateUtils.endContext(state, element);
@@ -3442,11 +3332,11 @@ async function readKeyValuePair<KVP extends Ast.TKeyValuePair>(
     nodeKind: KVP["kind"],
     keyReader: () => Promise<KVP["key"]>,
     valueReader: () => Promise<KVP["value"]>,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<KVP> {
     ParseStateUtils.startContext(state, nodeKind);
 
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readKeyValuePair.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readKeyValuePair.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -3520,12 +3410,12 @@ async function maybeReadPairedConstant<
     condition: () => boolean,
     constantReader: () => Ast.TConstant & Ast.IConstant<ConstantKind>,
     pairedReader: () => Promise<Paired>,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.IPairedConstant<Kind, ConstantKind, Paired> | undefined> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         maybeReadPairedConstant.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -3558,14 +3448,14 @@ async function genericReadParameterList<T extends Ast.TParameterType>(
     state: ParseState,
     parser: Parser,
     typeReader: () => Promise<T>,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.IParameterList<T>> {
     const nodeKind: Ast.NodeKind.ParameterList = Ast.NodeKind.ParameterList;
 
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         genericReadParameterList.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -3639,9 +3529,9 @@ async function genericReadParameterList<T extends Ast.TParameterType>(
             ...ParseStateUtils.assertGetContextNodeMetadata(state),
             kind: Ast.NodeKind.Parameter,
             isLeaf: false,
-            maybeOptionalConstant,
+            optionalConstant: maybeOptionalConstant,
             name,
-            maybeParameterType,
+            parameterType: maybeParameterType,
         };
 
         ParseStateUtils.endContext(state, parameter);
@@ -3659,7 +3549,7 @@ async function genericReadParameterList<T extends Ast.TParameterType>(
             kind: Ast.NodeKind.Csv,
             isLeaf: false,
             node: parameter,
-            maybeCommaConstant,
+            commaConstant: maybeCommaConstant,
         };
 
         ParseStateUtils.endContext(state, csv);
@@ -3714,9 +3604,9 @@ async function readWrapped<
     contentReader: () => Promise<Content>,
     closeConstantReader: () => Ast.IConstant<Close>,
     allowOptionalConstant: boolean,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<WrappedRead<Kind, Open, Content, Close>> {
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readWrapped.name, maybeCorrelationId, {
+    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readWrapped.name, correlationId, {
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
@@ -3743,7 +3633,7 @@ async function readWrapped<
         openWrapperConstant,
         content,
         closeWrapperConstant,
-        maybeOptionalConstant,
+        optionalConstant: maybeOptionalConstant,
     };
 
     ParseStateUtils.endContext(state, wrapped as unknown as Ast.TWrapped);
@@ -3757,7 +3647,7 @@ async function readWrapped<
 // ---------------------------------------------
 
 export function readToken(state: ParseState): string {
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const tokens: ReadonlyArray<Token.Token> = state.lexerSnapshot.tokens;
 
@@ -3777,10 +3667,10 @@ export function readToken(state: ParseState): string {
         // but there's no clean way to introduce that.
         //
         // So, for now when a IParseState is Eof when maybeCurrentTokenKind === undefined.
-        state.maybeCurrentTokenKind = undefined;
+        state.currentTokenKind = undefined;
     } else {
-        state.maybeCurrentToken = tokens[state.tokenIndex];
-        state.maybeCurrentTokenKind = state.maybeCurrentToken.kind;
+        state.currentToken = tokens[state.tokenIndex];
+        state.currentTokenKind = state.currentToken.kind;
     }
 
     return data;
@@ -3790,15 +3680,15 @@ export function readClosingTokenKindAsConstant<C extends Constant.TConstant>(
     state: ParseState,
     tokenKind: Token.TokenKind,
     constantKind: C,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Ast.TConstant & Ast.IConstant<C> {
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, Ast.NodeKind.Constant);
 
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readTokenKindAsConstant.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
@@ -3834,18 +3724,18 @@ export function readTokenKindAsConstant<C extends Constant.TConstant>(
     state: ParseState,
     tokenKind: Token.TokenKind,
     constantKind: C,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Ast.TConstant & Ast.IConstant<C> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
         readTokenKindAsConstant.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
         },
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, Ast.NodeKind.Constant);
 
     const result: Ast.TConstant & Ast.IConstant<C> = readTokenKindAsConstantInternal(
@@ -3916,7 +3806,7 @@ export function maybeReadTokenKindAsConstant<ConstantKind extends Constant.TCons
     tokenKind: Token.TokenKind,
     constantKind: ConstantKind,
 ): (Ast.TConstant & Ast.IConstant<ConstantKind>) | undefined {
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     let maybeConstant: (Ast.TConstant & Ast.IConstant<ConstantKind>) | undefined;
 
@@ -4001,10 +3891,10 @@ function maybeReadConstantKind<ConstantKind extends Constant.TConstant>(
 async function maybeReadLiteralAttributes(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.RecordLiteral | undefined> {
     if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.LeftBracket)) {
-        return await parser.readRecordLiteral(state, parser, maybeCorrelationId);
+        return await parser.readRecordLiteral(state, parser, correlationId);
     } else {
         ParseStateUtils.incrementAttributeCounter(state);
 
@@ -4046,8 +3936,8 @@ function testCatchFunction(
 
     if (
         parameters.length > 1 ||
-        (parameters.length === 1 && parameters[0].node.maybeParameterType) ||
-        catchFunction.maybeFunctionReturnType
+        (parameters.length === 1 && parameters[0].node.parameterType) ||
+        catchFunction.functionReturnType
     ) {
         const tokenStart: Token.Token = Assert.asDefined(
             state.lexerSnapshot.tokens[catchFunction.tokenRange.tokenIndexStart],

@@ -78,13 +78,9 @@ export function isValidInvocation(
     functionType: Type.DefinedFunction,
     args: ReadonlyArray<Type.TPowerQueryType>,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): boolean {
-    const trace: Trace = traceManager.entry(
-        TypeUtilsTraceConstant.TypeUtils,
-        isValidInvocation.name,
-        maybeCorrelationId,
-    );
+    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.TypeUtils, isValidInvocation.name, correlationId);
 
     // You can't provide more arguments than are on the function signature.
     if (args.length > functionType.parameters.length) {
@@ -96,14 +92,12 @@ export function isValidInvocation(
 
     for (let index: number = 1; index < numParameters; index += 1) {
         const parameter: Type.FunctionParameter = Assert.asDefined(parameters[index]);
-        const maybeArgType: Type.TPowerQueryType | undefined = args[index];
+        const argType: Type.TPowerQueryType | undefined = args[index];
 
-        if (maybeArgType !== undefined) {
-            const argType: Type.TPowerQueryType = maybeArgType;
-
+        if (argType !== undefined) {
             const parameterType: Type.TPowerQueryType = createPrimitiveType(
                 parameter.isNullable,
-                Assert.asDefined(parameter.maybeType),
+                Assert.asDefined(parameter.type),
             );
 
             if (!isCompatible(argType, parameterType, traceManager, trace.id)) {
@@ -143,25 +137,23 @@ export function inspectParameter(
 
 function inspectAstParameter(node: Ast.TParameter): Type.FunctionParameter {
     let isNullable: boolean;
-    let maybeType: Type.TypeKind | undefined;
+    let type: Type.TypeKind | undefined;
 
-    const maybeParameterType: Ast.TParameterType | undefined = node.maybeParameterType;
+    const parameterType: Ast.TParameterType | undefined = node.parameterType;
 
-    if (maybeParameterType !== undefined) {
-        const parameterType: Ast.TParameterType = maybeParameterType;
-
+    if (parameterType !== undefined) {
         switch (parameterType.kind) {
             case Ast.NodeKind.AsNullablePrimitiveType: {
                 const simplified: AstUtils.SimplifiedType = AstUtils.simplifyAsNullablePrimitiveType(parameterType);
                 isNullable = simplified.isNullable;
-                maybeType = typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind);
+                type = typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind);
                 break;
             }
 
             case Ast.NodeKind.AsType: {
                 const simplified: AstUtils.SimplifiedType = AstUtils.simplifyType(parameterType.paired);
                 isNullable = simplified.isNullable;
-                maybeType = typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind);
+                type = typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind);
                 break;
             }
 
@@ -170,14 +162,14 @@ function inspectAstParameter(node: Ast.TParameter): Type.FunctionParameter {
         }
     } else {
         isNullable = true;
-        maybeType = undefined;
+        type = undefined;
     }
 
     return {
         nameLiteral: node.name.literal,
         isNullable,
-        isOptional: node.maybeOptionalConstant !== undefined,
-        maybeType,
+        isOptional: node.optionalConstant !== undefined,
+        type,
     };
 }
 
@@ -186,49 +178,48 @@ function inspectContextParameter(
     parameter: ParseContext.Node<Ast.TParameter>,
 ): Type.FunctionParameter | undefined {
     let isNullable: boolean;
-    let maybeType: Type.TypeKind | undefined;
+    let type: Type.TypeKind | undefined;
 
-    const maybeName: Ast.Identifier | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
+    const name: Ast.Identifier | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked(
         nodeIdMapCollection,
         parameter.id,
         1,
         Ast.NodeKind.Identifier,
     );
 
-    if (maybeName === undefined) {
+    if (name === undefined) {
         return undefined;
     }
 
-    const maybeOptional: Ast.TConstant | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
+    const optionalConstant: Ast.TConstant | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked(
         nodeIdMapCollection,
         parameter.id,
         0,
         Ast.NodeKind.Constant,
     );
 
-    const isOptional: boolean = maybeOptional !== undefined;
+    const isOptional: boolean = optionalConstant !== undefined;
 
-    const maybeParameterType: Ast.AsNullablePrimitiveType | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
+    const parameterType: Ast.AsNullablePrimitiveType | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked(
         nodeIdMapCollection,
         parameter.id,
         2,
         Ast.NodeKind.AsNullablePrimitiveType,
     );
 
-    if (maybeParameterType !== undefined) {
-        const parameterType: Ast.AsNullablePrimitiveType = maybeParameterType;
+    if (parameterType !== undefined) {
         const simplified: AstUtils.SimplifiedType = AstUtils.simplifyAsNullablePrimitiveType(parameterType);
         isNullable = simplified.isNullable;
-        maybeType = typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind);
+        type = typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind);
     } else {
         isNullable = true;
-        maybeType = undefined;
+        type = undefined;
     }
 
     return {
-        nameLiteral: maybeName.literal,
+        nameLiteral: name.literal,
         isOptional,
         isNullable,
-        maybeType,
+        type,
     };
 }

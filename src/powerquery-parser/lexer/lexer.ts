@@ -63,7 +63,7 @@ export const enum LineMode {
 export interface State {
     readonly lines: ReadonlyArray<TLine>;
     readonly locale: string;
-    readonly maybeCancellationToken: ICancellationToken | undefined;
+    readonly cancellationToken: ICancellationToken | undefined;
 }
 
 export interface ILexerLine {
@@ -318,19 +318,19 @@ function lex(settings: LexSettings, text: string): State {
     return {
         lines: tokenizedLines,
         locale: settings.locale,
-        maybeCancellationToken: settings.cancellationToken,
+        cancellationToken: settings.cancellationToken,
     };
 }
 
 function appendLine(state: State, text: string, lineTerminator: string): State {
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const lines: ReadonlyArray<TLine> = state.lines;
     const numLines: number = lines.length;
-    const maybeLatestLine: TLine | undefined = lines[numLines - 1];
-    const lineModeStart: LineMode = maybeLatestLine ? maybeLatestLine.lineModeEnd : LineMode.Default;
+    const latestLine: TLine | undefined = lines[numLines - 1];
+    const lineModeStart: LineMode = latestLine ? latestLine.lineModeEnd : LineMode.Default;
     const untokenizedLine: UntouchedLine = lineFrom(text, lineTerminator, lineModeStart);
-    const tokenizedLine: TLine = tokenize(untokenizedLine, numLines, state.locale, state.maybeCancellationToken);
+    const tokenizedLine: TLine = tokenize(untokenizedLine, numLines, state.locale, state.cancellationToken);
 
     return {
         ...state,
@@ -339,12 +339,12 @@ function appendLine(state: State, text: string, lineTerminator: string): State {
 }
 
 function updateLine(state: State, lineNumber: number, text: string): State {
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
-    const maybeError: LexError.BadLineNumberError | undefined = testLineNumberError(state, lineNumber);
+    const error: LexError.BadLineNumberError | undefined = testLineNumberError(state, lineNumber);
 
-    if (maybeError !== undefined) {
-        throw maybeError;
+    if (error !== undefined) {
+        throw error;
     }
 
     const line: TLine = state.lines[lineNumber];
@@ -354,11 +354,12 @@ function updateLine(state: State, lineNumber: number, text: string): State {
 }
 
 function updateRange(state: State, range: Range, text: string): State {
-    state.maybeCancellationToken?.throwIfCancelled();
-    const maybeError: LexError.BadRangeError | undefined = testBadRangeError(state, range);
+    state.cancellationToken?.throwIfCancelled();
 
-    if (maybeError !== undefined) {
-        throw maybeError;
+    const error: LexError.BadRangeError | undefined = testBadRangeError(state, range);
+
+    if (error !== undefined) {
+        throw error;
     }
 
     const splitLines: SplitLine[] = splitOnLineTerminators(text);
@@ -377,14 +378,14 @@ function updateRange(state: State, range: Range, text: string): State {
     // make sure we have a line terminator
     lastSplitLine.lineTerminator = lineEnd.lineTerminator;
 
-    const maybePreviousLine: TLine | undefined = state.lines[rangeStart.lineNumber - 1];
-    const previousLineModeEnd: LineMode = maybePreviousLine?.lineModeEnd ?? LineMode.Default;
+    const previousLine: TLine | undefined = state.lines[rangeStart.lineNumber - 1];
+    const previousLineModeEnd: LineMode = previousLine?.lineModeEnd ?? LineMode.Default;
 
     const newLines: ReadonlyArray<TLine> = tokenizedLinesFrom(
         splitLines,
         previousLineModeEnd,
         state.locale,
-        state.maybeCancellationToken,
+        state.cancellationToken,
     );
 
     const lines: ReadonlyArray<TLine> = [
@@ -396,17 +397,17 @@ function updateRange(state: State, range: Range, text: string): State {
     return {
         lines,
         locale: state.locale,
-        maybeCancellationToken: state.maybeCancellationToken,
+        cancellationToken: state.cancellationToken,
     };
 }
 
 function deleteLine(state: State, lineNumber: number): State {
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
-    const maybeError: LexError.BadLineNumberError | undefined = testLineNumberError(state, lineNumber);
+    const error: LexError.BadLineNumberError | undefined = testLineNumberError(state, lineNumber);
 
-    if (maybeError !== undefined) {
-        throw maybeError;
+    if (error !== undefined) {
+        throw error;
     }
 
     return {
@@ -447,7 +448,7 @@ function tokenizedLinesFrom(
     splitLines: ReadonlyArray<SplitLine>,
     previousLineModeEnd: LineMode,
     locale: string,
-    maybeCancellationToken: ICancellationToken | undefined,
+    cancellationToken: ICancellationToken | undefined,
 ): ReadonlyArray<TLine> {
     const numLines: number = splitLines.length;
     const tokenizedLines: TLine[] = [];
@@ -455,7 +456,7 @@ function tokenizedLinesFrom(
     for (let lineNumber: number = 0; lineNumber < numLines; lineNumber += 1) {
         const splitLine: SplitLine = splitLines[lineNumber];
         const untokenizedLine: UntouchedLine = lineFrom(splitLine.text, splitLine.lineTerminator, previousLineModeEnd);
-        const tokenizedLine: TLine = tokenize(untokenizedLine, lineNumber, locale, maybeCancellationToken);
+        const tokenizedLine: TLine = tokenize(untokenizedLine, lineNumber, locale, cancellationToken);
         tokenizedLines.push(tokenizedLine);
         previousLineModeEnd = tokenizedLine.lineModeEnd;
     }
@@ -478,10 +479,10 @@ function retokenizeLines(state: State, lineNumber: number, previousLineModeEnd: 
 
     if (previousLineModeEnd !== lines[lineNumber].lineModeStart) {
         const offsetLineNumber: number = lineNumber;
-        let maybeCurrentLine: TLine | undefined = lines[lineNumber];
+        let currentLine: TLine | undefined = lines[lineNumber];
 
-        while (maybeCurrentLine) {
-            const line: TLine = maybeCurrentLine;
+        while (currentLine) {
+            const line: TLine = currentLine;
 
             if (previousLineModeEnd !== line.lineModeStart) {
                 const untokenizedLine: UntouchedLine = lineFrom(line.text, line.lineTerminator, previousLineModeEnd);
@@ -490,13 +491,13 @@ function retokenizeLines(state: State, lineNumber: number, previousLineModeEnd: 
                     untokenizedLine,
                     offsetLineNumber,
                     state.locale,
-                    state.maybeCancellationToken,
+                    state.cancellationToken,
                 );
 
                 retokenizedLines.push(retokenizedLine);
                 previousLineModeEnd = retokenizedLine.lineModeEnd;
                 lineNumber += 1;
-                maybeCurrentLine = lines[lineNumber];
+                currentLine = lines[lineNumber];
             } else {
                 return [...retokenizedLines, ...lines.slice(lineNumber + 1)];
             }
@@ -513,9 +514,9 @@ function tokenize(
     line: TLine,
     lineNumber: number,
     locale: string,
-    maybeCancellationToken: ICancellationToken | undefined,
+    cancellationToken: ICancellationToken | undefined,
 ): TLine {
-    maybeCancellationToken?.throwIfCancelled();
+    cancellationToken?.throwIfCancelled();
 
     switch (line.kind) {
         // Cannot tokenize something that ended with an error,
@@ -579,14 +580,14 @@ function tokenize(
 
     const newTokens: Token.LineToken[] = [];
     let continueLexing: boolean = currentPosition !== text.length;
-    let maybeError: LexError.TLexError | undefined;
+    let lexError: LexError.TLexError | undefined;
 
     // While neither eof nor having encountered an error:
     //  * Lex according to lineModeStart, starting from currentPosition.
     //  * Update currentPosition and lineMode.
     //  * Drain whitespace.
     while (continueLexing) {
-        maybeCancellationToken?.throwIfCancelled();
+        cancellationToken?.throwIfCancelled();
 
         try {
             let readOutcome: LineModeAlteringRead;
@@ -636,23 +637,23 @@ function tokenize(
             }
 
             continueLexing = false;
-            maybeError = error;
+            lexError = error;
         }
     }
 
     let partialTokenizeResult: PartialResult<TokenizeChanges, TokenizeChanges, LexError.TLexError>;
 
-    if (maybeError) {
+    if (lexError) {
         if (newTokens.length) {
             partialTokenizeResult = PartialResultUtils.createMixed(
                 {
                     tokens: newTokens,
                     lineModeEnd: lineMode,
                 },
-                maybeError,
+                lexError,
             );
         } else {
-            partialTokenizeResult = PartialResultUtils.createError(maybeError);
+            partialTokenizeResult = PartialResultUtils.createError(lexError);
         }
     } else {
         partialTokenizeResult = PartialResultUtils.createOk({
@@ -769,18 +770,16 @@ function tokenizeQuotedIdentifierContentOrEnd(line: TLine, currentPosition: numb
 // Read until either string literal end or eof
 function tokenizeTextLiteralContentOrEnd(line: TLine, currentPosition: number): LineModeAlteringRead {
     const text: string = line.text;
-    const maybePositionEnd: number | undefined = maybeIndexOfTextEnd(text, currentPosition);
+    const positionEnd: number | undefined = maybeIndexOfTextEnd(text, currentPosition);
 
-    if (maybePositionEnd === undefined) {
+    if (positionEnd === undefined) {
         return {
             token: readRestOfLine(Token.LineTokenKind.TextLiteralContent, text, currentPosition),
             lineMode: LineMode.Text,
         };
     } else {
-        const positionEnd: number = maybePositionEnd + 1;
-
         return {
-            token: readTokenFrom(Token.LineTokenKind.TextLiteralEnd, text, currentPosition, positionEnd),
+            token: readTokenFrom(Token.LineTokenKind.TextLiteralEnd, text, currentPosition, positionEnd + 1),
             lineMode: LineMode.Default,
         };
     }
@@ -1147,7 +1146,7 @@ function maybeIndexOfRegexEnd(pattern: RegExp, text: string, positionStart: numb
 }
 
 function maybeIndexOfIdentifierEnd(text: string, positionStart: number): number | undefined {
-    const maybeLength: number | undefined = TextUtils.maybeIdentifierLength(text, positionStart, true);
+    const maybeLength: number | undefined = TextUtils.identifierLength(text, positionStart, true);
 
     return maybeLength !== undefined ? positionStart + maybeLength : undefined;
 }

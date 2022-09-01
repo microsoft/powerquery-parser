@@ -22,13 +22,9 @@ export function createPrimitiveType<T extends Type.TypeKind>(isNullable: boolean
 export function createAnyUnion(
     unionedTypePairs: ReadonlyArray<Type.TPowerQueryType>,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Type.TPowerQueryType {
-    const trace: Trace = traceManager.entry(
-        TypeUtilsTraceConstant.CreateAnyUnion,
-        createAnyUnion.name,
-        maybeCorrelationId,
-    );
+    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.CreateAnyUnion, createAnyUnion.name, correlationId);
 
     const simplified: ReadonlyArray<Type.TPowerQueryType> = simplify(unionedTypePairs, traceManager, trace.id);
 
@@ -40,7 +36,7 @@ export function createAnyUnion(
 
     const result: Type.AnyUnion = {
         kind: Type.TypeKind.Any,
-        maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+        extendedKind: Type.ExtendedTypeKind.AnyUnion,
         isNullable: unionedTypePairs.find((ttype: Type.TPowerQueryType) => ttype.isNullable === true) !== undefined,
         unionedTypePairs: simplified,
     };
@@ -57,7 +53,7 @@ export function createDefinedFunction(
 ): Type.DefinedFunction {
     return {
         kind: Type.TypeKind.Function,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
+        extendedKind: Type.ExtendedTypeKind.DefinedFunction,
         isNullable,
         parameters,
         returnType,
@@ -70,7 +66,7 @@ export function createDefinedList(
 ): Type.DefinedList {
     return {
         kind: Type.TypeKind.List,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
+        extendedKind: Type.ExtendedTypeKind.DefinedList,
         isNullable,
         elements,
     };
@@ -82,7 +78,7 @@ export function createDefinedListType(
 ): Type.DefinedListType {
     return {
         kind: Type.TypeKind.Type,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedListType,
+        extendedKind: Type.ExtendedTypeKind.DefinedListType,
         isNullable,
         itemTypes,
     };
@@ -95,7 +91,7 @@ export function createDefinedRecord(
 ): Type.DefinedRecord {
     return {
         kind: Type.TypeKind.Record,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+        extendedKind: Type.ExtendedTypeKind.DefinedRecord,
         isNullable,
         fields,
         isOpen,
@@ -109,7 +105,7 @@ export function createDefinedTable(
 ): Type.DefinedTable {
     return {
         kind: Type.TypeKind.Table,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
+        extendedKind: Type.ExtendedTypeKind.DefinedTable,
         isNullable,
         fields,
         isOpen,
@@ -123,7 +119,7 @@ export function createFunctionType(
 ): Type.FunctionType {
     return {
         kind: Type.TypeKind.Type,
-        maybeExtendedKind: Type.ExtendedTypeKind.FunctionType,
+        extendedKind: Type.ExtendedTypeKind.FunctionType,
         isNullable,
         parameters,
         returnType,
@@ -147,7 +143,7 @@ export function createLogicalLiteral(isNullable: boolean, literal: string | bool
     return {
         isNullable,
         kind: Type.TypeKind.Logical,
-        maybeExtendedKind: Type.ExtendedTypeKind.LogicalLiteral,
+        extendedKind: Type.ExtendedTypeKind.LogicalLiteral,
         literal: parsedLiteral,
         normalizedLiteral,
     };
@@ -156,7 +152,7 @@ export function createLogicalLiteral(isNullable: boolean, literal: string | bool
 export function createListType(isNullable: boolean, itemType: Type.TPowerQueryType): Type.ListType {
     return {
         kind: Type.TypeKind.Type,
-        maybeExtendedKind: Type.ExtendedTypeKind.ListType,
+        extendedKind: Type.ExtendedTypeKind.ListType,
         isNullable,
         itemType,
     };
@@ -177,7 +173,7 @@ export function createNumberLiteral(isNullable: boolean, literal: string | numbe
     return {
         isNullable,
         kind: Type.TypeKind.Number,
-        maybeExtendedKind: Type.ExtendedTypeKind.NumberLiteral,
+        extendedKind: Type.ExtendedTypeKind.NumberLiteral,
         literal: parsedLiteral,
         normalizedLiteral,
     };
@@ -189,7 +185,7 @@ export function createPrimaryPrimitiveType(
 ): Type.PrimaryPrimitiveType {
     return {
         kind: Type.TypeKind.Type,
-        maybeExtendedKind: Type.ExtendedTypeKind.PrimaryPrimitiveType,
+        extendedKind: Type.ExtendedTypeKind.PrimaryPrimitiveType,
         isNullable,
         primitiveType,
     };
@@ -202,7 +198,7 @@ export function createRecordType(
 ): Type.RecordType {
     return {
         kind: Type.TypeKind.Type,
-        maybeExtendedKind: Type.ExtendedTypeKind.RecordType,
+        extendedKind: Type.ExtendedTypeKind.RecordType,
         isNullable,
         fields,
         isOpen,
@@ -216,7 +212,7 @@ export function createTableType(
 ): Type.TableType {
     return {
         kind: Type.TypeKind.Type,
-        maybeExtendedKind: Type.ExtendedTypeKind.TableType,
+        extendedKind: Type.ExtendedTypeKind.TableType,
         isNullable,
         fields,
         isOpen,
@@ -229,7 +225,7 @@ export function createTextLiteral(isNullable: boolean, literal: string): Type.Te
     return {
         isNullable,
         kind: Type.TypeKind.Text,
-        maybeExtendedKind: Type.ExtendedTypeKind.TextLiteral,
+        extendedKind: Type.ExtendedTypeKind.TextLiteral,
         literal,
         normalizedLiteral: literal,
     };
@@ -241,7 +237,7 @@ export function createTableTypePrimary(
 ): Type.TableTypePrimaryExpression {
     return {
         kind: Type.TypeKind.Type,
-        maybeExtendedKind: Type.ExtendedTypeKind.TableTypePrimaryExpression,
+        extendedKind: Type.ExtendedTypeKind.TableTypePrimaryExpression,
         isNullable,
         primaryExpression,
     };

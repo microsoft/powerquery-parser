@@ -8,10 +8,10 @@ export interface SimplifiedType {
     readonly primitiveTypeConstantKind: Constant.PrimitiveTypeConstant;
 }
 
-export function maybeLiteralKindFrom(
-    maybeTokenKind: TokenKind | undefined,
+export function literalKindFrom(
+    tokenKind: TokenKind | undefined,
 ): Ast.LiteralKind.Numeric | Ast.LiteralKind.Logical | Ast.LiteralKind.Null | Ast.LiteralKind.Text | undefined {
-    switch (maybeTokenKind) {
+    switch (tokenKind) {
         case TokenKind.HexLiteral:
         case TokenKind.KeywordHashNan:
         case TokenKind.KeywordHashInfinity:
