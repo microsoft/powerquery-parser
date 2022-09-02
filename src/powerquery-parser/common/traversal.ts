@@ -153,9 +153,9 @@ async function traverseRecursion<State extends ITraversalState<ResultType>, Resu
     nodesById: NodesById,
     node: Node,
     strategy: VisitNodeStrategy,
-    visitNodeFn: TVisitNodeFn<State, ResultType, Node, void>,
-    expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
-    earlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
+    visitNode: TVisitNodeFn<State, ResultType, Node, void>,
+    visitOrderQueue: TExpandNodesFn<State, ResultType, Node, NodesById>,
+    isEarlyExit: TEarlyExitFn<State, ResultType, Node> | undefined,
     correlationId: number | undefined,
 ): Promise<void> {
     const trace: Trace = state.traceManager.entry(
@@ -166,19 +166,19 @@ async function traverseRecursion<State extends ITraversalState<ResultType>, Resu
 
     state.cancellationToken?.throwIfCancelled();
 
-    if (earlyExitFn && (await earlyExitFn(state, node, trace.id))) {
+    if (isEarlyExit && (await isEarlyExit(state, node, trace.id))) {
         return;
     } else if (strategy === VisitNodeStrategy.BreadthFirst) {
-        await visitNodeFn(state, node, trace.id);
+        await visitNode(state, node, trace.id);
     }
 
-    for (const child of await expandNodesFn(state, node, nodesById)) {
+    for (const child of await visitOrderQueue(state, node, nodesById)) {
         // eslint-disable-next-line no-await-in-loop
-        await traverseRecursion(state, nodesById, child, strategy, visitNodeFn, expandNodesFn, earlyExitFn, trace.id);
+        await traverseRecursion(state, nodesById, child, strategy, visitNode, visitOrderQueue, isEarlyExit, trace.id);
     }
 
     if (strategy === VisitNodeStrategy.DepthFirst) {
-        await visitNodeFn(state, node, trace.id);
+        await visitNode(state, node, trace.id);
     }
 
     trace.exit();

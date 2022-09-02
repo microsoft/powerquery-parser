@@ -55,7 +55,7 @@ export function leftMostLeaf(nodeIdMapCollection: NodeIdMap.Collection, nodeId: 
 export function rightMostLeaf(
     nodeIdMapCollection: Collection,
     nodeId: number,
-    predicateFn: ((node: Ast.TNode) => boolean) | undefined = undefined,
+    predicate: ((node: Ast.TNode) => boolean) | undefined = undefined,
 ): Promise<Ast.TNode | undefined> {
     const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
     let nodeIdsToExplore: number[] = [nodeId];
@@ -69,7 +69,7 @@ export function rightMostLeaf(
 
         // Check if Ast.TNode or ParserContext.Node
         if (astNode !== undefined) {
-            if (predicateFn && !predicateFn(astNode)) {
+            if (predicate && !predicate(astNode)) {
                 continue;
             }
 

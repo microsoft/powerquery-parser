@@ -53,9 +53,9 @@ export class OrderedMap<K, V> implements Map<K, V> {
         }
     }
 
-    public forEach(callbackfn: (value: V, key: K, map: Map<K, V>) => void): void {
+    public forEach(callback: (value: V, key: K, map: Map<K, V>) => void): void {
         for (const [key, value] of this.entries()) {
-            callbackfn(value, key, this.map);
+            callback(value, key, this.map);
         }
     }
 

@@ -165,7 +165,7 @@ describe("Parser.AbridgedNode", () => {
             const customSettings: Settings = {
                 ...DefaultSettings,
                 parser: Parser.RecursiveDescentParser,
-                parserEntryPointFn: Parser.RecursiveDescentParser.readParameterSpecificationList,
+                parserEntryPoint: Parser.RecursiveDescentParser.readParameterSpecificationList,
             };
 
             const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(

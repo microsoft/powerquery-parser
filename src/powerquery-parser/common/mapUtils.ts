@@ -19,11 +19,7 @@ export function assertNotIn<K, V>(map: Map<K, V>, key: K, message?: string): voi
     Assert.isFalse(map.has(key), message ?? `key is present`, { key });
 }
 
-export function isEqualMap<K, V>(
-    left: Map<K, V>,
-    right: Map<K, V>,
-    valueCmpFn: (left: V, right: V) => boolean,
-): boolean {
+export function isEqualMap<K, V>(left: Map<K, V>, right: Map<K, V>, comparer: (left: V, right: V) => boolean): boolean {
     if (left.size !== right.size) {
         return false;
     }
@@ -31,7 +27,7 @@ export function isEqualMap<K, V>(
     for (const [leftKey, leftValue] of left.entries()) {
         const value: V | undefined = right.get(leftKey);
 
-        if (value === undefined || !valueCmpFn(leftValue, value)) {
+        if (value === undefined || !comparer(leftValue, value)) {
             return false;
         }
     }
@@ -42,7 +38,7 @@ export function isEqualMap<K, V>(
 export function isSubsetMap<K, V>(
     left: Map<K, V>,
     right: Map<K, V>,
-    valueCmpFn: (left: V, right: V) => boolean,
+    comparer: (left: V, right: V) => boolean,
 ): boolean {
     if (left.size > right.size) {
         return false;
@@ -51,7 +47,7 @@ export function isSubsetMap<K, V>(
     for (const [key, leftType] of left.entries()) {
         const rightType: V | undefined = right.get(key);
 
-        if (rightType === undefined || !valueCmpFn(leftType, rightType)) {
+        if (rightType === undefined || !comparer(leftType, rightType)) {
             return false;
         }
     }

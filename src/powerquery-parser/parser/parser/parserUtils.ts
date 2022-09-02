@@ -24,18 +24,18 @@ export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: Lexe
         initialCorrelationId: trace.id,
     };
 
-    const parserEntryPointFn:
+    const parserEntryPoint:
         | ((state: ParseState, parser: Parser, correlationId: number | undefined) => Promise<Ast.TNode>)
-        | undefined = updatedSettings?.parserEntryPointFn;
+        | undefined = updatedSettings?.parserEntryPoint;
 
-    if (parserEntryPointFn === undefined) {
+    if (parserEntryPoint === undefined) {
         return await tryParseDocument(updatedSettings, lexerSnapshot);
     }
 
-    const parseState: ParseState = updatedSettings.createParseStateFn(lexerSnapshot, defaultOverrides(updatedSettings));
+    const parseState: ParseState = updatedSettings.createParseState(lexerSnapshot, defaultOverrides(updatedSettings));
 
     try {
-        const root: Ast.TNode = await parserEntryPointFn(parseState, updatedSettings.parser, trace.id);
+        const root: Ast.TNode = await parserEntryPoint(parseState, updatedSettings.parser, trace.id);
         ParseStateUtils.assertIsDoneParsing(parseState);
 
         return ResultUtils.boxOk({
@@ -64,7 +64,7 @@ export async function tryParseDocument(
 
     let root: Ast.TNode;
 
-    const expressionDocumentState: ParseState = parseSettings.createParseStateFn(
+    const expressionDocumentState: ParseState = parseSettings.createParseState(
         lexerSnapshot,
         defaultOverrides(parseSettings),
     );
@@ -82,7 +82,7 @@ export async function tryParseDocument(
     } catch (expressionDocumentError) {
         Assert.isInstanceofError(expressionDocumentError);
 
-        const sectionDocumentState: ParseState = parseSettings.createParseStateFn(
+        const sectionDocumentState: ParseState = parseSettings.createParseState(
             lexerSnapshot,
             defaultOverrides(parseSettings),
         );

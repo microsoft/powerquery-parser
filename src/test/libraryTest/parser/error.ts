@@ -18,7 +18,7 @@ import { TestAssertUtils } from "../../testUtils";
 
 const DefaultSettingsWithStrict: Settings = {
     ...DefaultSettings,
-    createParseStateFn: (lexerSnapshot: Lexer.LexerSnapshot, overrides: Partial<ParseState> | undefined) => {
+    createParseState: (lexerSnapshot: Lexer.LexerSnapshot, overrides: Partial<ParseState> | undefined) => {
         overrides = overrides ?? {};
 
         return ParseStateUtils.createState(lexerSnapshot, {
@@ -101,7 +101,7 @@ describe("Parser.Error", () => {
                 ...DefaultSettings,
                 parser: RecursiveDescentParser,
                 // eslint-disable-next-line require-await
-                parserEntryPointFn: async (state: ParseState, parser: Parser): Promise<Ast.TNode> =>
+                parserEntryPoint: async (state: ParseState, parser: Parser): Promise<Ast.TNode> =>
                     parser.readIdentifier(state, parser, Ast.IdentifierContextKind.Value, undefined),
             };
 

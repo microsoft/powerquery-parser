@@ -10,7 +10,7 @@ export class ImmutableSet<T> {
 
     public constructor(
         iterable: Iterable<T> = [],
-        private readonly equalityFn: (left: T, right: T) => boolean = (left: T, right: T): boolean => left === right,
+        private readonly comparer: (left: T, right: T) => boolean = (left: T, right: T): boolean => left === right,
     ) {
         this.internalCollection = [...iterable];
         this.size = this.internalCollection.length;
@@ -20,7 +20,7 @@ export class ImmutableSet<T> {
         if (this.has(value)) {
             return this;
         } else {
-            return new ImmutableSet(new Set([...this.values(), value]), this.equalityFn);
+            return new ImmutableSet(new Set([...this.values(), value]), this.comparer);
         }
     }
 
@@ -41,18 +41,18 @@ export class ImmutableSet<T> {
 
     public delete(value: T): ImmutableSet<T> {
         const values: ReadonlyArray<T> = [...this.internalCollection.values()].filter(
-            (item: T) => !this.equalityFn(item, value),
+            (item: T) => !this.comparer(item, value),
         );
 
         if (values.length === this.internalCollection.length) {
             return this;
         } else {
-            return new ImmutableSet(new Set(values), this.equalityFn);
+            return new ImmutableSet(new Set(values), this.comparer);
         }
     }
 
     public has(value: T): boolean {
-        return ArrayUtils.includesUnique(this.internalCollection, value, this.equalityFn);
+        return ArrayUtils.includesUnique(this.internalCollection, value, this.comparer);
     }
 
     public values(): IterableIterator<T> {

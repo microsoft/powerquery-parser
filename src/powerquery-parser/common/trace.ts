@@ -53,7 +53,7 @@ export const enum TraceConstant {
 
 export class Trace {
     constructor(
-        protected readonly emitTraceFn: (trace: Trace, message: string, details?: object) => void,
+        protected readonly emitter: (trace: Trace, message: string, details?: object) => void,
         public readonly phase: string,
         public readonly task: string,
         public readonly id: number,
@@ -68,7 +68,7 @@ export class Trace {
     }
 
     public trace(message: string, details?: object): void {
-        this.emitTraceFn(this, message, details);
+        this.emitter(this, message, details);
     }
 
     public exit(details?: object): void {
@@ -109,7 +109,7 @@ export const NoOpTraceInstance: NoOpTrace = new NoOpTrace(
 );
 
 export abstract class TraceManager {
-    protected readonly createIdFn: () => number = createAutoIncrementId();
+    protected readonly idFactory: () => number = createAutoIncrementIdFactory();
 
     constructor(protected readonly valueDelimiter: string = ",", protected readonly newline: "\n" | "\r\n" = "\r\n") {}
 
@@ -136,7 +136,7 @@ export abstract class TraceManager {
     // Subclass this when the TraceManager needs a different subclass of Trace.
     // Eg. BenchmarkTraceManager returns a BenchmarkTrace instance.
     protected create(phase: string, task: string, correlationId: number | undefined, details?: object): Trace {
-        return new Trace(this.emit.bind(this), phase, task, this.createIdFn(), correlationId, details);
+        return new Trace(this.emit.bind(this), phase, task, this.idFactory(), correlationId, details);
     }
 
     // Copied signature from `JSON.stringify`.
@@ -157,12 +157,12 @@ export abstract class TraceManager {
 
 // Each trace entry gets passed to a callback function.
 export class ReportTraceManager extends TraceManager {
-    constructor(private readonly outputFn: (message: string) => void, valueDelimiter: string = "\t") {
+    constructor(private readonly emitter: (message: string) => void, valueDelimiter: string = "\t") {
         super(valueDelimiter);
     }
 
     emit(trace: Trace, message: string, details?: object): void {
-        this.outputFn(this.formatMessage(trace, message, details));
+        this.emitter(this.formatMessage(trace, message, details));
     }
 }
 
@@ -178,7 +178,7 @@ export class BenchmarkTraceManager extends ReportTraceManager {
         correlationId: number | undefined,
         details?: object,
     ): BenchmarkTrace {
-        return new BenchmarkTrace(this.emit.bind(this), phase, task, this.createIdFn(), correlationId, details);
+        return new BenchmarkTrace(this.emit.bind(this), phase, task, this.idFactory(), correlationId, details);
     }
 }
 
@@ -199,7 +199,7 @@ export class NoOpTraceManager extends TraceManager {
 
 export const NoOpTraceManagerInstance: NoOpTraceManager = new NoOpTraceManager(undefined, undefined);
 
-function createAutoIncrementId(): () => number {
+function createAutoIncrementIdFactory(): () => number {
     let counter: number = 0;
 
     return (): number => {

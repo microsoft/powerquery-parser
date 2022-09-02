@@ -19,11 +19,8 @@ export type LexSettings = CommonSettings;
 
 export interface ParseSettings extends CommonSettings {
     readonly parser: Parser;
-    readonly createParseStateFn: (
-        lexerSnapshot: LexerSnapshot,
-        overrides: Partial<ParseState> | undefined,
-    ) => ParseState;
-    readonly parserEntryPointFn:
+    readonly createParseState: (lexerSnapshot: LexerSnapshot, overrides: Partial<ParseState> | undefined) => ParseState;
+    readonly parserEntryPoint:
         | ((state: ParseState, parser: Parser, correlationId: number | undefined) => Promise<Ast.TNode>)
         | undefined;
 }
@@ -31,12 +28,12 @@ export interface ParseSettings extends CommonSettings {
 export type Settings = LexSettings & ParseSettings;
 
 export const DefaultSettings: Settings = {
-    createParseStateFn: (lexerSnapshot: LexerSnapshot, overrides: Partial<ParseState> | undefined) =>
+    createParseState: (lexerSnapshot: LexerSnapshot, overrides: Partial<ParseState> | undefined) =>
         ParseStateUtils.createState(lexerSnapshot, overrides),
     locale: DefaultLocale,
     cancellationToken: undefined,
     initialCorrelationId: undefined,
-    parserEntryPointFn: undefined,
+    parserEntryPoint: undefined,
     parser: CombinatorialParser,
     traceManager: NoOpTraceManagerInstance,
 };

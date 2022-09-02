@@ -5,10 +5,10 @@ import { Assert } from ".";
 
 export function all<T>(
     collection: ReadonlyArray<T>,
-    predicateFn: (value: T) => boolean = (value: T): boolean => Boolean(value),
+    predicate: (value: T) => boolean = (value: T): boolean => Boolean(value),
 ): boolean {
     for (const element of collection) {
-        if (!predicateFn(element)) {
+        if (!predicate(element)) {
             return false;
         }
     }
@@ -29,11 +29,11 @@ export function assertGet<T>(collection: ReadonlyArray<T>, index: number, messag
 
 export function assertIndexOfPredicate<T>(
     collection: ReadonlyArray<T>,
-    predicateFn: (element: T) => boolean,
+    predicate: (element: T) => boolean,
     message?: string,
     details?: object,
 ): number {
-    const index: number = indexOfPredicate(collection, predicateFn);
+    const index: number = indexOfPredicate(collection, predicate);
     Assert.isTrue(index !== -1, message, details);
 
     return index;
@@ -51,9 +51,9 @@ export function assertNonZeroLength<T>(collection: ReadonlyArray<T>, message?: s
 
 export async function mapAsync<T, U>(
     collection: ReadonlyArray<T>,
-    mapFn: (value: T) => Promise<U>,
+    map: (value: T) => Promise<U>,
 ): Promise<ReadonlyArray<U>> {
-    const tasks: ReadonlyArray<Promise<U>> = collection.map(mapFn);
+    const tasks: ReadonlyArray<Promise<U>> = collection.map(map);
 
     return await Promise.all(tasks);
 }
@@ -88,11 +88,11 @@ export function findReverse<T>(collection: ReadonlyArray<T>, predicate: (t: T) =
     return undefined;
 }
 
-export function includesPredicate<T>(collection: ReadonlyArray<T>, predicateFn: (element: T) => boolean): boolean {
+export function includesPredicate<T>(collection: ReadonlyArray<T>, predicate: (element: T) => boolean): boolean {
     const numElements: number = collection.length;
 
     for (let index: number = 0; index < numElements; index += 1) {
-        if (predicateFn(collection[index])) {
+        if (predicate(collection[index])) {
             return true;
         }
     }
@@ -103,16 +103,16 @@ export function includesPredicate<T>(collection: ReadonlyArray<T>, predicateFn: 
 export function includesUnique<T>(
     collection: ReadonlyArray<T>,
     testValue: T,
-    equalityFn: (left: T, right: T) => boolean,
+    comparer: (left: T, right: T) => boolean,
 ): boolean {
-    return includesPredicate(collection, (collectionItem: T) => equalityFn(testValue, collectionItem));
+    return includesPredicate(collection, (collectionItem: T) => comparer(testValue, collectionItem));
 }
 
-export function indexOfPredicate<T>(collection: ReadonlyArray<T>, predicateFn: (element: T) => boolean): number {
+export function indexOfPredicate<T>(collection: ReadonlyArray<T>, predicate: (element: T) => boolean): number {
     const numElements: number = collection.length;
 
     for (let index: number = 0; index < numElements; index += 1) {
-        if (predicateFn(collection[index])) {
+        if (predicate(collection[index])) {
             return index;
         }
     }
@@ -123,7 +123,7 @@ export function indexOfPredicate<T>(collection: ReadonlyArray<T>, predicateFn: (
 export function isSubset<T>(
     largerCollection: ReadonlyArray<T>,
     smallerCollection: ReadonlyArray<T>,
-    equalityFn: (left: T, right: T) => boolean = (left: T, right: T): boolean => left === right,
+    comparer: (left: T, right: T) => boolean = (left: T, right: T): boolean => left === right,
 ): boolean {
     if (smallerCollection.length > largerCollection.length) {
         return false;
@@ -133,7 +133,7 @@ export function isSubset<T>(
         let foundMatch: boolean = false;
 
         for (const largerCollectionValue of largerCollection) {
-            if (equalityFn(smallerCollectionValue, largerCollectionValue)) {
+            if (comparer(smallerCollectionValue, largerCollectionValue)) {
                 foundMatch = true;
                 break;
             }
@@ -180,13 +180,13 @@ export function removeAtIndex<T>(collection: ReadonlyArray<T>, index: number): T
 
 export function split<T>(
     collection: ReadonlyArray<T>,
-    splitFn: (value: T) => boolean,
+    splitter: (value: T) => boolean,
 ): [ReadonlyArray<T>, ReadonlyArray<T>] {
     const left: T[] = [];
     const right: T[] = [];
 
     for (const value of collection) {
-        if (splitFn(value) === true) {
+        if (splitter(value) === true) {
             left.push(value);
         } else {
             right.push(value);

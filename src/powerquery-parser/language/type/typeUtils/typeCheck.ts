@@ -230,7 +230,7 @@ function typeCheckGenericNumber<
 >(
     valueElements: ReadonlyArray<Value>,
     schemaItemTypes: ReadonlyArray<Schema>,
-    valueCmpFn: (left: Value, right: Schema, traceManager: TraceManager, correlationId: number) => boolean | undefined,
+    comparer: (left: Value, right: Schema, traceManager: TraceManager, correlationId: number) => boolean | undefined,
     traceManager: TraceManager,
     correlationId: number | undefined,
 ): IChecked<number, IMismatch<Value, Schema>> {
@@ -264,7 +264,7 @@ function typeCheckGenericNumber<
         const element: Value = valueElements[index];
         const schemaItemType: Schema = schemaItemTypes[index];
 
-        if (valueCmpFn(element, schemaItemType, traceManager, trace.id)) {
+        if (comparer(element, schemaItemType, traceManager, trace.id)) {
             validIndices.push(index);
         } else {
             mismatches.set(index, {

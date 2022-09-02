@@ -23,7 +23,7 @@ import { ParseError } from "..";
 export async function readAmbiguous<T extends Ast.TNode>(
     state: ParseState,
     parser: Parser,
-    parseFns: ReadonlyArray<(state: ParseState, parser: Parser, correlationId: number | undefined) => Promise<T>>,
+    parseCallbacks: ReadonlyArray<(state: ParseState, parser: Parser, correlationId: number | undefined) => Promise<T>>,
     correlationId: number | undefined,
 ): Promise<AmbiguousParse<T>> {
     const trace: Trace = state.traceManager.entry(
@@ -31,15 +31,15 @@ export async function readAmbiguous<T extends Ast.TNode>(
         readAmbiguous.name,
         correlationId,
         {
-            [TraceConstant.Length]: parseFns.length,
+            [TraceConstant.Length]: parseCallbacks.length,
         },
     );
 
-    ArrayUtils.assertNonZeroLength(parseFns, "requires at least one parse function");
+    ArrayUtils.assertNonZeroLength(parseCallbacks, "requires at least one parse function");
 
     let bestMatch: AmbiguousParse<T> | undefined = undefined;
 
-    for (const parseFn of parseFns) {
+    for (const parseCallback of parseCallbacks) {
         // eslint-disable-next-line no-await-in-loop
         const variantState: ParseState = await parser.copyState(state);
 
@@ -48,7 +48,7 @@ export async function readAmbiguous<T extends Ast.TNode>(
 
         try {
             // eslint-disable-next-line no-await-in-loop
-            node = await parseFn(variantState, parser, trace.id);
+            node = await parseCallback(variantState, parser, trace.id);
             variantResult = ResultUtils.boxOk(node);
         } catch (error) {
             if (!ParseError.isTInnerParseError(error)) {
