@@ -10,11 +10,11 @@ export function isEqualType(left: Type.TPowerQueryType, right: Type.TPowerQueryT
         return true;
     } else if (
         left.kind !== right.kind ||
-        left.maybeExtendedKind !== right.maybeExtendedKind ||
+        left.extendedKind !== right.extendedKind ||
         left.isNullable !== right.isNullable
     ) {
         return false;
-    } else if (left.maybeExtendedKind !== undefined && right.maybeExtendedKind !== undefined) {
+    } else if (left.extendedKind !== undefined && right.extendedKind !== undefined) {
         return isEqualExtendedTypes(left, right);
     } else {
         return true;
@@ -22,11 +22,7 @@ export function isEqualType(left: Type.TPowerQueryType, right: Type.TPowerQueryT
 }
 
 export function isEqualFunctionParameter(left: Type.FunctionParameter, right: Type.FunctionParameter): boolean {
-    return (
-        left.isNullable !== right.isNullable ||
-        left.isOptional !== right.isOptional ||
-        left.maybeType !== right.maybeType
-    );
+    return left.isNullable !== right.isNullable || left.isOptional !== right.isOptional || left.type !== right.type;
 }
 
 export function isEqualFunctionSignature(
@@ -66,11 +62,11 @@ export function isEqualTypes(
 export function isEqualExtendedTypes(left: Type.TExtendedType, right: Type.TExtendedType): boolean {
     if (left === right) {
         return true;
-    } else if (left.maybeExtendedKind !== right.maybeExtendedKind) {
+    } else if (left.extendedKind !== right.extendedKind) {
         return false;
     }
 
-    switch (left.maybeExtendedKind) {
+    switch (left.extendedKind) {
         case Type.ExtendedTypeKind.AnyUnion:
             return isEqualAnyUnion(left, right as Type.AnyUnion);
 
@@ -200,9 +196,9 @@ export function isEqualFieldSpecificationList(
     }
 
     for (const [key, leftValue] of left.fields.entries()) {
-        const maybeRightValue: Type.TPowerQueryType | undefined = right.fields.get(key);
+        const rightValue: Type.TPowerQueryType | undefined = right.fields.get(key);
 
-        if (maybeRightValue === undefined || !isEqualType(leftValue, maybeRightValue)) {
+        if (rightValue === undefined || !isEqualType(leftValue, rightValue)) {
             return false;
         }
     }

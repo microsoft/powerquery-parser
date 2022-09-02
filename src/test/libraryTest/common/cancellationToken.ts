@@ -35,7 +35,7 @@ function assertGetLexerStateWithCancellationToken(): Lexer.State {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, "foo");
     Assert.isOk(triedLex);
     const state: TypeScriptUtils.StripReadonly<Lexer.State> = triedLex.value;
-    state.maybeCancellationToken = new TimedCancellationToken(0);
+    state.cancellationToken = new TimedCancellationToken(0);
 
     return state;
 }

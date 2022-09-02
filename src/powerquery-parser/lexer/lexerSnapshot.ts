@@ -91,12 +91,12 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
     const flatTokens: ReadonlyArray<FlatLineToken> = flattenedLines.flatLineTokens;
     const numFlatTokens: number = flatTokens.length;
     const text: string = flattenedLines.text;
-    const maybeCancellationToken: ICancellationToken | undefined = state.maybeCancellationToken;
+    const cancellationToken: ICancellationToken | undefined = state.cancellationToken;
 
     let flatIndex: number = 0;
 
     while (flatIndex < numFlatTokens) {
-        state.maybeCancellationToken?.throwIfCancelled();
+        state.cancellationToken?.throwIfCancelled();
 
         const flatToken: FlatLineToken = flatTokens[flatIndex];
 
@@ -114,7 +114,7 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
                     flattenedLines,
                     flatToken,
                     state.locale,
-                    maybeCancellationToken,
+                    cancellationToken,
                 );
 
                 comments.push(concatenatedTokenRead.comment);
@@ -127,7 +127,7 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
                     flattenedLines,
                     flatToken,
                     state.locale,
-                    maybeCancellationToken,
+                    cancellationToken,
                 );
 
                 tokens.push(concatenatedTokenRead.token);
@@ -140,7 +140,7 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
                     flattenedLines,
                     flatToken,
                     state.locale,
-                    maybeCancellationToken,
+                    cancellationToken,
                 );
 
                 tokens.push(concatenatedTokenRead.token);
@@ -198,29 +198,28 @@ function readMultilineComment(
     flattenedLines: FlattenedLines,
     tokenStart: FlatLineToken,
     locale: string,
-    maybeCancellationToken: ICancellationToken | undefined,
+    cancellationToken: ICancellationToken | undefined,
 ): ConcatenatedCommentRead {
     const collection: FlatLineCollection = collectWhileContent(
         flattenedLines.flatLineTokens,
         tokenStart,
         Token.LineTokenKind.MultilineCommentContent,
-        maybeCancellationToken,
+        cancellationToken,
     );
 
-    const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
+    const tokenEnd: FlatLineToken | undefined = collection.tokenEnd;
 
-    if (!maybeTokenEnd) {
+    if (!tokenEnd) {
         throw new LexError.UnterminatedMultilineTokenError(
             locale,
             LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
             LexError.UnterminatedMultilineTokenKind.MultilineComment,
         );
-    } else if (maybeTokenEnd.kind !== Token.LineTokenKind.MultilineCommentEnd) {
-        const details: { foundTokenEnd: FlatLineToken | undefined } = { foundTokenEnd: maybeTokenEnd };
+    } else if (tokenEnd.kind !== Token.LineTokenKind.MultilineCommentEnd) {
+        const details: { foundTokenEnd: FlatLineToken | undefined } = { foundTokenEnd: tokenEnd };
         const message: string = ErrorMessageNoEndToken;
         throw new CommonError.InvariantError(message, details);
     } else {
-        const tokenEnd: FlatLineToken = maybeTokenEnd;
         const positionStart: Token.TokenPosition = tokenStart.positionStart;
         const positionEnd: Token.TokenPosition = tokenEnd.positionEnd;
 
@@ -241,29 +240,28 @@ function readQuotedIdentifier(
     flattenedLines: FlattenedLines,
     tokenStart: FlatLineToken,
     locale: string,
-    maybeCancellationToken: ICancellationToken | undefined,
+    cancellationToken: ICancellationToken | undefined,
 ): ConcatenatedTokenRead {
     const collection: FlatLineCollection = collectWhileContent(
         flattenedLines.flatLineTokens,
         tokenStart,
         Token.LineTokenKind.QuotedIdentifierContent,
-        maybeCancellationToken,
+        cancellationToken,
     );
 
-    const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
+    const tokenEnd: FlatLineToken | undefined = collection.tokenEnd;
 
-    if (!maybeTokenEnd) {
+    if (!tokenEnd) {
         throw new LexError.UnterminatedMultilineTokenError(
             locale,
             LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
             LexError.UnterminatedMultilineTokenKind.QuotedIdentifier,
         );
-    } else if (maybeTokenEnd.kind !== Token.LineTokenKind.QuotedIdentifierEnd) {
-        const details: { foundTokenEnd: FlatLineToken } = { foundTokenEnd: maybeTokenEnd };
+    } else if (tokenEnd.kind !== Token.LineTokenKind.QuotedIdentifierEnd) {
+        const details: { foundTokenEnd: FlatLineToken } = { foundTokenEnd: tokenEnd };
         const message: string = ErrorMessageNoEndToken;
         throw new CommonError.InvariantError(message, details);
     } else {
-        const tokenEnd: FlatLineToken = maybeTokenEnd;
         const positionStart: Token.TokenPosition = tokenStart.positionStart;
         const positionEnd: Token.TokenPosition = tokenEnd.positionEnd;
 
@@ -283,29 +281,28 @@ function readTextLiteral(
     flattenedLines: FlattenedLines,
     tokenStart: FlatLineToken,
     locale: string,
-    maybeCancellationToken: ICancellationToken | undefined,
+    cancellationToken: ICancellationToken | undefined,
 ): ConcatenatedTokenRead {
     const collection: FlatLineCollection = collectWhileContent(
         flattenedLines.flatLineTokens,
         tokenStart,
         Token.LineTokenKind.TextLiteralContent,
-        maybeCancellationToken,
+        cancellationToken,
     );
 
-    const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
+    const tokenEnd: FlatLineToken | undefined = collection.tokenEnd;
 
-    if (!maybeTokenEnd) {
+    if (!tokenEnd) {
         throw new LexError.UnterminatedMultilineTokenError(
             locale,
             LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
             LexError.UnterminatedMultilineTokenKind.Text,
         );
-    } else if (maybeTokenEnd.kind !== Token.LineTokenKind.TextLiteralEnd) {
-        const details: { foundTokenEnd: FlatLineToken } = { foundTokenEnd: maybeTokenEnd };
+    } else if (tokenEnd.kind !== Token.LineTokenKind.TextLiteralEnd) {
+        const details: { foundTokenEnd: FlatLineToken } = { foundTokenEnd: tokenEnd };
         const message: string = ErrorMessageNoEndToken;
         throw new CommonError.InvariantError(message, details);
     } else {
-        const tokenEnd: FlatLineToken = maybeTokenEnd;
         const positionStart: Token.TokenPosition = tokenStart.positionStart;
         const positionEnd: Token.TokenPosition = tokenEnd.positionEnd;
 
@@ -325,7 +322,7 @@ function collectWhileContent<KindVariant extends Token.LineTokenKind>(
     flatTokens: ReadonlyArray<FlatLineToken>,
     tokenStart: FlatLineToken,
     contentKind: KindVariant,
-    maybeCancellationToken: ICancellationToken | undefined,
+    cancellationToken: ICancellationToken | undefined,
 ): FlatLineCollection {
     const collectedTokens: FlatLineToken[] = [];
     const numTokens: number = flatTokens.length;
@@ -333,7 +330,7 @@ function collectWhileContent<KindVariant extends Token.LineTokenKind>(
     let flatIndex: number = tokenStart.flatIndex + 1;
 
     while (flatIndex < numTokens) {
-        maybeCancellationToken?.throwIfCancelled();
+        cancellationToken?.throwIfCancelled();
 
         const token: FlatLineToken = flatTokens[flatIndex];
 
@@ -348,7 +345,7 @@ function collectWhileContent<KindVariant extends Token.LineTokenKind>(
     return {
         tokenStart,
         collectedTokens,
-        maybeTokenEnd: flatTokens[flatIndex],
+        tokenEnd: flatTokens[flatIndex],
     };
 }
 
@@ -431,7 +428,7 @@ interface ConcatenatedTokenRead {
 interface FlatLineCollection {
     readonly tokenStart: FlatLineToken;
     readonly collectedTokens: ReadonlyArray<FlatLineToken>;
-    readonly maybeTokenEnd: FlatLineToken | undefined;
+    readonly tokenEnd: FlatLineToken | undefined;
 }
 
 interface LineTerminator {

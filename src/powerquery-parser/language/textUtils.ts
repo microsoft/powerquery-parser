@@ -34,23 +34,23 @@ export function identifierKind(text: string, allowTrailingPeriod: boolean): Iden
 }
 
 export function isGeneralizedIdentifier(text: string): boolean {
-    return maybeGeneralizedIdentifierLength(text, 0) === text.length;
+    return generalizedIdentifierLength(text, 0) === text.length;
 }
 
 export function isRegularIdentifier(text: string, allowTrailingPeriod: boolean): boolean {
-    return maybeIdentifierLength(text, 0, allowTrailingPeriod) === text.length;
+    return identifierLength(text, 0, allowTrailingPeriod) === text.length;
 }
 
 export function isQuotedIdentifier(text: string): boolean {
-    return maybeQuotedIdentifier(text, 0) !== undefined;
+    return quotedIdentifier(text, 0) !== undefined;
 }
 
-export function maybeIdentifierLength(text: string, index: number, allowTrailingPeriod: boolean): number | undefined {
+export function identifierLength(text: string, index: number, allowTrailingPeriod: boolean): number | undefined {
     const startingIndex: number = index;
     const textLength: number = text.length;
 
     let state: IdentifierRegexpState = IdentifierRegexpState.Start;
-    let maybeMatchLength: number | undefined;
+    let matchLength: number | undefined;
 
     while (state !== IdentifierRegexpState.Done) {
         if (index === textLength) {
@@ -59,13 +59,13 @@ export function maybeIdentifierLength(text: string, index: number, allowTrailing
 
         switch (state) {
             case IdentifierRegexpState.Start:
-                maybeMatchLength = StringUtils.maybeRegexMatchLength(Pattern.IdentifierStartCharacter, text, index);
+                matchLength = StringUtils.regexMatchLength(Pattern.IdentifierStartCharacter, text, index);
 
-                if (maybeMatchLength === undefined) {
+                if (matchLength === undefined) {
                     state = IdentifierRegexpState.Done;
                 } else {
                     state = IdentifierRegexpState.RegularIdentifier;
-                    index += maybeMatchLength;
+                    index += matchLength;
                 }
 
                 break;
@@ -76,12 +76,12 @@ export function maybeIdentifierLength(text: string, index: number, allowTrailing
                     index += 1;
                 }
 
-                maybeMatchLength = StringUtils.maybeRegexMatchLength(Pattern.IdentifierPartCharacters, text, index);
+                matchLength = StringUtils.regexMatchLength(Pattern.IdentifierPartCharacters, text, index);
 
-                if (maybeMatchLength === undefined) {
+                if (matchLength === undefined) {
                     state = IdentifierRegexpState.Done;
                 } else {
-                    index += maybeMatchLength;
+                    index += matchLength;
 
                     // Don't consider `..` or `...` part of an identifier.
                     if (allowTrailingPeriod && text[index] === "." && text[index + 1] !== ".") {
@@ -99,7 +99,7 @@ export function maybeIdentifierLength(text: string, index: number, allowTrailing
     return index !== startingIndex ? index - startingIndex : undefined;
 }
 
-export function maybeGeneralizedIdentifierLength(text: string, index: number): number | undefined {
+export function generalizedIdentifierLength(text: string, index: number): number | undefined {
     const startingIndex: number = index;
     const textLength: number = text.length;
 
@@ -118,18 +118,18 @@ export function maybeGeneralizedIdentifierLength(text: string, index: number): n
 
             index += 1;
         } else {
-            const maybeMatchLength: number | undefined = StringUtils.maybeRegexMatchLength(
+            const matchLength: number | undefined = StringUtils.regexMatchLength(
                 Pattern.IdentifierPartCharacters,
                 text,
                 index,
             );
 
-            if (maybeMatchLength === undefined) {
+            if (matchLength === undefined) {
                 continueMatching = false;
                 break;
             }
 
-            index += maybeMatchLength;
+            index += matchLength;
         }
 
         if (index >= textLength) {
@@ -140,12 +140,12 @@ export function maybeGeneralizedIdentifierLength(text: string, index: number): n
     return index !== startingIndex ? index - startingIndex : undefined;
 }
 
-export function maybeQuotedIdentifier(text: string, index: number): StringUtils.FoundQuote | undefined {
+export function quotedIdentifier(text: string, index: number): StringUtils.FoundQuotes | undefined {
     if (text[index] !== "#") {
         return undefined;
     }
 
-    return StringUtils.maybefindQuote(text, index + 1);
+    return StringUtils.findQuotes(text, index + 1);
 }
 
 export function normalizeIdentifier(text: string): string {
@@ -169,9 +169,9 @@ export function unescape(text: string): string {
 }
 
 const enum IdentifierRegexpState {
-    Start,
-    RegularIdentifier,
     Done,
+    RegularIdentifier,
+    Start,
 }
 
 const EscapedWhitespaceRegexp: ReadonlyArray<[RegExp, string]> = [

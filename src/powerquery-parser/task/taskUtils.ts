@@ -174,11 +174,11 @@ export function tryLex(settings: LexSettings, text: string): TriedLexTask {
     }
 
     const state: Lexer.State = triedLex.value;
-    const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(state);
+    const errorLineMap: Lexer.ErrorLineMap | undefined = Lexer.errorLineMap(state);
 
-    if (maybeErrorLineMap) {
+    if (errorLineMap) {
         return createLexTaskError(
-            new Lexer.LexError.LexError(new Lexer.LexError.ErrorLineMapError(maybeErrorLineMap, settings.locale)),
+            new Lexer.LexError.LexError(new Lexer.LexError.ErrorLineMapError(errorLineMap, settings.locale)),
         );
     }
 
@@ -207,12 +207,12 @@ export async function tryLexParse(settings: LexSettings & ParseSettings, text: s
     const trace: Trace = settings.traceManager.entry(
         TaskUtilsTraceConstant.LexParse,
         tryLexParse.name,
-        settings.maybeInitialCorrelationId,
+        settings.initialCorrelationId,
     );
 
     const updatedSettings: LexSettings & ParseSettings = {
         ...settings,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     const triedLexTask: TriedLexTask = tryLex(updatedSettings, text);

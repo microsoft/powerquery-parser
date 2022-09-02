@@ -63,7 +63,7 @@ export const enum LineMode {
 export interface State {
     readonly lines: ReadonlyArray<TLine>;
     readonly locale: string;
-    readonly maybeCancellationToken: ICancellationToken | undefined;
+    readonly cancellationToken: ICancellationToken | undefined;
 }
 
 export interface ILexerLine {
@@ -207,7 +207,7 @@ export function isErrorLine(line: TLine): line is TErrorLine {
     }
 }
 
-export function maybeErrorLineMap(state: State): ErrorLineMap | undefined {
+export function errorLineMap(state: State): ErrorLineMap | undefined {
     const errorLines: ErrorLineMap = state.lines.reduce((errorLineMap: ErrorLineMap, line: TLine, index: number) => {
         if (isErrorLine(line)) {
             errorLineMap.set(index, line);
@@ -312,25 +312,25 @@ function lex(settings: LexSettings, text: string): State {
         splitLines,
         LineMode.Default,
         settings.locale,
-        settings.maybeCancellationToken,
+        settings.cancellationToken,
     );
 
     return {
         lines: tokenizedLines,
         locale: settings.locale,
-        maybeCancellationToken: settings.maybeCancellationToken,
+        cancellationToken: settings.cancellationToken,
     };
 }
 
 function appendLine(state: State, text: string, lineTerminator: string): State {
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const lines: ReadonlyArray<TLine> = state.lines;
     const numLines: number = lines.length;
-    const maybeLatestLine: TLine | undefined = lines[numLines - 1];
-    const lineModeStart: LineMode = maybeLatestLine ? maybeLatestLine.lineModeEnd : LineMode.Default;
+    const latestLine: TLine | undefined = lines[numLines - 1];
+    const lineModeStart: LineMode = latestLine ? latestLine.lineModeEnd : LineMode.Default;
     const untokenizedLine: UntouchedLine = lineFrom(text, lineTerminator, lineModeStart);
-    const tokenizedLine: TLine = tokenize(untokenizedLine, numLines, state.locale, state.maybeCancellationToken);
+    const tokenizedLine: TLine = tokenize(untokenizedLine, numLines, state.locale, state.cancellationToken);
 
     return {
         ...state,
@@ -339,12 +339,12 @@ function appendLine(state: State, text: string, lineTerminator: string): State {
 }
 
 function updateLine(state: State, lineNumber: number, text: string): State {
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
-    const maybeError: LexError.BadLineNumberError | undefined = testLineNumberError(state, lineNumber);
+    const error: LexError.BadLineNumberError | undefined = testLineNumberError(state, lineNumber);
 
-    if (maybeError !== undefined) {
-        throw maybeError;
+    if (error !== undefined) {
+        throw error;
     }
 
     const line: TLine = state.lines[lineNumber];
@@ -354,11 +354,12 @@ function updateLine(state: State, lineNumber: number, text: string): State {
 }
 
 function updateRange(state: State, range: Range, text: string): State {
-    state.maybeCancellationToken?.throwIfCancelled();
-    const maybeError: LexError.BadRangeError | undefined = testBadRangeError(state, range);
+    state.cancellationToken?.throwIfCancelled();
 
-    if (maybeError !== undefined) {
-        throw maybeError;
+    const error: LexError.BadRangeError | undefined = testBadRangeError(state, range);
+
+    if (error !== undefined) {
+        throw error;
     }
 
     const splitLines: SplitLine[] = splitOnLineTerminators(text);
@@ -377,14 +378,14 @@ function updateRange(state: State, range: Range, text: string): State {
     // make sure we have a line terminator
     lastSplitLine.lineTerminator = lineEnd.lineTerminator;
 
-    const maybePreviousLine: TLine | undefined = state.lines[rangeStart.lineNumber - 1];
-    const previousLineModeEnd: LineMode = maybePreviousLine?.lineModeEnd ?? LineMode.Default;
+    const previousLine: TLine | undefined = state.lines[rangeStart.lineNumber - 1];
+    const previousLineModeEnd: LineMode = previousLine?.lineModeEnd ?? LineMode.Default;
 
     const newLines: ReadonlyArray<TLine> = tokenizedLinesFrom(
         splitLines,
         previousLineModeEnd,
         state.locale,
-        state.maybeCancellationToken,
+        state.cancellationToken,
     );
 
     const lines: ReadonlyArray<TLine> = [
@@ -396,17 +397,17 @@ function updateRange(state: State, range: Range, text: string): State {
     return {
         lines,
         locale: state.locale,
-        maybeCancellationToken: state.maybeCancellationToken,
+        cancellationToken: state.cancellationToken,
     };
 }
 
 function deleteLine(state: State, lineNumber: number): State {
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
-    const maybeError: LexError.BadLineNumberError | undefined = testLineNumberError(state, lineNumber);
+    const error: LexError.BadLineNumberError | undefined = testLineNumberError(state, lineNumber);
 
-    if (maybeError !== undefined) {
-        throw maybeError;
+    if (error !== undefined) {
+        throw error;
     }
 
     return {
@@ -447,7 +448,7 @@ function tokenizedLinesFrom(
     splitLines: ReadonlyArray<SplitLine>,
     previousLineModeEnd: LineMode,
     locale: string,
-    maybeCancellationToken: ICancellationToken | undefined,
+    cancellationToken: ICancellationToken | undefined,
 ): ReadonlyArray<TLine> {
     const numLines: number = splitLines.length;
     const tokenizedLines: TLine[] = [];
@@ -455,7 +456,7 @@ function tokenizedLinesFrom(
     for (let lineNumber: number = 0; lineNumber < numLines; lineNumber += 1) {
         const splitLine: SplitLine = splitLines[lineNumber];
         const untokenizedLine: UntouchedLine = lineFrom(splitLine.text, splitLine.lineTerminator, previousLineModeEnd);
-        const tokenizedLine: TLine = tokenize(untokenizedLine, lineNumber, locale, maybeCancellationToken);
+        const tokenizedLine: TLine = tokenize(untokenizedLine, lineNumber, locale, cancellationToken);
         tokenizedLines.push(tokenizedLine);
         previousLineModeEnd = tokenizedLine.lineModeEnd;
     }
@@ -478,10 +479,10 @@ function retokenizeLines(state: State, lineNumber: number, previousLineModeEnd: 
 
     if (previousLineModeEnd !== lines[lineNumber].lineModeStart) {
         const offsetLineNumber: number = lineNumber;
-        let maybeCurrentLine: TLine | undefined = lines[lineNumber];
+        let currentLine: TLine | undefined = lines[lineNumber];
 
-        while (maybeCurrentLine) {
-            const line: TLine = maybeCurrentLine;
+        while (currentLine) {
+            const line: TLine = currentLine;
 
             if (previousLineModeEnd !== line.lineModeStart) {
                 const untokenizedLine: UntouchedLine = lineFrom(line.text, line.lineTerminator, previousLineModeEnd);
@@ -490,13 +491,13 @@ function retokenizeLines(state: State, lineNumber: number, previousLineModeEnd: 
                     untokenizedLine,
                     offsetLineNumber,
                     state.locale,
-                    state.maybeCancellationToken,
+                    state.cancellationToken,
                 );
 
                 retokenizedLines.push(retokenizedLine);
                 previousLineModeEnd = retokenizedLine.lineModeEnd;
                 lineNumber += 1;
-                maybeCurrentLine = lines[lineNumber];
+                currentLine = lines[lineNumber];
             } else {
                 return [...retokenizedLines, ...lines.slice(lineNumber + 1)];
             }
@@ -513,9 +514,9 @@ function tokenize(
     line: TLine,
     lineNumber: number,
     locale: string,
-    maybeCancellationToken: ICancellationToken | undefined,
+    cancellationToken: ICancellationToken | undefined,
 ): TLine {
-    maybeCancellationToken?.throwIfCancelled();
+    cancellationToken?.throwIfCancelled();
 
     switch (line.kind) {
         // Cannot tokenize something that ended with an error,
@@ -579,14 +580,14 @@ function tokenize(
 
     const newTokens: Token.LineToken[] = [];
     let continueLexing: boolean = currentPosition !== text.length;
-    let maybeError: LexError.TLexError | undefined;
+    let lexError: LexError.TLexError | undefined;
 
     // While neither eof nor having encountered an error:
     //  * Lex according to lineModeStart, starting from currentPosition.
     //  * Update currentPosition and lineMode.
     //  * Drain whitespace.
     while (continueLexing) {
-        maybeCancellationToken?.throwIfCancelled();
+        cancellationToken?.throwIfCancelled();
 
         try {
             let readOutcome: LineModeAlteringRead;
@@ -636,23 +637,23 @@ function tokenize(
             }
 
             continueLexing = false;
-            maybeError = error;
+            lexError = error;
         }
     }
 
     let partialTokenizeResult: PartialResult<TokenizeChanges, TokenizeChanges, LexError.TLexError>;
 
-    if (maybeError) {
+    if (lexError) {
         if (newTokens.length) {
             partialTokenizeResult = PartialResultUtils.createMixed(
                 {
                     tokens: newTokens,
                     lineModeEnd: lineMode,
                 },
-                maybeError,
+                lexError,
             );
         } else {
-            partialTokenizeResult = PartialResultUtils.createError(maybeError);
+            partialTokenizeResult = PartialResultUtils.createError(lexError);
         }
     } else {
         partialTokenizeResult = PartialResultUtils.createOk({
@@ -769,18 +770,16 @@ function tokenizeQuotedIdentifierContentOrEnd(line: TLine, currentPosition: numb
 // Read until either string literal end or eof
 function tokenizeTextLiteralContentOrEnd(line: TLine, currentPosition: number): LineModeAlteringRead {
     const text: string = line.text;
-    const maybePositionEnd: number | undefined = maybeIndexOfTextEnd(text, currentPosition);
+    const positionEnd: number | undefined = indexOfTextEnd(text, currentPosition);
 
-    if (maybePositionEnd === undefined) {
+    if (positionEnd === undefined) {
         return {
             token: readRestOfLine(Token.LineTokenKind.TextLiteralContent, text, currentPosition),
             lineMode: LineMode.Text,
         };
     } else {
-        const positionEnd: number = maybePositionEnd + 1;
-
         return {
-            token: readTokenFrom(Token.LineTokenKind.TextLiteralEnd, text, currentPosition, positionEnd),
+            token: readTokenFrom(Token.LineTokenKind.TextLiteralEnd, text, currentPosition, positionEnd + 1),
             lineMode: LineMode.Default,
         };
     }
@@ -924,10 +923,10 @@ function drainWhitespace(text: string, position: number): number {
     let continueDraining: boolean = text[position] !== undefined;
 
     while (continueDraining) {
-        const maybeLength: number | undefined = StringUtils.maybeRegexMatchLength(Pattern.Whitespace, text, position);
+        const length: number | undefined = StringUtils.regexMatchLength(Pattern.Whitespace, text, position);
 
-        if (maybeLength) {
-            position += maybeLength;
+        if (length) {
+            position += length;
         } else {
             continueDraining = false;
         }
@@ -937,13 +936,11 @@ function drainWhitespace(text: string, position: number): number {
 }
 
 function readOrStartTextLiteral(text: string, currentPosition: number): LineModeAlteringRead {
-    const maybePositionEnd: number | undefined = maybeIndexOfTextEnd(text, currentPosition + 1);
+    const positionEnd: number | undefined = indexOfTextEnd(text, currentPosition + 1);
 
-    if (maybePositionEnd !== undefined) {
-        const positionEnd: number = maybePositionEnd + 1;
-
+    if (positionEnd !== undefined) {
         return {
-            token: readTokenFrom(Token.LineTokenKind.TextLiteral, text, currentPosition, positionEnd),
+            token: readTokenFrom(Token.LineTokenKind.TextLiteral, text, currentPosition, positionEnd + 1),
             lineMode: LineMode.Default,
         };
     } else {
@@ -955,9 +952,9 @@ function readOrStartTextLiteral(text: string, currentPosition: number): LineMode
 }
 
 function readHexLiteral(text: string, lineNumber: number, positionStart: number, locale: string): Token.LineToken {
-    const maybePositionEnd: number | undefined = maybeIndexOfRegexEnd(Pattern.Hex, text, positionStart);
+    const positionEnd: number | undefined = indexOfRegexEnd(Pattern.Hex, text, positionStart);
 
-    if (maybePositionEnd === undefined) {
+    if (positionEnd === undefined) {
         throw new LexError.ExpectedError(
             graphemePositionFrom(text, lineNumber, positionStart),
             LexError.ExpectedKind.HexLiteral,
@@ -965,23 +962,19 @@ function readHexLiteral(text: string, lineNumber: number, positionStart: number,
         );
     }
 
-    const positionEnd: number = maybePositionEnd;
-
     return readTokenFrom(Token.LineTokenKind.HexLiteral, text, positionStart, positionEnd);
 }
 
 function readNumericLiteral(text: string, lineNumber: number, positionStart: number, locale: string): Token.LineToken {
-    const maybePositionEnd: number | undefined = maybeIndexOfRegexEnd(Pattern.Numeric, text, positionStart);
+    const positionEnd: number | undefined = indexOfRegexEnd(Pattern.Numeric, text, positionStart);
 
-    if (maybePositionEnd === undefined) {
+    if (positionEnd === undefined) {
         throw new LexError.ExpectedError(
             graphemePositionFrom(text, lineNumber, positionStart),
             LexError.ExpectedKind.Numeric,
             locale,
         );
     }
-
-    const positionEnd: number = maybePositionEnd;
 
     return readTokenFrom(Token.LineTokenKind.NumericLiteral, text, positionStart, positionEnd);
 }
@@ -1009,34 +1002,32 @@ function readOrStartMultilineComment(text: string, positionStart: number): LineM
 }
 
 function readKeyword(text: string, lineNumber: number, positionStart: number, locale: string): Token.LineToken {
-    const maybeLineToken: Token.LineToken | undefined = maybeReadKeyword(text, positionStart);
+    const lineToken: Token.LineToken | undefined = readKeywordHelper(text, positionStart);
 
-    if (maybeLineToken) {
-        return maybeLineToken;
+    if (lineToken) {
+        return lineToken;
     } else {
         throw unexpectedReadError(locale, text, lineNumber, positionStart);
     }
 }
 
-function maybeReadKeyword(text: string, currentPosition: number): Token.LineToken | undefined {
+function readKeywordHelper(text: string, currentPosition: number): Token.LineToken | undefined {
     const identifierPositionStart: number = text[currentPosition] === "#" ? currentPosition + 1 : currentPosition;
 
-    const maybeIdentifierPositionEnd: number | undefined = maybeIndexOfIdentifierEnd(text, identifierPositionStart);
+    const identifierPositionEnd: number | undefined = indexOfIdentifierEnd(text, identifierPositionStart);
 
-    if (maybeIdentifierPositionEnd === undefined) {
+    if (identifierPositionEnd === undefined) {
         return undefined;
     }
 
-    const identifierPositionEnd: number = maybeIdentifierPositionEnd;
-
     const data: string = text.substring(currentPosition, identifierPositionEnd);
-    const maybeKeywordTokenKind: Token.LineTokenKind | undefined = maybeKeywordLineTokenKindFrom(data);
+    const keywordTokenKind: Token.LineTokenKind | undefined = keywordLineTokenKindFrom(data);
 
-    if (maybeKeywordTokenKind === undefined) {
+    if (keywordTokenKind === undefined) {
         return undefined;
     } else {
         return {
-            kind: maybeKeywordTokenKind,
+            kind: keywordTokenKind,
             positionStart: currentPosition,
             positionEnd: identifierPositionEnd,
             data,
@@ -1045,13 +1036,11 @@ function maybeReadKeyword(text: string, currentPosition: number): Token.LineToke
 }
 
 function readOrStartQuotedIdentifier(text: string, currentPosition: number): LineModeAlteringRead {
-    const maybePositionEnd: number | undefined = maybeIndexOfTextEnd(text, currentPosition + 2);
+    const positionEnd: number | undefined = indexOfTextEnd(text, currentPosition + 2);
 
-    if (maybePositionEnd !== undefined) {
-        const positionEnd: number = maybePositionEnd + 1;
-
+    if (positionEnd !== undefined) {
         return {
-            token: readTokenFrom(Token.LineTokenKind.Identifier, text, currentPosition, positionEnd),
+            token: readTokenFrom(Token.LineTokenKind.Identifier, text, currentPosition, positionEnd + 1),
             lineMode: LineMode.Default,
         };
     } else {
@@ -1076,9 +1065,9 @@ function readKeywordOrIdentifier(
     }
     // either keyword or identifier
     else {
-        const maybePositionEnd: number | undefined = maybeIndexOfIdentifierEnd(text, positionStart);
+        const positionEnd: number | undefined = indexOfIdentifierEnd(text, positionStart);
 
-        if (maybePositionEnd === undefined) {
+        if (positionEnd === undefined) {
             throw new LexError.ExpectedError(
                 graphemePositionFrom(text, lineNumber, positionStart),
                 LexError.ExpectedKind.KeywordOrIdentifier,
@@ -1086,14 +1075,13 @@ function readKeywordOrIdentifier(
             );
         }
 
-        const positionEnd: number = maybePositionEnd;
         const data: string = text.substring(positionStart, positionEnd);
-        const maybeKeywordTokenKind: Token.LineTokenKind | undefined = maybeKeywordLineTokenKindFrom(data);
+        const keywordTokenKind: Token.LineTokenKind | undefined = keywordLineTokenKindFrom(data);
 
         let tokenKind: Token.LineTokenKind;
 
-        if (maybeKeywordTokenKind !== undefined) {
-            tokenKind = maybeKeywordTokenKind;
+        if (keywordTokenKind !== undefined) {
+            tokenKind = keywordTokenKind;
         } else if (data === "null") {
             tokenKind = Token.LineTokenKind.NullLiteral;
         } else {
@@ -1140,88 +1128,119 @@ function readRestOfLine(lineTokenKind: Token.LineTokenKind, text: string, positi
     return readTokenFrom(lineTokenKind, text, positionStart, positionEnd);
 }
 
-function maybeIndexOfRegexEnd(pattern: RegExp, text: string, positionStart: number): number | undefined {
-    const maybeLength: number | undefined = StringUtils.maybeRegexMatchLength(pattern, text, positionStart);
+function indexOfRegexEnd(pattern: RegExp, text: string, positionStart: number): number | undefined {
+    const length: number | undefined = StringUtils.regexMatchLength(pattern, text, positionStart);
 
-    return maybeLength !== undefined ? positionStart + maybeLength : undefined;
+    return length !== undefined ? positionStart + length : undefined;
 }
 
-function maybeIndexOfIdentifierEnd(text: string, positionStart: number): number | undefined {
-    const maybeLength: number | undefined = TextUtils.maybeIdentifierLength(text, positionStart, true);
+function indexOfIdentifierEnd(text: string, positionStart: number): number | undefined {
+    const length: number | undefined = TextUtils.identifierLength(text, positionStart, true);
 
-    return maybeLength !== undefined ? positionStart + maybeLength : undefined;
+    return length !== undefined ? positionStart + length : undefined;
 }
 
-function maybeKeywordLineTokenKindFrom(data: string): Token.LineTokenKind | undefined {
+function keywordLineTokenKindFrom(data: string): Token.LineTokenKind | undefined {
     switch (data) {
         case Keyword.KeywordKind.And:
             return Token.LineTokenKind.KeywordAnd;
+
         case Keyword.KeywordKind.As:
             return Token.LineTokenKind.KeywordAs;
+
         case Keyword.KeywordKind.Each:
             return Token.LineTokenKind.KeywordEach;
+
         case Keyword.KeywordKind.Else:
             return Token.LineTokenKind.KeywordElse;
+
         case Keyword.KeywordKind.Error:
             return Token.LineTokenKind.KeywordError;
+
         case Keyword.KeywordKind.False:
             return Token.LineTokenKind.KeywordFalse;
+
         case Keyword.KeywordKind.If:
             return Token.LineTokenKind.KeywordIf;
+
         case Keyword.KeywordKind.In:
             return Token.LineTokenKind.KeywordIn;
+
         case Keyword.KeywordKind.Is:
             return Token.LineTokenKind.KeywordIs;
+
         case Keyword.KeywordKind.Let:
             return Token.LineTokenKind.KeywordLet;
+
         case Keyword.KeywordKind.Meta:
             return Token.LineTokenKind.KeywordMeta;
+
         case Keyword.KeywordKind.Not:
             return Token.LineTokenKind.KeywordNot;
+
         case Keyword.KeywordKind.Or:
             return Token.LineTokenKind.KeywordOr;
+
         case Keyword.KeywordKind.Otherwise:
             return Token.LineTokenKind.KeywordOtherwise;
+
         case Keyword.KeywordKind.Section:
             return Token.LineTokenKind.KeywordSection;
+
         case Keyword.KeywordKind.Shared:
             return Token.LineTokenKind.KeywordShared;
+
         case Keyword.KeywordKind.Then:
             return Token.LineTokenKind.KeywordThen;
+
         case Keyword.KeywordKind.True:
             return Token.LineTokenKind.KeywordTrue;
+
         case Keyword.KeywordKind.Try:
             return Token.LineTokenKind.KeywordTry;
+
         case Keyword.KeywordKind.Type:
             return Token.LineTokenKind.KeywordType;
+
         case Keyword.KeywordKind.HashBinary:
             return Token.LineTokenKind.KeywordHashBinary;
+
         case Keyword.KeywordKind.HashDate:
             return Token.LineTokenKind.KeywordHashDate;
+
         case Keyword.KeywordKind.HashDateTime:
             return Token.LineTokenKind.KeywordHashDateTime;
+
         case Keyword.KeywordKind.HashDateTimeZone:
             return Token.LineTokenKind.KeywordHashDateTimeZone;
+
         case Keyword.KeywordKind.HashDuration:
             return Token.LineTokenKind.KeywordHashDuration;
+
         case Keyword.KeywordKind.HashInfinity:
             return Token.LineTokenKind.KeywordHashInfinity;
+
         case Keyword.KeywordKind.HashNan:
             return Token.LineTokenKind.KeywordHashNan;
+
         case Keyword.KeywordKind.HashSections:
             return Token.LineTokenKind.KeywordHashSections;
+
         case Keyword.KeywordKind.HashShared:
             return Token.LineTokenKind.KeywordHashShared;
+
         case Keyword.KeywordKind.HashTable:
             return Token.LineTokenKind.KeywordHashTable;
+
         case Keyword.KeywordKind.HashTime:
             return Token.LineTokenKind.KeywordHashTime;
+
         default:
             return undefined;
     }
 }
 
-function maybeIndexOfTextEnd(text: string, positionStart: number): number | undefined {
+function indexOfTextEnd(text: string, positionStart: number): number | undefined {
     let indexLow: number = positionStart;
     let positionEnd: number = text.indexOf('"', indexLow);
 
@@ -1274,23 +1293,21 @@ function testBadRangeError(state: State, range: Range): LexError.BadRangeError |
     const end: RangePosition = range.end;
     const numLines: number = state.lines.length;
 
-    let maybeKind: LexError.BadRangeKind | undefined;
+    let kind: LexError.BadRangeKind | undefined;
 
     if (start.lineNumber === end.lineNumber && start.lineCodeUnit > end.lineCodeUnit) {
-        maybeKind = LexError.BadRangeKind.SameLine_LineCodeUnitStart_Higher;
+        kind = LexError.BadRangeKind.SameLine_LineCodeUnitStart_Higher;
     } else if (start.lineNumber > end.lineNumber) {
-        maybeKind = LexError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd;
+        kind = LexError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd;
     } else if (start.lineNumber < 0) {
-        maybeKind = LexError.BadRangeKind.LineNumberStart_LessThan_Zero;
+        kind = LexError.BadRangeKind.LineNumberStart_LessThan_Zero;
     } else if (start.lineNumber >= numLines) {
-        maybeKind = LexError.BadRangeKind.LineNumberStart_GreaterThan_NumLines;
+        kind = LexError.BadRangeKind.LineNumberStart_GreaterThan_NumLines;
     } else if (end.lineNumber >= numLines) {
-        maybeKind = LexError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines;
+        kind = LexError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines;
     }
 
-    if (maybeKind !== undefined) {
-        const kind: LexError.BadRangeKind = maybeKind;
-
+    if (kind !== undefined) {
         return new LexError.BadRangeError(range, kind, state.locale);
     }
 
@@ -1302,13 +1319,13 @@ function testBadRangeError(state: State, range: Range): LexError.BadRangeError |
     const lineEnd: TLine = lines[rangeEnd.lineNumber];
 
     if (rangeStart.lineCodeUnit > lineStart.text.length) {
-        maybeKind = LexError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength;
+        kind = LexError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength;
     } else if (rangeEnd.lineCodeUnit > lineEnd.text.length) {
-        maybeKind = LexError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength;
+        kind = LexError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength;
     }
 
-    if (maybeKind !== undefined) {
-        return new LexError.BadRangeError(range, maybeKind, state.locale);
+    if (kind !== undefined) {
+        return new LexError.BadRangeError(range, kind, state.locale);
     }
 
     return undefined;

@@ -5,8 +5,8 @@ import { Ast, Token } from "../../../language";
 import { Collection, IdsByNodeKind } from "../nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "../xorNode";
 import { Assert } from "../../../common";
-import { maybeRightMostLeaf } from "./leafSelectors";
 import { ParseContext } from "../../context";
+import { rightMostLeaf } from "./leafSelectors";
 
 export function copy(nodeIdMapCollection: Collection): Collection {
     const contextNodeById: Map<number, ParseContext.TNode> = new Map(
@@ -28,17 +28,17 @@ export function copy(nodeIdMapCollection: Collection): Collection {
         contextNodeById,
         leafIds: new Set(nodeIdMapCollection.leafIds),
         idsByNodeKind,
-        maybeRightMostLeaf: nodeIdMapCollection.maybeRightMostLeaf,
+        rightMostLeaf: nodeIdMapCollection.rightMostLeaf,
         parentIdById: new Map(nodeIdMapCollection.parentIdById),
     };
 }
 
 // Checks if the given nodeId contains at least one parsed token.
 export function hasParsedToken(nodeIdMapCollection: Collection, nodeId: number): boolean {
-    let maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(nodeId);
+    let childIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(nodeId);
 
-    while (maybeChildIds !== undefined) {
-        const numChildren: number = maybeChildIds.length;
+    while (childIds !== undefined) {
+        const numChildren: number = childIds.length;
 
         // No children means no nothing was parsed under this node.
         if (numChildren === 0) {
@@ -46,7 +46,7 @@ export function hasParsedToken(nodeIdMapCollection: Collection, nodeId: number):
         }
         // There might be a child under here.
         else if (numChildren === 1) {
-            const childId: number = maybeChildIds[0];
+            const childId: number = childIds[0];
 
             // We know it's an Ast Node, therefore something was parsed.
             if (nodeIdMapCollection.astNodeById.has(childId)) {
@@ -54,7 +54,7 @@ export function hasParsedToken(nodeIdMapCollection: Collection, nodeId: number):
             }
             // There still might be a child under here. Recurse down to the grandchildren.
             else {
-                maybeChildIds = nodeIdMapCollection.childIdsById.get(childId);
+                childIds = nodeIdMapCollection.childIdsById.get(childId);
             }
         }
         // Handles the 'else if (numChildren > 2)' branch.
@@ -87,15 +87,11 @@ export async function xorNodeTokenRange(
             const contextNode: ParseContext.TNode = xorNode.node;
             let tokenIndexEnd: number;
 
-            const maybeRightMostChild: Ast.TNode | undefined = await maybeRightMostLeaf(
-                nodeIdMapCollection,
-                xorNode.node.id,
-            );
+            const rightMostChild: Ast.TNode | undefined = await rightMostLeaf(nodeIdMapCollection, xorNode.node.id);
 
-            if (maybeRightMostChild === undefined) {
+            if (rightMostChild === undefined) {
                 tokenIndexEnd = contextNode.tokenIndexStart;
             } else {
-                const rightMostChild: Ast.TNode = maybeRightMostChild;
                 tokenIndexEnd = rightMostChild.tokenRange.tokenIndexEnd;
             }
 

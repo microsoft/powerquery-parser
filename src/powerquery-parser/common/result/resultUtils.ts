@@ -26,9 +26,9 @@ export function isError<T, E>(result: Result<T, E>): result is ErrorResult<E> {
     return result.kind === ResultKind.Error;
 }
 
-export function ensureResult<T>(callbackFn: () => T, locale: string): Result<T, CommonError.CommonError> {
+export function ensureResult<T>(callback: () => T, locale: string): Result<T, CommonError.CommonError> {
     try {
-        return boxOk(callbackFn());
+        return boxOk(callback());
     } catch (error) {
         Assert.isInstanceofError(error);
 
@@ -37,11 +37,11 @@ export function ensureResult<T>(callbackFn: () => T, locale: string): Result<T, 
 }
 
 export async function ensureResultAsync<T>(
-    callbackFn: () => Promise<T>,
+    callback: () => Promise<T>,
     locale: string,
 ): Promise<Result<T, CommonError.CommonError>> {
     try {
-        return boxOk(await callbackFn());
+        return boxOk(await callback());
     } catch (error) {
         Assert.isInstanceofError(error);
 

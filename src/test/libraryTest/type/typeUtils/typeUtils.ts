@@ -10,14 +10,14 @@ import { OrderedMap } from "../../../../powerquery-parser";
 
 interface AbridgedType {
     readonly kind: Type.TypeKind;
-    readonly maybeExtendedKind: Type.ExtendedTypeKind | undefined;
+    readonly extendedKind: Type.ExtendedTypeKind | undefined;
     readonly isNullable: boolean;
 }
 
 function abridgedPrimitiveType(kind: Type.TypeKind, isNullable: boolean): AbridgedType {
     return {
         kind,
-        maybeExtendedKind: undefined,
+        extendedKind: undefined,
         isNullable,
     };
 }
@@ -25,7 +25,7 @@ function abridgedPrimitiveType(kind: Type.TypeKind, isNullable: boolean): Abridg
 function typeToAbridged(type: Type.TPowerQueryType): AbridgedType {
     return {
         kind: type.kind,
-        maybeExtendedKind: type.maybeExtendedKind,
+        extendedKind: type.extendedKind,
         isNullable: type.isNullable,
     };
 }
@@ -459,25 +459,25 @@ describe(`TypeUtils`, () => {
                             {
                                 isNullable: false,
                                 isOptional: false,
-                                maybeType: Type.TypeKind.Number,
+                                type: Type.TypeKind.Number,
                                 nameLiteral: "param1",
                             },
                             {
                                 isNullable: true,
                                 isOptional: false,
-                                maybeType: Type.TypeKind.Number,
+                                type: Type.TypeKind.Number,
                                 nameLiteral: "param2",
                             },
                             {
                                 isNullable: false,
                                 isOptional: true,
-                                maybeType: Type.TypeKind.Number,
+                                type: Type.TypeKind.Number,
                                 nameLiteral: "param3",
                             },
                             {
                                 isNullable: true,
                                 isOptional: true,
-                                maybeType: Type.TypeKind.Number,
+                                type: Type.TypeKind.Number,
                                 nameLiteral: "param4",
                             },
                         ],
@@ -647,25 +647,25 @@ describe(`TypeUtils`, () => {
                             {
                                 isNullable: false,
                                 isOptional: false,
-                                maybeType: Type.TypeKind.Number,
+                                type: Type.TypeKind.Number,
                                 nameLiteral: "param1",
                             },
                             {
                                 isNullable: true,
                                 isOptional: false,
-                                maybeType: Type.TypeKind.Number,
+                                type: Type.TypeKind.Number,
                                 nameLiteral: "param2",
                             },
                             {
                                 isNullable: false,
                                 isOptional: true,
-                                maybeType: Type.TypeKind.Number,
+                                type: Type.TypeKind.Number,
                                 nameLiteral: "param3",
                             },
                             {
                                 isNullable: true,
                                 isOptional: true,
-                                maybeType: Type.TypeKind.Number,
+                                type: Type.TypeKind.Number,
                                 nameLiteral: "param4",
                             },
                         ],

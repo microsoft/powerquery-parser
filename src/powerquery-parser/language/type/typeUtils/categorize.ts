@@ -50,27 +50,27 @@ export type NonExtendedCategory =
     | UnknownCategory;
 
 export interface CategorizedPowerQueryTypes {
-    readonly maybeAction: ActionCategory | undefined;
-    readonly maybeAnyNonNull: AnyNonNullCategory | undefined;
-    readonly maybeAny: AnyCategory | undefined;
-    readonly maybeBinary: BinaryCategory | undefined;
-    readonly maybeDate: DateCategory | undefined;
-    readonly maybeDateTime: DateTimeCategory | undefined;
-    readonly maybeDateTimeZone: DateTimeZoneCategory | undefined;
-    readonly maybeDuration: DurationCategory | undefined;
-    readonly maybeFunction: FunctionCategory | undefined;
-    readonly maybeList: ListCategory | undefined;
-    readonly maybeLogical: LogicalCategory | undefined;
-    readonly maybeNone: NoneCategory | undefined;
-    readonly maybeNotApplicable: NotApplicableCategory | undefined;
-    readonly maybeNumber: NumberCategory | undefined;
-    readonly maybeNull: NullCategory | undefined;
-    readonly maybeRecord: RecordCategory | undefined;
-    readonly maybeTable: TableCategory | undefined;
-    readonly maybeText: TextCategory | undefined;
-    readonly maybeTime: TimeCategory | undefined;
-    readonly maybeType: TypeCategory | undefined;
-    readonly maybeUnknown: UnknownCategory | undefined;
+    readonly actions: ActionCategory | undefined;
+    readonly anyNonNulls: AnyNonNullCategory | undefined;
+    readonly anys: AnyCategory | undefined;
+    readonly binaries: BinaryCategory | undefined;
+    readonly dates: DateCategory | undefined;
+    readonly dateTimes: DateTimeCategory | undefined;
+    readonly dateTimeZones: DateTimeZoneCategory | undefined;
+    readonly durations: DurationCategory | undefined;
+    readonly functions: FunctionCategory | undefined;
+    readonly lists: ListCategory | undefined;
+    readonly logicals: LogicalCategory | undefined;
+    readonly nones: NoneCategory | undefined;
+    readonly notApplicables: NotApplicableCategory | undefined;
+    readonly numbers: NumberCategory | undefined;
+    readonly nulls: NullCategory | undefined;
+    readonly records: RecordCategory | undefined;
+    readonly tables: TableCategory | undefined;
+    readonly texts: TextCategory | undefined;
+    readonly times: TimeCategory | undefined;
+    readonly types: TypeCategory | undefined;
+    readonly unknowns: UnknownCategory | undefined;
 }
 
 export type ActionCategory = ITypeKindCategory<Type.Action>;
@@ -138,44 +138,44 @@ export interface TypeCategory extends ITypeKindCategory<Type.Type> {
 export function categorize(
     types: ReadonlyArray<Type.TPowerQueryType>,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): CategorizedPowerQueryTypes {
-    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.Categorize, categorize.name, maybeCorrelationId);
+    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.Categorize, categorize.name, correlationId);
 
     const categoryByKind: Map<Type.TypeKind, TCategory> = new Map();
 
     for (const type of types) {
-        const maybeCategory: TCategory | undefined = categoryByKind.get(type.kind);
+        const category: TCategory | undefined = categoryByKind.get(type.kind);
 
-        if (maybeCategory === undefined) {
+        if (category === undefined) {
             categoryByKind.set(type.kind, createCategory(type, traceManager, trace.id));
         } else {
-            categoryByKind.set(type.kind, addToCategory(maybeCategory, type, traceManager, trace.id));
+            categoryByKind.set(type.kind, addToCategory(category, type, traceManager, trace.id));
         }
     }
 
     const result: CategorizedPowerQueryTypes = {
-        maybeAction: categoryByKind.get(Type.TypeKind.Action) as ActionCategory,
-        maybeAny: categoryByKind.get(Type.TypeKind.Any) as AnyCategory,
-        maybeAnyNonNull: categoryByKind.get(Type.TypeKind.AnyNonNull) as AnyNonNullCategory,
-        maybeBinary: categoryByKind.get(Type.TypeKind.Binary) as BinaryCategory,
-        maybeDate: categoryByKind.get(Type.TypeKind.Date) as DateCategory,
-        maybeDateTime: categoryByKind.get(Type.TypeKind.DateTime) as DateTimeCategory,
-        maybeDateTimeZone: categoryByKind.get(Type.TypeKind.DateTimeZone) as DateTimeZoneCategory,
-        maybeDuration: categoryByKind.get(Type.TypeKind.Duration) as DurationCategory,
-        maybeFunction: categoryByKind.get(Type.TypeKind.Function) as FunctionCategory,
-        maybeList: categoryByKind.get(Type.TypeKind.List) as ListCategory,
-        maybeLogical: categoryByKind.get(Type.TypeKind.Logical) as LogicalCategory,
-        maybeNone: categoryByKind.get(Type.TypeKind.None) as NoneCategory,
-        maybeNotApplicable: categoryByKind.get(Type.TypeKind.NotApplicable) as NotApplicableCategory,
-        maybeNull: categoryByKind.get(Type.TypeKind.Null) as NullCategory,
-        maybeNumber: categoryByKind.get(Type.TypeKind.Number) as NumberCategory,
-        maybeRecord: categoryByKind.get(Type.TypeKind.Record) as RecordCategory,
-        maybeTable: categoryByKind.get(Type.TypeKind.Table) as TableCategory,
-        maybeText: categoryByKind.get(Type.TypeKind.Text) as TextCategory,
-        maybeTime: categoryByKind.get(Type.TypeKind.Time) as TimeCategory,
-        maybeType: categoryByKind.get(Type.TypeKind.Type) as TypeCategory,
-        maybeUnknown: categoryByKind.get(Type.TypeKind.Unknown) as UnknownCategory,
+        actions: categoryByKind.get(Type.TypeKind.Action) as ActionCategory,
+        anys: categoryByKind.get(Type.TypeKind.Any) as AnyCategory,
+        anyNonNulls: categoryByKind.get(Type.TypeKind.AnyNonNull) as AnyNonNullCategory,
+        binaries: categoryByKind.get(Type.TypeKind.Binary) as BinaryCategory,
+        dates: categoryByKind.get(Type.TypeKind.Date) as DateCategory,
+        dateTimes: categoryByKind.get(Type.TypeKind.DateTime) as DateTimeCategory,
+        dateTimeZones: categoryByKind.get(Type.TypeKind.DateTimeZone) as DateTimeZoneCategory,
+        durations: categoryByKind.get(Type.TypeKind.Duration) as DurationCategory,
+        functions: categoryByKind.get(Type.TypeKind.Function) as FunctionCategory,
+        lists: categoryByKind.get(Type.TypeKind.List) as ListCategory,
+        logicals: categoryByKind.get(Type.TypeKind.Logical) as LogicalCategory,
+        nones: categoryByKind.get(Type.TypeKind.None) as NoneCategory,
+        notApplicables: categoryByKind.get(Type.TypeKind.NotApplicable) as NotApplicableCategory,
+        nulls: categoryByKind.get(Type.TypeKind.Null) as NullCategory,
+        numbers: categoryByKind.get(Type.TypeKind.Number) as NumberCategory,
+        records: categoryByKind.get(Type.TypeKind.Record) as RecordCategory,
+        tables: categoryByKind.get(Type.TypeKind.Table) as TableCategory,
+        texts: categoryByKind.get(Type.TypeKind.Text) as TextCategory,
+        times: categoryByKind.get(Type.TypeKind.Time) as TimeCategory,
+        types: categoryByKind.get(Type.TypeKind.Type) as TypeCategory,
+        unknowns: categoryByKind.get(Type.TypeKind.Unknown) as UnknownCategory,
     };
 
     trace.exit();
@@ -322,7 +322,7 @@ function addToCategory(
 function addTypeIfUniqueAny(category: AnyCategory, type: Type.TAny): AnyCategory {
     assertIsCategoryForType<Type.TAny, AnyCategory>(category, type);
 
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.AnyUnion:
             return {
                 ...category,
@@ -341,7 +341,7 @@ function addTypeIfUniqueAny(category: AnyCategory, type: Type.TAny): AnyCategory
 function addToCategoryForFunction(category: FunctionCategory, type: Type.TFunction): FunctionCategory {
     assertIsCategoryForType<Type.TFunction, FunctionCategory>(category, type);
 
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.DefinedFunction: {
             return {
                 ...category,
@@ -364,7 +364,7 @@ function addToCategoryForFunction(category: FunctionCategory, type: Type.TFuncti
 function addToCategoryForList(category: ListCategory, type: Type.TList): ListCategory {
     assertIsCategoryForType<Type.TList, ListCategory>(category, type);
 
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.DefinedList: {
             return {
                 ...category,
@@ -387,7 +387,7 @@ function addToCategoryForList(category: ListCategory, type: Type.TList): ListCat
 function addToCategoryForLogical(category: LogicalCategory, type: Type.TLogical): LogicalCategory {
     assertIsCategoryForType<Type.TLogical, LogicalCategory>(category, type);
 
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.LogicalLiteral: {
             return {
                 ...category,
@@ -417,7 +417,7 @@ function addToCategoryForLogical(category: LogicalCategory, type: Type.TLogical)
 function addToCategoryForNumber(category: NumberCategory, type: Type.TNumber): NumberCategory {
     assertIsCategoryForType<Type.TNumber, NumberCategory>(category, type);
 
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.NumberLiteral: {
             return {
                 ...category,
@@ -452,7 +452,7 @@ function addToCategoryForPrimitive<T extends Type.TPowerQueryType, C extends ITy
 function addToCategoryForRecord(category: RecordCategory, type: Type.TRecord): RecordCategory {
     assertIsCategoryForType<Type.TRecord, RecordCategory>(category, type);
 
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.DefinedRecord: {
             return {
                 ...category,
@@ -475,7 +475,7 @@ function addToCategoryForRecord(category: RecordCategory, type: Type.TRecord): R
 function addToCategoryForTable(category: TableCategory, type: Type.TTable): TableCategory {
     assertIsCategoryForType<Type.TTable, TableCategory>(category, type);
 
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.DefinedTable: {
             return {
                 ...category,
@@ -498,7 +498,7 @@ function addToCategoryForTable(category: TableCategory, type: Type.TTable): Tabl
 function addToCategoryForText(category: TextCategory, type: Type.TText): TextCategory {
     assertIsCategoryForType<Type.TText, TextCategory>(category, type);
 
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.TextLiteral: {
             return {
                 ...category,
@@ -521,7 +521,7 @@ function addToCategoryForText(category: TextCategory, type: Type.TText): TextCat
 function addTypeIfUniqueType(category: TypeCategory, type: Type.TType): TypeCategory {
     assertIsCategoryForType<Type.TType, TypeCategory>(category, type);
 
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.DefinedListType: {
             return {
                 ...category,
@@ -695,7 +695,7 @@ function createCategory(type: Type.TPowerQueryType, traceManager: TraceManager, 
 }
 
 function createCategoryForAny(type: Type.TAny): AnyCategory {
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.AnyUnion: {
             return {
                 kind: Type.TypeKind.Any,
@@ -720,7 +720,7 @@ function createCategoryForAny(type: Type.TAny): AnyCategory {
 }
 
 function createCategoryForFunction(type: Type.TFunction): FunctionCategory {
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.DefinedFunction: {
             return {
                 kind: Type.TypeKind.Function,
@@ -743,7 +743,7 @@ function createCategoryForFunction(type: Type.TFunction): FunctionCategory {
 }
 
 function createCategoryForList(type: Type.TList): ListCategory {
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.DefinedList: {
             return {
                 kind: Type.TypeKind.List,
@@ -766,7 +766,7 @@ function createCategoryForList(type: Type.TList): ListCategory {
 }
 
 function createCategoryForLogical(type: Type.TLogical): LogicalCategory {
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.LogicalLiteral: {
             return {
                 kind: Type.TypeKind.Logical,
@@ -795,7 +795,7 @@ function createCategoryForLogical(type: Type.TLogical): LogicalCategory {
 }
 
 function createCategoryForNumber(type: Type.TNumber): NumberCategory {
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.NumberLiteral: {
             return {
                 kind: Type.TypeKind.Number,
@@ -825,7 +825,7 @@ function createCategoryForPrimitive<T extends Type.TPowerQueryType>(type: T): IT
 }
 
 function createCategoryForRecord(type: Type.TRecord): RecordCategory {
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.DefinedRecord: {
             return {
                 kind: Type.TypeKind.Record,
@@ -848,7 +848,7 @@ function createCategoryForRecord(type: Type.TRecord): RecordCategory {
 }
 
 function createCategoryForTable(type: Type.TTable): TableCategory {
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.DefinedTable: {
             return {
                 kind: Type.TypeKind.Table,
@@ -871,7 +871,7 @@ function createCategoryForTable(type: Type.TTable): TableCategory {
 }
 
 function createCategoryForText(type: Type.TText): TextCategory {
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.TextLiteral: {
             return {
                 kind: Type.TypeKind.Text,
@@ -903,7 +903,7 @@ function createCategoryForType(type: Type.TType): TypeCategory {
     let tablePrimaryExpressionTypes: ReadonlyArray<Type.TableTypePrimaryExpression> = [];
     let tableTypes: ReadonlyArray<Type.TableType> = [];
 
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.DefinedListType:
             definedListTypes = [type];
             break;
@@ -961,7 +961,7 @@ function flattenAnyUnion(anyUnion: Type.AnyUnion): ReadonlyArray<Type.TPowerQuer
         // If it's an Any primitive then we can do an early return.
         // Else it's an AnyUnion so continue flattening the types.
         if (item.kind === Type.TypeKind.Any) {
-            switch (item.maybeExtendedKind) {
+            switch (item.extendedKind) {
                 case undefined:
                     return [item];
 

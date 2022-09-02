@@ -16,26 +16,26 @@ export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: Lexe
     const trace: Trace = parseSettings.traceManager.entry(
         ParserUtilsTraceConstant.ParserUtils,
         tryParse.name,
-        parseSettings.maybeInitialCorrelationId,
+        parseSettings.initialCorrelationId,
     );
 
     const updatedSettings: ParseSettings = {
         ...parseSettings,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
-    const maybeParserEntryPointFn:
-        | ((state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) => Promise<Ast.TNode>)
-        | undefined = updatedSettings?.maybeParserEntryPointFn;
+    const parserEntryPoint:
+        | ((state: ParseState, parser: Parser, correlationId: number | undefined) => Promise<Ast.TNode>)
+        | undefined = updatedSettings?.parserEntryPoint;
 
-    if (maybeParserEntryPointFn === undefined) {
+    if (parserEntryPoint === undefined) {
         return await tryParseDocument(updatedSettings, lexerSnapshot);
     }
 
     const parseState: ParseState = updatedSettings.createParseState(lexerSnapshot, defaultOverrides(updatedSettings));
 
     try {
-        const root: Ast.TNode = await maybeParserEntryPointFn(parseState, updatedSettings.parser, trace.id);
+        const root: Ast.TNode = await parserEntryPoint(parseState, updatedSettings.parser, trace.id);
         ParseStateUtils.assertIsDoneParsing(parseState);
 
         return ResultUtils.boxOk({
@@ -59,7 +59,7 @@ export async function tryParseDocument(
     const trace: Trace = parseSettings.traceManager.entry(
         ParserUtilsTraceConstant.ParserUtils,
         tryParseDocument.name,
-        parseSettings.maybeInitialCorrelationId,
+        parseSettings.initialCorrelationId,
     );
 
     let root: Ast.TNode;
@@ -132,7 +132,7 @@ export async function createCheckpoint(state: ParseState): Promise<ParseStateChe
     return {
         tokenIndex: state.tokenIndex,
         contextStateIdCounter: state.contextState.idCounter,
-        maybeContextNodeId: state.maybeCurrentContextNode?.id,
+        contextNodeId: state.currentContextNode?.id,
     };
 }
 
@@ -142,8 +142,8 @@ export async function createCheckpoint(state: ParseState): Promise<ParseStateChe
 // eslint-disable-next-line require-await
 export async function restoreCheckpoint(state: ParseState, checkpoint: ParseStateCheckpoint): Promise<void> {
     state.tokenIndex = checkpoint.tokenIndex;
-    state.maybeCurrentToken = state.lexerSnapshot.tokens[state.tokenIndex];
-    state.maybeCurrentTokenKind = state.maybeCurrentToken?.kind;
+    state.currentToken = state.lexerSnapshot.tokens[state.tokenIndex];
+    state.currentTokenKind = state.currentToken?.kind;
 
     const contextState: ParseContext.State = state.contextState;
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
@@ -168,8 +168,8 @@ export async function restoreCheckpoint(state: ParseState, checkpoint: ParseStat
     const reverseNumberSort: (left: number, right: number) => number = (left: number, right: number) => right - left;
 
     for (const nodeId of newAstNodeIds.sort(reverseNumberSort)) {
-        const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
-        const parentWillBeDeleted: boolean = maybeParentId !== undefined && maybeParentId >= backupIdCounter;
+        const parentId: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
+        const parentWillBeDeleted: boolean = parentId !== undefined && parentId >= backupIdCounter;
         ParseContextUtils.deleteAst(state.contextState, nodeId, parentWillBeDeleted);
     }
 
@@ -177,13 +177,13 @@ export async function restoreCheckpoint(state: ParseState, checkpoint: ParseStat
         ParseContextUtils.deleteContext(state.contextState, nodeId);
     }
 
-    if (checkpoint.maybeContextNodeId) {
-        state.maybeCurrentContextNode = NodeIdMapUtils.assertUnboxContext(
+    if (checkpoint.contextNodeId) {
+        state.currentContextNode = NodeIdMapUtils.assertUnboxContext(
             state.contextState.nodeIdMapCollection.contextNodeById,
-            checkpoint.maybeContextNodeId,
+            checkpoint.contextNodeId,
         );
     } else {
-        state.maybeCurrentContextNode = undefined;
+        state.currentContextNode = undefined;
     }
 }
 
@@ -204,7 +204,7 @@ function ensureParseError(state: ParseState, error: Error, locale: string): Pars
 function defaultOverrides(parseSettings: ParseSettings): Partial<ParseState> {
     return {
         locale: parseSettings.locale,
-        maybeCancellationToken: parseSettings.maybeCancellationToken,
+        cancellationToken: parseSettings.cancellationToken,
         traceManager: parseSettings.traceManager,
     };
 }

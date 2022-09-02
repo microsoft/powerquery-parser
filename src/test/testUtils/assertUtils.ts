@@ -53,7 +53,7 @@ async function assertGetTriedParse(settings: LexSettings & ParseSettings, text: 
     const triedLex: Lexer.TriedLex = Lexer.tryLex(settings, text);
     Assert.isOk(triedLex);
     const lexerState: Lexer.State = triedLex.value;
-    Assert.isUndefined(Lexer.maybeErrorLineMap(lexerState));
+    Assert.isUndefined(Lexer.errorLineMap(lexerState));
 
     const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(lexerState);
     Assert.isOk(triedSnapshot);

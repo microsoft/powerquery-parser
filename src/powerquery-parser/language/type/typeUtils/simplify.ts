@@ -23,44 +23,44 @@ import { TypeUtilsTraceConstant } from "./typeTraceConstant";
 export function simplify(
     types: ReadonlyArray<Type.TPowerQueryType>,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): ReadonlyArray<Type.TPowerQueryType> {
-    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.Simplify, simplify.name, maybeCorrelationId);
+    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.Simplify, simplify.name, correlationId);
 
     const categorized: CategorizedPowerQueryTypes = categorize(types, traceManager, trace.id);
 
     // If an `any` exists then that's as simplified as we can make it.
-    const maybeAny: Type.Any | undefined = maybeFindAnyPrimitive(categorized);
+    const any: Type.Any | undefined = findAnyPrimitive(categorized);
 
-    if (maybeAny) {
-        return [maybeAny];
+    if (any) {
+        return [any];
     }
 
     const partial: Type.TPowerQueryType[] = [
-        ...(categorized.maybeAction?.primitives.values() ?? []),
-        ...(categorized.maybeAnyNonNull?.primitives.values() ?? []),
-        ...(categorized.maybeBinary?.primitives.values() ?? []),
-        ...(categorized.maybeDate?.primitives.values() ?? []),
-        ...(categorized.maybeDateTime?.primitives.values() ?? []),
-        ...(categorized.maybeDateTimeZone?.primitives.values() ?? []),
-        ...(categorized.maybeDuration?.primitives.values() ?? []),
-        ...(categorized.maybeNone?.primitives.values() ?? []),
-        ...(categorized.maybeNotApplicable?.primitives.values() ?? []),
-        ...(categorized.maybeNull?.primitives.values() ?? []),
-        ...(categorized.maybeTime?.primitives.values() ?? []),
-        ...(categorized.maybeUnknown?.primitives.values() ?? []),
+        ...(categorized.actions?.primitives.values() ?? []),
+        ...(categorized.anyNonNulls?.primitives.values() ?? []),
+        ...(categorized.binaries?.primitives.values() ?? []),
+        ...(categorized.dates?.primitives.values() ?? []),
+        ...(categorized.dateTimes?.primitives.values() ?? []),
+        ...(categorized.dateTimeZones?.primitives.values() ?? []),
+        ...(categorized.durations?.primitives.values() ?? []),
+        ...(categorized.nones?.primitives.values() ?? []),
+        ...(categorized.notApplicables?.primitives.values() ?? []),
+        ...(categorized.nulls?.primitives.values() ?? []),
+        ...(categorized.times?.primitives.values() ?? []),
+        ...(categorized.unknowns?.primitives.values() ?? []),
 
-        ...simplifyFunctionCategory(categorized.maybeFunction),
-        ...simplifyListCategory(categorized.maybeList),
-        ...simplifyLogicalCategory(categorized.maybeLogical),
-        ...simplifyNumberCategory(categorized.maybeNumber),
-        ...simplifyRecordCategory(categorized.maybeRecord),
-        ...simplifyTableCategory(categorized.maybeTable),
-        ...simplifyTextCategory(categorized.maybeText),
-        ...simplifyTypeCategory(categorized.maybeType),
+        ...simplifyFunctionCategory(categorized.functions),
+        ...simplifyListCategory(categorized.lists),
+        ...simplifyLogicalCategory(categorized.logicals),
+        ...simplifyNumberCategory(categorized.numbers),
+        ...simplifyRecordCategory(categorized.records),
+        ...simplifyTableCategory(categorized.tables),
+        ...simplifyTextCategory(categorized.texts),
+        ...simplifyTypeCategory(categorized.types),
     ];
 
-    for (const flattenedValue of simplifyAnyCategory(categorized.maybeAny)) {
+    for (const flattenedValue of simplifyAnyCategory(categorized.anys)) {
         if (!ArrayUtils.includesUnique(partial, flattenedValue, isEqualType)) {
             partial.push(flattenedValue);
         }
@@ -85,107 +85,79 @@ function firstNullableElseFirst<T extends Type.TPowerQueryType>(immutableSet: Im
     return setValues[0];
 }
 
-function maybeFindAnyPrimitive(categorized: CategorizedPowerQueryTypes): Type.Any | undefined {
-    const maybeAnySet: ImmutableSet<Type.Any> | undefined = categorized.maybeAny?.primitives;
+function findAnyPrimitive(categorized: CategorizedPowerQueryTypes): Type.Any | undefined {
+    const anySet: ImmutableSet<Type.Any> | undefined = categorized.anys?.primitives;
 
-    if (maybeAnySet === undefined) {
-        return undefined;
-    }
-
-    return firstNullableElseFirst(maybeAnySet);
+    return anySet ? firstNullableElseFirst(anySet) : undefined;
 }
 
-function simplifyAnyCategory(maybeCategory: AnyCategory | undefined): ReadonlyArray<Type.TPowerQueryType> {
-    if (!maybeCategory?.flattenedAnyUnions) {
+function simplifyAnyCategory(category: AnyCategory | undefined): ReadonlyArray<Type.TPowerQueryType> {
+    if (!category?.flattenedAnyUnions) {
         return [];
     } else {
-        const flattnedAnyUnions: ImmutableSet<Type.TPowerQueryType> = maybeCategory?.flattenedAnyUnions;
+        const flattnedAnyUnions: ImmutableSet<Type.TPowerQueryType> = category?.flattenedAnyUnions;
 
         return [...flattnedAnyUnions.values()];
     }
 }
 
-function simplifyFunctionCategory(maybeCategory: FunctionCategory | undefined): ReadonlyArray<Type.TFunction> {
-    if (maybeCategory === undefined) {
-        return [];
-    }
-
-    return simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedFunctions);
+function simplifyFunctionCategory(category: FunctionCategory | undefined): ReadonlyArray<Type.TFunction> {
+    return category ? simplifyExtendedType(category.primitives, category.definedFunctions) : [];
 }
 
-function simplifyListCategory(maybeCategory: ListCategory | undefined): ReadonlyArray<Type.TList> {
-    if (maybeCategory === undefined) {
-        return [];
-    }
-
-    return simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedLists);
+function simplifyListCategory(category: ListCategory | undefined): ReadonlyArray<Type.TList> {
+    return category ? simplifyExtendedType(category.primitives, category.definedLists) : [];
 }
 
-function simplifyLogicalCategory(maybeCategory: LogicalCategory | undefined): ReadonlyArray<Type.TLogical> {
-    if (maybeCategory === undefined) {
+function simplifyLogicalCategory(category: LogicalCategory | undefined): ReadonlyArray<Type.TLogical> {
+    if (category === undefined) {
         return [];
     } else if (
-        (maybeCategory.hasFalsyNullableLiteral || maybeCategory.hasFalsyNonNullableLiteral) &&
-        (maybeCategory.hasTruthyNullableLiteral || maybeCategory.hasTruthyNonNullableLiteral)
+        (category.hasFalsyNullableLiteral || category.hasFalsyNonNullableLiteral) &&
+        (category.hasTruthyNullableLiteral || category.hasTruthyNonNullableLiteral)
     ) {
-        return maybeCategory.hasFalsyNullableLiteral || maybeCategory.hasTruthyNullableLiteral
+        return category.hasFalsyNullableLiteral || category.hasTruthyNullableLiteral
             ? [Type.NullableLogicalInstance]
             : [Type.LogicalInstance];
     } else {
-        const maybeType: Type.Logical | undefined = firstNullableElseFirst(maybeCategory.primitives);
+        const type: Type.Logical | undefined = firstNullableElseFirst(category.primitives);
 
-        return maybeType ? [maybeType] : [];
+        return type ? [type] : [];
     }
 }
 
-function simplifyNumberCategory(maybeCategory: NumberCategory | undefined): ReadonlyArray<Type.TNumber> {
-    if (maybeCategory === undefined) {
-        return [];
-    }
-
-    return simplifyExtendedType(maybeCategory.primitives, maybeCategory.literals);
+function simplifyNumberCategory(category: NumberCategory | undefined): ReadonlyArray<Type.TNumber> {
+    return category ? simplifyExtendedType(category.primitives, category.literals) : [];
 }
 
-function simplifyRecordCategory(maybeCategory: RecordCategory | undefined): ReadonlyArray<Type.TRecord> {
-    if (maybeCategory === undefined) {
-        return [];
-    }
-
-    return simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedRecords);
+function simplifyRecordCategory(category: RecordCategory | undefined): ReadonlyArray<Type.TRecord> {
+    return category ? simplifyExtendedType(category.primitives, category.definedRecords) : [];
 }
 
-function simplifyTableCategory(maybeCategory: TableCategory | undefined): ReadonlyArray<Type.TTable> {
-    if (maybeCategory === undefined) {
-        return [];
-    }
-
-    return simplifyExtendedType(maybeCategory.primitives, maybeCategory.definedTables);
+function simplifyTableCategory(category: TableCategory | undefined): ReadonlyArray<Type.TTable> {
+    return category ? simplifyExtendedType(category.primitives, category.definedTables) : [];
 }
 
-function simplifyTextCategory(maybeCategory: TextCategory | undefined): ReadonlyArray<Type.TText> {
-    if (maybeCategory === undefined) {
-        return [];
-    }
-
-    return simplifyExtendedType(maybeCategory.primitives, maybeCategory.literals);
+function simplifyTextCategory(category: TextCategory | undefined): ReadonlyArray<Type.TText> {
+    return category ? simplifyExtendedType(category.primitives, category.literals) : [];
 }
 
-function simplifyTypeCategory(maybeCategory: TypeCategory | undefined): ReadonlyArray<Type.TPowerQueryType> {
-    if (maybeCategory === undefined) {
+function simplifyTypeCategory(category: TypeCategory | undefined): ReadonlyArray<Type.TPowerQueryType> {
+    if (category === undefined) {
         return [];
-    } else if (maybeCategory.primitives.size) {
-        const maybeType: Type.Type | undefined | undefined = firstNullableElseFirst(maybeCategory.primitives);
+    } else if (category.primitives.size) {
+        const typeType: Type.Type | undefined | undefined = firstNullableElseFirst(category.primitives);
 
-        return maybeType ? [maybeType] : [];
+        return typeType ? [typeType] : [];
     } else {
         return [
-            ...maybeCategory.definedListTypes.values(),
-            ...maybeCategory.functionTypes.values(),
-            ...maybeCategory.listTypes.values(),
-            ...maybeCategory.primaryPrimitiveTypes.values(),
-            ...maybeCategory.recordTypes.values(),
-            ...maybeCategory.tablePrimaryExpressionTypes.values(),
-            ...maybeCategory.tableTypes.values(),
+            ...category.definedListTypes.values(),
+            ...category.functionTypes.values(),
+            ...category.listTypes.values(),
+            ...category.primaryPrimitiveTypes.values(),
+            ...category.recordTypes.values(),
+            ...category.tablePrimaryExpressionTypes.values(),
+            ...category.tableTypes.values(),
         ];
     }
 }
@@ -195,9 +167,9 @@ function simplifyExtendedType<T extends Type.TPowerQueryType, L extends Type.TPo
     literals: ImmutableSet<L>,
 ): ReadonlyArray<T> | ReadonlyArray<L> {
     if (primitives.size) {
-        const maybeType: T | undefined = firstNullableElseFirst(primitives);
+        const type: T | undefined = firstNullableElseFirst(primitives);
 
-        return maybeType ? [maybeType] : [];
+        return type ? [type] : [];
     } else if (literals.size) {
         return [...literals.values()];
     } else {

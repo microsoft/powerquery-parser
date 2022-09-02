@@ -5,7 +5,7 @@ import { Assert } from "../../../common";
 import { Constant } from "../../constant";
 import { Type } from "..";
 
-export function maybePrimitiveTypeConstantKindFromTypeKind(
+export function primitiveTypeConstantKindFromTypeKind(
     typeKind: Type.TypeKind,
 ): Constant.PrimitiveTypeConstant | undefined {
     switch (typeKind) {

@@ -10,16 +10,16 @@ import { TypeUtilsTraceConstant } from "./typeTraceConstant";
 export function nameOf(
     type: Type.TPowerQueryType,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): string {
-    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.NameOf, nameOf.name, maybeCorrelationId);
+    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.NameOf, nameOf.name, correlationId);
 
     let result: string;
 
     if (type.kind === Type.TypeKind.Null) {
         result = "null";
     } else {
-        switch (type.maybeExtendedKind) {
+        switch (type.extendedKind) {
             case Type.ExtendedTypeKind.NumberLiteral:
             case Type.ExtendedTypeKind.TextLiteral:
                 result = prefixNullableIfRequired(type, `${type.literal}`);
@@ -121,13 +121,9 @@ export function nameOf(
 export function nameOfFunctionParameter(
     parameter: Type.FunctionParameter,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): string {
-    const trace: Trace = traceManager.entry(
-        TypeUtilsTraceConstant.NameOf,
-        nameOfFunctionParameter.name,
-        maybeCorrelationId,
-    );
+    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.NameOf, nameOfFunctionParameter.name, correlationId);
 
     let partial: string = `${parameter.nameLiteral}:`;
 
@@ -139,8 +135,8 @@ export function nameOfFunctionParameter(
         partial += " nullable";
     }
 
-    if (parameter.maybeType !== undefined) {
-        partial += ` ${nameOfTypeKind(parameter.maybeType)}`;
+    if (parameter.type !== undefined) {
+        partial += ` ${nameOfTypeKind(parameter.type)}`;
     } else {
         partial += ` ${nameOfTypeKind(Type.TypeKind.Any)}`;
     }
@@ -154,13 +150,9 @@ export function nameOfFunctionSignature(
     type: Type.FunctionSignature,
     includeFatArrow: boolean,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): string {
-    const trace: Trace = traceManager.entry(
-        TypeUtilsTraceConstant.NameOf,
-        nameOfFunctionSignature.name,
-        maybeCorrelationId,
-    );
+    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.NameOf, nameOfFunctionSignature.name, correlationId);
 
     const parameters: string = type.parameters
         .map((parameter: Type.FunctionParameter) => nameOfFunctionParameter(parameter, traceManager, trace.id))

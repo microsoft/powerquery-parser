@@ -2,8 +2,8 @@ import { Assert } from "../../common";
 import { Constant } from ".";
 import { TokenKind } from "../token";
 
-export function maybeUnaryOperatorKindFrom(maybeTokenKind: TokenKind | undefined): Constant.UnaryOperator | undefined {
-    switch (maybeTokenKind) {
+export function unaryOperatorKindFrom(tokenKind: TokenKind | undefined): Constant.UnaryOperator | undefined {
+    switch (tokenKind) {
         case TokenKind.Plus:
             return Constant.UnaryOperator.Positive;
         case TokenKind.Minus:
@@ -15,10 +15,8 @@ export function maybeUnaryOperatorKindFrom(maybeTokenKind: TokenKind | undefined
     }
 }
 
-export function maybeArithmeticOperatorKindFrom(
-    maybeTokenKind: TokenKind | undefined,
-): Constant.ArithmeticOperator | undefined {
-    switch (maybeTokenKind) {
+export function arithmeticOperatorKindFrom(tokenKind: TokenKind | undefined): Constant.ArithmeticOperator | undefined {
+    switch (tokenKind) {
         case TokenKind.Asterisk:
             return Constant.ArithmeticOperator.Multiplication;
         case TokenKind.Division:
@@ -34,10 +32,8 @@ export function maybeArithmeticOperatorKindFrom(
     }
 }
 
-export function maybeEqualityOperatorKindFrom(
-    maybeTokenKind: TokenKind | undefined,
-): Constant.EqualityOperator | undefined {
-    switch (maybeTokenKind) {
+export function equalityOperatorKindFrom(tokenKind: TokenKind | undefined): Constant.EqualityOperator | undefined {
+    switch (tokenKind) {
         case TokenKind.Equal:
             return Constant.EqualityOperator.EqualTo;
         case TokenKind.NotEqual:
@@ -47,10 +43,8 @@ export function maybeEqualityOperatorKindFrom(
     }
 }
 
-export function maybeLogicalOperatorKindFrom(
-    maybeTokenKind: TokenKind | undefined,
-): Constant.LogicalOperator | undefined {
-    switch (maybeTokenKind) {
+export function logicalOperatorKindFrom(tokenKind: TokenKind | undefined): Constant.LogicalOperator | undefined {
+    switch (tokenKind) {
         case TokenKind.KeywordAnd:
             return Constant.LogicalOperator.And;
         case TokenKind.KeywordOr:
@@ -60,10 +54,8 @@ export function maybeLogicalOperatorKindFrom(
     }
 }
 
-export function maybeRelationalOperatorKindFrom(
-    maybeTokenKind: TokenKind | undefined,
-): Constant.RelationalOperator | undefined {
-    switch (maybeTokenKind) {
+export function relationalOperatorKindFrom(tokenKind: TokenKind | undefined): Constant.RelationalOperator | undefined {
+    switch (tokenKind) {
         case TokenKind.LessThan:
             return Constant.RelationalOperator.LessThan;
         case TokenKind.LessThanEqualTo:
@@ -77,10 +69,10 @@ export function maybeRelationalOperatorKindFrom(
     }
 }
 
-export function maybeBinOpExpressionOperatorKindFrom(
-    maybeTokenKind: TokenKind | undefined,
+export function binOpExpressionOperatorKindFrom(
+    tokenKind: TokenKind | undefined,
 ): Constant.TBinOpExpressionOperator | undefined {
-    switch (maybeTokenKind) {
+    switch (tokenKind) {
         // ArithmeticOperator
         case TokenKind.Asterisk:
             return Constant.ArithmeticOperator.Multiplication;

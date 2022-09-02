@@ -23,33 +23,33 @@ import { ParseError } from "..";
 export async function readAmbiguous<T extends Ast.TNode>(
     state: ParseState,
     parser: Parser,
-    parseFns: ReadonlyArray<(state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) => Promise<T>>,
-    maybeCorrelationId: number | undefined,
+    parseCallbacks: ReadonlyArray<(state: ParseState, parser: Parser, correlationId: number | undefined) => Promise<T>>,
+    correlationId: number | undefined,
 ): Promise<AmbiguousParse<T>> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         readAmbiguous.name,
-        maybeCorrelationId,
+        correlationId,
         {
-            [TraceConstant.Length]: parseFns.length,
+            [TraceConstant.Length]: parseCallbacks.length,
         },
     );
 
-    ArrayUtils.assertNonZeroLength(parseFns, "requires at least one parse function");
+    ArrayUtils.assertNonZeroLength(parseCallbacks, "requires at least one parse function");
 
-    let maybeBestMatch: AmbiguousParse<T> | undefined = undefined;
+    let bestMatch: AmbiguousParse<T> | undefined = undefined;
 
-    for (const parseFn of parseFns) {
+    for (const parseCallback of parseCallbacks) {
         // eslint-disable-next-line no-await-in-loop
         const variantState: ParseState = await parser.copyState(state);
 
-        let maybeNode: T | undefined;
+        let node: T | undefined;
         let variantResult: Result<T, ParseError.ParseError>;
 
         try {
             // eslint-disable-next-line no-await-in-loop
-            maybeNode = await parseFn(variantState, parser, trace.id);
-            variantResult = ResultUtils.boxOk(maybeNode);
+            node = await parseCallback(variantState, parser, trace.id);
+            variantResult = ResultUtils.boxOk(node);
         } catch (error) {
             if (!ParseError.isTInnerParseError(error)) {
                 throw error;
@@ -63,13 +63,13 @@ export async function readAmbiguous<T extends Ast.TNode>(
             result: variantResult,
         };
 
-        maybeBestMatch = bestAmbiguousParseMatch<T>(maybeBestMatch, candiate);
+        bestMatch = bestAmbiguousParseMatch<T>(bestMatch, candiate);
     }
 
-    Assert.isDefined(maybeBestMatch);
+    Assert.isDefined(bestMatch);
     trace.exit();
 
-    return maybeBestMatch;
+    return bestMatch;
 }
 
 // Peeks at the token stream and either performs an explicit read or an ambiguous read.
@@ -77,27 +77,21 @@ export async function readAmbiguousBracket(
     state: ParseState,
     parser: Parser,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<TAmbiguousBracketNode> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         readAmbiguousBracket.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
     // We might be able to peek at tokens to disambiguate what bracketed expression is next.
-    const maybeDisambiguation: BracketDisambiguation | undefined = maybeDisambiguateBracket(
-        state,
-        allowedVariants,
-        trace.id,
-    );
+    const disambiguation: BracketDisambiguation | undefined = disambiguateBracket(state, allowedVariants, trace.id);
 
     // Peeking gave us a concrete answer as to what's next.
     let ambiguousBracket: TAmbiguousBracketNode;
 
-    if (maybeDisambiguation !== undefined) {
-        const disambiguation: BracketDisambiguation = maybeDisambiguation;
-
+    if (disambiguation !== undefined) {
         switch (disambiguation) {
             case BracketDisambiguation.FieldProjection:
                 ambiguousBracket = await parser.readFieldProjection(state, parser, trace.id);
@@ -141,16 +135,16 @@ export async function readAmbiguousBracket(
 export async function readAmbiguousParenthesis(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<TAmbiguousParenthesisNode> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         readAmbiguousParenthesis.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
     // We might be able to peek at tokens to disambiguate what parenthesized expression is next.
-    const maybeDisambiguation: ParenthesisDisambiguation | undefined = await maybeDisambiguateParenthesis(
+    const disambiguation: ParenthesisDisambiguation | undefined = await disambiguateParenthesis(
         state,
         parser,
         trace.id,
@@ -159,9 +153,7 @@ export async function readAmbiguousParenthesis(
     // Peeking gave us a concrete answer as to what's next.
     let ambiguousParenthesis: TAmbiguousParenthesisNode;
 
-    if (maybeDisambiguation !== undefined) {
-        const disambiguation: ParenthesisDisambiguation = maybeDisambiguation;
-
+    if (disambiguation !== undefined) {
         switch (disambiguation) {
             case ParenthesisDisambiguation.FunctionExpression:
                 ambiguousParenthesis = await parser.readFunctionExpression(state, parser, trace.id);
@@ -200,15 +192,15 @@ export async function readAmbiguousParenthesis(
 }
 
 // Peeks at tokens which might give a concrete disambiguation.
-export async function maybeDisambiguateParenthesis(
+export async function disambiguateParenthesis(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<ParenthesisDisambiguation | undefined> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
-        maybeDisambiguateParenthesis.name,
-        maybeCorrelationId,
+        disambiguateParenthesis.name,
+        correlationId,
     );
 
     const initialTokenIndex: number = state.tokenIndex;
@@ -226,7 +218,7 @@ export async function maybeDisambiguateParenthesis(
             nestedDepth -= 1;
         }
 
-        let maybeDisambiguation: ParenthesisDisambiguation | undefined = undefined;
+        let disambiguation: ParenthesisDisambiguation | undefined = undefined;
 
         if (nestedDepth === 0) {
             // '(x as number) as number' could either be either case,
@@ -251,24 +243,24 @@ export async function maybeDisambiguateParenthesis(
                 }
 
                 if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.FatArrow)) {
-                    maybeDisambiguation = ParenthesisDisambiguation.FunctionExpression;
+                    disambiguation = ParenthesisDisambiguation.FunctionExpression;
                 } else {
-                    maybeDisambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
+                    disambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
                 }
 
                 // eslint-disable-next-line no-await-in-loop
                 await parser.restoreCheckpoint(state, checkpoint);
             } else if (ParseStateUtils.isTokenKind(state, Token.TokenKind.FatArrow, offsetTokenIndex + 1)) {
-                maybeDisambiguation = ParenthesisDisambiguation.FunctionExpression;
+                disambiguation = ParenthesisDisambiguation.FunctionExpression;
             } else {
-                maybeDisambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
+                disambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
             }
         }
 
-        if (maybeDisambiguation) {
-            trace.exit({ [TraceConstant.Result]: maybeDisambiguation });
+        if (disambiguation) {
+            trace.exit({ [TraceConstant.Result]: disambiguation });
 
-            return maybeDisambiguation;
+            return disambiguation;
         }
 
         offsetTokenIndex += 1;
@@ -279,26 +271,24 @@ export async function maybeDisambiguateParenthesis(
     return undefined;
 }
 
-export function maybeDisambiguateBracket(
+export function disambiguateBracket(
     state: ParseState,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): BracketDisambiguation | undefined {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
-        maybeDisambiguateBracket.name,
-        maybeCorrelationId,
+        disambiguateBracket.name,
+        correlationId,
     );
 
     let offsetTokenIndex: number = state.tokenIndex + 1;
     const tokens: ReadonlyArray<Token.Token> = state.lexerSnapshot.tokens;
-    const maybeOffsetToken: Token.Token | undefined = tokens[offsetTokenIndex];
+    const offsetToken: Token.Token | undefined = tokens[offsetTokenIndex];
 
-    if (maybeOffsetToken === undefined) {
+    if (offsetToken === undefined) {
         return undefined;
     }
-
-    const offsetToken: Token.Token = maybeOffsetToken;
 
     let offsetTokenKind: Token.TokenKind = offsetToken.kind;
     let result: BracketDisambiguation | undefined;
@@ -342,12 +332,12 @@ async function thoroughReadAmbiguousBracket(
     state: ParseState,
     parser: Parser,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<TAmbiguousBracketNode> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         readAmbiguousBracket.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
     const ambiguousBracket: TAmbiguousBracketNode = await thoroughReadAmbiguous(
@@ -368,26 +358,26 @@ async function thoroughReadAmbiguousBracket(
 async function thoroughReadAmbiguousParenthesis(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<TAmbiguousParenthesisNode> {
     return await thoroughReadAmbiguous<TAmbiguousParenthesisNode>(
         state,
         parser,
         [parser.readFunctionExpression, readParenthesizedExpressionOrBinOpExpression],
-        maybeCorrelationId,
+        correlationId,
     );
 }
 
 async function thoroughReadAmbiguous<T extends TAmbiguousBracketNode | TAmbiguousParenthesisNode>(
     state: ParseState,
     parser: Parser,
-    parseFns: ReadonlyArray<(state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) => Promise<T>>,
-    maybeCorrelationId: number | undefined,
+    parseFns: ReadonlyArray<(state: ParseState, parser: Parser, correlationId: number | undefined) => Promise<T>>,
+    correlationId: number | undefined,
 ): Promise<T> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         thoroughReadAmbiguous.name,
-        maybeCorrelationId,
+        correlationId,
         {
             [TraceConstant.Length]: parseFns.length,
         },
@@ -422,7 +412,7 @@ function bracketDisambiguationParseFunctions(
     parser: Parser,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
 ): ReadonlyArray<
-    (state: ParseState, parser: Parser, maybeCorrelationId: number | undefined) => Promise<TAmbiguousBracketNode>
+    (state: ParseState, parser: Parser, correlationId: number | undefined) => Promise<TAmbiguousBracketNode>
 > {
     return allowedVariants.map((bracketDisambiguation: BracketDisambiguation) => {
         switch (bracketDisambiguation) {
@@ -447,12 +437,12 @@ function bracketDisambiguationParseFunctions(
 async function readParenthesizedExpressionOrBinOpExpression(
     state: ParseState,
     parser: Parser,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Ast.ParenthesizedExpression | Ast.TLogicalExpression> {
     const trace: Trace = state.traceManager.entry(
         DisambiguationTraceConstant.Disambiguation,
         readParenthesizedExpressionOrBinOpExpression.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
     const node: Ast.TNode = await parser.readLogicalExpression(state, parser, trace.id);
@@ -482,27 +472,27 @@ function unsafeMoveTo(state: ParseState, tokenIndex: number): void {
     state.tokenIndex = tokenIndex;
 
     if (tokenIndex < tokens.length) {
-        state.maybeCurrentToken = tokens[tokenIndex];
-        state.maybeCurrentTokenKind = state.maybeCurrentToken.kind;
+        state.currentToken = tokens[tokenIndex];
+        state.currentTokenKind = state.currentToken.kind;
     } else {
-        state.maybeCurrentToken = undefined;
-        state.maybeCurrentTokenKind = undefined;
+        state.currentToken = undefined;
+        state.currentTokenKind = undefined;
     }
 }
 
 function bestAmbiguousParseMatch<T extends Ast.TNode>(
-    maybeBest: AmbiguousParse<T> | undefined,
+    best: AmbiguousParse<T> | undefined,
     candidate: AmbiguousParse<T>,
 ): AmbiguousParse<T> {
-    if (maybeBest === undefined || maybeBest.parseState.tokenIndex < candidate.parseState.tokenIndex) {
+    if (best === undefined || best.parseState.tokenIndex < candidate.parseState.tokenIndex) {
         return candidate;
     } else if (
-        maybeBest.parseState.tokenIndex === candidate.parseState.tokenIndex &&
-        ResultUtils.isError(maybeBest.result) &&
+        best.parseState.tokenIndex === candidate.parseState.tokenIndex &&
+        ResultUtils.isError(best.result) &&
         ResultUtils.isOk(candidate.result)
     ) {
         return candidate;
     } else {
-        return maybeBest;
+        return best;
     }
 }

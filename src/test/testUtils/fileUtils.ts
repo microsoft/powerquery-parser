@@ -58,9 +58,9 @@ export async function tryLexParse(
     return await TaskUtils.tryLexParse(settings, contents);
 }
 
-function isDirectory(maybePath: string): boolean {
+function isDirectory(path: string): boolean {
     // tslint:disable-next-line: non-literal-fs-path
-    return fs.statSync(maybePath).isDirectory();
+    return fs.statSync(path).isDirectory();
 }
 
 function isFile(filePath: string): boolean {

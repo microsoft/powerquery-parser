@@ -10,12 +10,11 @@ import { Ast } from "../../language";
 export function assertGetAncestry(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): ReadonlyArray<TXorNode> {
     const ancestryIds: number[] = [nodeId];
 
-    let maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
+    let parentId: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
 
-    while (maybeParentId) {
-        const parentId: number = maybeParentId;
+    while (parentId) {
         ancestryIds.push(parentId);
-        maybeParentId = nodeIdMapCollection.parentIdById.get(parentId);
+        parentId = nodeIdMapCollection.parentIdById.get(parentId);
     }
 
     return NodeIdMapIterator.assertIterXor(nodeIdMapCollection, ancestryIds);
@@ -107,7 +106,7 @@ export function assertGetNthPreviousXorChecked<T extends Ast.TNode>(
 }
 
 export function assertGetNthXor(ancestry: ReadonlyArray<TXorNode>, ancestryIndex: number): TXorNode {
-    return Assert.asDefined(maybeNthXor(ancestry, ancestryIndex), "ancestryIndex is out of bounds", {
+    return Assert.asDefined(nthXor(ancestry, ancestryIndex), "ancestryIndex is out of bounds", {
         ancestryLength: ancestry.length,
         ancestryIndex,
     });
@@ -121,107 +120,107 @@ export function assertGetNthXorChecked<T extends Ast.TNode>(
     return assertGetNthXorChecked(ancestry, ancestryIndex, expectedNodeKinds);
 }
 
-export function maybeNthXor(ancestry: ReadonlyArray<TXorNode>, ancestryIndex: number): TXorNode | undefined {
+export function nthXor(ancestry: ReadonlyArray<TXorNode>, ancestryIndex: number): TXorNode | undefined {
     return ancestry[ancestryIndex];
 }
 
-export function maybeNthXorChecked<T extends Ast.TNode>(
+export function nthXorChecked<T extends Ast.TNode>(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> | undefined {
-    const maybeXorNode: TXorNode | undefined = maybeNthXor(ancestry, ancestryIndex);
+    const xorNode: TXorNode | undefined = nthXor(ancestry, ancestryIndex);
 
-    return maybeXorNode && XorNodeUtils.isNodeKind(maybeXorNode, expectedNodeKinds) ? maybeXorNode : undefined;
+    return xorNode && XorNodeUtils.isNodeKind(xorNode, expectedNodeKinds) ? xorNode : undefined;
 }
 
-export function maybeNextXor(ancestry: ReadonlyArray<TXorNode>, ancestryIndex: number): TXorNode | undefined {
-    return maybeNthXor(ancestry, ancestryIndex + 1);
+export function nextXor(ancestry: ReadonlyArray<TXorNode>, ancestryIndex: number): TXorNode | undefined {
+    return nthXor(ancestry, ancestryIndex + 1);
 }
 
-export function maybeNextXorChecked<T extends Ast.TNode>(
+export function nextXorChecked<T extends Ast.TNode>(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> | undefined {
-    return maybeNthXorChecked(ancestry, ancestryIndex + 1, expectedNodeKinds);
+    return nthXorChecked(ancestry, ancestryIndex + 1, expectedNodeKinds);
 }
 
-export function maybePreviousXor(ancestry: ReadonlyArray<TXorNode>, ancestryIndex: number): TXorNode | undefined {
-    return maybeNthXor(ancestry, ancestryIndex - 1);
+export function previousXor(ancestry: ReadonlyArray<TXorNode>, ancestryIndex: number): TXorNode | undefined {
+    return nthXor(ancestry, ancestryIndex - 1);
 }
 
-export function maybePreviousXorChecked<T extends Ast.TNode>(
+export function previousXorChecked<T extends Ast.TNode>(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> | undefined {
-    return maybeNthXorChecked(ancestry, ancestryIndex - 1, expectedNodeKinds);
+    return nthXorChecked(ancestry, ancestryIndex - 1, expectedNodeKinds);
 }
 
-export function maybeNthNextXor(
+export function nthNextXor(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     offset: number = 1,
 ): TXorNode | undefined {
-    return maybeNthXor(ancestry, ancestryIndex + offset);
+    return nthXor(ancestry, ancestryIndex + offset);
 }
 
-export function maybeNthNextXorChecked<T extends Ast.TNode>(
+export function nthNextXorChecked<T extends Ast.TNode>(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     offset: number = 1,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> | undefined {
-    return maybeNthXorChecked(ancestry, ancestryIndex + offset, expectedNodeKinds);
+    return nthXorChecked(ancestry, ancestryIndex + offset, expectedNodeKinds);
 }
 
-export function maybeNthPreviousXor(
+export function nthPreviousXor(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     offset: number = 1,
 ): TXorNode | undefined {
-    return maybeNthXor(ancestry, ancestryIndex - offset);
+    return nthXor(ancestry, ancestryIndex - offset);
 }
 
-export function maybeNthPreviousXorChecked<T extends Ast.TNode>(
+export function nthPreviousXorChecked<T extends Ast.TNode>(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     offset: number = 1,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> | undefined {
-    return maybeNthXorChecked(ancestry, ancestryIndex - offset, expectedNodeKinds);
+    return nthXorChecked(ancestry, ancestryIndex - offset, expectedNodeKinds);
 }
 
-export function maybeFirstXorOfNodeKind<T extends Ast.TNode>(
+export function findXorOfNodeKind<T extends Ast.TNode>(
     ancestry: ReadonlyArray<TXorNode>,
     nodeKind: T["kind"],
 ): XorNode<T> | undefined {
-    const maybeNode: TXorNode | undefined = ancestry.find((xorNode: TXorNode) => xorNode.node.kind === nodeKind);
+    const node: TXorNode | undefined = ancestry.find((xorNode: TXorNode) => xorNode.node.kind === nodeKind);
 
-    if (maybeNode === undefined || !XorNodeUtils.isNodeKind(maybeNode, nodeKind)) {
+    if (node === undefined || !XorNodeUtils.isNodeKind(node, nodeKind)) {
         return undefined;
     }
 
-    return maybeNode;
+    return node;
 }
 
-export function maybeFirstIndexOfNodeKind<T extends Ast.TNode>(
+export function findIndexOfNodeKind<T extends Ast.TNode>(
     ancestry: ReadonlyArray<TXorNode>,
     nodeKind: T["kind"],
 ): number | undefined {
-    const maybeIndex: number = ancestry.findIndex((xorNode: TXorNode) => XorNodeUtils.isNodeKind(xorNode, nodeKind));
+    const index: number = ancestry.findIndex((xorNode: TXorNode) => XorNodeUtils.isNodeKind(xorNode, nodeKind));
 
-    return maybeIndex !== -1 ? maybeIndex : undefined;
+    return index !== -1 ? index : undefined;
 }
 
-export function maybeFirstXorAndIndexOfNodeKind<T extends Ast.TNode>(
+export function findXorAndIndexOfNodeKind<T extends Ast.TNode>(
     ancestry: ReadonlyArray<TXorNode>,
     nodeKind: T["kind"],
 ): [XorNode<T>, number] | undefined {
-    const maybeIndex: number | undefined = maybeFirstIndexOfNodeKind(ancestry, nodeKind);
+    const index: number | undefined = findIndexOfNodeKind(ancestry, nodeKind);
 
-    return maybeIndex !== undefined
-        ? [XorNodeUtils.assertAsNodeKind(Assert.asDefined(ancestry[maybeIndex]), nodeKind), maybeIndex]
+    return index !== undefined
+        ? [XorNodeUtils.assertAsNodeKind(Assert.asDefined(ancestry[index]), nodeKind), index]
         : undefined;
 }

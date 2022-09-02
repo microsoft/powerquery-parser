@@ -43,7 +43,7 @@ function lexText(text: string): void {
 
     // An error state is returned if the argument can't be lexed.
     // Use either the typeguard Lexer.isErrorState to discover if it's an error state,
-    // or Lexer.maybeErrorLineMap to quickly get all lines with errors.
+    // or Lexer.errorLineMap to quickly get all lines with errors.
     // Note: At this point all errors are isolated to a single line.
     //       Checks for multiline errors, such as an unterminated string, have not been processed.
     let triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
@@ -58,12 +58,10 @@ function lexText(text: string): void {
 
     // The lexer state might have an error.
     // To be sure either use the typeguard Lexer.isErrorState,
-    // or Lexer.maybeErrorLineMap to get an option containing a map of all lines with errors.
-    const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(lexerState);
+    // or Lexer.errorLineMap to get an option containing a map of all lines with errors.
+    const errorLineMap: Lexer.ErrorLineMap | undefined = Lexer.errorLineMap(lexerState);
 
-    if (maybeErrorLineMap !== undefined) {
-        const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
-
+    if (errorLineMap !== undefined) {
         for (const [lineNumber, errorLine] of errorLineMap.entries()) {
             console.log(`lineNumber ${lineNumber} has the following error: ${errorLine.error.message}`);
         }

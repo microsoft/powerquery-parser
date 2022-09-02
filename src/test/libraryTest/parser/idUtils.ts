@@ -61,7 +61,7 @@ async function expectLinksMatch(
         xorNode = XorNodeUtils.boxAst(triedLexParse.ast);
     } else if (TaskUtils.isParseStageParseError(triedLexParse)) {
         nodeIdMapCollection = triedLexParse.nodeIdMapCollection;
-        xorNode = XorNodeUtils.boxContext(Assert.asDefined(triedLexParse.error.state.contextState.maybeRoot));
+        xorNode = XorNodeUtils.boxContext(Assert.asDefined(triedLexParse.error.state.contextState.root));
     } else {
         throw new Error(`expected TriedLexParse to be Ok`);
     }
@@ -82,8 +82,8 @@ async function expectLinksMatch(
         contextIds: [],
         leafIds: new Set<number>(),
         idsByNodeKind: new Map(),
-        maybeCancellationToken: undefined,
-        maybeInitialCorrelationId: undefined,
+        cancellationToken: undefined,
+        initialCorrelationId: undefined,
         traceManager: NoOpTraceManagerInstance,
     };
 
@@ -204,10 +204,10 @@ async function traverseVisitNode(state: TraverseState, xorNode: TXorNode): Promi
         state.contextIds.push(xorNode.node.id);
     }
 
-    const maybeNodeIdsByNodeKind: Set<number> | undefined = state.idsByNodeKind.get(xorNode.node.kind);
+    const nodeIdsByNodeKind: Set<number> | undefined = state.idsByNodeKind.get(xorNode.node.kind);
 
-    if (maybeNodeIdsByNodeKind !== undefined) {
-        maybeNodeIdsByNodeKind.add(xorNode.node.id);
+    if (nodeIdsByNodeKind !== undefined) {
+        nodeIdsByNodeKind.add(xorNode.node.id);
     } else {
         state.idsByNodeKind.set(xorNode.node.kind, new Set([xorNode.node.id]));
     }

@@ -18,13 +18,12 @@ import { TestAssertUtils } from "../../testUtils";
 
 const DefaultSettingsWithStrict: Settings = {
     ...DefaultSettings,
-    createParseState: (lexerSnapshot: Lexer.LexerSnapshot, maybeOverrides: Partial<ParseState> | undefined) => {
-        maybeOverrides = maybeOverrides ?? {};
+    createParseState: (lexerSnapshot: Lexer.LexerSnapshot, overrides: Partial<ParseState> | undefined) => {
+        overrides = overrides ?? {};
 
         return ParseStateUtils.createState(lexerSnapshot, {
-            ...maybeOverrides,
-            disambiguationBehavior:
-                maybeOverrides.disambiguationBehavior ?? Disambiguation.DismabiguationBehavior.Strict,
+            ...overrides,
+            disambiguationBehavior: overrides.disambiguationBehavior ?? Disambiguation.DismabiguationBehavior.Strict,
         });
     },
 };
@@ -102,7 +101,7 @@ describe("Parser.Error", () => {
                 ...DefaultSettings,
                 parser: RecursiveDescentParser,
                 // eslint-disable-next-line require-await
-                maybeParserEntryPointFn: async (state: ParseState, parser: Parser): Promise<Ast.TNode> =>
+                parserEntryPoint: async (state: ParseState, parser: Parser): Promise<Ast.TNode> =>
                     parser.readIdentifier(state, parser, Ast.IdentifierContextKind.Value, undefined),
             };
 

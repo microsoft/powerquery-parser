@@ -35,8 +35,8 @@ async function collectAbridgeNodeFromAst(text: string): Promise<ReadonlyArray<Ab
     const state: CollectAbridgeNodeState = {
         locale: DefaultLocale,
         result: [],
-        maybeCancellationToken: undefined,
-        maybeInitialCorrelationId: undefined,
+        cancellationToken: undefined,
+        initialCorrelationId: undefined,
         traceManager: NoOpTraceManagerInstance,
     };
 
@@ -64,8 +64,8 @@ async function collectAbridgeNodeFromContext(text: string): Promise<ReadonlyArra
     const state: CollectAbridgeNodeState = {
         locale: DefaultLocale,
         result: [],
-        maybeCancellationToken: undefined,
-        maybeInitialCorrelationId: undefined,
+        cancellationToken: undefined,
+        initialCorrelationId: undefined,
         traceManager: NoOpTraceManagerInstance,
     };
 
@@ -75,7 +75,7 @@ async function collectAbridgeNodeFromContext(text: string): Promise<ReadonlyArra
     >(
         state,
         parseError.nodeIdMapCollection,
-        XorNodeUtils.boxContext(Assert.asDefined(parseError.parseState.contextState.maybeRoot)),
+        XorNodeUtils.boxContext(Assert.asDefined(parseError.parseState.contextState.root)),
         Traverse.VisitNodeStrategy.BreadthFirst,
         collectAbridgeXorNodeVisit,
         Traverse.assertGetAllXorChildren,
@@ -100,8 +100,8 @@ async function assertGetNthNodeOfKind<N extends Language.Ast.TNode>(
         nodeKind,
         nthCounter: 0,
         nthRequired,
-        maybeCancellationToken: undefined,
-        maybeInitialCorrelationId: undefined,
+        cancellationToken: undefined,
+        initialCorrelationId: undefined,
         traceManager: NoOpTraceManagerInstance,
     };
 
@@ -125,12 +125,12 @@ async function assertGetNthNodeOfKind<N extends Language.Ast.TNode>(
 
 // eslint-disable-next-line require-await
 async function collectAbridgeAstNodeVisit(state: CollectAbridgeNodeState, node: Language.Ast.TNode): Promise<void> {
-    state.result.push([node.kind, node.maybeAttributeIndex]);
+    state.result.push([node.kind, node.attributeIndex]);
 }
 
 // eslint-disable-next-line require-await
 async function collectAbridgeXorNodeVisit(state: CollectAbridgeNodeState, xorNode: TXorNode): Promise<void> {
-    state.result.push([xorNode.node.kind, xorNode.node.maybeAttributeIndex]);
+    state.result.push([xorNode.node.kind, xorNode.node.attributeIndex]);
 }
 
 // eslint-disable-next-line require-await
@@ -165,7 +165,7 @@ describe("Parser.AbridgedNode", () => {
             const customSettings: Settings = {
                 ...DefaultSettings,
                 parser: Parser.RecursiveDescentParser,
-                maybeParserEntryPointFn: Parser.RecursiveDescentParser.readParameterSpecificationList,
+                parserEntryPoint: Parser.RecursiveDescentParser.readParameterSpecificationList,
             };
 
             const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(

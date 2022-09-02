@@ -66,13 +66,9 @@ export function typeCheckFunction(
     valueType: Type.DefinedFunction,
     schemaType: Type.FunctionType,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): CheckedDefinedFunction {
-    const trace: Trace = traceManager.entry(
-        TypeUtilsTraceConstant.TypeCheck,
-        typeCheckFunction.name,
-        maybeCorrelationId,
-    );
+    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.TypeCheck, typeCheckFunction.name, correlationId);
 
     const result: CheckedDefinedFunction = {
         ...typeCheckFunctionSignature(valueType, schemaType, traceManager, trace.id),
@@ -89,12 +85,12 @@ export function typeCheckFunctionSignature(
     valueType: Type.FunctionSignature,
     schemaType: Type.FunctionSignature,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): CheckedFunctionSignature {
     const trace: Trace = traceManager.entry(
         TypeUtilsTraceConstant.TypeCheck,
         typeCheckFunctionSignature.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
     const result: CheckedFunctionSignature = typeCheckGenericNumber<Type.FunctionParameter, Type.FunctionParameter>(
@@ -114,13 +110,9 @@ export function typeCheckInvocation(
     args: ReadonlyArray<Type.TPowerQueryType>,
     definedFunction: Type.DefinedFunction,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): CheckedInvocation {
-    const trace: Trace = traceManager.entry(
-        TypeUtilsTraceConstant.TypeCheck,
-        typeCheckInvocation.name,
-        maybeCorrelationId,
-    );
+    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.TypeCheck, typeCheckInvocation.name, correlationId);
 
     const parameters: ReadonlyArray<Type.FunctionParameter> = definedFunction.parameters;
     const numArgs: number = args.length;
@@ -134,15 +126,15 @@ export function typeCheckInvocation(
     const invalidArgs: Map<number, InvocationMismatch> = new Map();
 
     for (let index: number = 0; index < numParameters; index += 1) {
-        const maybeArg: Type.TPowerQueryType | undefined = args[index];
+        const arg: Type.TPowerQueryType | undefined = args[index];
         const parameter: Type.FunctionParameter = parameters[index];
 
-        if (isCompatibleWithFunctionParameter(maybeArg, parameter)) {
+        if (isCompatibleWithFunctionParameter(arg, parameter)) {
             validArgs.push(index);
-        } else if (maybeArg !== undefined) {
+        } else if (arg !== undefined) {
             invalidArgs.set(index, {
                 expected: parameter,
-                actual: maybeArg,
+                actual: arg,
             });
         } else {
             missingArgs.push(index);
@@ -165,12 +157,12 @@ export function typeCheckListWithListType(
     valueType: Type.DefinedList,
     schemaType: Type.ListType,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): CheckedDefinedList {
     const trace: Trace = traceManager.entry(
         TypeUtilsTraceConstant.TypeCheck,
         typeCheckListWithListType.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
     const validArgs: number[] = [];
@@ -209,45 +201,27 @@ export function typeCheckListWithDefinedListType(
     valueType: Type.DefinedList,
     schemaType: Type.DefinedListType,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): CheckedDefinedList {
-    return typeCheckGenericNumber(
-        valueType.elements,
-        schemaType.itemTypes,
-        isCompatible,
-        traceManager,
-        maybeCorrelationId,
-    );
+    return typeCheckGenericNumber(valueType.elements, schemaType.itemTypes, isCompatible, traceManager, correlationId);
 }
 
 export function typeCheckRecord(
     valueType: Type.DefinedRecord,
     schemaType: Type.RecordType,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): CheckedDefinedRecord {
-    return typeCheckRecordOrTable(
-        valueType.fields,
-        schemaType.fields,
-        schemaType.isOpen,
-        traceManager,
-        maybeCorrelationId,
-    );
+    return typeCheckRecordOrTable(valueType.fields, schemaType.fields, schemaType.isOpen, traceManager, correlationId);
 }
 
 export function typeCheckTable(
     valueType: Type.DefinedTable,
     schemaType: Type.TableType,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): CheckedDefinedTable {
-    return typeCheckRecordOrTable(
-        valueType.fields,
-        schemaType.fields,
-        schemaType.isOpen,
-        traceManager,
-        maybeCorrelationId,
-    );
+    return typeCheckRecordOrTable(valueType.fields, schemaType.fields, schemaType.isOpen, traceManager, correlationId);
 }
 
 function typeCheckGenericNumber<
@@ -256,12 +230,7 @@ function typeCheckGenericNumber<
 >(
     valueElements: ReadonlyArray<Value>,
     schemaItemTypes: ReadonlyArray<Schema>,
-    valueCmpFn: (
-        left: Value,
-        right: Schema,
-        traceManager: TraceManager,
-        maybeCorrelationId: number,
-    ) => boolean | undefined,
+    comparer: (left: Value, right: Schema, traceManager: TraceManager, correlationId: number) => boolean | undefined,
     traceManager: TraceManager,
     correlationId: number | undefined,
 ): IChecked<number, IMismatch<Value, Schema>> {
@@ -295,7 +264,7 @@ function typeCheckGenericNumber<
         const element: Value = valueElements[index];
         const schemaItemType: Schema = schemaItemTypes[index];
 
-        if (valueCmpFn(element, schemaItemType, traceManager, trace.id)) {
+        if (comparer(element, schemaItemType, traceManager, trace.id)) {
             validIndices.push(index);
         } else {
             mismatches.set(index, {
@@ -322,12 +291,12 @@ function typeCheckRecordOrTable(
     schemaFields: Map<string, Type.TPowerQueryType>,
     schemaIsOpen: boolean,
     traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): IChecked<string, IMismatch<Type.TPowerQueryType, Type.TPowerQueryType>> {
     const trace: Trace = traceManager.entry(
         TypeUtilsTraceConstant.TypeCheck,
         typeCheckRecordOrTable.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
     const validFields: string[] = [];
@@ -339,11 +308,9 @@ function typeCheckRecordOrTable(
     );
 
     for (const [key, type] of valueFields.entries()) {
-        const maybeSchemaValueType: Type.TPowerQueryType | undefined = schemaFields.get(key);
+        const schemaValueType: Type.TPowerQueryType | undefined = schemaFields.get(key);
 
-        if (maybeSchemaValueType !== undefined) {
-            const schemaValueType: Type.TPowerQueryType = maybeSchemaValueType;
-
+        if (schemaValueType !== undefined) {
             if (isCompatible(type, schemaValueType, traceManager, trace.id)) {
                 validFields.push(key);
             } else {

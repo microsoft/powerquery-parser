@@ -40,7 +40,7 @@ export class ParseError extends Error {
 export class ExpectedCsvContinuationError extends Error {
     constructor(
         readonly kind: CsvContinuationKind,
-        readonly maybeFoundToken: TokenWithColumnNumber | undefined,
+        readonly foundToken: TokenWithColumnNumber | undefined,
         locale: string,
     ) {
         super(Localization.error_parse_csvContinuation(LocalizationUtils.getLocalizationTemplates(locale), kind));
@@ -51,14 +51,14 @@ export class ExpectedCsvContinuationError extends Error {
 export class ExpectedAnyTokenKindError extends Error {
     constructor(
         readonly expectedAnyTokenKinds: ReadonlyArray<Token.TokenKind>,
-        readonly maybeFoundToken: TokenWithColumnNumber | undefined,
+        readonly foundToken: TokenWithColumnNumber | undefined,
         locale: string,
     ) {
         super(
             Localization.error_parse_expectAnyTokenKind(
                 LocalizationUtils.getLocalizationTemplates(locale),
                 expectedAnyTokenKinds,
-                maybeFoundToken,
+                foundToken,
             ),
         );
 
@@ -69,7 +69,7 @@ export class ExpectedAnyTokenKindError extends Error {
 export class ExpectedClosingTokenKind extends Error {
     constructor(
         readonly expectedTokenKind: Token.TokenKind,
-        readonly maybeFoundToken: TokenWithColumnNumber | undefined,
+        readonly foundToken: TokenWithColumnNumber | undefined,
         locale: string,
     ) {
         super(
@@ -86,14 +86,14 @@ export class ExpectedClosingTokenKind extends Error {
 export class ExpectedTokenKindError extends Error {
     constructor(
         readonly expectedTokenKind: Token.TokenKind,
-        readonly maybeFoundToken: TokenWithColumnNumber | undefined,
+        readonly foundToken: TokenWithColumnNumber | undefined,
         locale: string,
     ) {
         super(
             Localization.error_parse_expectTokenKind(
                 LocalizationUtils.getLocalizationTemplates(locale),
                 expectedTokenKind,
-                maybeFoundToken,
+                foundToken,
             ),
         );
 
@@ -102,11 +102,11 @@ export class ExpectedTokenKindError extends Error {
 }
 
 export class ExpectedGeneralizedIdentifierError extends Error {
-    constructor(readonly maybeFoundToken: TokenWithColumnNumber | undefined, locale: string) {
+    constructor(readonly foundToken: TokenWithColumnNumber | undefined, locale: string) {
         super(
             Localization.error_parse_expectGeneralizedIdentifier(
                 LocalizationUtils.getLocalizationTemplates(locale),
-                maybeFoundToken,
+                foundToken,
             ),
         );
 
@@ -207,7 +207,7 @@ export function isTInnerParseError(x: any): x is TInnerParseError {
     );
 }
 
-export function maybeTokenFrom(error: TInnerParseError): Token.Token | undefined {
+export function tokenFrom(error: TInnerParseError): Token.Token | undefined {
     if (
         error instanceof ExpectedAnyTokenKindError ||
         error instanceof ExpectedClosingTokenKind ||
@@ -215,7 +215,7 @@ export function maybeTokenFrom(error: TInnerParseError): Token.Token | undefined
         error instanceof ExpectedGeneralizedIdentifierError ||
         error instanceof ExpectedTokenKindError
     ) {
-        return error.maybeFoundToken?.token;
+        return error.foundToken?.token;
     } else if (error instanceof InvalidPrimitiveTypeError) {
         return error.token;
     } else if (error instanceof RequiredParameterAfterOptionalParameterError) {
