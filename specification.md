@@ -4,7 +4,6 @@ There are a few differences between the [Power Query / M Language Specification]
 
 ## Where the Power Query parser differs from the specification
 
--   An additional primitive type named `time` exists.
 -   An additional primitive type named `action` exists.
 -   The `field-specification` construct requires an `identifier`. Instead `identifer` is replaced with `generalized-identifier`.
 -   The `type` construct matches either `parenthesized-expression` or `primary-type`. Instead `parenthesized-expression` is replaced with `primary-expression`.
