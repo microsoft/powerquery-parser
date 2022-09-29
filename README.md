@@ -12,7 +12,8 @@ The most common way to consume the project is to interact with the helper functi
 
 - [powerquery-formatter](https://github.com/microsoft/powerquery-formatter): A code formatter for Power Query which is bundled in the VSCode extension.
 - [powerquery-language-services](https://github.com/microsoft/powerquery-language-services): A high level library that wraps the parser for external projects, such as the VSCode extension. Includes features such as Intellisense.
-- [vscode-powerquery](https://github.com/microsoft/vscode-powerquery): The VSCode extension for Power Query.
+- [vscode-powerquery](https://github.com/microsoft/vscode-powerquery): The VSCode extension for Power Query language support.
+- [vscode-powerquery-sdk](https://github.com/microsoft/vscode-powerquery-sdk): The VSCode extension for Power Query connector SDK.
 
 ## Things to note
 
