@@ -4,5 +4,5 @@
 export interface ICancellationToken {
     isCancelled: () => boolean;
     throwIfCancelled: () => void;
-    cancel: () => void;
+    cancel: (reason: string) => void;
 }

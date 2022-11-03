@@ -7,16 +7,17 @@ import { ICancellationToken } from "./ICancellationToken";
 // Cancelled after X milliseconds.
 export class TimedCancellationToken implements ICancellationToken {
     private readonly threshold: number;
+    private cancelReason: string | undefined;
     private wasForceCancelled: boolean;
 
-    constructor(milliseconds: number) {
+    constructor(private readonly milliseconds: number) {
         this.threshold = Date.now() + milliseconds;
         this.wasForceCancelled = false;
     }
 
     public throwIfCancelled(): void {
         if (this.isCancelled()) {
-            throw new CommonError.CancellationError(this);
+            throw new CommonError.CancellationError(this, this.cancelReason ?? `Exceeded ${this.milliseconds}ms`);
         }
     }
 
@@ -24,16 +25,18 @@ export class TimedCancellationToken implements ICancellationToken {
         return this.wasForceCancelled || Date.now() >= this.threshold;
     }
 
-    public cancel(): void {
+    public cancel(reason: string): void {
         this.wasForceCancelled = true;
+        this.cancelReason = reason;
     }
 }
 
 // Cancelled after X calls are made to isCancelled.
 // Not really useful other than as an example of how to create your own cancellation token.
 export class CounterCancellationToken implements ICancellationToken {
-    private wasForceCancelled: boolean;
+    private cancelReason: string | undefined;
     private counter: number;
+    private wasForceCancelled: boolean;
 
     constructor(private readonly cancellationThreshold: number) {
         this.wasForceCancelled = false;
@@ -48,11 +51,15 @@ export class CounterCancellationToken implements ICancellationToken {
 
     public throwIfCancelled(): void {
         if (this.isCancelled()) {
-            throw new CommonError.CancellationError(this);
+            throw new CommonError.CancellationError(
+                this,
+                this.cancelReason ?? `Exceeded ${this.cancellationThreshold} calls`,
+            );
         }
     }
 
-    public cancel(): void {
+    public cancel(reason: string): void {
         this.wasForceCancelled = true;
+        this.cancelReason = reason;
     }
 }
