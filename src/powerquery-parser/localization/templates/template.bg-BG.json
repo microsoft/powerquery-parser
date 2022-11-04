@@ -1,5 +1,5 @@
 {
-  "error_common_cancellationError": "CancellationError: направена е заявка за отмяна.",
+  "error_common_cancellationError": "CancellationError: {reason}",
   "error_common_invariantError_1_details": "InvariantError: {invariantBroken} – {details}",
   "error_common_invariantError_2_noDetails": "InvariantError: {invariantBroken}",
   "error_common_unknown": "Възникна неизвестна грешка, innerError: {innerError}",

@@ -1,5 +1,5 @@
 {
-  "error_common_cancellationError": "CancellationError: permintaan pembatalan dibuat.",
+  "error_common_cancellationError": "CancellationError: {reason}",
   "error_common_invariantError_1_details": "Invanterror: {invariantBroken} - {details}",
   "error_common_invariantError_2_noDetails": "Invanterror: {invariantBroken}",
   "error_common_unknown": "Terjadi kesalahan yang tidak diketahui, innerError: {innerError}",

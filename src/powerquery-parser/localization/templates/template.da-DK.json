@@ -1,5 +1,5 @@
 {
-  "error_common_cancellationError": "CancellationError: der blev foretaget en anmodning om annullering.",
+  "error_common_cancellationError": "CancellationError: {reason}",
   "error_common_invariantError_1_details": "InvariantError: {invariantBroken} - {details}",
   "error_common_invariantError_2_noDetails": "InvariantError: {invariantBroken}",
   "error_common_unknown": "Der opstod en ukendt fejl, innerError: {innerError}",
