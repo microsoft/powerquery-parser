@@ -1,5 +1,5 @@
 {
-  "error_common_cancellationError": "CancellationError: đã tạo yêu cầu hủy.",
+  "error_common_cancellationError": "CancellationError: {reason}",
   "error_common_invariantError_1_details": "InvariantError: {invariantBroken} - {details}",
   "error_common_invariantError_2_noDetails": "InvariantError: {invariantBroken}",
   "error_common_unknown": "Đã gặp phải lỗi không xác định, innerError: {innerError}",

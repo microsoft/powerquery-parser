@@ -15,8 +15,8 @@ export class CommonError extends Error {
 }
 
 export class CancellationError extends Error {
-    constructor(readonly cancellationToken: ICancellationToken) {
-        super(Localization.error_common_cancellationError(Templates.DefaultTemplates));
+    constructor(readonly cancellationToken: ICancellationToken, readonly reason: string) {
+        super(Localization.error_common_cancellationError(Templates.DefaultTemplates, reason));
         Object.setPrototypeOf(this, CancellationError.prototype);
     }
 }

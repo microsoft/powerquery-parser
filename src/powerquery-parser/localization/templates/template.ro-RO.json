@@ -1,5 +1,5 @@
 {
-  "error_common_cancellationError": "CancellationError: s-a făcut o solicitare de anulare.",
+  "error_common_cancellationError": "CancellationError: {reason}",
   "error_common_invariantError_1_details": "InvariantError: {invariantBroken} - {details}",
   "error_common_invariantError_2_noDetails": "InvariantError: {invariantBroken}",
   "error_common_unknown": "S-a întâlnit o eroare necunoscută, innerError: {innerError}",
