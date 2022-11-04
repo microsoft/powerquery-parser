@@ -1,5 +1,5 @@
 {
-  "error_common_cancellationError": "CancellationError: zahteva za preklic je bila ustvarjena.",
+  "error_common_cancellationError": "CancellationError: {reason}",
   "error_common_invariantError_1_details": "InvariantError: {invariantBroken} – {details}",
   "error_common_invariantError_2_noDetails": "InvariantError: {invariantBroken}",
   "error_common_unknown": "Prišlo je do neznane napake, innerError: {innerError}",

@@ -1,5 +1,5 @@
 {
-  "error_common_cancellationError": "Помилка скасування. Виконано запит на скасування.",
+  "error_common_cancellationError": "CancellationError: {reason}",
   "error_common_invariantError_1_details": "InvariantError: {invariantBroken} – {details}",
   "error_common_invariantError_2_noDetails": "InvariantError: {invariantBroken}",
   "error_common_unknown": "Виявлено невідому помилку. innerError: {innerError}",

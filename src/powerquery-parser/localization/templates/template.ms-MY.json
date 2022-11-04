@@ -1,5 +1,5 @@
 {
-  "error_common_cancellationError": "CancellationError: permintaan pembatalan telah dibuat.",
+  "error_common_cancellationError": "CancellationError: {reason}",
   "error_common_invariantError_1_details": "InvariantError: {invariantBroken} - {details}",
   "error_common_invariantError_2_noDetails": "InvariantError: {invariantBroken}",
   "error_common_unknown": "Ralat tidak diketahui ditemui, innerError: {innerError}",

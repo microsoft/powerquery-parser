@@ -1,5 +1,5 @@
 {
-  "error_common_cancellationError": "CancellationError: бас тарту сұрауы жасалды.",
+  "error_common_cancellationError": "CancellationError: {reason}",
   "error_common_invariantError_1_details": "InvariantError: {invariantBroken} - {details}",
   "error_common_invariantError_2_noDetails": "InvariantError: {invariantBroken}",
   "error_common_unknown": "Белгісіз қате пайда болды, innerError: {innerError}",
