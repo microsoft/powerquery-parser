@@ -10,7 +10,7 @@ import { ParseError } from "../parser";
 import { Token } from "../language";
 
 interface ILocalization {
-    readonly error_common_cancellationError: (templates: ILocalizationTemplates) => string;
+    readonly error_common_cancellationError: (templates: ILocalizationTemplates, reason: string) => string;
     readonly error_common_invariantError: (
         templates: ILocalizationTemplates,
         reason: string,
@@ -194,7 +194,8 @@ export function localizeTokenKind(localizationTemplates: ILocalizationTemplates,
 }
 
 export const Localization: ILocalization = {
-    error_common_cancellationError: (templates: ILocalizationTemplates) => templates.error_common_cancellationError,
+    error_common_cancellationError: (templates: ILocalizationTemplates, reason: string) =>
+        StringUtils.assertGetFormatted(templates.error_common_cancellationError, new Map([["reason", reason]])),
 
     error_common_invariantError: (
         templates: ILocalizationTemplates,
