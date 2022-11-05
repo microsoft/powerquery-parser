@@ -12,10 +12,13 @@
       <Disp Icon="Str" Disp="true" LocTbl="false" />
       <Item ItemId=";error_common_cancellationError" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[CancellationError: a cancellation request was made.]]></Val>
+          <Val><![CDATA[CancellationError: {reason}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[CancellationError: megszakítási kérelem érkezett.]]></Val>
+            <Val><![CDATA[CancellationError: {reason}]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[CancellationError: a cancellation request was made.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
