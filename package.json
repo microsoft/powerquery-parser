@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/powerquery-parser",
-    "version": "0.11.0",
+    "version": "0.11.2",
     "description": "A parser for the Power Query/M formula language.",
     "author": "Microsoft",
     "license": "MIT",
@@ -27,7 +27,7 @@
     "main": "lib/powerquery-parser/index.js",
     "types": "lib/powerquery-parser/index.d.ts",
     "engines": {
-        "node": ">=16.13.2"
+        "node": ">=16.13.1"
     },
     "dependencies": {
         "grapheme-splitter": "^1.0.4",
