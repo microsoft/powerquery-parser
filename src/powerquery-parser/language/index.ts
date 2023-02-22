@@ -9,5 +9,4 @@ export { Comment, Token };
 export * from "./ast";
 export * from "./constant";
 export * from "./keyword";
-export * from "../lexer/lexSettings";
 export * from "./type";

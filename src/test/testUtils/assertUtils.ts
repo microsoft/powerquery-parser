@@ -3,8 +3,10 @@
 
 import "mocha";
 
-import { Assert, Lexer, LexSettings, Parser, ParseSettings, Task } from "../..";
+import { Assert, Lexer, Parser, Task } from "../..";
 import { ResultUtils, TaskUtils } from "../../powerquery-parser";
+import { LexSettings } from "../../powerquery-parser/lexer";
+import { ParseSettings } from "../../powerquery-parser/parser";
 
 export async function assertGetLexParseOk(
     settings: LexSettings & ParseSettings,

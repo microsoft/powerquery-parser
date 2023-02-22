@@ -14,8 +14,9 @@ import {
     ResultUtils,
     StringUtils,
 } from "../common";
-import { Keyword, LexSettings, TextUtils, Token } from "../language";
+import { Keyword, TextUtils, Token } from "../language";
 import { LexError } from ".";
+import { LexSettings } from "./lexSettings";
 
 // Call Lexer.stateFrom to instantiate a new State instance.
 // Lexer functions will return a new state object.

@@ -3,7 +3,6 @@
 
 import { CommonError, ResultKind, ResultUtils } from "../common";
 import { Lexer, Parser } from "..";
-import { LexSettings, ParseSettings } from "../lexer/lexSettings";
 import {
     LexTaskError,
     LexTaskOk,
@@ -16,8 +15,9 @@ import {
     TriedParseTask,
     TTask,
 } from "./task";
-import { ParserUtils, ParseState } from "../parser";
+import { ParserUtils, ParseSettings, ParseState } from "../parser";
 import { Ast } from "../language";
+import { LexSettings } from "../lexer";
 import { Trace } from "../common/trace";
 
 export function assertIsError(task: TTask): asserts task is LexTaskError | ParseTaskCommonError | ParseTaskParseError {
