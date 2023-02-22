@@ -6,10 +6,10 @@ import {
     Assert,
     CommonError,
     ICancellationToken,
-    PartialResult,
-    PartialResultKind,
-    PartialResultUtils,
     Pattern,
+    PotentiallyIncompleteResult,
+    PotentiallyIncompleteResultKind,
+    PotentiallyIncompleteResultUtils,
     Result,
     ResultUtils,
     StringUtils,
@@ -217,6 +217,17 @@ export function errorLineMap(state: State): ErrorLineMap | undefined {
     }, new Map());
 
     return errorLines.size !== 0 ? errorLines : undefined;
+}
+
+type PotentiallyIncompleteLex = PotentiallyIncompleteResult<
+    TokenizeChanges,
+    PotentiallyIncompletePartialLex,
+    LexError.TLexError
+>;
+
+interface PotentiallyIncompletePartialLex {
+    readonly tokenizeChanges: TokenizeChanges;
+    readonly error: LexError.TLexError;
 }
 
 interface TokenizeChanges {
@@ -641,22 +652,22 @@ function tokenize(
         }
     }
 
-    let partialTokenizeResult: PartialResult<TokenizeChanges, TokenizeChanges, LexError.TLexError>;
+    let partialTokenizeResult: PotentiallyIncompleteLex;
 
     if (lexError) {
         if (newTokens.length) {
-            partialTokenizeResult = PartialResultUtils.createMixed(
-                {
+            partialTokenizeResult = PotentiallyIncompleteResultUtils.createPartial<PotentiallyIncompletePartialLex>({
+                tokenizeChanges: {
                     tokens: newTokens,
                     lineModeEnd: lineMode,
                 },
-                lexError,
-            );
+                error: lexError,
+            });
         } else {
-            partialTokenizeResult = PartialResultUtils.createError(lexError);
+            partialTokenizeResult = PotentiallyIncompleteResultUtils.createError(lexError);
         }
     } else {
-        partialTokenizeResult = PartialResultUtils.createOk({
+        partialTokenizeResult = PotentiallyIncompleteResultUtils.createOk({
             tokens: newTokens,
             lineModeEnd: lineMode,
         });
@@ -666,13 +677,10 @@ function tokenize(
 }
 
 // Takes the return from a tokenizeX function to updates the TLine's state.
-function updateLineState(
-    line: TLine,
-    tokenizePartialResult: PartialResult<TokenizeChanges, TokenizeChanges, LexError.TLexError>,
-): TLine {
-    switch (tokenizePartialResult.kind) {
-        case PartialResultKind.Ok: {
-            const tokenizeChanges: TokenizeChanges = tokenizePartialResult.value;
+function updateLineState(line: TLine, potentiallyIncompleteResult: PotentiallyIncompleteLex): TLine {
+    switch (potentiallyIncompleteResult.kind) {
+        case PotentiallyIncompleteResultKind.Ok: {
+            const tokenizeChanges: TokenizeChanges = potentiallyIncompleteResult.value;
             const newTokens: ReadonlyArray<Token.LineToken> = line.tokens.concat(tokenizeChanges.tokens);
 
             return {
@@ -685,8 +693,8 @@ function updateLineState(
             };
         }
 
-        case PartialResultKind.Mixed: {
-            const tokenizeChanges: TokenizeChanges = tokenizePartialResult.value;
+        case PotentiallyIncompleteResultKind.Partial: {
+            const tokenizeChanges: TokenizeChanges = potentiallyIncompleteResult.partial.tokenizeChanges;
             const newTokens: ReadonlyArray<Token.LineToken> = line.tokens.concat(tokenizeChanges.tokens);
 
             return {
@@ -696,11 +704,11 @@ function updateLineState(
                 lineModeStart: line.lineModeStart,
                 lineModeEnd: tokenizeChanges.lineModeEnd,
                 tokens: newTokens,
-                error: tokenizePartialResult.error,
+                error: potentiallyIncompleteResult.partial.error,
             };
         }
 
-        case PartialResultKind.Error:
+        case PotentiallyIncompleteResultKind.Error:
             return {
                 kind: LineKind.Error,
                 text: line.text,
@@ -708,11 +716,11 @@ function updateLineState(
                 lineTerminator: line.lineTerminator,
                 lineModeEnd: line.lineModeEnd,
                 tokens: line.tokens,
-                error: tokenizePartialResult.error,
+                error: potentiallyIncompleteResult.error,
             };
 
         default:
-            throw Assert.isNever(tokenizePartialResult);
+            throw Assert.isNever(potentiallyIncompleteResult);
     }
 }
 

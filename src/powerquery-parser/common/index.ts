@@ -15,5 +15,5 @@ export * as TypeScriptUtils from "./typeScriptTypeUtils";
 export * from "./cancellationToken";
 export * from "./immutableSet";
 export * from "./orderedMap";
-export * from "./partialResult";
+export * from "./potentiallyIncompleteResult";
 export * from "./result";
