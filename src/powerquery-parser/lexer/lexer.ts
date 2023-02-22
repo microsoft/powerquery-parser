@@ -6,10 +6,10 @@ import {
     Assert,
     CommonError,
     ICancellationToken,
+    PartialResult,
+    PartialResultKind,
+    PartialResultUtils,
     Pattern,
-    PotentiallyIncompleteResult,
-    PotentiallyIncompleteResultKind,
-    PotentiallyIncompleteResultUtils,
     Result,
     ResultUtils,
     StringUtils,
@@ -219,13 +219,9 @@ export function errorLineMap(state: State): ErrorLineMap | undefined {
     return errorLines.size !== 0 ? errorLines : undefined;
 }
 
-type PotentiallyIncompleteLex = PotentiallyIncompleteResult<
-    TokenizeChanges,
-    PotentiallyIncompletePartialLex,
-    LexError.TLexError
->;
+type PartialLexResult = PartialResult<TokenizeChanges, PartialLex, LexError.TLexError>;
 
-interface PotentiallyIncompletePartialLex {
+interface PartialLex {
     readonly tokenizeChanges: TokenizeChanges;
     readonly error: LexError.TLexError;
 }
@@ -652,11 +648,11 @@ function tokenize(
         }
     }
 
-    let partialTokenizeResult: PotentiallyIncompleteLex;
+    let partialTokenizeResult: PartialLexResult;
 
     if (lexError) {
         if (newTokens.length) {
-            partialTokenizeResult = PotentiallyIncompleteResultUtils.createPartial<PotentiallyIncompletePartialLex>({
+            partialTokenizeResult = PartialResultUtils.createIncomplete<PartialLex>({
                 tokenizeChanges: {
                     tokens: newTokens,
                     lineModeEnd: lineMode,
@@ -664,10 +660,10 @@ function tokenize(
                 error: lexError,
             });
         } else {
-            partialTokenizeResult = PotentiallyIncompleteResultUtils.createError(lexError);
+            partialTokenizeResult = PartialResultUtils.createError(lexError);
         }
     } else {
-        partialTokenizeResult = PotentiallyIncompleteResultUtils.createOk({
+        partialTokenizeResult = PartialResultUtils.createOk({
             tokens: newTokens,
             lineModeEnd: lineMode,
         });
@@ -677,9 +673,9 @@ function tokenize(
 }
 
 // Takes the return from a tokenizeX function to updates the TLine's state.
-function updateLineState(line: TLine, potentiallyIncompleteResult: PotentiallyIncompleteLex): TLine {
+function updateLineState(line: TLine, potentiallyIncompleteResult: PartialLexResult): TLine {
     switch (potentiallyIncompleteResult.kind) {
-        case PotentiallyIncompleteResultKind.Ok: {
+        case PartialResultKind.Ok: {
             const tokenizeChanges: TokenizeChanges = potentiallyIncompleteResult.value;
             const newTokens: ReadonlyArray<Token.LineToken> = line.tokens.concat(tokenizeChanges.tokens);
 
@@ -693,7 +689,7 @@ function updateLineState(line: TLine, potentiallyIncompleteResult: PotentiallyIn
             };
         }
 
-        case PotentiallyIncompleteResultKind.Partial: {
+        case PartialResultKind.Incomplete: {
             const tokenizeChanges: TokenizeChanges = potentiallyIncompleteResult.partial.tokenizeChanges;
             const newTokens: ReadonlyArray<Token.LineToken> = line.tokens.concat(tokenizeChanges.tokens);
 
@@ -708,7 +704,7 @@ function updateLineState(line: TLine, potentiallyIncompleteResult: PotentiallyIn
             };
         }
 
-        case PotentiallyIncompleteResultKind.Error:
+        case PartialResultKind.Error:
             return {
                 kind: LineKind.Error,
                 text: line.text,
