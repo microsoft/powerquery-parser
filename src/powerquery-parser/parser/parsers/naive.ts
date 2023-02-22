@@ -2435,15 +2435,15 @@ async function tryReadPrimaryType(
     let attempt: TriedReadPrimaryType;
 
     if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.LeftBracket)) {
-        attempt = ResultUtils.boxOk(await parser.readRecordType(state, parser, trace.id));
+        attempt = ResultUtils.ok(await parser.readRecordType(state, parser, trace.id));
     } else if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.LeftBrace)) {
-        attempt = ResultUtils.boxOk(await parser.readListType(state, parser, trace.id));
+        attempt = ResultUtils.ok(await parser.readListType(state, parser, trace.id));
     } else if (isTableTypeNext) {
-        attempt = ResultUtils.boxOk(await parser.readTableType(state, parser, trace.id));
+        attempt = ResultUtils.ok(await parser.readTableType(state, parser, trace.id));
     } else if (isFunctionTypeNext) {
-        attempt = ResultUtils.boxOk(await parser.readFunctionType(state, parser, trace.id));
+        attempt = ResultUtils.ok(await parser.readFunctionType(state, parser, trace.id));
     } else if (ParseStateUtils.isOnConstantKind(state, Constant.LanguageConstant.Nullable)) {
-        attempt = ResultUtils.boxOk(await parser.readNullableType(state, parser, trace.id));
+        attempt = ResultUtils.ok(await parser.readNullableType(state, parser, trace.id));
     } else {
         const checkpoint: ParseStateCheckpoint = await parser.checkpoint(state);
         const triedReadPrimitiveType: TriedReadPrimaryType = await tryReadPrimitiveType(state, parser, trace.id);
@@ -2878,7 +2878,7 @@ async function tryReadPrimitiveType(
             [TraceConstant.IsError]: true,
         });
 
-        return ResultUtils.boxError(error);
+        return ResultUtils.error(error);
     }
 
     let primitiveTypeKind: Constant.PrimitiveTypeConstant;
@@ -2912,7 +2912,7 @@ async function tryReadPrimitiveType(
                 const token: Token.Token = ParseStateUtils.assertGetTokenAt(state, state.tokenIndex);
                 await parser.restoreCheckpoint(state, checkpoint);
 
-                return ResultUtils.boxError(
+                return ResultUtils.error(
                     new ParseError.InvalidPrimitiveTypeError(
                         token,
                         state.lexerSnapshot.graphemePositionStartFrom(token),
@@ -2936,7 +2936,7 @@ async function tryReadPrimitiveType(
             [TraceConstant.IsError]: true,
         });
 
-        return ResultUtils.boxError(
+        return ResultUtils.error(
             new CommonError.InvariantError(`unknown currentTokenKind, not found in [${expectedTokenKinds}]`, details),
         );
     }
@@ -2955,7 +2955,7 @@ async function tryReadPrimitiveType(
         [TraceConstant.IsError]: false,
     });
 
-    return ResultUtils.boxOk(primitiveType);
+    return ResultUtils.ok(primitiveType);
 }
 
 // -------------------------------------

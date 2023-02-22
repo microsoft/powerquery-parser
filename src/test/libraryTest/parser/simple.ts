@@ -2241,7 +2241,7 @@ describe("Parser.AbridgedNode", () => {
             expect(operatorNode.constantKind).to.equal(Language.Constant.UnaryOperator.Negative);
         });
 
-        it(`WIP not 1`, async () => {
+        it(`not 1`, async () => {
             const text: string = `not 1`;
 
             const expected: ReadonlyArray<AbridgedNode> = [

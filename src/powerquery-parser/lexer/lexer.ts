@@ -296,19 +296,19 @@ function ensureCommonOrLexerResult<T>(
     locale: string,
 ): Result<T, CommonError.CommonError | LexError.LexError> {
     try {
-        return ResultUtils.boxOk(functionToWrap());
-    } catch (error: unknown) {
-        Assert.isInstanceofError(error);
+        return ResultUtils.ok(functionToWrap());
+    } catch (caught: unknown) {
+        Assert.isInstanceofError(caught);
 
         let convertedError: CommonError.CommonError | LexError.LexError;
 
-        if (LexError.isTInnerLexError(error)) {
-            convertedError = new LexError.LexError(error);
+        if (LexError.isTInnerLexError(caught)) {
+            convertedError = new LexError.LexError(caught);
         } else {
-            convertedError = CommonError.ensureCommonError(error, locale);
+            convertedError = CommonError.ensureCommonError(caught, locale);
         }
 
-        return ResultUtils.boxError(convertedError);
+        return ResultUtils.error(convertedError);
     }
 }
 
@@ -633,14 +633,14 @@ function tokenize(
             if (currentPosition === textLength) {
                 continueLexing = false;
             }
-        } catch (exception: unknown) {
+        } catch (caught: unknown) {
             let error: LexError.TLexError;
 
-            if (LexError.isTInnerLexError(exception)) {
-                error = new LexError.LexError(exception);
+            if (LexError.isTInnerLexError(caught)) {
+                error = new LexError.LexError(caught);
             } else {
-                Assert.isInstanceofError(exception);
-                error = CommonError.ensureCommonError(exception, locale);
+                Assert.isInstanceofError(caught);
+                error = CommonError.ensureCommonError(caught, locale);
             }
 
             continueLexing = false;

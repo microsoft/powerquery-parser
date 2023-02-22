@@ -30,14 +30,14 @@ export function assertUnboxError<T, E>(result: Result<T, E>): E {
     return result.error;
 }
 
-export function boxOk<T>(value: T): OkResult<T> {
+export function ok<T>(value: T): OkResult<T> {
     return {
         kind: ResultKind.Ok,
         value,
     };
 }
 
-export function boxError<E>(error: E): ErrorResult<E> {
+export function error<E>(error: E): ErrorResult<E> {
     return {
         kind: ResultKind.Error,
         error,
@@ -46,11 +46,11 @@ export function boxError<E>(error: E): ErrorResult<E> {
 
 export function ensureResult<T>(callback: () => T, locale: string): Result<T, CommonError.CommonError> {
     try {
-        return boxOk(callback());
-    } catch (error) {
-        Assert.isInstanceofError(error);
+        return ok(callback());
+    } catch (caught: unknown) {
+        Assert.isInstanceofError(caught);
 
-        return boxError(CommonError.ensureCommonError(error, locale));
+        return error(CommonError.ensureCommonError(caught, locale));
     }
 }
 
@@ -59,11 +59,11 @@ export async function ensureResultAsync<T>(
     locale: string,
 ): Promise<Result<T, CommonError.CommonError>> {
     try {
-        return boxOk(await callback());
-    } catch (error) {
-        Assert.isInstanceofError(error);
+        return ok(await callback());
+    } catch (caught: unknown) {
+        Assert.isInstanceofError(caught);
 
-        return boxError(CommonError.ensureCommonError(error, locale));
+        return error(CommonError.ensureCommonError(caught, locale));
     }
 }
 

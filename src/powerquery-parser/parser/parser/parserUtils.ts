@@ -37,16 +37,16 @@ export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: Lexe
         const root: Ast.TNode = await parserEntryPoint(parseState, updatedSettings.parser, trace.id);
         ParseStateUtils.assertIsDoneParsing(parseState);
 
-        return ResultUtils.boxOk({
+        return ResultUtils.ok({
             lexerSnapshot,
             root,
             state: parseState,
         });
-    } catch (error: unknown) {
-        Assert.isInstanceofError(error);
-        CommonError.throwIfCancellationError(error);
+    } catch (caught: unknown) {
+        Assert.isInstanceofError(caught);
+        CommonError.throwIfCancellationError(caught);
 
-        return ResultUtils.boxError(ensureParseError(parseState, error, updatedSettings.locale));
+        return ResultUtils.error(ensureParseError(parseState, caught, updatedSettings.locale));
     }
 }
 
@@ -74,7 +74,7 @@ export async function tryParseDocument(
         ParseStateUtils.assertIsDoneParsing(expressionDocumentState);
         trace.exit();
 
-        return ResultUtils.boxOk({
+        return ResultUtils.ok({
             lexerSnapshot,
             root,
             state: expressionDocumentState,
@@ -93,7 +93,7 @@ export async function tryParseDocument(
             ParseStateUtils.assertIsDoneParsing(sectionDocumentState);
             trace.exit();
 
-            return ResultUtils.boxOk({
+            return ResultUtils.ok({
                 lexerSnapshot,
                 root,
                 state: sectionDocumentState,
@@ -115,7 +115,7 @@ export async function tryParseDocument(
 
             trace.exit();
 
-            return ResultUtils.boxError(ensureParseError(betterParsedState, betterParsedError, parseSettings.locale));
+            return ResultUtils.error(ensureParseError(betterParsedState, betterParsedError, parseSettings.locale));
         }
     }
 }

@@ -49,7 +49,7 @@ export async function readAmbiguous<T extends Ast.TNode>(
         try {
             // eslint-disable-next-line no-await-in-loop
             node = await parseCallback(variantState, parser, trace.id);
-            variantResult = ResultUtils.boxOk(node);
+            variantResult = ResultUtils.ok(node);
         } catch (error: unknown) {
             Assert.isInstanceofError(error);
             CommonError.throwIfCancellationError(error);
@@ -58,7 +58,7 @@ export async function readAmbiguous<T extends Ast.TNode>(
                 throw error;
             }
 
-            variantResult = ResultUtils.boxError(new ParseError.ParseError(error, variantState));
+            variantResult = ResultUtils.error(new ParseError.ParseError(error, variantState));
         }
 
         const candiate: AmbiguousParse<T> = {
