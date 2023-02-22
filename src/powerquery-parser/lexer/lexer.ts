@@ -297,7 +297,7 @@ function ensureCommonOrLexerResult<T>(
 ): Result<T, CommonError.CommonError | LexError.LexError> {
     try {
         return ResultUtils.boxOk(functionToWrap());
-    } catch (error) {
+    } catch (error: unknown) {
         Assert.isInstanceofError(error);
 
         let convertedError: CommonError.CommonError | LexError.LexError;
@@ -633,7 +633,7 @@ function tokenize(
             if (currentPosition === textLength) {
                 continueLexing = false;
             }
-        } catch (exception) {
+        } catch (exception: unknown) {
             let error: LexError.TLexError;
 
             if (LexError.isTInnerLexError(exception)) {

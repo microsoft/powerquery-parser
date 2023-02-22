@@ -222,8 +222,9 @@ export async function readDocument(
     try {
         document = await parser.readExpression(state, parser, trace.id);
         ParseStateUtils.assertIsDoneParsing(state);
-    } catch (expressionError) {
+    } catch (expressionError: unknown) {
         Assert.isInstanceofError(expressionError);
+        CommonError.throwIfCancellationError(expressionError);
 
         // Fast backup deletes context state, but we want to preserve it for the case
         // where both parsing an expression and section document error out.
@@ -243,8 +244,9 @@ export async function readDocument(
         try {
             document = await readSectionDocument(state, parser, trace.id);
             ParseStateUtils.assertIsDoneParsing(state);
-        } catch (sectionError) {
+        } catch (sectionError: unknown) {
             Assert.isInstanceofError(sectionError);
+            CommonError.throwIfCancellationError(sectionError);
 
             let triedError: Error;
 

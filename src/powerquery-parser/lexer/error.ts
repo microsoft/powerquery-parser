@@ -129,27 +129,24 @@ export class UnterminatedMultilineTokenError extends Error {
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isLexError(x: any): x is LexError {
-    return x instanceof LexError;
+export function isLexError(error: unknown): error is LexError {
+    return error instanceof LexError;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isTLexError(x: any): x is TLexError {
-    return x instanceof LexError || x instanceof CommonError.CommonError;
+export function isTLexError(error: unknown): error is TLexError {
+    return error instanceof LexError || error instanceof CommonError.CommonError;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isTInnerLexError(x: any): x is TInnerLexError {
+export function isTInnerLexError(error: unknown): error is TInnerLexError {
     return (
-        x instanceof BadLineNumberError ||
-        x instanceof BadRangeError ||
-        x instanceof BadStateError ||
-        x instanceof EndOfStreamError ||
-        x instanceof ErrorLineMapError ||
-        x instanceof ExpectedError ||
-        x instanceof UnexpectedEofError ||
-        x instanceof UnexpectedReadError ||
-        x instanceof UnterminatedMultilineTokenError
+        error instanceof BadLineNumberError ||
+        error instanceof BadRangeError ||
+        error instanceof BadStateError ||
+        error instanceof EndOfStreamError ||
+        error instanceof ErrorLineMapError ||
+        error instanceof ExpectedError ||
+        error instanceof UnexpectedEofError ||
+        error instanceof UnexpectedReadError ||
+        error instanceof UnterminatedMultilineTokenError
     );
 }

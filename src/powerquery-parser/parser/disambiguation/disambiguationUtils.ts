@@ -9,7 +9,7 @@ import {
     TAmbiguousBracketNode,
     TAmbiguousParenthesisNode,
 } from "./disambiguation";
-import { ArrayUtils, Assert, Result, ResultUtils, TypeScriptUtils } from "../../common";
+import { ArrayUtils, Assert, CommonError, Result, ResultUtils, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils, Constant, Token } from "../../language";
 import { Parser, ParseStateCheckpoint } from "../parser";
 import { ParseState, ParseStateUtils } from "../parseState";
@@ -50,7 +50,10 @@ export async function readAmbiguous<T extends Ast.TNode>(
             // eslint-disable-next-line no-await-in-loop
             node = await parseCallback(variantState, parser, trace.id);
             variantResult = ResultUtils.boxOk(node);
-        } catch (error) {
+        } catch (error: unknown) {
+            Assert.isInstanceofError(error);
+            CommonError.throwIfCancellationError(error);
+
             if (!ParseError.isTInnerParseError(error)) {
                 throw error;
             }

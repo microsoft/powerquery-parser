@@ -37,15 +37,6 @@ export class CounterCancellationToken implements ICancellationToken {
     }
 }
 
-// In case you need to provide a cancellation token but don't want to support cancellation.
-export const NoOpCancellationToken: ICancellationToken = {
-    isCancelled: () => false,
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    throwIfCancelled: () => {},
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    cancel: () => {},
-};
-
 // Cancelled after X milliseconds.
 export class TimedCancellationToken implements ICancellationToken {
     private readonly threshold: number;
@@ -72,3 +63,14 @@ export class TimedCancellationToken implements ICancellationToken {
         this.cancelReason = reason;
     }
 }
+
+export const ExpiredCancellationToken: ICancellationToken = new TimedCancellationToken(0);
+
+// In case you need to provide a cancellation token but don't want to support cancellation.
+export const NoOpCancellationToken: ICancellationToken = {
+    isCancelled: () => false,
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    throwIfCancelled: () => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    cancel: () => {},
+};

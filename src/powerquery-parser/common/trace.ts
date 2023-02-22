@@ -149,7 +149,7 @@ export abstract class TraceManager {
     ): string {
         try {
             return JSON.stringify(obj, replacer, space);
-        } catch (e) {
+        } catch {
             return "[JSON.stringify Error]";
         }
     }

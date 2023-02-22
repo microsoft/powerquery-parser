@@ -42,8 +42,9 @@ export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: Lexe
             root,
             state: parseState,
         });
-    } catch (error) {
+    } catch (error: unknown) {
         Assert.isInstanceofError(error);
+        CommonError.throwIfCancellationError(error);
 
         return ResultUtils.boxError(ensureParseError(parseState, error, updatedSettings.locale));
     }
@@ -78,8 +79,9 @@ export async function tryParseDocument(
             root,
             state: expressionDocumentState,
         });
-    } catch (expressionDocumentError) {
+    } catch (expressionDocumentError: unknown) {
         Assert.isInstanceofError(expressionDocumentError);
+        CommonError.throwIfCancellationError(expressionDocumentError);
 
         const sectionDocumentState: ParseState = parseSettings.newParseState(
             lexerSnapshot,
@@ -96,8 +98,9 @@ export async function tryParseDocument(
                 root,
                 state: sectionDocumentState,
             });
-        } catch (sectionDocumentError) {
+        } catch (sectionDocumentError: unknown) {
             Assert.isInstanceofError(sectionDocumentError);
+            CommonError.throwIfCancellationError(expressionDocumentError);
 
             let betterParsedState: ParseState;
             let betterParsedError: Error;
@@ -118,14 +121,14 @@ export async function tryParseDocument(
 }
 
 // If you have a custom parser + parser state,
-// then you'll have to create your own (create|restore)Checkpoint functions.
+// then you'll have to create your own checkpoint/restoreCheckpoint functions.
 //
 // Due to performance reasons the backup no longer can include a naive deep copy of the context state.
 // Instead it's assumed that a backup is made immediately before a try/catch read block.
 // This means the state begins in a parsing context and the backup will either be immediately consumed or dropped.
 // Therefore we only care about the delta between before and after the try/catch block.
 // Thanks to the invariants above and the fact the ids for nodes are an auto-incrementing integer
-// we can easily just drop all delete all context nodes past the id of when the backup was created.
+// we can easily delete all context nodes past the id of when the backup was created.
 // eslint-disable-next-line require-await
 export async function checkpoint(state: ParseState): Promise<ParseStateCheckpoint> {
     return {
