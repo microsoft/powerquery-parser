@@ -55,7 +55,3 @@ export function isUndefined<T>(value: T | undefined, message?: string, details?:
         throw new CommonError.InvariantError(message ?? `assert failed, expected value to be undefined`, details);
     }
 }
-
-export function shouldNeverBeReachedTypescript(): CommonError.InvariantError {
-    return new CommonError.InvariantError(`this should never be reached but TypeScript can't tell that`);
-}
