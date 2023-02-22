@@ -3,8 +3,16 @@
 
 import "mocha";
 
-import { CommonError, Lexer, Result, ResultUtils, TimedCancellationToken, TypeScriptUtils } from "../../..";
-import { DefaultSettings, Settings } from "../../../powerquery-parser/parser";
+import {
+    CommonError,
+    DefaultSettings,
+    Lexer,
+    Result,
+    ResultUtils,
+    Settings,
+    TimedCancellationToken,
+    TypeScriptUtils,
+} from "../../..";
 
 function assertGetCancellationError<T, E>(tried: Result<T, E>): CommonError.CancellationError {
     ResultUtils.assertIsError(tried);
