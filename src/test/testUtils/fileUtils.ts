@@ -5,8 +5,9 @@ import "mocha";
 import * as fs from "fs";
 import * as path from "path";
 
-import { LexSettings, ParseSettings, Task } from "../..";
+import { Task } from "../..";
 import { TaskUtils } from "../../powerquery-parser";
+import { LexSettings, ParseSettings } from "../../powerquery-parser/parser";
 
 const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"];
 

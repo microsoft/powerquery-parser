@@ -227,12 +227,12 @@ export async function readDocument(
 
         // Fast backup deletes context state, but we want to preserve it for the case
         // where both parsing an expression and section document error out.
-        const expressionCheckpoint: ParseStateCheckpoint = await parser.createCheckpoint(state);
+        const expressionCheckpoint: ParseStateCheckpoint = await parser.checkpoint(state);
         const expressionErrorContextState: ParseContext.State = state.contextState;
 
         // Reset the parser's state.
         state.tokenIndex = 0;
-        state.contextState = ParseContextUtils.createState();
+        state.contextState = ParseContextUtils.newState();
         state.currentContextNode = undefined;
 
         if (state.lexerSnapshot.tokens.length) {
@@ -2443,7 +2443,7 @@ async function tryReadPrimaryType(
     } else if (ParseStateUtils.isOnConstantKind(state, Constant.LanguageConstant.Nullable)) {
         attempt = ResultUtils.boxOk(await parser.readNullableType(state, parser, trace.id));
     } else {
-        const checkpoint: ParseStateCheckpoint = await parser.createCheckpoint(state);
+        const checkpoint: ParseStateCheckpoint = await parser.checkpoint(state);
         const triedReadPrimitiveType: TriedReadPrimaryType = await tryReadPrimitiveType(state, parser, trace.id);
 
         if (ResultUtils.isError(triedReadPrimitiveType)) {
@@ -2857,7 +2857,7 @@ async function tryReadPrimitiveType(
 
     ParseStateUtils.startContext(state, nodeKind);
 
-    const checkpoint: ParseStateCheckpoint = await parser.createCheckpoint(state);
+    const checkpoint: ParseStateCheckpoint = await parser.checkpoint(state);
 
     const expectedTokenKinds: ReadonlyArray<Token.TokenKind> = [
         Token.TokenKind.Identifier,

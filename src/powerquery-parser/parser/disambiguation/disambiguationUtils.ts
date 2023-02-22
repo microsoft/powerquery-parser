@@ -225,7 +225,7 @@ export async function disambiguateParenthesis(
             // so we need to consume test if the trailing 'as number' is followed by a FatArrow.
             if (ParseStateUtils.isTokenKind(state, Token.TokenKind.KeywordAs, offsetTokenIndex + 1)) {
                 // eslint-disable-next-line no-await-in-loop
-                const checkpoint: ParseStateCheckpoint = await parser.createCheckpoint(state);
+                const checkpoint: ParseStateCheckpoint = await parser.checkpoint(state);
                 unsafeMoveTo(state, offsetTokenIndex + 2);
 
                 try {

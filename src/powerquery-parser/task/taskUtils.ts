@@ -3,7 +3,7 @@
 
 import { CommonError, ResultKind, ResultUtils } from "../common";
 import { Lexer, Parser } from "..";
-import { LexSettings, ParseSettings } from "../settings/settings";
+import { LexSettings, ParseSettings } from "../language/settings";
 import {
     LexTaskError,
     LexTaskOk,

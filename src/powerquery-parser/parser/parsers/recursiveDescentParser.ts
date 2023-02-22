@@ -12,6 +12,6 @@ export const RecursiveDescentParser: Parser = {
 
     applyState: ParseStateUtils.applyState,
     copyState: ParseStateUtils.copyState,
-    createCheckpoint: ParserUtils.createCheckpoint,
+    checkpoint: ParserUtils.checkpoint,
     restoreCheckpoint: ParserUtils.restoreCheckpoint,
 };

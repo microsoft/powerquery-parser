@@ -19,7 +19,7 @@ export function assertIsNodeKind<T extends Ast.TNode>(
     }
 }
 
-export function createState(): ParseContext.State {
+export function newState(): ParseContext.State {
     return {
         nodeIdMapCollection: {
             astNodeById: new Map(),

@@ -14,9 +14,8 @@ import {
     ResultUtils,
     StringUtils,
 } from "../common";
-import { Keyword, TextUtils, Token } from "../language";
+import { Keyword, LexSettings, TextUtils, Token } from "../language";
 import { LexError } from ".";
-import { LexSettings } from "../settings";
 
 // Call Lexer.stateFrom to instantiate a new State instance.
 // Lexer functions will return a new state object.
@@ -652,7 +651,7 @@ function tokenize(
 
     if (lexError) {
         if (newTokens.length) {
-            partialTokenizeResult = PartialResultUtils.createIncomplete<PartialLex>({
+            partialTokenizeResult = PartialResultUtils.incomplete<PartialLex>({
                 tokenizeChanges: {
                     tokens: newTokens,
                     lineModeEnd: lineMode,
@@ -660,10 +659,10 @@ function tokenize(
                 error: lexError,
             });
         } else {
-            partialTokenizeResult = PartialResultUtils.createError(lexError);
+            partialTokenizeResult = PartialResultUtils.error(lexError);
         }
     } else {
-        partialTokenizeResult = PartialResultUtils.createOk({
+        partialTokenizeResult = PartialResultUtils.ok({
             tokens: newTokens,
             lineModeEnd: lineMode,
         });

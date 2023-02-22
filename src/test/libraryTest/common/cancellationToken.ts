@@ -3,17 +3,8 @@
 
 import "mocha";
 
-import {
-    CommonError,
-    DefaultSettings,
-    Lexer,
-    Result,
-    ResultUtils,
-    Settings,
-    SettingsUtils,
-    TimedCancellationToken,
-    TypeScriptUtils,
-} from "../../..";
+import { CommonError, Lexer, Result, ResultUtils, TimedCancellationToken, TypeScriptUtils } from "../../..";
+import { DefaultSettings, Settings } from "../../../powerquery-parser/parser";
 
 function assertGetCancellationError<T, E>(tried: Result<T, E>): CommonError.CancellationError {
     ResultUtils.assertIsError(tried);
@@ -40,14 +31,17 @@ function assertGetLexerStateWithCancellationToken(): Lexer.State {
     return state;
 }
 
-function settingsWithCancellationToken(): Settings {
-    return SettingsUtils.createDefaultSettings(new TimedCancellationToken(0));
+function defaultSettingsWithExpiredCancellationToken(): Settings {
+    return {
+        ...DefaultSettings,
+        cancellationToken: new TimedCancellationToken(0),
+    };
 }
 
 describe("CancellationToken", () => {
     describe(`lexer`, () => {
         it(`Lexer.tryLex`, () => {
-            const triedLex: Lexer.TriedLex = Lexer.tryLex(settingsWithCancellationToken(), "foo");
+            const triedLex: Lexer.TriedLex = Lexer.tryLex(defaultSettingsWithExpiredCancellationToken(), "foo");
             assertGetCancellationError(triedLex);
         });
 

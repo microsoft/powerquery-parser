@@ -3,7 +3,7 @@
 
 import { CombinatorialParser, Parser, ParseState, ParseStateUtils } from "../parser";
 import { NoOpTraceManagerInstance, TraceManager } from "../common/trace";
-import { Ast } from "../language";
+import { Ast } from ".";
 import { DefaultLocale } from "../localization";
 import { ICancellationToken } from "../common";
 import { LexerSnapshot } from "../lexer";
@@ -19,7 +19,7 @@ export type LexSettings = CommonSettings;
 
 export interface ParseSettings extends CommonSettings {
     readonly parser: Parser;
-    readonly createParseState: (lexerSnapshot: LexerSnapshot, overrides: Partial<ParseState> | undefined) => ParseState;
+    readonly newParseState: (lexerSnapshot: LexerSnapshot, overrides: Partial<ParseState> | undefined) => ParseState;
     readonly parserEntryPoint:
         | ((state: ParseState, parser: Parser, correlationId: number | undefined) => Promise<Ast.TNode>)
         | undefined;
@@ -28,8 +28,8 @@ export interface ParseSettings extends CommonSettings {
 export type Settings = LexSettings & ParseSettings;
 
 export const DefaultSettings: Settings = {
-    createParseState: (lexerSnapshot: LexerSnapshot, overrides: Partial<ParseState> | undefined) =>
-        ParseStateUtils.createState(lexerSnapshot, overrides),
+    newParseState: (lexerSnapshot: LexerSnapshot, overrides: Partial<ParseState> | undefined) =>
+        ParseStateUtils.newState(lexerSnapshot, overrides),
     locale: DefaultLocale,
     cancellationToken: undefined,
     initialCorrelationId: undefined,

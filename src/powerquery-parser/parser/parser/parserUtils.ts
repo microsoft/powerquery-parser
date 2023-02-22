@@ -4,12 +4,11 @@
 import { Assert, CommonError, ResultUtils } from "../../common";
 import { NodeIdMap, NodeIdMapUtils } from "../nodeIdMap";
 import { ParseContext, ParseContextUtils } from "../context";
+import { ParseError, ParseSettings } from "..";
 import { Parser, ParseStateCheckpoint, TriedParse } from "./parser";
 import { ParseState, ParseStateUtils } from "../parseState";
 import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { ParseError } from "..";
-import { ParseSettings } from "../../settings";
 import { Trace } from "../../common/trace";
 
 export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: LexerSnapshot): Promise<TriedParse> {
@@ -32,7 +31,7 @@ export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: Lexe
         return await tryParseDocument(updatedSettings, lexerSnapshot);
     }
 
-    const parseState: ParseState = updatedSettings.createParseState(lexerSnapshot, defaultOverrides(updatedSettings));
+    const parseState: ParseState = updatedSettings.newParseState(lexerSnapshot, defaultOverrides(updatedSettings));
 
     try {
         const root: Ast.TNode = await parserEntryPoint(parseState, updatedSettings.parser, trace.id);
@@ -64,7 +63,7 @@ export async function tryParseDocument(
 
     let root: Ast.TNode;
 
-    const expressionDocumentState: ParseState = parseSettings.createParseState(
+    const expressionDocumentState: ParseState = parseSettings.newParseState(
         lexerSnapshot,
         defaultOverrides(parseSettings),
     );
@@ -82,7 +81,7 @@ export async function tryParseDocument(
     } catch (expressionDocumentError) {
         Assert.isInstanceofError(expressionDocumentError);
 
-        const sectionDocumentState: ParseState = parseSettings.createParseState(
+        const sectionDocumentState: ParseState = parseSettings.newParseState(
             lexerSnapshot,
             defaultOverrides(parseSettings),
         );
@@ -128,7 +127,7 @@ export async function tryParseDocument(
 // Thanks to the invariants above and the fact the ids for nodes are an auto-incrementing integer
 // we can easily just drop all delete all context nodes past the id of when the backup was created.
 // eslint-disable-next-line require-await
-export async function createCheckpoint(state: ParseState): Promise<ParseStateCheckpoint> {
+export async function checkpoint(state: ParseState): Promise<ParseStateCheckpoint> {
     return {
         tokenIndex: state.tokenIndex,
         contextStateIdCounter: state.contextState.idCounter,

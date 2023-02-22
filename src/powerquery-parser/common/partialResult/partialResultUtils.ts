@@ -9,21 +9,21 @@ import {
     PartialResultOk,
 } from "./partialResult";
 
-export function createOk<Ok>(value: Ok): PartialResultOk<Ok> {
+export function ok<Ok>(value: Ok): PartialResultOk<Ok> {
     return {
         kind: PartialResultKind.Ok,
         value,
     };
 }
 
-export function createIncomplete<Partial>(partial: Partial): PartialResultIncomplete<Partial> {
+export function incomplete<Partial>(partial: Partial): PartialResultIncomplete<Partial> {
     return {
         kind: PartialResultKind.Incomplete,
         partial,
     };
 }
 
-export function createError<Error>(error: Error): PartialResultError<Error> {
+export function error<Error>(error: Error): PartialResultError<Error> {
     return {
         kind: PartialResultKind.Error,
         error,

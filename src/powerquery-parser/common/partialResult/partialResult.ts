@@ -15,16 +15,16 @@
 //             const [numerator, denominator] = numbers[i];
 //
 //             if (denominator === 0) {
-//                 return PartialResultUtils.createIncomplete({ results, errorIndex: i });
+//                 return PartialResultUtils.incomplete({ results, errorIndex: i });
 //             }
 //
 //             results.push(numerator / denominator);
 //         }
 //
-//         return PartialResultUtils.createOk(results);
+//         return PartialResultUtils.ok(results);
 //     }
 //    catch (error) {
-//         return PartialResultUtils.createError(error);
+//         return PartialResultUtils.error(error);
 //     }
 // }
 
