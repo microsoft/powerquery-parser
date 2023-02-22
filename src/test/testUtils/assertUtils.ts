@@ -4,7 +4,7 @@
 import "mocha";
 
 import { Assert, Lexer, LexSettings, Parser, ParseSettings, Task } from "../..";
-import { TaskUtils } from "../../powerquery-parser";
+import { ResultUtils, TaskUtils } from "../../powerquery-parser";
 
 export async function assertGetLexParseOk(
     settings: LexSettings & ParseSettings,
@@ -31,7 +31,7 @@ export async function assertGetParseError(
     text: string,
 ): Promise<Parser.ParseError.ParseError> {
     const triedParse: Parser.TriedParse = await assertGetTriedParse(settings, text);
-    Assert.isError(triedParse);
+    ResultUtils.assertIsError(triedParse);
 
     if (!Parser.ParseError.isParseError(triedParse.error)) {
         throw new Error(`expected triedParse to return a ParseError.ParseError: ${triedParse.error.message}`);
@@ -42,7 +42,7 @@ export async function assertGetParseError(
 
 export async function assertGetParseOk(settings: LexSettings & ParseSettings, text: string): Promise<Parser.ParseOk> {
     const triedParse: Parser.TriedParse = await assertGetTriedParse(settings, text);
-    Assert.isOk(triedParse);
+    ResultUtils.assertIsOk(triedParse);
 
     return triedParse.value;
 }
@@ -51,12 +51,12 @@ export async function assertGetParseOk(settings: LexSettings & ParseSettings, te
 // If I use tryLexParse I might get a CommonError which could have come either from lexing or parsing.
 async function assertGetTriedParse(settings: LexSettings & ParseSettings, text: string): Promise<Parser.TriedParse> {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(settings, text);
-    Assert.isOk(triedLex);
+    ResultUtils.assertIsOk(triedLex);
     const lexerState: Lexer.State = triedLex.value;
     Assert.isUndefined(Lexer.errorLineMap(lexerState));
 
     const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(lexerState);
-    Assert.isOk(triedSnapshot);
+    ResultUtils.assertIsOk(triedSnapshot);
     const lexerSnapshot: Lexer.LexerSnapshot = triedSnapshot.value;
 
     return await Parser.ParserUtils.tryParse(settings, lexerSnapshot);

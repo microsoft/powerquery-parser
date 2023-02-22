@@ -4,14 +4,14 @@
 import "mocha";
 import { expect } from "chai";
 
-import { Assert, DefaultSettings, Lexer, ResultUtils } from "../../..";
+import { DefaultSettings, Lexer, ResultUtils } from "../../..";
 
 function assertBadLineNumberKind(lineNumber: number, expectedKind: Lexer.LexError.BadLineNumberKind): void {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, `foo`);
-    Assert.isOk(triedLex);
+    ResultUtils.assertIsOk(triedLex);
 
     const triedUpdate: Lexer.TriedLex = Lexer.tryUpdateLine(triedLex.value, lineNumber, `bar`);
-    Assert.isError(triedUpdate);
+    ResultUtils.assertIsError(triedUpdate);
 
     const error: Lexer.LexError.LexError = triedUpdate.error;
 
@@ -65,7 +65,7 @@ function assertBadRangeKind(range: Lexer.Range, expectedKind: Lexer.LexError.Bad
     const state: Lexer.State = triedLex.value;
 
     const TriedLex: Lexer.TriedLex = Lexer.tryUpdateRange(state, range, `bar`);
-    Assert.isError(TriedLex);
+    ResultUtils.assertIsError(TriedLex);
 
     const error: Lexer.LexError.LexError = TriedLex.error;
 
@@ -85,10 +85,10 @@ function assertUnterminatedMultilineTokenKind(
     expectedKind: Lexer.LexError.UnterminatedMultilineTokenKind,
 ): void {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
-    Assert.isOk(triedLex);
+    ResultUtils.assertIsOk(triedLex);
     const lexerState: Lexer.State = triedLex.value;
     const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(lexerState);
-    Assert.isError(triedSnapshot);
+    ResultUtils.assertIsError(triedSnapshot);
 
     const error: Lexer.LexError.TLexError = triedSnapshot.error;
 

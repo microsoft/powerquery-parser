@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, Lexer } from "../../../";
-import { DefaultLocale, Language } from "../../../powerquery-parser";
+import { DefaultLocale, Language, ResultUtils } from "../../../powerquery-parser";
+import { Lexer } from "../../../";
 
 export class Tokenizer implements TokensProvider {
     constructor(private readonly lineTerminator: string) {}
@@ -40,7 +40,7 @@ export class Tokenizer implements TokensProvider {
         const lexerState: Lexer.State = tokenizerState.lexerState;
 
         const triedLex: Lexer.TriedLex = Lexer.tryAppendLine(lexerState, line, this.lineTerminator);
-        Assert.isOk(triedLex);
+        ResultUtils.assertIsOk(triedLex);
         const newLexerState: Lexer.State = triedLex.value;
 
         return {

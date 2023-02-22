@@ -4,11 +4,11 @@
 import "mocha";
 
 import {
-    Assert,
     CommonError,
     DefaultSettings,
     Lexer,
     Result,
+    ResultUtils,
     Settings,
     SettingsUtils,
     TimedCancellationToken,
@@ -16,7 +16,7 @@ import {
 } from "../../..";
 
 function assertGetCancellationError<T, E>(tried: Result<T, E>): CommonError.CancellationError {
-    Assert.isError(tried);
+    ResultUtils.assertIsError(tried);
 
     if (!CommonError.isCommonError(tried.error)) {
         throw new Error(`expected error to be a ${CommonError.CommonError.name}`);
@@ -33,7 +33,7 @@ function assertGetCancellationError<T, E>(tried: Result<T, E>): CommonError.Canc
 
 function assertGetLexerStateWithCancellationToken(): Lexer.State {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, "foo");
-    Assert.isOk(triedLex);
+    ResultUtils.assertIsOk(triedLex);
     const state: TypeScriptUtils.StripReadonly<Lexer.State> = triedLex.value;
     state.cancellationToken = new TimedCancellationToken(0);
 

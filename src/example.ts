@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-unused-vars */
 
-import { Assert, DefaultSettings, Lexer, ResultUtils, Task, TaskUtils } from ".";
+import { DefaultSettings, Lexer, ResultUtils, Task, TaskUtils } from ".";
 
 parseText(`let x = 1 in try x otherwise 2`);
 
@@ -73,7 +73,7 @@ function lexText(text: string): void {
     // Be aware that this is a Result due to the potential of errors such as
     // a cancellation request from the CancellationToken.
     triedLex = Lexer.tryAppendLine(lexerState, "// hello world", "\n");
-    Assert.isOk(triedLex);
+    ResultUtils.assertIsOk(triedLex);
     lexerState = triedLex.value;
 
     // Updating a line number is also easy.

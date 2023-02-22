@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ErrorResult, OkResult, Result, ResultUtils } from "./result";
 import { CommonError } from ".";
 
 export function asDefined<T>(value: T | undefined, message?: string, details?: object): NonNullable<T> {
@@ -55,32 +54,6 @@ export function isUndefined<T>(value: T | undefined, message?: string, details?:
     if (value !== undefined) {
         throw new CommonError.InvariantError(message ?? `assert failed, expected value to be undefined`, details);
     }
-}
-
-export function isOk<T, E>(result: Result<T, E>): asserts result is OkResult<T> {
-    if (!ResultUtils.isOk(result)) {
-        throw new CommonError.InvariantError(`assert failed, result expected to be an Ok`, {
-            error: result.error,
-        });
-    }
-}
-
-export function isError<T, E>(result: Result<T, E>): asserts result is ErrorResult<E> {
-    if (!ResultUtils.isError(result)) {
-        throw new CommonError.InvariantError(`assert failed, result expected to be an Err`);
-    }
-}
-
-export function unboxOk<T, E>(result: Result<T, E>): T {
-    isOk(result);
-
-    return result.value;
-}
-
-export function unboxError<T, E>(result: Result<T, E>): E {
-    isError(result);
-
-    return result.error;
 }
 
 export function shouldNeverBeReachedTypescript(): CommonError.InvariantError {

@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 
-import { Assert, DefaultSettings, Language, Lexer } from "../../..";
+import { Assert, DefaultSettings, Language, Lexer, ResultUtils } from "../../..";
 
 export type AbridgedComments = ReadonlyArray<[Language.Comment.CommentKind, string]>;
 
@@ -122,7 +122,7 @@ export function assertGetSnapshotAbridgedComments(
 
 export function assertGetLexOk(text: string): Lexer.State {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
-    Assert.isOk(triedLex);
+    ResultUtils.assertIsOk(triedLex);
     const lexerState: Lexer.State = triedLex.value;
 
     if (Lexer.isErrorState(lexerState)) {
@@ -139,7 +139,7 @@ export function assertGetLexOk(text: string): Lexer.State {
 export function assertGetLexerSnapshot(text: string): Lexer.LexerSnapshot {
     const state: Lexer.State = assertGetLexOk(text);
     const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(state);
-    Assert.isOk(triedSnapshot);
+    ResultUtils.assertIsOk(triedSnapshot);
 
     return triedSnapshot.value;
 }
