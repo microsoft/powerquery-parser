@@ -4,7 +4,7 @@
 import "mocha";
 import { expect } from "chai";
 
-import { Assert, Language, TaskUtils, Traverse } from "../../../powerquery-parser";
+import { Assert, Language, ResultUtils, TaskUtils, Traverse } from "../../../powerquery-parser";
 import { ChildIdsById, IdsByNodeKind, ParentIdById } from "../../../powerquery-parser/parser/nodeIdMap/nodeIdMap";
 import { DefaultSettings, Task } from "../../..";
 import { NodeIdMap, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
@@ -97,7 +97,7 @@ async function expectLinksMatch(
         undefined,
     );
 
-    Assert.isOk(triedTraverse);
+    ResultUtils.assertIsOk(triedTraverse);
     assertTraverseMatchesState(traverseState, nodeIdMapCollection);
 
     const astIds: ReadonlyArray<number> = [...nodeIdMapCollection.astNodeById.keys()];

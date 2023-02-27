@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 export const enum TypeUtilsTraceConstant {
+    AnyUnion = "CreateAnyUnion",
     Categorize = "Categorize",
-    CreateAnyUnion = "CreateAnyUnion",
     IsCompatible = "IsCompatible",
     NameOf = "NameOf",
     Simplify = "Simplify",

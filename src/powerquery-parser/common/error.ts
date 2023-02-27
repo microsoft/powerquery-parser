@@ -36,21 +36,28 @@ export class UnknownError extends Error {
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function assertIsCommonError(error: any): error is CommonError {
+export function assertIsCommonError(error: unknown): error is CommonError {
     Assert.isTrue(isCommonError(error), "isCommonError(error)");
 
     return true;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isCommonError(error: any): error is CommonError {
+export function isCommonError(error: unknown): error is CommonError {
     return error instanceof CommonError;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isTInnerCommonError(x: any): x is TInnerCommonError {
-    return x instanceof CancellationError || x instanceof InvariantError || x instanceof UnknownError;
+export function isCancellationError(error: Error): error is CancellationError {
+    return error instanceof CancellationError;
+}
+
+export function isTInnerCommonError(error: unknown): error is TInnerCommonError {
+    return error instanceof CancellationError || error instanceof InvariantError || error instanceof UnknownError;
+}
+
+export function throwIfCancellationError(error: Error): void {
+    if (isCancellationError(error)) {
+        throw error;
+    }
 }
 
 export function ensureCommonError(error: Error, locale: string): CommonError {

@@ -4,7 +4,8 @@
 export * as ParseError from "./error";
 export * from "./context";
 export * from "./disambiguation";
-export * from "./parser";
-export * from "./parseState";
 export * from "./nodeIdMap";
+export * from "./parser";
 export * from "./parsers";
+export * from "./parseSettings";
+export * from "./parseState";

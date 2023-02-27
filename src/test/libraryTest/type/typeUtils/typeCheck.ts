@@ -52,7 +52,7 @@ describe(`TypeUtils.typeCheck`, () => {
         it(`extraneous parameter`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.ActionInstance];
 
-            const definedFunction: Language.Type.DefinedFunction = TypeUtils.createDefinedFunction(
+            const definedFunction: Language.Type.DefinedFunction = TypeUtils.definedFunction(
                 false,
                 [],
                 Language.Type.ActionInstance,
@@ -73,7 +73,7 @@ describe(`TypeUtils.typeCheck`, () => {
         it(`missing required parameter`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [];
 
-            const definedFunction: Language.Type.DefinedFunction = TypeUtils.createDefinedFunction(
+            const definedFunction: Language.Type.DefinedFunction = TypeUtils.definedFunction(
                 false,
                 [
                     {
@@ -101,7 +101,7 @@ describe(`TypeUtils.typeCheck`, () => {
         it(`missing optional parameter`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [];
 
-            const definedFunction: Language.Type.DefinedFunction = TypeUtils.createDefinedFunction(
+            const definedFunction: Language.Type.DefinedFunction = TypeUtils.definedFunction(
                 false,
                 [
                     {
@@ -129,7 +129,7 @@ describe(`TypeUtils.typeCheck`, () => {
         it(`type === null translates to any`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.NumberInstance];
 
-            const definedFunction: Language.Type.DefinedFunction = TypeUtils.createDefinedFunction(
+            const definedFunction: Language.Type.DefinedFunction = TypeUtils.definedFunction(
                 false,
                 [
                     {
@@ -157,7 +157,7 @@ describe(`TypeUtils.typeCheck`, () => {
         it(`paramter.type === any allows any type`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.NumberInstance];
 
-            const definedFunction: Language.Type.DefinedFunction = TypeUtils.createDefinedFunction(
+            const definedFunction: Language.Type.DefinedFunction = TypeUtils.definedFunction(
                 false,
                 [
                     {
@@ -185,7 +185,7 @@ describe(`TypeUtils.typeCheck`, () => {
         it(`an any argument allowed for non-any parameters`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.AnyInstance];
 
-            const definedFunction: Language.Type.DefinedFunction = TypeUtils.createDefinedFunction(
+            const definedFunction: Language.Type.DefinedFunction = TypeUtils.definedFunction(
                 false,
                 [
                     {
@@ -211,9 +211,9 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`valid parameter`, () => {
-            const args: ReadonlyArray<Language.Type.TPowerQueryType> = [TypeUtils.createNumberLiteral(false, 1)];
+            const args: ReadonlyArray<Language.Type.TPowerQueryType> = [TypeUtils.numberLiteral(false, 1)];
 
-            const definedFunction: Language.Type.DefinedFunction = TypeUtils.createDefinedFunction(
+            const definedFunction: Language.Type.DefinedFunction = TypeUtils.definedFunction(
                 false,
                 [
                     {
@@ -240,11 +240,11 @@ describe(`TypeUtils.typeCheck`, () => {
 
         it(`valid multiple parameters`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [
-                TypeUtils.createNumberLiteral(false, 1),
-                TypeUtils.createTextLiteral(false, `"cat"`),
+                TypeUtils.numberLiteral(false, 1),
+                TypeUtils.textLiteral(false, `"cat"`),
             ];
 
-            const definedFunction: Language.Type.DefinedFunction = TypeUtils.createDefinedFunction(
+            const definedFunction: Language.Type.DefinedFunction = TypeUtils.definedFunction(
                 false,
                 [
                     {
@@ -276,9 +276,9 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`invalid parameter`, () => {
-            const args: ReadonlyArray<Language.Type.TPowerQueryType> = [TypeUtils.createTextLiteral(false, `""`)];
+            const args: ReadonlyArray<Language.Type.TPowerQueryType> = [TypeUtils.textLiteral(false, `""`)];
 
-            const definedFunction: Language.Type.DefinedFunction = TypeUtils.createDefinedFunction(
+            const definedFunction: Language.Type.DefinedFunction = TypeUtils.definedFunction(
                 false,
                 [
                     {
@@ -314,7 +314,7 @@ describe(`TypeUtils.typeCheck`, () => {
         it(`allow null for nullable parameter`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.NullInstance];
 
-            const definedFunction: Language.Type.DefinedFunction = TypeUtils.createDefinedFunction(
+            const definedFunction: Language.Type.DefinedFunction = TypeUtils.definedFunction(
                 false,
                 [
                     {
@@ -342,7 +342,7 @@ describe(`TypeUtils.typeCheck`, () => {
         it(`disallow null for non-nullable parameter`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.NullInstance];
 
-            const definedFunction: Language.Type.DefinedFunction = TypeUtils.createDefinedFunction(
+            const definedFunction: Language.Type.DefinedFunction = TypeUtils.definedFunction(
                 false,
                 [
                     {
@@ -370,7 +370,7 @@ describe(`TypeUtils.typeCheck`, () => {
         it(`disallow nullable for non-nullable parameter`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.NullableTextInstance];
 
-            const definedFunction: Language.Type.DefinedFunction = TypeUtils.createDefinedFunction(
+            const definedFunction: Language.Type.DefinedFunction = TypeUtils.definedFunction(
                 false,
                 [
                     {
@@ -401,7 +401,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 Language.Type.FunctionInstance,
             ];
 
-            const definedFunction: Language.Type.DefinedFunction = TypeUtils.createDefinedFunction(
+            const definedFunction: Language.Type.DefinedFunction = TypeUtils.definedFunction(
                 false,
                 [
                     {
@@ -450,12 +450,12 @@ describe(`TypeUtils.typeCheck`, () => {
 
     describe(`Table.RenameColumns`, () => {
         it(`list with two text elements, valid`, () => {
-            const valueType: Language.Type.DefinedList = TypeUtils.createDefinedList(false, [
+            const valueType: Language.Type.DefinedList = TypeUtils.definedList(false, [
                 Language.Type.TextInstance,
                 Language.Type.TextInstance,
             ]);
 
-            const schemaType: Language.Type.DefinedListType = TypeUtils.createDefinedListType(false, [
+            const schemaType: Language.Type.DefinedListType = TypeUtils.definedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.TextInstance,
             ]);
@@ -473,13 +473,13 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`list with two text elements, invalid`, () => {
-            const valueType: Language.Type.DefinedList = TypeUtils.createDefinedList(false, [
+            const valueType: Language.Type.DefinedList = TypeUtils.definedList(false, [
                 Language.Type.TextInstance,
                 Language.Type.TextInstance,
                 Language.Type.TextInstance,
             ]);
 
-            const schemaType: Language.Type.DefinedListType = TypeUtils.createDefinedListType(false, [
+            const schemaType: Language.Type.DefinedListType = TypeUtils.definedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.TextInstance,
             ]);
@@ -497,13 +497,13 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`list of list with two text elements, valid single list`, () => {
-            const valueType: Language.Type.DefinedList = TypeUtils.createDefinedList(false, [
-                TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+            const valueType: Language.Type.DefinedList = TypeUtils.definedList(false, [
+                TypeUtils.definedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             ]);
 
-            const schemaType: Language.Type.ListType = TypeUtils.createListType(
+            const schemaType: Language.Type.ListType = TypeUtils.listType(
                 false,
-                TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                TypeUtils.definedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
 
             const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithListType(valueType, schemaType);
@@ -519,16 +519,16 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`list of list with two text elements, valid multiple list`, () => {
-            const valueType: Language.Type.DefinedList = TypeUtils.createDefinedList(false, [
-                TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
-                TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
-                TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
-                TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+            const valueType: Language.Type.DefinedList = TypeUtils.definedList(false, [
+                TypeUtils.definedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                TypeUtils.definedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                TypeUtils.definedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                TypeUtils.definedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             ]);
 
-            const schemaType: Language.Type.ListType = TypeUtils.createListType(
+            const schemaType: Language.Type.ListType = TypeUtils.listType(
                 false,
-                TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                TypeUtils.definedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
 
             const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithListType(valueType, schemaType);
@@ -544,11 +544,11 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`list of list with two text elements, empty list`, () => {
-            const valueType: Language.Type.DefinedList = TypeUtils.createDefinedList(false, []);
+            const valueType: Language.Type.DefinedList = TypeUtils.definedList(false, []);
 
-            const schemaType: Language.Type.ListType = TypeUtils.createListType(
+            const schemaType: Language.Type.ListType = TypeUtils.listType(
                 false,
-                TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                TypeUtils.definedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
 
             const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithListType(valueType, schemaType);
@@ -564,13 +564,13 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`list of list with two text elements, invalid single list`, () => {
-            const valueType: Language.Type.DefinedList = TypeUtils.createDefinedList(false, [
-                TypeUtils.createDefinedList(false, [Language.Type.NumberInstance, Language.Type.TextInstance]),
+            const valueType: Language.Type.DefinedList = TypeUtils.definedList(false, [
+                TypeUtils.definedList(false, [Language.Type.NumberInstance, Language.Type.TextInstance]),
             ]);
 
-            const schemaType: Language.Type.ListType = TypeUtils.createListType(
+            const schemaType: Language.Type.ListType = TypeUtils.listType(
                 false,
-                TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                TypeUtils.definedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
 
             const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithListType(valueType, schemaType);
@@ -586,16 +586,16 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`list of list with two text elements, invalid multiple list`, () => {
-            const valueType: Language.Type.DefinedList = TypeUtils.createDefinedList(false, [
-                TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
-                TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.NumberInstance]),
-                TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
-                TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+            const valueType: Language.Type.DefinedList = TypeUtils.definedList(false, [
+                TypeUtils.definedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                TypeUtils.definedList(false, [Language.Type.TextInstance, Language.Type.NumberInstance]),
+                TypeUtils.definedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                TypeUtils.definedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             ]);
 
-            const schemaType: Language.Type.ListType = TypeUtils.createListType(
+            const schemaType: Language.Type.ListType = TypeUtils.listType(
                 false,
-                TypeUtils.createDefinedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                TypeUtils.definedList(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
 
             const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithListType(valueType, schemaType);
@@ -613,12 +613,12 @@ describe(`TypeUtils.typeCheck`, () => {
 
     describe(`${Language.Type.ExtendedTypeKind.DefinedListType}`, () => {
         it(`valid`, () => {
-            const valueType: Language.Type.DefinedList = TypeUtils.createDefinedList(false, [
+            const valueType: Language.Type.DefinedList = TypeUtils.definedList(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
 
-            const schemaType: Language.Type.DefinedListType = TypeUtils.createDefinedListType(false, [
+            const schemaType: Language.Type.DefinedListType = TypeUtils.definedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
@@ -636,12 +636,12 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`invalid`, () => {
-            const valueType: Language.Type.DefinedList = TypeUtils.createDefinedList(false, [
+            const valueType: Language.Type.DefinedList = TypeUtils.definedList(false, [
                 Language.Type.TextInstance,
                 Language.Type.DateInstance,
             ]);
 
-            const schemaType: Language.Type.DefinedListType = TypeUtils.createDefinedListType(false, [
+            const schemaType: Language.Type.DefinedListType = TypeUtils.definedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
@@ -659,12 +659,12 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`extraneous`, () => {
-            const valueType: Language.Type.DefinedList = TypeUtils.createDefinedList(false, [
+            const valueType: Language.Type.DefinedList = TypeUtils.definedList(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
 
-            const schemaType: Language.Type.DefinedListType = TypeUtils.createDefinedListType(false, [
+            const schemaType: Language.Type.DefinedListType = TypeUtils.definedListType(false, [
                 Language.Type.TextInstance,
             ]);
 
@@ -681,9 +681,9 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`missing`, () => {
-            const valueType: Language.Type.DefinedList = TypeUtils.createDefinedList(false, []);
+            const valueType: Language.Type.DefinedList = TypeUtils.definedList(false, []);
 
-            const schemaType: Language.Type.DefinedListType = TypeUtils.createDefinedListType(false, [
+            const schemaType: Language.Type.DefinedListType = TypeUtils.definedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
@@ -703,12 +703,12 @@ describe(`TypeUtils.typeCheck`, () => {
 
     describe(`${Language.Type.ExtendedTypeKind.ListType}`, () => {
         it(`valid`, () => {
-            const valueType: Language.Type.DefinedList = TypeUtils.createDefinedList(false, [
+            const valueType: Language.Type.DefinedList = TypeUtils.definedList(false, [
                 Language.Type.TextInstance,
                 Language.Type.TextInstance,
             ]);
 
-            const schemaType: Language.Type.ListType = TypeUtils.createListType(false, Language.Type.TextInstance);
+            const schemaType: Language.Type.ListType = TypeUtils.listType(false, Language.Type.TextInstance);
 
             const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithListType(valueType, schemaType);
 
@@ -723,12 +723,12 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`invalid`, () => {
-            const valueType: Language.Type.DefinedList = TypeUtils.createDefinedList(false, [
+            const valueType: Language.Type.DefinedList = TypeUtils.definedList(false, [
                 Language.Type.TextInstance,
                 Language.Type.DateInstance,
             ]);
 
-            const schemaType: Language.Type.DefinedListType = TypeUtils.createDefinedListType(false, [
+            const schemaType: Language.Type.DefinedListType = TypeUtils.definedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
@@ -746,12 +746,12 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`extraneous`, () => {
-            const valueType: Language.Type.DefinedList = TypeUtils.createDefinedList(false, [
+            const valueType: Language.Type.DefinedList = TypeUtils.definedList(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
 
-            const schemaType: Language.Type.DefinedListType = TypeUtils.createDefinedListType(false, [
+            const schemaType: Language.Type.DefinedListType = TypeUtils.definedListType(false, [
                 Language.Type.TextInstance,
             ]);
 
@@ -768,9 +768,9 @@ describe(`TypeUtils.typeCheck`, () => {
         });
 
         it(`missing`, () => {
-            const valueType: Language.Type.DefinedList = TypeUtils.createDefinedList(false, []);
+            const valueType: Language.Type.DefinedList = TypeUtils.definedList(false, []);
 
-            const schemaType: Language.Type.DefinedListType = TypeUtils.createDefinedListType(false, [
+            const schemaType: Language.Type.DefinedListType = TypeUtils.definedListType(false, [
                 Language.Type.TextInstance,
                 Language.Type.NumberInstance,
             ]);
@@ -790,13 +790,13 @@ describe(`TypeUtils.typeCheck`, () => {
 
     describe(`${Language.Type.ExtendedTypeKind.FunctionType}`, () => {
         it(`return type`, () => {
-            const valueType: Language.Type.DefinedFunction = TypeUtils.createDefinedFunction(
+            const valueType: Language.Type.DefinedFunction = TypeUtils.definedFunction(
                 false,
                 [],
                 Language.Type.NullableTextInstance,
             );
 
-            const schemaType: Language.Type.FunctionType = TypeUtils.createFunctionType(
+            const schemaType: Language.Type.FunctionType = TypeUtils.functionType(
                 false,
                 [],
                 Language.Type.NullableTextInstance,
@@ -822,7 +822,7 @@ describe(`TypeUtils.typeCheck`, () => {
 
     describe(`${Language.Type.ExtendedTypeKind.RecordType}`, () => {
         it(`${Language.Type.ExtendedTypeKind.DefinedRecord}`, () => {
-            const valueType: Language.Type.DefinedRecord = TypeUtils.createDefinedRecord(
+            const valueType: Language.Type.DefinedRecord = TypeUtils.definedRecord(
                 false,
                 new Map<string, Language.Type.TPowerQueryType>([
                     ["number", Language.Type.NullableNumberInstance],
@@ -832,7 +832,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 false,
             );
 
-            const schemaType: Language.Type.RecordType = TypeUtils.createRecordType(
+            const schemaType: Language.Type.RecordType = TypeUtils.recordType(
                 false,
                 new Map<string, Language.Type.TPowerQueryType>([
                     ["number", Language.Type.NumberInstance],
@@ -862,7 +862,7 @@ describe(`TypeUtils.typeCheck`, () => {
 
     describe(`${Language.Type.ExtendedTypeKind.TableType}`, () => {
         it(`${Language.Type.ExtendedTypeKind.DefinedTable}`, () => {
-            const valueType: Language.Type.DefinedTable = TypeUtils.createDefinedTable(
+            const valueType: Language.Type.DefinedTable = TypeUtils.definedTable(
                 false,
                 new OrderedMap<string, Language.Type.TPowerQueryType>([
                     ["number", Language.Type.NullableNumberInstance],
@@ -872,7 +872,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 false,
             );
 
-            const schemaType: Language.Type.TableType = TypeUtils.createTableType(
+            const schemaType: Language.Type.TableType = TypeUtils.tableType(
                 false,
                 new Map<string, Language.Type.TPowerQueryType>([
                     ["number", Language.Type.NumberInstance],

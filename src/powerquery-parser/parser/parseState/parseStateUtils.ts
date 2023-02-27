@@ -11,11 +11,11 @@ import { NoOpTraceManagerInstance } from "../../common/trace";
 import { ParseState } from "./parseState";
 import { SequenceKind } from "../error";
 
-export function createState(lexerSnapshot: LexerSnapshot, overrides: Partial<ParseState> | undefined): ParseState {
+export function newState(lexerSnapshot: LexerSnapshot, overrides: Partial<ParseState> | undefined): ParseState {
     const tokenIndex: number = overrides?.tokenIndex ?? 0;
     const currentToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
     const currentTokenKind: Token.TokenKind | undefined = currentToken?.kind;
-    const contextState: ParseContext.State = overrides?.contextState ?? ParseContextUtils.createState();
+    const contextState: ParseContext.State = overrides?.contextState ?? ParseContextUtils.newState();
 
     const currentContextNodeId: number | undefined =
         contextState.nodeIdMapCollection.contextNodeById.size > 0
@@ -34,7 +34,7 @@ export function createState(lexerSnapshot: LexerSnapshot, overrides: Partial<Par
         locale: overrides?.locale ?? DefaultLocale,
         cancellationToken: overrides?.cancellationToken,
         traceManager: overrides?.traceManager ?? NoOpTraceManagerInstance,
-        contextState: overrides?.contextState ?? ParseContextUtils.createState(),
+        contextState: overrides?.contextState ?? ParseContextUtils.newState(),
         currentToken,
         currentContextNode,
         currentTokenKind,

@@ -16,7 +16,7 @@ import {
 } from "../common";
 import { Keyword, TextUtils, Token } from "../language";
 import { LexError } from ".";
-import { LexSettings } from "../settings";
+import { LexSettings } from "./lexSettings";
 
 // Call Lexer.stateFrom to instantiate a new State instance.
 // Lexer functions will return a new state object.
@@ -219,6 +219,13 @@ export function errorLineMap(state: State): ErrorLineMap | undefined {
     return errorLines.size !== 0 ? errorLines : undefined;
 }
 
+type PartialLexResult = PartialResult<TokenizeChanges, PartialLex, LexError.TLexError>;
+
+interface PartialLex {
+    readonly tokenizeChanges: TokenizeChanges;
+    readonly error: LexError.TLexError;
+}
+
 interface TokenizeChanges {
     readonly tokens: ReadonlyArray<Token.LineToken>;
     readonly lineModeEnd: LineMode;
@@ -289,19 +296,19 @@ function ensureCommonOrLexerResult<T>(
     locale: string,
 ): Result<T, CommonError.CommonError | LexError.LexError> {
     try {
-        return ResultUtils.boxOk(functionToWrap());
-    } catch (error) {
-        Assert.isInstanceofError(error);
+        return ResultUtils.ok(functionToWrap());
+    } catch (caught: unknown) {
+        Assert.isInstanceofError(caught);
 
         let convertedError: CommonError.CommonError | LexError.LexError;
 
-        if (LexError.isTInnerLexError(error)) {
-            convertedError = new LexError.LexError(error);
+        if (LexError.isTInnerLexError(caught)) {
+            convertedError = new LexError.LexError(caught);
         } else {
-            convertedError = CommonError.ensureCommonError(error, locale);
+            convertedError = CommonError.ensureCommonError(caught, locale);
         }
 
-        return ResultUtils.boxError(convertedError);
+        return ResultUtils.error(convertedError);
     }
 }
 
@@ -626,14 +633,14 @@ function tokenize(
             if (currentPosition === textLength) {
                 continueLexing = false;
             }
-        } catch (exception) {
+        } catch (caught: unknown) {
             let error: LexError.TLexError;
 
-            if (LexError.isTInnerLexError(exception)) {
-                error = new LexError.LexError(exception);
+            if (LexError.isTInnerLexError(caught)) {
+                error = new LexError.LexError(caught);
             } else {
-                Assert.isInstanceofError(exception);
-                error = CommonError.ensureCommonError(exception, locale);
+                Assert.isInstanceofError(caught);
+                error = CommonError.ensureCommonError(caught, locale);
             }
 
             continueLexing = false;
@@ -641,22 +648,22 @@ function tokenize(
         }
     }
 
-    let partialTokenizeResult: PartialResult<TokenizeChanges, TokenizeChanges, LexError.TLexError>;
+    let partialTokenizeResult: PartialLexResult;
 
     if (lexError) {
         if (newTokens.length) {
-            partialTokenizeResult = PartialResultUtils.createMixed(
-                {
+            partialTokenizeResult = PartialResultUtils.incomplete<PartialLex>({
+                tokenizeChanges: {
                     tokens: newTokens,
                     lineModeEnd: lineMode,
                 },
-                lexError,
-            );
+                error: lexError,
+            });
         } else {
-            partialTokenizeResult = PartialResultUtils.createError(lexError);
+            partialTokenizeResult = PartialResultUtils.error(lexError);
         }
     } else {
-        partialTokenizeResult = PartialResultUtils.createOk({
+        partialTokenizeResult = PartialResultUtils.ok({
             tokens: newTokens,
             lineModeEnd: lineMode,
         });
@@ -666,13 +673,10 @@ function tokenize(
 }
 
 // Takes the return from a tokenizeX function to updates the TLine's state.
-function updateLineState(
-    line: TLine,
-    tokenizePartialResult: PartialResult<TokenizeChanges, TokenizeChanges, LexError.TLexError>,
-): TLine {
-    switch (tokenizePartialResult.kind) {
+function updateLineState(line: TLine, potentiallyIncompleteResult: PartialLexResult): TLine {
+    switch (potentiallyIncompleteResult.kind) {
         case PartialResultKind.Ok: {
-            const tokenizeChanges: TokenizeChanges = tokenizePartialResult.value;
+            const tokenizeChanges: TokenizeChanges = potentiallyIncompleteResult.value;
             const newTokens: ReadonlyArray<Token.LineToken> = line.tokens.concat(tokenizeChanges.tokens);
 
             return {
@@ -685,8 +689,8 @@ function updateLineState(
             };
         }
 
-        case PartialResultKind.Mixed: {
-            const tokenizeChanges: TokenizeChanges = tokenizePartialResult.value;
+        case PartialResultKind.Incomplete: {
+            const tokenizeChanges: TokenizeChanges = potentiallyIncompleteResult.partial.tokenizeChanges;
             const newTokens: ReadonlyArray<Token.LineToken> = line.tokens.concat(tokenizeChanges.tokens);
 
             return {
@@ -696,7 +700,7 @@ function updateLineState(
                 lineModeStart: line.lineModeStart,
                 lineModeEnd: tokenizeChanges.lineModeEnd,
                 tokens: newTokens,
-                error: tokenizePartialResult.error,
+                error: potentiallyIncompleteResult.partial.error,
             };
         }
 
@@ -708,11 +712,11 @@ function updateLineState(
                 lineTerminator: line.lineTerminator,
                 lineModeEnd: line.lineModeEnd,
                 tokens: line.tokens,
-                error: tokenizePartialResult.error,
+                error: potentiallyIncompleteResult.error,
             };
 
         default:
-            throw Assert.isNever(tokenizePartialResult);
+            throw Assert.isNever(potentiallyIncompleteResult);
     }
 }
 

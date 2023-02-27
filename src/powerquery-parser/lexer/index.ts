@@ -4,5 +4,6 @@
 import * as LexError from "./error";
 
 export { LexError };
-export * from "./lexerSnapshot";
 export * from "./lexer";
+export * from "./lexerSnapshot";
+export * from "./lexSettings";

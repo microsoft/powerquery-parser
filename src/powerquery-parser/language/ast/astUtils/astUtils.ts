@@ -8,6 +8,14 @@ export interface SimplifiedType {
     readonly primitiveTypeConstantKind: Constant.PrimitiveTypeConstant;
 }
 
+export function assertIsLeaf(node: Ast.TNode): asserts node is Ast.TLeaf {
+    Assert.isTrue(node.isLeaf, "Assert(node.isLeaf)", { nodeId: node.id, nodeKind: node.kind });
+}
+
+export function isLeaf(node: Ast.TNode): node is Ast.TLeaf {
+    return node.isLeaf;
+}
+
 export function literalKindFrom(
     tokenKind: TokenKind | undefined,
 ): Ast.LiteralKind.Numeric | Ast.LiteralKind.Logical | Ast.LiteralKind.Null | Ast.LiteralKind.Text | undefined {

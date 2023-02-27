@@ -29,7 +29,7 @@ export interface Parser {
     // If the checkpoint is used on a parser that didn't create the checkpoint it results in undefiend behavior.
     // If the checkpoint is used on a parser whose state is earlier than what the checkpoint recorded
     // it results in undefined behavior.
-    readonly createCheckpoint: (state: ParseState) => Promise<ParseStateCheckpoint>;
+    readonly checkpoint: (state: ParseState) => Promise<ParseStateCheckpoint>;
     readonly restoreCheckpoint: (state: ParseState, checkpoint: ParseStateCheckpoint) => Promise<void>;
 
     // 12.1.6 Identifiers

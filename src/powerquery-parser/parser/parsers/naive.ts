@@ -222,17 +222,18 @@ export async function readDocument(
     try {
         document = await parser.readExpression(state, parser, trace.id);
         ParseStateUtils.assertIsDoneParsing(state);
-    } catch (expressionError) {
+    } catch (expressionError: unknown) {
         Assert.isInstanceofError(expressionError);
+        CommonError.throwIfCancellationError(expressionError);
 
         // Fast backup deletes context state, but we want to preserve it for the case
         // where both parsing an expression and section document error out.
-        const expressionCheckpoint: ParseStateCheckpoint = await parser.createCheckpoint(state);
+        const expressionCheckpoint: ParseStateCheckpoint = await parser.checkpoint(state);
         const expressionErrorContextState: ParseContext.State = state.contextState;
 
         // Reset the parser's state.
         state.tokenIndex = 0;
-        state.contextState = ParseContextUtils.createState();
+        state.contextState = ParseContextUtils.newState();
         state.currentContextNode = undefined;
 
         if (state.lexerSnapshot.tokens.length) {
@@ -243,8 +244,9 @@ export async function readDocument(
         try {
             document = await readSectionDocument(state, parser, trace.id);
             ParseStateUtils.assertIsDoneParsing(state);
-        } catch (sectionError) {
+        } catch (sectionError: unknown) {
             Assert.isInstanceofError(sectionError);
+            CommonError.throwIfCancellationError(sectionError);
 
             let triedError: Error;
 
@@ -2433,17 +2435,17 @@ async function tryReadPrimaryType(
     let attempt: TriedReadPrimaryType;
 
     if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.LeftBracket)) {
-        attempt = ResultUtils.boxOk(await parser.readRecordType(state, parser, trace.id));
+        attempt = ResultUtils.ok(await parser.readRecordType(state, parser, trace.id));
     } else if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.LeftBrace)) {
-        attempt = ResultUtils.boxOk(await parser.readListType(state, parser, trace.id));
+        attempt = ResultUtils.ok(await parser.readListType(state, parser, trace.id));
     } else if (isTableTypeNext) {
-        attempt = ResultUtils.boxOk(await parser.readTableType(state, parser, trace.id));
+        attempt = ResultUtils.ok(await parser.readTableType(state, parser, trace.id));
     } else if (isFunctionTypeNext) {
-        attempt = ResultUtils.boxOk(await parser.readFunctionType(state, parser, trace.id));
+        attempt = ResultUtils.ok(await parser.readFunctionType(state, parser, trace.id));
     } else if (ParseStateUtils.isOnConstantKind(state, Constant.LanguageConstant.Nullable)) {
-        attempt = ResultUtils.boxOk(await parser.readNullableType(state, parser, trace.id));
+        attempt = ResultUtils.ok(await parser.readNullableType(state, parser, trace.id));
     } else {
-        const checkpoint: ParseStateCheckpoint = await parser.createCheckpoint(state);
+        const checkpoint: ParseStateCheckpoint = await parser.checkpoint(state);
         const triedReadPrimitiveType: TriedReadPrimaryType = await tryReadPrimitiveType(state, parser, trace.id);
 
         if (ResultUtils.isError(triedReadPrimitiveType)) {
@@ -2857,7 +2859,7 @@ async function tryReadPrimitiveType(
 
     ParseStateUtils.startContext(state, nodeKind);
 
-    const checkpoint: ParseStateCheckpoint = await parser.createCheckpoint(state);
+    const checkpoint: ParseStateCheckpoint = await parser.checkpoint(state);
 
     const expectedTokenKinds: ReadonlyArray<Token.TokenKind> = [
         Token.TokenKind.Identifier,
@@ -2876,7 +2878,7 @@ async function tryReadPrimitiveType(
             [TraceConstant.IsError]: true,
         });
 
-        return ResultUtils.boxError(error);
+        return ResultUtils.error(error);
     }
 
     let primitiveTypeKind: Constant.PrimitiveTypeConstant;
@@ -2910,7 +2912,7 @@ async function tryReadPrimitiveType(
                 const token: Token.Token = ParseStateUtils.assertGetTokenAt(state, state.tokenIndex);
                 await parser.restoreCheckpoint(state, checkpoint);
 
-                return ResultUtils.boxError(
+                return ResultUtils.error(
                     new ParseError.InvalidPrimitiveTypeError(
                         token,
                         state.lexerSnapshot.graphemePositionStartFrom(token),
@@ -2934,7 +2936,7 @@ async function tryReadPrimitiveType(
             [TraceConstant.IsError]: true,
         });
 
-        return ResultUtils.boxError(
+        return ResultUtils.error(
             new CommonError.InvariantError(`unknown currentTokenKind, not found in [${expectedTokenKinds}]`, details),
         );
     }
@@ -2953,7 +2955,7 @@ async function tryReadPrimitiveType(
         [TraceConstant.IsError]: false,
     });
 
-    return ResultUtils.boxOk(primitiveType);
+    return ResultUtils.ok(primitiveType);
 }
 
 // -------------------------------------

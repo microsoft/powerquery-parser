@@ -174,36 +174,32 @@ export interface TokenWithColumnNumber {
     readonly columnNumber: number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function assertIsParseError(error: any): error is ParseError {
+export function assertIsParseError(error: unknown): error is ParseError {
     Assert.isTrue(isParseError(error), "isParseError(error)");
 
     return true;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isParseError(error: any): error is ParseError {
+export function isParseError(error: unknown): error is ParseError {
     return error instanceof ParseError;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isTParseError(error: any): error is TParseError {
+export function isTParseError(error: unknown): error is TParseError {
     return isParseError(error) || CommonError.isCommonError(error);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isTInnerParseError(x: any): x is TInnerParseError {
+export function isTInnerParseError(error: unknown): error is TInnerParseError {
     return (
-        x instanceof ExpectedAnyTokenKindError ||
-        x instanceof ExpectedClosingTokenKind ||
-        x instanceof ExpectedCsvContinuationError ||
-        x instanceof ExpectedGeneralizedIdentifierError ||
-        x instanceof ExpectedTokenKindError ||
-        x instanceof InvalidCatchFunctionError ||
-        x instanceof InvalidPrimitiveTypeError ||
-        x instanceof RequiredParameterAfterOptionalParameterError ||
-        x instanceof UnterminatedSequence ||
-        x instanceof UnusedTokensRemainError
+        error instanceof ExpectedAnyTokenKindError ||
+        error instanceof ExpectedClosingTokenKind ||
+        error instanceof ExpectedCsvContinuationError ||
+        error instanceof ExpectedGeneralizedIdentifierError ||
+        error instanceof ExpectedTokenKindError ||
+        error instanceof InvalidCatchFunctionError ||
+        error instanceof InvalidPrimitiveTypeError ||
+        error instanceof RequiredParameterAfterOptionalParameterError ||
+        error instanceof UnterminatedSequence ||
+        error instanceof UnusedTokensRemainError
     );
 }
 

@@ -11,7 +11,7 @@ import { TypeKind } from "../../../../powerquery-parser/language/type/type";
 
 const noopCreateAnyUnion: (unionedTypePairs: ReadonlyArray<Type.TPowerQueryType>) => Type.TPowerQueryType = (
     unionedTypePairs: ReadonlyArray<Type.TPowerQueryType>,
-) => TypeUtils.createAnyUnion(unionedTypePairs, NoOpTraceManagerInstance, undefined);
+) => TypeUtils.anyUnion(unionedTypePairs, NoOpTraceManagerInstance, undefined);
 
 const noopIsCompatible: (left: Type.TPowerQueryType, right: Type.TPowerQueryType) => boolean | undefined = (
     left: Type.TPowerQueryType,
@@ -72,7 +72,7 @@ describe(`localIsCompatible`, () => {
 
             const actual: ReadonlyArray<[Type.TypeKind, boolean | undefined]> = typeKinds.map((typeKind: TypeKind) => [
                 typeKind,
-                noopIsCompatible(TypeUtils.createPrimitiveType(false, typeKind), Type.AnyInstance),
+                noopIsCompatible(TypeUtils.primitiveType(false, typeKind), Type.AnyInstance),
             ]);
 
             expect(actual).deep.equal(expected);
@@ -80,7 +80,7 @@ describe(`localIsCompatible`, () => {
 
         it(`${Type.TypeKind.None} not compatible with any`, () => {
             const actual: boolean | undefined = noopIsCompatible(
-                TypeUtils.createPrimitiveType(false, Type.TypeKind.None),
+                TypeUtils.primitiveType(false, Type.TypeKind.None),
                 Type.AnyInstance,
             );
 
@@ -109,12 +109,12 @@ describe(`localIsCompatible`, () => {
     describe(`${Type.ExtendedTypeKind.DefinedList}`, () => {
         describe(`identity`, () => {
             it(`empty`, () => {
-                const definedList: Type.DefinedList = TypeUtils.createDefinedList(false, []);
+                const definedList: Type.DefinedList = TypeUtils.definedList(false, []);
                 expect(noopIsCompatible(definedList, definedList)).to.equal(true, undefined);
             });
 
             it(`non-empty`, () => {
-                const definedList: Type.DefinedList = TypeUtils.createDefinedList(false, [
+                const definedList: Type.DefinedList = TypeUtils.definedList(false, [
                     Type.TextInstance,
                     Type.NumberInstance,
                 ]);
@@ -125,31 +125,25 @@ describe(`localIsCompatible`, () => {
 
         describe(`list item literal is compatible with parent type`, () => {
             it(`${Type.ExtendedTypeKind.LogicalLiteral}`, () => {
-                const left: Type.DefinedList = TypeUtils.createDefinedList(false, [
-                    TypeUtils.createLogicalLiteral(false, true),
-                ]);
+                const left: Type.DefinedList = TypeUtils.definedList(false, [TypeUtils.logicalLiteral(false, true)]);
 
-                const right: Type.DefinedList = TypeUtils.createDefinedList(false, [Type.LogicalInstance]);
+                const right: Type.DefinedList = TypeUtils.definedList(false, [Type.LogicalInstance]);
 
                 expect(noopIsCompatible(left, right)).to.equal(true, undefined);
             });
 
             it(`${Type.ExtendedTypeKind.NumberLiteral}`, () => {
-                const left: Type.DefinedList = TypeUtils.createDefinedList(false, [
-                    TypeUtils.createNumberLiteral(false, `1`),
-                ]);
+                const left: Type.DefinedList = TypeUtils.definedList(false, [TypeUtils.numberLiteral(false, `1`)]);
 
-                const right: Type.DefinedList = TypeUtils.createDefinedList(false, [Type.NumberInstance]);
+                const right: Type.DefinedList = TypeUtils.definedList(false, [Type.NumberInstance]);
 
                 expect(noopIsCompatible(left, right)).to.equal(true, undefined);
             });
 
             it(`${Type.ExtendedTypeKind.TextLiteral}`, () => {
-                const left: Type.DefinedList = TypeUtils.createDefinedList(false, [
-                    TypeUtils.createTextLiteral(false, `"foo"`),
-                ]);
+                const left: Type.DefinedList = TypeUtils.definedList(false, [TypeUtils.textLiteral(false, `"foo"`)]);
 
-                const right: Type.DefinedList = TypeUtils.createDefinedList(false, [Type.TextInstance]);
+                const right: Type.DefinedList = TypeUtils.definedList(false, [Type.TextInstance]);
 
                 expect(noopIsCompatible(left, right)).to.equal(true, undefined);
             });
@@ -157,17 +151,17 @@ describe(`localIsCompatible`, () => {
 
         describe(`null`, () => {
             it(`null is not compatible with non-nullable`, () => {
-                const definedList: Type.DefinedList = TypeUtils.createDefinedList(false, []);
+                const definedList: Type.DefinedList = TypeUtils.definedList(false, []);
                 expect(noopIsCompatible(Type.NullInstance, definedList)).to.equal(false, undefined);
             });
 
             it(`non-nullable is not compatible with null`, () => {
-                const definedList: Type.DefinedList = TypeUtils.createDefinedList(false, []);
+                const definedList: Type.DefinedList = TypeUtils.definedList(false, []);
                 expect(noopIsCompatible(definedList, Type.NullInstance)).to.equal(false, undefined);
             });
 
             it(`null is compatible with nullable`, () => {
-                const definedList: Type.DefinedList = TypeUtils.createDefinedList(true, []);
+                const definedList: Type.DefinedList = TypeUtils.definedList(true, []);
                 expect(noopIsCompatible(Type.NullInstance, definedList)).to.equal(true, undefined);
             });
         });
@@ -176,12 +170,12 @@ describe(`localIsCompatible`, () => {
     describe(`${Type.ExtendedTypeKind.DefinedRecord}`, () => {
         describe(`identity`, () => {
             it(`empty`, () => {
-                const definedRecord: Type.DefinedRecord = TypeUtils.createDefinedRecord(false, new Map(), false);
+                const definedRecord: Type.DefinedRecord = TypeUtils.definedRecord(false, new Map(), false);
                 expect(noopIsCompatible(definedRecord, definedRecord)).to.equal(true, undefined);
             });
 
             it(`non-empty`, () => {
-                const definedRecord: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                const definedRecord: Type.DefinedRecord = TypeUtils.definedRecord(
                     false,
                     new Map([["number", Type.NumberInstance]]),
                     false,
@@ -193,13 +187,13 @@ describe(`localIsCompatible`, () => {
 
         describe(`field member literal is compatible with parent type`, () => {
             it(`${Type.ExtendedTypeKind.LogicalLiteral}`, () => {
-                const left: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                const left: Type.DefinedRecord = TypeUtils.definedRecord(
                     false,
-                    new Map([["logical", TypeUtils.createLogicalLiteral(false, true)]]),
+                    new Map([["logical", TypeUtils.logicalLiteral(false, true)]]),
                     false,
                 );
 
-                const right: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                const right: Type.DefinedRecord = TypeUtils.definedRecord(
                     false,
                     new Map([["logical", Type.LogicalInstance]]),
                     false,
@@ -209,13 +203,13 @@ describe(`localIsCompatible`, () => {
             });
 
             it(`${Type.ExtendedTypeKind.NumberLiteral}`, () => {
-                const left: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                const left: Type.DefinedRecord = TypeUtils.definedRecord(
                     false,
-                    new Map([["number", TypeUtils.createNumberLiteral(false, 1)]]),
+                    new Map([["number", TypeUtils.numberLiteral(false, 1)]]),
                     false,
                 );
 
-                const right: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                const right: Type.DefinedRecord = TypeUtils.definedRecord(
                     false,
                     new Map([["number", Type.NumberInstance]]),
                     false,
@@ -225,13 +219,13 @@ describe(`localIsCompatible`, () => {
             });
 
             it(`${Type.ExtendedTypeKind.TextLiteral}`, () => {
-                const left: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                const left: Type.DefinedRecord = TypeUtils.definedRecord(
                     false,
-                    new Map([["text", TypeUtils.createTextLiteral(false, `""`)]]),
+                    new Map([["text", TypeUtils.textLiteral(false, `""`)]]),
                     false,
                 );
 
-                const right: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                const right: Type.DefinedRecord = TypeUtils.definedRecord(
                     false,
                     new Map([["text", Type.TextInstance]]),
                     false,
@@ -243,17 +237,17 @@ describe(`localIsCompatible`, () => {
 
         describe(`null`, () => {
             it(`null is not compatible with non-nullable`, () => {
-                const definedRecord: Type.DefinedRecord = TypeUtils.createDefinedRecord(false, new Map(), false);
+                const definedRecord: Type.DefinedRecord = TypeUtils.definedRecord(false, new Map(), false);
                 expect(noopIsCompatible(Type.NullInstance, definedRecord)).to.equal(false, undefined);
             });
 
             it(`non-nullable is not compatible with null`, () => {
-                const definedRecord: Type.DefinedRecord = TypeUtils.createDefinedRecord(false, new Map(), false);
+                const definedRecord: Type.DefinedRecord = TypeUtils.definedRecord(false, new Map(), false);
                 expect(noopIsCompatible(definedRecord, Type.NullInstance)).to.equal(false, undefined);
             });
 
             it(`null is compatible with nullable`, () => {
-                const definedRecord: Type.DefinedRecord = TypeUtils.createDefinedRecord(true, new Map(), false);
+                const definedRecord: Type.DefinedRecord = TypeUtils.definedRecord(true, new Map(), false);
                 expect(noopIsCompatible(Type.NullInstance, definedRecord)).to.equal(true, undefined);
             });
         });
@@ -262,12 +256,12 @@ describe(`localIsCompatible`, () => {
     describe(`${Type.ExtendedTypeKind.DefinedTable}`, () => {
         describe(`identity`, () => {
             it(`empty`, () => {
-                const definedTable: Type.DefinedTable = TypeUtils.createDefinedTable(false, new OrderedMap(), false);
+                const definedTable: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), false);
                 expect(noopIsCompatible(definedTable, definedTable)).to.equal(true, undefined);
             });
 
             it(`non-empty`, () => {
-                const definedTable: Type.DefinedTable = TypeUtils.createDefinedTable(
+                const definedTable: Type.DefinedTable = TypeUtils.definedTable(
                     false,
                     new OrderedMap([["number", Type.NumberInstance]]),
                     false,
@@ -279,13 +273,13 @@ describe(`localIsCompatible`, () => {
 
         describe(`field member literal is compatible with parent type`, () => {
             it(`${Type.ExtendedTypeKind.LogicalLiteral}`, () => {
-                const left: Type.DefinedTable = TypeUtils.createDefinedTable(
+                const left: Type.DefinedTable = TypeUtils.definedTable(
                     false,
-                    new OrderedMap([["logical", TypeUtils.createLogicalLiteral(false, true)]]),
+                    new OrderedMap([["logical", TypeUtils.logicalLiteral(false, true)]]),
                     false,
                 );
 
-                const right: Type.DefinedTable = TypeUtils.createDefinedTable(
+                const right: Type.DefinedTable = TypeUtils.definedTable(
                     false,
                     new OrderedMap([["logical", Type.LogicalInstance]]),
                     false,
@@ -295,13 +289,13 @@ describe(`localIsCompatible`, () => {
             });
 
             it(`${Type.ExtendedTypeKind.NumberLiteral}`, () => {
-                const left: Type.DefinedTable = TypeUtils.createDefinedTable(
+                const left: Type.DefinedTable = TypeUtils.definedTable(
                     false,
-                    new OrderedMap([["number", TypeUtils.createNumberLiteral(false, 1)]]),
+                    new OrderedMap([["number", TypeUtils.numberLiteral(false, 1)]]),
                     false,
                 );
 
-                const right: Type.DefinedTable = TypeUtils.createDefinedTable(
+                const right: Type.DefinedTable = TypeUtils.definedTable(
                     false,
                     new OrderedMap([["number", Type.NumberInstance]]),
                     false,
@@ -311,13 +305,13 @@ describe(`localIsCompatible`, () => {
             });
 
             it(`${Type.ExtendedTypeKind.TextLiteral}`, () => {
-                const left: Type.DefinedTable = TypeUtils.createDefinedTable(
+                const left: Type.DefinedTable = TypeUtils.definedTable(
                     false,
-                    new OrderedMap([["text", TypeUtils.createTextLiteral(false, `""`)]]),
+                    new OrderedMap([["text", TypeUtils.textLiteral(false, `""`)]]),
                     false,
                 );
 
-                const right: Type.DefinedTable = TypeUtils.createDefinedTable(
+                const right: Type.DefinedTable = TypeUtils.definedTable(
                     false,
                     new OrderedMap([["text", Type.TextInstance]]),
                     false,
@@ -329,17 +323,17 @@ describe(`localIsCompatible`, () => {
 
         describe(`null`, () => {
             it(`null is not compatible with non-nullable`, () => {
-                const definedTable: Type.DefinedTable = TypeUtils.createDefinedTable(false, new OrderedMap(), false);
+                const definedTable: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), false);
                 expect(noopIsCompatible(Type.NullInstance, definedTable)).to.equal(false, undefined);
             });
 
             it(`non-nullable is not compatible with null`, () => {
-                const definedTable: Type.DefinedTable = TypeUtils.createDefinedTable(false, new OrderedMap(), false);
+                const definedTable: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), false);
                 expect(noopIsCompatible(definedTable, Type.NullInstance)).to.equal(false, undefined);
             });
 
             it(`null is compatible with nullable`, () => {
-                const definedTable: Type.DefinedTable = TypeUtils.createDefinedTable(true, new OrderedMap(), false);
+                const definedTable: Type.DefinedTable = TypeUtils.definedTable(true, new OrderedMap(), false);
                 expect(noopIsCompatible(Type.NullInstance, definedTable)).to.equal(true, undefined);
             });
         });
@@ -356,21 +350,21 @@ describe(`localIsCompatible`, () => {
 
         describe(`${Type.ExtendedTypeKind.NumberLiteral}`, () => {
             it(`1`, () => {
-                expect(noopIsCompatible(TypeUtils.createNumberLiteral(false, `1`), Type.NumberInstance)).to.equal(
+                expect(noopIsCompatible(TypeUtils.numberLiteral(false, `1`), Type.NumberInstance)).to.equal(
                     true,
                     undefined,
                 );
             });
 
             it(`--1`, () => {
-                expect(noopIsCompatible(TypeUtils.createNumberLiteral(false, `--1`), Type.NumberInstance)).to.equal(
+                expect(noopIsCompatible(TypeUtils.numberLiteral(false, `--1`), Type.NumberInstance)).to.equal(
                     true,
                     undefined,
                 );
             });
 
             it(`+1`, () => {
-                expect(noopIsCompatible(TypeUtils.createNumberLiteral(false, `+1`), Type.NumberInstance)).to.equal(
+                expect(noopIsCompatible(TypeUtils.numberLiteral(false, `+1`), Type.NumberInstance)).to.equal(
                     true,
                     undefined,
                 );
@@ -378,7 +372,7 @@ describe(`localIsCompatible`, () => {
         });
 
         it(`${Type.ExtendedTypeKind.TextLiteral}`, () => {
-            expect(noopIsCompatible(TypeUtils.createTextLiteral(false, `"foo"`), Type.TextInstance)).to.equal(
+            expect(noopIsCompatible(TypeUtils.textLiteral(false, `"foo"`), Type.TextInstance)).to.equal(
                 true,
                 undefined,
             );
@@ -387,17 +381,15 @@ describe(`localIsCompatible`, () => {
 
     describe(`literals are compatible with literals`, () => {
         it(`1`, () => {
-            expect(
-                noopIsCompatible(TypeUtils.createNumberLiteral(false, `1`), TypeUtils.createNumberLiteral(false, `1`)),
-            ).to.equal(true, undefined);
+            expect(noopIsCompatible(TypeUtils.numberLiteral(false, `1`), TypeUtils.numberLiteral(false, `1`))).to.equal(
+                true,
+                undefined,
+            );
         });
 
         it(`"foo"`, () => {
             expect(
-                noopIsCompatible(
-                    TypeUtils.createTextLiteral(false, `"foo"`),
-                    TypeUtils.createTextLiteral(false, `"foo"`),
-                ),
+                noopIsCompatible(TypeUtils.textLiteral(false, `"foo"`), TypeUtils.textLiteral(false, `"foo"`)),
             ).to.equal(true, undefined);
         });
     });

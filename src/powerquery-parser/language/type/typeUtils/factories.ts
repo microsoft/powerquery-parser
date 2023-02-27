@@ -8,7 +8,7 @@ import { simplify } from "./simplify";
 import { Type } from "..";
 import { TypeUtilsTraceConstant } from "./typeTraceConstant";
 
-export function createPrimitiveType<T extends Type.TypeKind>(isNullable: boolean, typeKind: T): Type.TPrimitiveType {
+export function primitiveType<T extends Type.TypeKind>(isNullable: boolean, typeKind: T): Type.TPrimitiveType {
     const key: string = primitiveTypeMapKey(isNullable, typeKind);
 
     return Assert.asDefined(PrimitiveTypeConstantMap.get(key), `unknown key for PrimitiveTypeConstantMap`, {
@@ -19,12 +19,12 @@ export function createPrimitiveType<T extends Type.TypeKind>(isNullable: boolean
 
 // If the given types can be simplified/deduped down to a single type then that is returned instead.
 // Otherwise returns an instance of `Type.AnyUnion`.
-export function createAnyUnion(
+export function anyUnion(
     unionedTypePairs: ReadonlyArray<Type.TPowerQueryType>,
     traceManager: TraceManager,
     correlationId: number | undefined,
 ): Type.TPowerQueryType {
-    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.CreateAnyUnion, createAnyUnion.name, correlationId);
+    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.AnyUnion, anyUnion.name, correlationId);
 
     const simplified: ReadonlyArray<Type.TPowerQueryType> = simplify(unionedTypePairs, traceManager, trace.id);
 
@@ -46,7 +46,7 @@ export function createAnyUnion(
     return result;
 }
 
-export function createDefinedFunction(
+export function definedFunction(
     isNullable: boolean,
     parameters: ReadonlyArray<Type.FunctionParameter>,
     returnType: Type.TPowerQueryType,
@@ -60,10 +60,7 @@ export function createDefinedFunction(
     };
 }
 
-export function createDefinedList(
-    isNullable: boolean,
-    elements: ReadonlyArray<Type.TPowerQueryType>,
-): Type.DefinedList {
+export function definedList(isNullable: boolean, elements: ReadonlyArray<Type.TPowerQueryType>): Type.DefinedList {
     return {
         kind: Type.TypeKind.List,
         extendedKind: Type.ExtendedTypeKind.DefinedList,
@@ -72,7 +69,7 @@ export function createDefinedList(
     };
 }
 
-export function createDefinedListType(
+export function definedListType(
     isNullable: boolean,
     itemTypes: ReadonlyArray<Type.TPowerQueryType>,
 ): Type.DefinedListType {
@@ -84,7 +81,7 @@ export function createDefinedListType(
     };
 }
 
-export function createDefinedRecord(
+export function definedRecord(
     isNullable: boolean,
     fields: Map<string, Type.TPowerQueryType>,
     isOpen: boolean,
@@ -98,11 +95,7 @@ export function createDefinedRecord(
     };
 }
 
-export function createDefinedTable(
-    isNullable: boolean,
-    fields: Type.OrderedFields,
-    isOpen: boolean,
-): Type.DefinedTable {
+export function definedTable(isNullable: boolean, fields: Type.OrderedFields, isOpen: boolean): Type.DefinedTable {
     return {
         kind: Type.TypeKind.Table,
         extendedKind: Type.ExtendedTypeKind.DefinedTable,
@@ -112,7 +105,7 @@ export function createDefinedTable(
     };
 }
 
-export function createFunctionType(
+export function functionType(
     isNullable: boolean,
     parameters: ReadonlyArray<Type.FunctionParameter>,
     returnType: Type.TPowerQueryType,
@@ -126,7 +119,7 @@ export function createFunctionType(
     };
 }
 
-export function createLogicalLiteral(isNullable: boolean, literal: string | boolean): Type.LogicalLiteral {
+export function logicalLiteral(isNullable: boolean, literal: string | boolean): Type.LogicalLiteral {
     let parsedLiteral: string;
     let normalizedLiteral: boolean;
 
@@ -149,7 +142,7 @@ export function createLogicalLiteral(isNullable: boolean, literal: string | bool
     };
 }
 
-export function createListType(isNullable: boolean, itemType: Type.TPowerQueryType): Type.ListType {
+export function listType(isNullable: boolean, itemType: Type.TPowerQueryType): Type.ListType {
     return {
         kind: Type.TypeKind.Type,
         extendedKind: Type.ExtendedTypeKind.ListType,
@@ -158,7 +151,7 @@ export function createListType(isNullable: boolean, itemType: Type.TPowerQueryTy
     };
 }
 
-export function createNumberLiteral(isNullable: boolean, literal: string | number): Type.NumberLiteral {
+export function numberLiteral(isNullable: boolean, literal: string | number): Type.NumberLiteral {
     let parsedLiteral: string;
     let normalizedLiteral: number;
 
@@ -179,7 +172,7 @@ export function createNumberLiteral(isNullable: boolean, literal: string | numbe
     };
 }
 
-export function createPrimaryPrimitiveType(
+export function primaryPrimitiveType(
     isNullable: boolean,
     primitiveType: Type.TPrimitiveType,
 ): Type.PrimaryPrimitiveType {
@@ -191,7 +184,7 @@ export function createPrimaryPrimitiveType(
     };
 }
 
-export function createRecordType(
+export function recordType(
     isNullable: boolean,
     fields: Map<string, Type.TPowerQueryType>,
     isOpen: boolean,
@@ -205,7 +198,7 @@ export function createRecordType(
     };
 }
 
-export function createTableType(
+export function tableType(
     isNullable: boolean,
     fields: Map<string, Type.TPowerQueryType>,
     isOpen: boolean,
@@ -219,19 +212,7 @@ export function createTableType(
     };
 }
 
-export function createTextLiteral(isNullable: boolean, literal: string): Type.TextLiteral {
-    literal = StringUtils.ensureQuoted(literal);
-
-    return {
-        isNullable,
-        kind: Type.TypeKind.Text,
-        extendedKind: Type.ExtendedTypeKind.TextLiteral,
-        literal,
-        normalizedLiteral: literal,
-    };
-}
-
-export function createTableTypePrimary(
+export function tableTypePrimary(
     isNullable: boolean,
     primaryExpression: Type.TPowerQueryType,
 ): Type.TableTypePrimaryExpression {
@@ -240,5 +221,17 @@ export function createTableTypePrimary(
         extendedKind: Type.ExtendedTypeKind.TableTypePrimaryExpression,
         isNullable,
         primaryExpression,
+    };
+}
+
+export function textLiteral(isNullable: boolean, literal: string): Type.TextLiteral {
+    literal = StringUtils.ensureQuoted(literal);
+
+    return {
+        isNullable,
+        kind: Type.TypeKind.Text,
+        extendedKind: Type.ExtendedTypeKind.TextLiteral,
+        literal,
+        normalizedLiteral: literal,
     };
 }

@@ -118,7 +118,7 @@ export abstract class TraceManager {
     // Creates a new Trace instance and call its entry method.
     // Traces should be created at the start of a function, and further calls are made on Trace instance.
     public entry(phase: string, task: string, correlationId: number | undefined, details?: object): Trace {
-        return this.create(phase, task, correlationId, details);
+        return this.trace(phase, task, correlationId, details);
     }
 
     // Defaults to simple concatenation.
@@ -135,7 +135,7 @@ export abstract class TraceManager {
     // The return to the TraceManager.start function.
     // Subclass this when the TraceManager needs a different subclass of Trace.
     // Eg. BenchmarkTraceManager returns a BenchmarkTrace instance.
-    protected create(phase: string, task: string, correlationId: number | undefined, details?: object): Trace {
+    protected trace(phase: string, task: string, correlationId: number | undefined, details?: object): Trace {
         return new Trace(this.emit.bind(this), phase, task, this.idFactory(), correlationId, details);
     }
 
@@ -149,7 +149,7 @@ export abstract class TraceManager {
     ): string {
         try {
             return JSON.stringify(obj, replacer, space);
-        } catch (e) {
+        } catch {
             return "[JSON.stringify Error]";
         }
     }
@@ -172,7 +172,7 @@ export class BenchmarkTraceManager extends ReportTraceManager {
         super(outputFn, valueDelimiter);
     }
 
-    protected override create(
+    protected override trace(
         phase: string,
         task: string,
         correlationId: number | undefined,
@@ -187,7 +187,7 @@ export class NoOpTraceManager extends TraceManager {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     emit(_tracer: Trace, _message: string, _details?: object): void {}
 
-    protected override create(
+    protected override trace(
         _phase: string,
         _task: string,
         _correlationId: number | undefined,

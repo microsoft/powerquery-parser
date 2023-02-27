@@ -10,6 +10,7 @@ import {
     DefaultSettings,
     Language,
     Parser,
+    ResultUtils,
     Settings,
     Task,
     TaskUtils,
@@ -53,7 +54,7 @@ async function collectAbridgeNodeFromAst(text: string): Promise<ReadonlyArray<Ab
         undefined,
     );
 
-    Assert.isOk(triedTraverse);
+    ResultUtils.assertIsOk(triedTraverse);
 
     return triedTraverse.value;
 }
@@ -82,7 +83,7 @@ async function collectAbridgeNodeFromContext(text: string): Promise<ReadonlyArra
         undefined,
     );
 
-    Assert.isOk(triedTraverse);
+    ResultUtils.assertIsOk(triedTraverse);
 
     return triedTraverse.value;
 }
@@ -118,7 +119,7 @@ async function assertGetNthNodeOfKind<N extends Language.Ast.TNode>(
         nthNodeEarlyExit,
     );
 
-    Assert.isOk(triedTraverse);
+    ResultUtils.assertIsOk(triedTraverse);
 
     return Assert.asDefined(triedTraverse.value) as N;
 }

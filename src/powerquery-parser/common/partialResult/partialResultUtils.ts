@@ -1,38 +1,47 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { PartialError, PartialMixed, PartialOk, PartialResult, PartialResultKind } from "./partialResult";
+import {
+    PartialResult,
+    PartialResultError,
+    PartialResultIncomplete,
+    PartialResultKind,
+    PartialResultOk,
+} from "./partialResult";
 
-export function createOk<O>(value: O): PartialOk<O> {
+export function ok<Ok>(value: Ok): PartialResultOk<Ok> {
     return {
         kind: PartialResultKind.Ok,
         value,
     };
 }
 
-export function createMixed<M, E>(value: M, error: E): PartialMixed<M, E> {
+export function incomplete<Partial>(partial: Partial): PartialResultIncomplete<Partial> {
     return {
-        kind: PartialResultKind.Mixed,
-        value,
-        error,
+        kind: PartialResultKind.Incomplete,
+        partial,
     };
 }
 
-export function createError<E>(error: E): PartialError<E> {
+export function error<Error>(error: Error): PartialResultError<Error> {
     return {
         kind: PartialResultKind.Error,
         error,
     };
 }
 
-export function isOk<O, M, E>(result: PartialResult<O, M, E>): result is PartialOk<O> {
+export function isOk<Ok, Partial, Error>(result: PartialResult<Ok, Partial, Error>): result is PartialResultOk<Ok> {
     return result.kind === PartialResultKind.Ok;
 }
 
-export function isMixed<O, M, E>(result: PartialResult<O, M, E>): result is PartialMixed<M, E> {
-    return result.kind === PartialResultKind.Mixed;
+export function isIncomplete<Ok, Partial, Error>(
+    result: PartialResult<Ok, Partial, Error>,
+): result is PartialResultIncomplete<Partial> {
+    return result.kind === PartialResultKind.Incomplete;
 }
 
-export function isError<O, M, E>(result: PartialResult<O, M, E>): result is PartialError<E> {
+export function isError<Ok, Partial, Error>(
+    result: PartialResult<Ok, Partial, Error>,
+): result is PartialResultError<Error> {
     return result.kind === PartialResultKind.Error;
 }

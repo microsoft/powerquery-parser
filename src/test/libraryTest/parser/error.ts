@@ -18,10 +18,10 @@ import { TestAssertUtils } from "../../testUtils";
 
 const DefaultSettingsWithStrict: Settings = {
     ...DefaultSettings,
-    createParseState: (lexerSnapshot: Lexer.LexerSnapshot, overrides: Partial<ParseState> | undefined) => {
+    newParseState: (lexerSnapshot: Lexer.LexerSnapshot, overrides: Partial<ParseState> | undefined) => {
         overrides = overrides ?? {};
 
-        return ParseStateUtils.createState(lexerSnapshot, {
+        return ParseStateUtils.newState(lexerSnapshot, {
             ...overrides,
             disambiguationBehavior: overrides.disambiguationBehavior ?? Disambiguation.DismabiguationBehavior.Strict,
         });

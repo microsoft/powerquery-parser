@@ -9,7 +9,7 @@ import {
     TAmbiguousBracketNode,
     TAmbiguousParenthesisNode,
 } from "./disambiguation";
-import { ArrayUtils, Assert, Result, ResultUtils, TypeScriptUtils } from "../../common";
+import { ArrayUtils, Assert, CommonError, Result, ResultUtils, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils, Constant, Token } from "../../language";
 import { Parser, ParseStateCheckpoint } from "../parser";
 import { ParseState, ParseStateUtils } from "../parseState";
@@ -49,13 +49,16 @@ export async function readAmbiguous<T extends Ast.TNode>(
         try {
             // eslint-disable-next-line no-await-in-loop
             node = await parseCallback(variantState, parser, trace.id);
-            variantResult = ResultUtils.boxOk(node);
-        } catch (error) {
+            variantResult = ResultUtils.ok(node);
+        } catch (error: unknown) {
+            Assert.isInstanceofError(error);
+            CommonError.throwIfCancellationError(error);
+
             if (!ParseError.isTInnerParseError(error)) {
                 throw error;
             }
 
-            variantResult = ResultUtils.boxError(new ParseError.ParseError(error, variantState));
+            variantResult = ResultUtils.error(new ParseError.ParseError(error, variantState));
         }
 
         const candiate: AmbiguousParse<T> = {
@@ -225,7 +228,7 @@ export async function disambiguateParenthesis(
             // so we need to consume test if the trailing 'as number' is followed by a FatArrow.
             if (ParseStateUtils.isTokenKind(state, Token.TokenKind.KeywordAs, offsetTokenIndex + 1)) {
                 // eslint-disable-next-line no-await-in-loop
-                const checkpoint: ParseStateCheckpoint = await parser.createCheckpoint(state);
+                const checkpoint: ParseStateCheckpoint = await parser.checkpoint(state);
                 unsafeMoveTo(state, offsetTokenIndex + 2);
 
                 try {

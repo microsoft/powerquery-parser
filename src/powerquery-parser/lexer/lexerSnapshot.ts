@@ -65,18 +65,18 @@ export class LexerSnapshot {
 
 export function trySnapshot(state: Lexer.State): TriedLexerSnapshot {
     try {
-        return ResultUtils.boxOk(createSnapshot(state));
-    } catch (e) {
+        return ResultUtils.ok(createSnapshot(state));
+    } catch (caught: unknown) {
         let error: LexError.TLexError;
 
-        if (LexError.isTInnerLexError(e)) {
-            error = new LexError.LexError(e);
+        if (LexError.isTInnerLexError(caught)) {
+            error = new LexError.LexError(caught);
         } else {
-            Assert.isInstanceofError(e);
-            error = CommonError.ensureCommonError(e, state.locale);
+            Assert.isInstanceofError(caught);
+            error = CommonError.ensureCommonError(caught, state.locale);
         }
 
-        return ResultUtils.boxError(error);
+        return ResultUtils.error(error);
     }
 }
 

@@ -36,7 +36,7 @@ function createAbridgedTypes(types: ReadonlyArray<Type.TPowerQueryType>): Readon
 
 const noopCreateAnyUnion: (types: ReadonlyArray<Type.TPowerQueryType>) => Type.TPowerQueryType = (
     types: ReadonlyArray<Type.TPowerQueryType>,
-) => TypeUtils.createAnyUnion(types, NoOpTraceManagerInstance, undefined);
+) => TypeUtils.anyUnion(types, NoOpTraceManagerInstance, undefined);
 
 const noopNameOf: (type: Type.TPowerQueryType) => string = (type: Type.TPowerQueryType) =>
     TypeUtils.nameOf(type, NoOpTraceManagerInstance, undefined);
@@ -80,7 +80,7 @@ describe(`TypeUtils`, () => {
 
         it(`simplify literal and primitive to primitive`, () => {
             const actual: ReadonlyArray<AbridgedType> = createAbridgedTypes(
-                noopSimplify([Type.NumberInstance, TypeUtils.createNumberLiteral(false, 1)]),
+                noopSimplify([Type.NumberInstance, TypeUtils.numberLiteral(false, 1)]),
             );
 
             const expected: ReadonlyArray<AbridgedType> = [Type.NumberInstance];
@@ -89,13 +89,13 @@ describe(`TypeUtils`, () => {
 
         it(`retain multiple unique literals`, () => {
             const actual: ReadonlyArray<AbridgedType> = noopSimplify([
-                TypeUtils.createNumberLiteral(false, 1),
-                TypeUtils.createNumberLiteral(false, 2),
+                TypeUtils.numberLiteral(false, 1),
+                TypeUtils.numberLiteral(false, 2),
             ]);
 
             const expected: ReadonlyArray<AbridgedType> = [
-                TypeUtils.createNumberLiteral(false, 1),
-                TypeUtils.createNumberLiteral(false, 2),
+                TypeUtils.numberLiteral(false, 1),
+                TypeUtils.numberLiteral(false, 2),
             ];
 
             expect(actual).deep.equal(expected);
@@ -121,11 +121,11 @@ describe(`TypeUtils`, () => {
 
         it(`dedupe duplicate literals`, () => {
             const actual: ReadonlyArray<AbridgedType> = noopSimplify([
-                TypeUtils.createNumberLiteral(false, 1),
-                TypeUtils.createNumberLiteral(false, 1),
+                TypeUtils.numberLiteral(false, 1),
+                TypeUtils.numberLiteral(false, 1),
             ]);
 
-            const expected: ReadonlyArray<AbridgedType> = [TypeUtils.createNumberLiteral(false, 1)];
+            const expected: ReadonlyArray<AbridgedType> = [TypeUtils.numberLiteral(false, 1)];
             expect(actual).deep.equal(expected);
         });
 
@@ -138,7 +138,7 @@ describe(`TypeUtils`, () => {
             expect(simplified.length).to.equal(1);
 
             const actual: AbridgedType = typeToAbridged(simplified[0]);
-            const expected: AbridgedType = TypeUtils.createPrimitiveType(false, Type.TypeKind.Record);
+            const expected: AbridgedType = TypeUtils.primitiveType(false, Type.TypeKind.Record);
             expect(actual).deep.equal(expected);
         });
 
@@ -423,9 +423,9 @@ describe(`TypeUtils`, () => {
 
                 it(`complex`, () => {
                     const type: Type.TPowerQueryType = noopCreateAnyUnion([
-                        TypeUtils.createDefinedRecord(false, new Map([["foo", Type.NumberInstance]]), false),
-                        TypeUtils.createDefinedList(false, [Type.TextInstance]),
-                        TypeUtils.createDefinedTable(false, new OrderedMap([["bar", Type.TextInstance]]), true),
+                        TypeUtils.definedRecord(false, new Map([["foo", Type.NumberInstance]]), false),
+                        TypeUtils.definedList(false, [Type.TextInstance]),
+                        TypeUtils.definedTable(false, new OrderedMap([["bar", Type.TextInstance]]), true),
                     ]);
 
                     const actual: string = noopNameOf(type);
@@ -435,17 +435,13 @@ describe(`TypeUtils`, () => {
 
             describe(`${Type.ExtendedTypeKind.DefinedFunction}`, () => {
                 it(`() => any`, () => {
-                    const type: Type.DefinedFunction = TypeUtils.createDefinedFunction(false, [], Type.AnyInstance);
+                    const type: Type.DefinedFunction = TypeUtils.definedFunction(false, [], Type.AnyInstance);
                     const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`() => any`);
                 });
 
                 it(`() => nullable any`, () => {
-                    const type: Type.DefinedFunction = TypeUtils.createDefinedFunction(
-                        false,
-                        [],
-                        Type.NullableAnyInstance,
-                    );
+                    const type: Type.DefinedFunction = TypeUtils.definedFunction(false, [], Type.NullableAnyInstance);
 
                     const actual: string = noopNameOf(type);
                     // tslint:disable-next-line: chai-vague-errors
@@ -453,7 +449,7 @@ describe(`TypeUtils`, () => {
                 });
 
                 it(`(param1 as number, param2 as nullable number, optional param3 as number, optional param4 as nullable number) => any`, () => {
-                    const type: Type.DefinedFunction = TypeUtils.createDefinedFunction(
+                    const type: Type.DefinedFunction = TypeUtils.definedFunction(
                         false,
                         [
                             {
@@ -495,20 +491,20 @@ describe(`TypeUtils`, () => {
 
             describe(`${Type.ExtendedTypeKind.DefinedList}`, () => {
                 it(`{}`, () => {
-                    const type: Type.DefinedList = TypeUtils.createDefinedList(false, []);
+                    const type: Type.DefinedList = TypeUtils.definedList(false, []);
                     const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`{}`);
                 });
 
                 it(`nullable {}`, () => {
-                    const type: Type.DefinedList = TypeUtils.createDefinedList(true, []);
+                    const type: Type.DefinedList = TypeUtils.definedList(true, []);
                     const actual: string = noopNameOf(type);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(`nullable {}`);
                 });
 
                 it(`{number, nullable text}`, () => {
-                    const type: Type.DefinedList = TypeUtils.createDefinedList(false, [
+                    const type: Type.DefinedList = TypeUtils.definedList(false, [
                         Type.NumberInstance,
                         Type.NullableTextInstance,
                     ]);
@@ -521,20 +517,20 @@ describe(`TypeUtils`, () => {
 
             describe(`${Type.ExtendedTypeKind.DefinedListType}`, () => {
                 it(`type {}`, () => {
-                    const type: Type.DefinedListType = TypeUtils.createDefinedListType(false, []);
+                    const type: Type.DefinedListType = TypeUtils.definedListType(false, []);
                     const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`type {}`);
                 });
 
                 it(`nullable type {}`, () => {
-                    const type: Type.DefinedListType = TypeUtils.createDefinedListType(true, []);
+                    const type: Type.DefinedListType = TypeUtils.definedListType(true, []);
                     const actual: string = noopNameOf(type);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(`nullable type {}`);
                 });
 
                 it(`type {number, nullable text}`, () => {
-                    const type: Type.DefinedListType = TypeUtils.createDefinedListType(false, [
+                    const type: Type.DefinedListType = TypeUtils.definedListType(false, [
                         Type.NumberInstance,
                         Type.NullableTextInstance,
                     ]);
@@ -547,19 +543,19 @@ describe(`TypeUtils`, () => {
 
             describe(`${Type.ExtendedTypeKind.DefinedRecord}`, () => {
                 it(`[]`, () => {
-                    const type: Type.DefinedRecord = TypeUtils.createDefinedRecord(false, new Map(), false);
+                    const type: Type.DefinedRecord = TypeUtils.definedRecord(false, new Map(), false);
                     const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`[]`);
                 });
 
                 it(`[...]`, () => {
-                    const type: Type.DefinedRecord = TypeUtils.createDefinedRecord(false, new Map(), true);
+                    const type: Type.DefinedRecord = TypeUtils.definedRecord(false, new Map(), true);
                     const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`[...]`);
                 });
 
                 it(`[foo = number, bar = nullable text]`, () => {
-                    const type: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                    const type: Type.DefinedRecord = TypeUtils.definedRecord(
                         false,
                         new Map<string, Type.TPowerQueryType>([
                             ["foo", Type.NumberInstance],
@@ -574,7 +570,7 @@ describe(`TypeUtils`, () => {
                 });
 
                 it(`[foo = number, bar = nullable text, ...]`, () => {
-                    const type: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                    const type: Type.DefinedRecord = TypeUtils.definedRecord(
                         false,
                         new Map<string, Type.TPowerQueryType>([
                             ["foo", Type.NumberInstance],
@@ -591,19 +587,19 @@ describe(`TypeUtils`, () => {
 
             describe(`${Type.ExtendedTypeKind.DefinedTable}`, () => {
                 it(`table []`, () => {
-                    const type: Type.DefinedTable = TypeUtils.createDefinedTable(false, new OrderedMap(), false);
+                    const type: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), false);
                     const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`table []`);
                 });
 
                 it(`table [...]`, () => {
-                    const type: Type.DefinedTable = TypeUtils.createDefinedTable(false, new OrderedMap(), true);
+                    const type: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), true);
                     const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`table [...]`);
                 });
 
                 it(`table [foo = number, bar = nullable text]`, () => {
-                    const type: Type.DefinedTable = TypeUtils.createDefinedTable(
+                    const type: Type.DefinedTable = TypeUtils.definedTable(
                         false,
                         new OrderedMap<string, Type.TPowerQueryType>([
                             ["foo", Type.NumberInstance],
@@ -618,7 +614,7 @@ describe(`TypeUtils`, () => {
                 });
 
                 it(`table [foo = number, bar = nullable text, ...]`, () => {
-                    const type: Type.DefinedTable = TypeUtils.createDefinedTable(
+                    const type: Type.DefinedTable = TypeUtils.definedTable(
                         false,
                         new OrderedMap<string, Type.TPowerQueryType>([
                             ["foo", Type.NumberInstance],
@@ -635,13 +631,13 @@ describe(`TypeUtils`, () => {
 
             describe(`${Type.ExtendedTypeKind.FunctionType}`, () => {
                 it(`type function () any`, () => {
-                    const type: Type.FunctionType = TypeUtils.createFunctionType(false, [], Type.AnyInstance);
+                    const type: Type.FunctionType = TypeUtils.functionType(false, [], Type.AnyInstance);
                     const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`type function () any`);
                 });
 
                 it(`type function () any`, () => {
-                    const type: Type.FunctionType = TypeUtils.createFunctionType(
+                    const type: Type.FunctionType = TypeUtils.functionType(
                         false,
                         [
                             {
@@ -683,7 +679,7 @@ describe(`TypeUtils`, () => {
 
             describe(`${Type.ExtendedTypeKind.ListType}`, () => {
                 it(`type {text}`, () => {
-                    const type: Type.ListType = TypeUtils.createListType(false, Type.TextInstance);
+                    const type: Type.ListType = TypeUtils.listType(false, Type.TextInstance);
                     const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`type {text}`);
                 });
@@ -691,10 +687,7 @@ describe(`TypeUtils`, () => {
 
             describe(`${Type.ExtendedTypeKind.PrimaryPrimitiveType}`, () => {
                 it(`type text`, () => {
-                    const type: Type.PrimaryPrimitiveType = TypeUtils.createPrimaryPrimitiveType(
-                        false,
-                        Type.TextInstance,
-                    );
+                    const type: Type.PrimaryPrimitiveType = TypeUtils.primaryPrimitiveType(false, Type.TextInstance);
 
                     const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`type text`);
@@ -703,7 +696,7 @@ describe(`TypeUtils`, () => {
 
             describe(`${Type.ExtendedTypeKind.RecordType}`, () => {
                 it(`type [foo = number]`, () => {
-                    const type: Type.RecordType = TypeUtils.createRecordType(
+                    const type: Type.RecordType = TypeUtils.recordType(
                         false,
                         new Map([["foo", Type.NumberInstance]]),
                         false,
@@ -714,13 +707,13 @@ describe(`TypeUtils`, () => {
                 });
 
                 it(`type [...]`, () => {
-                    const type: Type.RecordType = TypeUtils.createRecordType(false, new Map(), true);
+                    const type: Type.RecordType = TypeUtils.recordType(false, new Map(), true);
                     const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`type [...]`);
                 });
 
                 it(`type [foo = number, bar = nullable text]`, () => {
-                    const type: Type.RecordType = TypeUtils.createRecordType(
+                    const type: Type.RecordType = TypeUtils.recordType(
                         false,
                         new Map<string, Type.TPowerQueryType>([
                             ["foo", Type.NumberInstance],
@@ -735,7 +728,7 @@ describe(`TypeUtils`, () => {
                 });
 
                 it(`type [foo = number, bar = nullable text, ...]`, () => {
-                    const type: Type.RecordType = TypeUtils.createRecordType(
+                    const type: Type.RecordType = TypeUtils.recordType(
                         false,
                         new Map<string, Type.TPowerQueryType>([
                             ["foo", Type.NumberInstance],
@@ -752,7 +745,7 @@ describe(`TypeUtils`, () => {
 
             describe(`${Type.ExtendedTypeKind.TableType}`, () => {
                 it(`type table [foo = number]`, () => {
-                    const type: Type.TableType = TypeUtils.createTableType(
+                    const type: Type.TableType = TypeUtils.tableType(
                         false,
                         new Map([["foo", Type.NumberInstance]]),
                         false,
@@ -763,13 +756,13 @@ describe(`TypeUtils`, () => {
                 });
 
                 it(`type table [...]`, () => {
-                    const type: Type.TableType = TypeUtils.createTableType(false, new Map(), true);
+                    const type: Type.TableType = TypeUtils.tableType(false, new Map(), true);
                     const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`type table [...]`);
                 });
 
                 it(`type table [foo = number, bar = nullable text]`, () => {
-                    const type: Type.TableType = TypeUtils.createTableType(
+                    const type: Type.TableType = TypeUtils.tableType(
                         false,
                         new Map<string, Type.TPowerQueryType>([
                             ["foo", Type.NumberInstance],
@@ -784,7 +777,7 @@ describe(`TypeUtils`, () => {
                 });
 
                 it(`type table [foo = number, bar = nullable text, ...]`, () => {
-                    const type: Type.TableType = TypeUtils.createTableType(
+                    const type: Type.TableType = TypeUtils.tableType(
                         false,
                         new Map<string, Type.TPowerQueryType>([
                             ["foo", Type.NumberInstance],
@@ -802,10 +795,7 @@ describe(`TypeUtils`, () => {
             describe(`${Type.ExtendedTypeKind.TableTypePrimaryExpression}`, () => {
                 // Assumes `foo` is text.
                 it(`type table foo`, () => {
-                    const type: Type.TableTypePrimaryExpression = TypeUtils.createTableTypePrimary(
-                        false,
-                        Type.TextInstance,
-                    );
+                    const type: Type.TableTypePrimaryExpression = TypeUtils.tableTypePrimary(false, Type.TextInstance);
 
                     const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`type table text`);

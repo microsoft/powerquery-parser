@@ -4,12 +4,11 @@
 import { Assert, CommonError, ResultUtils } from "../../common";
 import { NodeIdMap, NodeIdMapUtils } from "../nodeIdMap";
 import { ParseContext, ParseContextUtils } from "../context";
+import { ParseError, ParseSettings } from "..";
 import { Parser, ParseStateCheckpoint, TriedParse } from "./parser";
 import { ParseState, ParseStateUtils } from "../parseState";
 import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { ParseError } from "..";
-import { ParseSettings } from "../../settings";
 import { Trace } from "../../common/trace";
 
 export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: LexerSnapshot): Promise<TriedParse> {
@@ -32,21 +31,22 @@ export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: Lexe
         return await tryParseDocument(updatedSettings, lexerSnapshot);
     }
 
-    const parseState: ParseState = updatedSettings.createParseState(lexerSnapshot, defaultOverrides(updatedSettings));
+    const parseState: ParseState = updatedSettings.newParseState(lexerSnapshot, defaultOverrides(updatedSettings));
 
     try {
         const root: Ast.TNode = await parserEntryPoint(parseState, updatedSettings.parser, trace.id);
         ParseStateUtils.assertIsDoneParsing(parseState);
 
-        return ResultUtils.boxOk({
+        return ResultUtils.ok({
             lexerSnapshot,
             root,
             state: parseState,
         });
-    } catch (error) {
-        Assert.isInstanceofError(error);
+    } catch (caught: unknown) {
+        Assert.isInstanceofError(caught);
+        CommonError.throwIfCancellationError(caught);
 
-        return ResultUtils.boxError(ensureParseError(parseState, error, updatedSettings.locale));
+        return ResultUtils.error(ensureParseError(parseState, caught, updatedSettings.locale));
     }
 }
 
@@ -64,7 +64,7 @@ export async function tryParseDocument(
 
     let root: Ast.TNode;
 
-    const expressionDocumentState: ParseState = parseSettings.createParseState(
+    const expressionDocumentState: ParseState = parseSettings.newParseState(
         lexerSnapshot,
         defaultOverrides(parseSettings),
     );
@@ -74,15 +74,16 @@ export async function tryParseDocument(
         ParseStateUtils.assertIsDoneParsing(expressionDocumentState);
         trace.exit();
 
-        return ResultUtils.boxOk({
+        return ResultUtils.ok({
             lexerSnapshot,
             root,
             state: expressionDocumentState,
         });
-    } catch (expressionDocumentError) {
+    } catch (expressionDocumentError: unknown) {
         Assert.isInstanceofError(expressionDocumentError);
+        CommonError.throwIfCancellationError(expressionDocumentError);
 
-        const sectionDocumentState: ParseState = parseSettings.createParseState(
+        const sectionDocumentState: ParseState = parseSettings.newParseState(
             lexerSnapshot,
             defaultOverrides(parseSettings),
         );
@@ -92,13 +93,14 @@ export async function tryParseDocument(
             ParseStateUtils.assertIsDoneParsing(sectionDocumentState);
             trace.exit();
 
-            return ResultUtils.boxOk({
+            return ResultUtils.ok({
                 lexerSnapshot,
                 root,
                 state: sectionDocumentState,
             });
-        } catch (sectionDocumentError) {
+        } catch (sectionDocumentError: unknown) {
             Assert.isInstanceofError(sectionDocumentError);
+            CommonError.throwIfCancellationError(expressionDocumentError);
 
             let betterParsedState: ParseState;
             let betterParsedError: Error;
@@ -113,22 +115,22 @@ export async function tryParseDocument(
 
             trace.exit();
 
-            return ResultUtils.boxError(ensureParseError(betterParsedState, betterParsedError, parseSettings.locale));
+            return ResultUtils.error(ensureParseError(betterParsedState, betterParsedError, parseSettings.locale));
         }
     }
 }
 
 // If you have a custom parser + parser state,
-// then you'll have to create your own (create|restore)Checkpoint functions.
+// then you'll have to create your own checkpoint/restoreCheckpoint functions.
 //
 // Due to performance reasons the backup no longer can include a naive deep copy of the context state.
 // Instead it's assumed that a backup is made immediately before a try/catch read block.
 // This means the state begins in a parsing context and the backup will either be immediately consumed or dropped.
 // Therefore we only care about the delta between before and after the try/catch block.
 // Thanks to the invariants above and the fact the ids for nodes are an auto-incrementing integer
-// we can easily just drop all delete all context nodes past the id of when the backup was created.
+// we can easily delete all context nodes past the id of when the backup was created.
 // eslint-disable-next-line require-await
-export async function createCheckpoint(state: ParseState): Promise<ParseStateCheckpoint> {
+export async function checkpoint(state: ParseState): Promise<ParseStateCheckpoint> {
     return {
         tokenIndex: state.tokenIndex,
         contextStateIdCounter: state.contextState.idCounter,

@@ -4,19 +4,18 @@
 import "mocha";
 
 import {
-    Assert,
     CommonError,
     DefaultSettings,
     Lexer,
     Result,
+    ResultUtils,
     Settings,
-    SettingsUtils,
     TimedCancellationToken,
     TypeScriptUtils,
 } from "../../..";
 
 function assertGetCancellationError<T, E>(tried: Result<T, E>): CommonError.CancellationError {
-    Assert.isError(tried);
+    ResultUtils.assertIsError(tried);
 
     if (!CommonError.isCommonError(tried.error)) {
         throw new Error(`expected error to be a ${CommonError.CommonError.name}`);
@@ -33,21 +32,24 @@ function assertGetCancellationError<T, E>(tried: Result<T, E>): CommonError.Canc
 
 function assertGetLexerStateWithCancellationToken(): Lexer.State {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, "foo");
-    Assert.isOk(triedLex);
+    ResultUtils.assertIsOk(triedLex);
     const state: TypeScriptUtils.StripReadonly<Lexer.State> = triedLex.value;
     state.cancellationToken = new TimedCancellationToken(0);
 
     return state;
 }
 
-function settingsWithCancellationToken(): Settings {
-    return SettingsUtils.createDefaultSettings(new TimedCancellationToken(0));
+function defaultSettingsWithExpiredCancellationToken(): Settings {
+    return {
+        ...DefaultSettings,
+        cancellationToken: new TimedCancellationToken(0),
+    };
 }
 
 describe("CancellationToken", () => {
     describe(`lexer`, () => {
         it(`Lexer.tryLex`, () => {
-            const triedLex: Lexer.TriedLex = Lexer.tryLex(settingsWithCancellationToken(), "foo");
+            const triedLex: Lexer.TriedLex = Lexer.tryLex(defaultSettingsWithExpiredCancellationToken(), "foo");
             assertGetCancellationError(triedLex);
         });
 

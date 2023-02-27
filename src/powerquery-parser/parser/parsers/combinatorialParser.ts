@@ -27,7 +27,7 @@ export const CombinatorialParser: Parser = {
     ...NaiveParseSteps,
     applyState: ParseStateUtils.applyState,
     copyState: ParseStateUtils.copyState,
-    createCheckpoint: ParserUtils.createCheckpoint,
+    checkpoint: ParserUtils.checkpoint,
     restoreCheckpoint: ParserUtils.restoreCheckpoint,
 
     // 12.2.3.2 Logical expressions

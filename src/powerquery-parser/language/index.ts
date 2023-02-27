@@ -8,5 +8,5 @@ import * as Token from "./token";
 export { Comment, Token };
 export * from "./ast";
 export * from "./constant";
-export * from "./type";
 export * from "./keyword";
+export * from "./type";
