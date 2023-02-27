@@ -169,15 +169,22 @@ export type LineToken = IToken<LineTokenKind, number>;
 
 export type Token = IToken<TokenKind, TokenPosition>;
 
+// 0-indexed
+// Inclusive start, exclusive end
 export interface TokenPosition {
+    // What code unit it's on for the line
     readonly lineCodeUnit: number;
+    // What line it's on
     readonly lineNumber: number;
+    // What code unit it's on for the whole document
     readonly codeUnit: number;
 }
 
+// 0-indexed
+// Inclusive start, exclusive end
 export interface TokenRange {
     readonly tokenIndexStart: number;
-    readonly tokenIndexEnd: number; // exclusive
+    readonly tokenIndexEnd: number;
     readonly positionStart: TokenPosition;
     readonly positionEnd: TokenPosition;
 }

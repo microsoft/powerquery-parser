@@ -79,6 +79,8 @@ export interface INode {
 
 export type TNode = TDocument | TAuxiliaryNodes;
 
+export type TLeaf = GeneralizedIdentifier | Identifier | LiteralExpression | PrimitiveType | TConstant;
+
 // ----------------------------------------
 // ---------- Non-standard Nodes ----------
 // ----------------------------------------
