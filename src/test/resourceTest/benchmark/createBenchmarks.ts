@@ -11,7 +11,7 @@ import { DefaultSettings, Settings } from "../../..";
 import { BenchmarkTraceManager } from "../../../powerquery-parser/common/trace";
 import { TestFileUtils } from "../../testUtils";
 
-const NumberOfRunsPerFile: number = 100;
+const NumberOfRunsPerFile: number = 1;
 const ResourceDirectory: string = path.dirname(__filename);
 const SourceFilesDirectory: string = path.join(ResourceDirectory, "sourceFiles");
 const OutputDirectory: string = path.join(ResourceDirectory, "logs");
@@ -39,9 +39,9 @@ for (const filePath of TestFileUtils.getPowerQueryFilesRecursively(SourceFilesDi
     const fileStart: number = performanceNow();
 
     for (let iteration: number = 0; iteration < NumberOfRunsPerFile; iteration += 1) {
-        const stream: fs.WriteStream = createIterationOutputStream(filePath, iteration);
+        const iterationStream: fs.WriteStream = createIterationOutputStream(filePath, iteration);
 
-        stream.on("open", async () => {
+        iterationStream.on("open", async () => {
             if (iteration % 2 === 0 || iteration === NumberOfRunsPerFile - 1) {
                 console.log(
                     `Running iteration ${iteration + 1} out of ${NumberOfRunsPerFile} for ${path.basename(filePath)}`,
@@ -50,10 +50,12 @@ for (const filePath of TestFileUtils.getPowerQueryFilesRecursively(SourceFilesDi
 
             const benchmarkSettings: Settings = {
                 ...DefaultSettings,
-                traceManager: new BenchmarkTraceManager((message: string) => stream.write(message)),
+                traceManager: new BenchmarkTraceManager((message: string) => iterationStream.write(message)),
             };
 
             await TestFileUtils.tryLexParse(benchmarkSettings, filePath);
+
+            iterationStream.close();
         });
     }
 
@@ -65,5 +67,6 @@ for (const filePath of TestFileUtils.getPowerQueryFilesRecursively(SourceFilesDi
 
     summaryStream.on("open", () => {
         summaryStream.write(`Total time: ${fileDuration}ms\nAverage time: ${fileAverage}ms\n`);
+        summaryStream.close();
     });
 }
