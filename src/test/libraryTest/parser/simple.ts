@@ -4,7 +4,7 @@
 import "mocha";
 import { expect } from "chai";
 
-import { Assert, CommonError, DefaultLocale, DefaultSettings, ResultUtils, Task, TaskUtils, Traverse } from "../../..";
+import { Assert, DefaultLocale, DefaultSettings, ResultUtils, Task, TaskUtils, Traverse } from "../../..";
 import { Ast, Constant } from "../../../powerquery-parser/language";
 import { NodeIdMap, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
 import { NoOpTraceManagerInstance } from "../../../powerquery-parser/common/trace";
@@ -33,9 +33,7 @@ async function collectAbridgeNodeFromXor(text: string): Promise<ReadonlyArray<Ab
         root = XorNodeUtils.boxContext(Assert.asDefined(triedLexParse.parseState.contextState.root));
         nodeIdMapCollection = triedLexParse.nodeIdMapCollection;
     } else {
-        throw new CommonError.InvariantError(
-            `expected parse stage to be ok or parse error, got ${triedLexParse.stage}`,
-        );
+        throw new Error(`expected parse stage to be ok or parse error, got ${triedLexParse.stage}`);
     }
 
     const state: CollectAbridgeNodeState = {
