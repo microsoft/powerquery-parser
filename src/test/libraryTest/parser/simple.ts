@@ -4,28 +4,18 @@
 import "mocha";
 import { expect } from "chai";
 
-import {
-    Assert,
-    CommonError,
-    DefaultLocale,
-    DefaultSettings,
-    Language,
-    ResultUtils,
-    Task,
-    TaskUtils,
-    Traverse,
-} from "../../..";
+import { Assert, CommonError, DefaultLocale, DefaultSettings, ResultUtils, Task, TaskUtils, Traverse } from "../../..";
+import { Ast, Constant } from "../../../powerquery-parser/language";
 import { NodeIdMap, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
-import { Constant } from "../../../powerquery-parser/language";
 import { NoOpTraceManagerInstance } from "../../../powerquery-parser/common/trace";
 import { TestAssertUtils } from "../../testUtils";
 
-type AbridgedNode = [Language.Ast.NodeKind, number | undefined];
+type AbridgedNode = [Ast.NodeKind, number | undefined];
 
 type CollectAbridgeNodeState = Traverse.ITraversalState<AbridgedNode[]>;
 
-interface NthNodeOfKindState extends Traverse.ITraversalState<Language.Ast.TNode | undefined> {
-    readonly nodeKind: Language.Ast.NodeKind;
+interface NthNodeOfKindState extends Traverse.ITraversalState<Ast.TNode | undefined> {
+    readonly nodeKind: Ast.NodeKind;
     readonly nthRequired: number;
     nthCounter: number;
 }
@@ -74,9 +64,9 @@ async function collectAbridgeNodeFromXor(text: string): Promise<ReadonlyArray<Ab
     return triedTraverse.value;
 }
 
-async function assertGetNthNodeOfKind<N extends Language.Ast.TNode>(
+async function assertGetNthNodeOfKind<N extends Ast.TNode>(
     text: string,
-    nodeKind: Language.Ast.NodeKind,
+    nodeKind: Ast.NodeKind,
     nthRequired: number,
 ): Promise<N> {
     const parseTaskOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
@@ -92,9 +82,9 @@ async function assertGetNthNodeOfKind<N extends Language.Ast.TNode>(
         traceManager: NoOpTraceManagerInstance,
     };
 
-    const triedTraverse: Traverse.TriedTraverse<Language.Ast.TNode | undefined> = await Traverse.tryTraverseAst<
+    const triedTraverse: Traverse.TriedTraverse<Ast.TNode | undefined> = await Traverse.tryTraverseAst<
         NthNodeOfKindState,
-        Language.Ast.TNode | undefined
+        Ast.TNode | undefined
     >(
         state,
         parseTaskOk.nodeIdMapCollection,
@@ -116,7 +106,7 @@ async function collectAbridgeXorNodeVisit(state: CollectAbridgeNodeState, xorNod
 }
 
 // eslint-disable-next-line require-await
-async function nthNodeVisit(state: NthNodeOfKindState, node: Language.Ast.TNode): Promise<void> {
+async function nthNodeVisit(state: NthNodeOfKindState, node: Ast.TNode): Promise<void> {
     if (node.kind === state.nodeKind) {
         state.nthCounter += 1;
 
@@ -127,7 +117,7 @@ async function nthNodeVisit(state: NthNodeOfKindState, node: Language.Ast.TNode)
 }
 
 // eslint-disable-next-line require-await
-async function nthNodeEarlyExit(state: NthNodeOfKindState, _: Language.Ast.TNode): Promise<boolean> {
+async function nthNodeEarlyExit(state: NthNodeOfKindState, _: Ast.TNode): Promise<boolean> {
     return state.nthCounter === state.nthRequired;
 }
 
@@ -144,1563 +134,1559 @@ describe("Parser.AbridgedNode", () => {
     ): Promise<void> {
         await runAbridgedNodeTest(text, expected);
 
-        const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
-            text,
-            Language.Ast.NodeKind.Constant,
-            1,
-        );
+        const operatorNode: Ast.TConstant = await assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
 
         expect(operatorNode.constantKind).to.equal(constant);
     }
 
-    describe(`${Language.Ast.NodeKind.ArithmeticExpression}`, () => {
+    describe(`${Ast.NodeKind.ArithmeticExpression}`, () => {
         it(`1 & 2`, async () => {
             await runAbridgedNodeAndOperatorTest(`1 & 2`, Constant.ArithmeticOperator.And, [
-                [Language.Ast.NodeKind.ArithmeticExpression, undefined],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.ArithmeticExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ]);
         });
 
         it(`1 * 2`, async () => {
             await runAbridgedNodeAndOperatorTest(`1 * 2`, Constant.ArithmeticOperator.Multiplication, [
-                [Language.Ast.NodeKind.ArithmeticExpression, undefined],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.ArithmeticExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ]);
         });
 
         it(`1 / 2`, async () => {
             await runAbridgedNodeAndOperatorTest(`1 / 2`, Constant.ArithmeticOperator.Division, [
-                [Language.Ast.NodeKind.ArithmeticExpression, undefined],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.ArithmeticExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ]);
         });
 
         it(`1 + 2`, async () => {
             await runAbridgedNodeAndOperatorTest(`1 + 2`, Constant.ArithmeticOperator.Addition, [
-                [Language.Ast.NodeKind.ArithmeticExpression, undefined],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.ArithmeticExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ]);
         });
 
         it(`1 - 2`, async () => {
             await runAbridgedNodeAndOperatorTest(`1 - 2`, Constant.ArithmeticOperator.Subtraction, [
-                [Language.Ast.NodeKind.ArithmeticExpression, undefined],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.ArithmeticExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ]);
         });
 
         it(`1 + 2 + 3 + 4`, async () => {
             await runAbridgedNodeTest(`1 + 2 + 3 + 4`, [
-                [Language.Ast.NodeKind.ArithmeticExpression, undefined],
-                [Language.Ast.NodeKind.ArithmeticExpression, 0],
-                [Language.Ast.NodeKind.ArithmeticExpression, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.ArithmeticExpression, undefined],
+                [Ast.NodeKind.ArithmeticExpression, 0],
+                [Ast.NodeKind.ArithmeticExpression, 0],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ]);
         });
     });
 
-    describe(`${Language.Ast.NodeKind.AsExpression}`, () => {
+    describe(`${Ast.NodeKind.AsExpression}`, () => {
         it(`1 as number`, async () => {
             await runAbridgedNodeTest(`1 as number`, [
-                [Language.Ast.NodeKind.AsExpression, undefined],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.PrimitiveType, 2],
+                [Ast.NodeKind.AsExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.PrimitiveType, 2],
             ]);
         });
 
         it(`type function (x as number) as number`, async () => {
             await runAbridgedNodeTest(`type function (x as number) as number`, [
-                [Language.Ast.NodeKind.TypePrimaryType, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.FunctionType, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ParameterList, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.Parameter, 0],
-                [Language.Ast.NodeKind.Identifier, 1],
-                [Language.Ast.NodeKind.AsType, 2],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.PrimitiveType, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.AsType, 2],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.TypePrimaryType, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.FunctionType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ParameterList, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.Parameter, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.AsType, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.AsType, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
             ]);
         });
     });
 
-    // Ast.NodeKind.Constant covered by many
+    // Ast.Ast.NodeKind.Constant covered by many
 
-    // Ast.NodeKind.Csv covered by many
+    // Ast.Ast.NodeKind.Csv covered by many
 
-    it(`${Language.Ast.NodeKind.EachExpression}`, async () => {
+    it(`${Ast.NodeKind.EachExpression}`, async () => {
         await runAbridgedNodeTest(`each 1`, [
-            [Language.Ast.NodeKind.EachExpression, undefined],
-            [Language.Ast.NodeKind.Constant, 0],
-            [Language.Ast.NodeKind.LiteralExpression, 1],
+            [Ast.NodeKind.EachExpression, undefined],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.LiteralExpression, 1],
         ]);
     });
 
-    describe(`${Language.Ast.NodeKind.EqualityExpression}`, () => {
+    describe(`${Ast.NodeKind.EqualityExpression}`, () => {
         it(`1 = 2`, async () => {
             await runAbridgedNodeAndOperatorTest(`1 = 2`, Constant.EqualityOperator.EqualTo, [
-                [Language.Ast.NodeKind.EqualityExpression, undefined],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.EqualityExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ]);
         });
 
         it(`1 <> 2`, async () => {
             await runAbridgedNodeAndOperatorTest(`1 <> 2`, Constant.EqualityOperator.NotEqualTo, [
-                [Language.Ast.NodeKind.EqualityExpression, undefined],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.EqualityExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ]);
         });
     });
 
-    describe(`${Language.Ast.NodeKind.ErrorHandlingExpression}`, () => {
+    describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
         it(`try 1`, async () => {
             await runAbridgedNodeTest(`try 1`, [
-                [Language.Ast.NodeKind.ErrorHandlingExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.ErrorHandlingExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
             ]);
         });
 
         it(`try 1 otherwise 2`, async () => {
             await runAbridgedNodeTest(`try 1 otherwise 2`, [
-                [Language.Ast.NodeKind.ErrorHandlingExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 1],
-                [Language.Ast.NodeKind.OtherwiseExpression, 2],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.ErrorHandlingExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.OtherwiseExpression, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
             ]);
         });
 
         it(`try 1 catch () => 1`, async () => {
             await runAbridgedNodeTest(`try 1 catch () => 1`, [
-                [Language.Ast.NodeKind.ErrorHandlingExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 1],
-                [Language.Ast.NodeKind.CatchExpression, 2],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.FunctionExpression, 1],
-                [Language.Ast.NodeKind.ParameterList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.LiteralExpression, 3],
+                [Ast.NodeKind.ErrorHandlingExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.CatchExpression, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.FunctionExpression, 1],
+                [Ast.NodeKind.ParameterList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.LiteralExpression, 3],
             ]);
         });
 
         it(`try 1 catch (x) => 1`, async () => {
             await runAbridgedNodeTest(`try 1 catch (x) => 1`, [
-                [Language.Ast.NodeKind.ErrorHandlingExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 1],
-                [Language.Ast.NodeKind.CatchExpression, 2],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.FunctionExpression, 1],
-                [Language.Ast.NodeKind.ParameterList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.Parameter, 0],
-                [Language.Ast.NodeKind.Identifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.LiteralExpression, 3],
+                [Ast.NodeKind.ErrorHandlingExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.CatchExpression, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.FunctionExpression, 1],
+                [Ast.NodeKind.ParameterList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.Parameter, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.LiteralExpression, 3],
             ]);
         });
     });
 
-    it(`${Language.Ast.NodeKind.ErrorRaisingExpression}`, async () => {
+    it(`${Ast.NodeKind.ErrorRaisingExpression}`, async () => {
         await runAbridgedNodeTest(`error 1`, [
-            [Language.Ast.NodeKind.ErrorRaisingExpression, undefined],
-            [Language.Ast.NodeKind.Constant, 0],
-            [Language.Ast.NodeKind.LiteralExpression, 1],
+            [Ast.NodeKind.ErrorRaisingExpression, undefined],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.LiteralExpression, 1],
         ]);
     });
 
-    describe(`${Language.Ast.NodeKind.FieldProjection}`, () => {
+    describe(`${Ast.NodeKind.FieldProjection}`, () => {
         it(`x[[y]]`, async () => {
             await runAbridgedNodeTest(`x[[y]]`, [
-                [Language.Ast.NodeKind.RecursivePrimaryExpression, undefined],
-                [Language.Ast.NodeKind.IdentifierExpression, 0],
-                [Language.Ast.NodeKind.Identifier, 1],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.FieldProjection, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.FieldSelector, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.RecursivePrimaryExpression, undefined],
+                [Ast.NodeKind.IdentifierExpression, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.FieldProjection, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.FieldSelector, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`x[[y], [z]]`, async () => {
             await runAbridgedNodeTest(`x[[y], [z]]`, [
-                [Language.Ast.NodeKind.RecursivePrimaryExpression, undefined],
-                [Language.Ast.NodeKind.IdentifierExpression, 0],
-                [Language.Ast.NodeKind.Identifier, 1],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.FieldProjection, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.FieldSelector, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Csv, 1],
-                [Language.Ast.NodeKind.FieldSelector, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.RecursivePrimaryExpression, undefined],
+                [Ast.NodeKind.IdentifierExpression, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.FieldProjection, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.FieldSelector, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Csv, 1],
+                [Ast.NodeKind.FieldSelector, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`x[[y]]?`, async () => {
             await runAbridgedNodeTest(`x[[y]]?`, [
-                [Language.Ast.NodeKind.RecursivePrimaryExpression, undefined],
-                [Language.Ast.NodeKind.IdentifierExpression, 0],
-                [Language.Ast.NodeKind.Identifier, 1],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.FieldProjection, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.FieldSelector, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.RecursivePrimaryExpression, undefined],
+                [Ast.NodeKind.IdentifierExpression, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.FieldProjection, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.FieldSelector, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 3],
             ]);
         });
     });
 
-    describe(`${Language.Ast.NodeKind.FieldSelector}`, () => {
+    describe(`${Ast.NodeKind.FieldSelector}`, () => {
         it(`[x]`, async () => {
             await runAbridgedNodeTest(`[x]`, [
-                [Language.Ast.NodeKind.FieldSelector, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.FieldSelector, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`[x]?`, async () => {
             await runAbridgedNodeTest(`[x]?`, [
-                [Language.Ast.NodeKind.FieldSelector, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.FieldSelector, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 3],
             ]);
         });
     });
 
-    describe(`${Language.Ast.NodeKind.FieldSpecification}`, () => {
+    describe(`${Ast.NodeKind.FieldSpecification}`, () => {
         it(`type [x]`, async () => {
             await runAbridgedNodeTest(`type [x]`, [
-                [Language.Ast.NodeKind.TypePrimaryType, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.RecordType, 1],
-                [Language.Ast.NodeKind.FieldSpecificationList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.FieldSpecification, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.TypePrimaryType, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.RecordType, 1],
+                [Ast.NodeKind.FieldSpecificationList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.FieldSpecification, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`type [optional x]`, async () => {
             await runAbridgedNodeTest(`type [optional x]`, [
-                [Language.Ast.NodeKind.TypePrimaryType, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.RecordType, 1],
-                [Language.Ast.NodeKind.FieldSpecificationList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.FieldSpecification, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.TypePrimaryType, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.RecordType, 1],
+                [Ast.NodeKind.FieldSpecificationList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.FieldSpecification, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`type [x = number]`, async () => {
             await runAbridgedNodeTest(`type [x = number]`, [
-                [Language.Ast.NodeKind.TypePrimaryType, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.RecordType, 1],
-                [Language.Ast.NodeKind.FieldSpecificationList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.FieldSpecification, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Language.Ast.NodeKind.FieldTypeSpecification, 2],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.PrimitiveType, 1],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.TypePrimaryType, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.RecordType, 1],
+                [Ast.NodeKind.FieldSpecificationList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.FieldSpecification, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.FieldTypeSpecification, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
     });
 
-    describe(`${Language.Ast.NodeKind.FieldSpecificationList}`, () => {
+    describe(`${Ast.NodeKind.FieldSpecificationList}`, () => {
         it(`type []`, async () => {
             await runAbridgedNodeTest(`type []`, [
-                [Language.Ast.NodeKind.TypePrimaryType, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.RecordType, 1],
-                [Language.Ast.NodeKind.FieldSpecificationList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.TypePrimaryType, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.RecordType, 1],
+                [Ast.NodeKind.FieldSpecificationList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`type table []`, async () => {
             await runAbridgedNodeTest(`type table []`, [
-                [Language.Ast.NodeKind.TypePrimaryType, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.TableType, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.FieldSpecificationList, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.TypePrimaryType, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.TableType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.FieldSpecificationList, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
-        it(`${Language.Ast.NodeKind.FieldSpecificationList}`, async () => {
+        it(`${Ast.NodeKind.FieldSpecificationList}`, async () => {
             await runAbridgedNodeTest(`type [x]`, [
-                [Language.Ast.NodeKind.TypePrimaryType, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.RecordType, 1],
-                [Language.Ast.NodeKind.FieldSpecificationList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.FieldSpecification, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.TypePrimaryType, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.RecordType, 1],
+                [Ast.NodeKind.FieldSpecificationList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.FieldSpecification, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`type [x, ...]`, async () => {
             await runAbridgedNodeTest(`type [x, ...]`, [
-                [Language.Ast.NodeKind.TypePrimaryType, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.RecordType, 1],
-                [Language.Ast.NodeKind.FieldSpecificationList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.FieldSpecification, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.TypePrimaryType, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.RecordType, 1],
+                [Ast.NodeKind.FieldSpecificationList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.FieldSpecification, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 3],
             ]);
         });
     });
 
-    // Ast.NodeKind.FieldTypeSpecification covered by FieldSpecification
+    // Ast.Ast.NodeKind.FieldTypeSpecification covered by FieldSpecification
 
-    describe(`${Language.Ast.NodeKind.FunctionExpression}`, () => {
+    describe(`${Ast.NodeKind.FunctionExpression}`, () => {
         it(`() => 1`, async () => {
             await runAbridgedNodeTest(`() => 1`, [
-                [Language.Ast.NodeKind.FunctionExpression, undefined],
-                [Language.Ast.NodeKind.ParameterList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.LiteralExpression, 3],
+                [Ast.NodeKind.FunctionExpression, undefined],
+                [Ast.NodeKind.ParameterList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.LiteralExpression, 3],
             ]);
         });
 
         it(`(x) => 1`, async () => {
             await runAbridgedNodeTest(`(x) => 1`, [
-                [Language.Ast.NodeKind.FunctionExpression, undefined],
-                [Language.Ast.NodeKind.ParameterList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.Parameter, 0],
-                [Language.Ast.NodeKind.Identifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.LiteralExpression, 3],
+                [Ast.NodeKind.FunctionExpression, undefined],
+                [Ast.NodeKind.ParameterList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.Parameter, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.LiteralExpression, 3],
             ]);
         });
 
         it(`(x, y, z) => 1`, async () => {
             await runAbridgedNodeTest(`(x, y, z) => 1`, [
-                [Language.Ast.NodeKind.FunctionExpression, undefined],
-                [Language.Ast.NodeKind.ParameterList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.Parameter, 0],
-                [Language.Ast.NodeKind.Identifier, 1],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Csv, 1],
-                [Language.Ast.NodeKind.Parameter, 0],
-                [Language.Ast.NodeKind.Identifier, 1],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Csv, 2],
-                [Language.Ast.NodeKind.Parameter, 0],
-                [Language.Ast.NodeKind.Identifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.LiteralExpression, 3],
+                [Ast.NodeKind.FunctionExpression, undefined],
+                [Ast.NodeKind.ParameterList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.Parameter, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Csv, 1],
+                [Ast.NodeKind.Parameter, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Csv, 2],
+                [Ast.NodeKind.Parameter, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.LiteralExpression, 3],
             ]);
         });
 
         it(`(optional x) => 1`, async () => {
             await runAbridgedNodeTest(`(optional x) => 1`, [
-                [Language.Ast.NodeKind.FunctionExpression, undefined],
-                [Language.Ast.NodeKind.ParameterList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.Parameter, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.Identifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.LiteralExpression, 3],
+                [Ast.NodeKind.FunctionExpression, undefined],
+                [Ast.NodeKind.ParameterList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.Parameter, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.LiteralExpression, 3],
             ]);
         });
 
         it(`(x as nullable text) => 1`, async () => {
             await runAbridgedNodeTest(`(x as nullable text) => 1`, [
-                [Language.Ast.NodeKind.FunctionExpression, undefined],
-                [Language.Ast.NodeKind.ParameterList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.Parameter, 0],
-                [Language.Ast.NodeKind.Identifier, 1],
-                [Language.Ast.NodeKind.AsNullablePrimitiveType, 2],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.NullablePrimitiveType, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.PrimitiveType, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.LiteralExpression, 3],
+                [Ast.NodeKind.FunctionExpression, undefined],
+                [Ast.NodeKind.ParameterList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.Parameter, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.AsNullablePrimitiveType, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.NullablePrimitiveType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.LiteralExpression, 3],
             ]);
         });
 
         it(`(x) as number => x`, async () => {
             await runAbridgedNodeTest(`(x) as number => x`, [
-                [Language.Ast.NodeKind.FunctionExpression, undefined],
-                [Language.Ast.NodeKind.ParameterList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.Parameter, 0],
-                [Language.Ast.NodeKind.Identifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.AsNullablePrimitiveType, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.PrimitiveType, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.IdentifierExpression, 3],
-                [Language.Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.FunctionExpression, undefined],
+                [Ast.NodeKind.ParameterList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.Parameter, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.AsNullablePrimitiveType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.IdentifierExpression, 3],
+                [Ast.NodeKind.Identifier, 1],
             ]);
         });
 
         it(`(x as number) as number => x`, async () => {
             await runAbridgedNodeTest(`(x as number) as number => x`, [
-                [Language.Ast.NodeKind.FunctionExpression, undefined],
-                [Language.Ast.NodeKind.ParameterList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.Parameter, 0],
-                [Language.Ast.NodeKind.Identifier, 1],
-                [Language.Ast.NodeKind.AsNullablePrimitiveType, 2],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.PrimitiveType, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.AsNullablePrimitiveType, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.PrimitiveType, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.IdentifierExpression, 3],
-                [Language.Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.FunctionExpression, undefined],
+                [Ast.NodeKind.ParameterList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.Parameter, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.AsNullablePrimitiveType, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.AsNullablePrimitiveType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.IdentifierExpression, 3],
+                [Ast.NodeKind.Identifier, 1],
             ]);
         });
 
         it(`(x as number) as nullable number => x`, async () => {
             await runAbridgedNodeTest(`(x as number) as nullable number => x`, [
-                [Language.Ast.NodeKind.FunctionExpression, undefined],
-                [Language.Ast.NodeKind.ParameterList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.Parameter, 0],
-                [Language.Ast.NodeKind.Identifier, 1],
-                [Language.Ast.NodeKind.AsNullablePrimitiveType, 2],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.PrimitiveType, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.AsNullablePrimitiveType, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.NullablePrimitiveType, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.PrimitiveType, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.IdentifierExpression, 3],
-                [Language.Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.FunctionExpression, undefined],
+                [Ast.NodeKind.ParameterList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.Parameter, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.AsNullablePrimitiveType, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.AsNullablePrimitiveType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.NullablePrimitiveType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.IdentifierExpression, 3],
+                [Ast.NodeKind.Identifier, 1],
             ]);
         });
 
         it(`let Fn = () as nullable text => "asd" in Fn`, async () => {
             await runAbridgedNodeTest(`let Fn = () as nullable text => "asd" in Fn`, [
-                [Language.Ast.NodeKind.LetExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.IdentifierPairedExpression, 0],
-                [Language.Ast.NodeKind.Identifier, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.FunctionExpression, 2],
-                [Language.Ast.NodeKind.ParameterList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.AsNullablePrimitiveType, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.NullablePrimitiveType, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.PrimitiveType, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.LiteralExpression, 3],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.IdentifierExpression, 3],
-                [Language.Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.LetExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.IdentifierPairedExpression, 0],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.FunctionExpression, 2],
+                [Ast.NodeKind.ParameterList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.AsNullablePrimitiveType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.NullablePrimitiveType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.LiteralExpression, 3],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.IdentifierExpression, 3],
+                [Ast.NodeKind.Identifier, 1],
             ]);
         });
     });
 
-    describe(`${Language.Ast.NodeKind.FunctionType}`, () => {
+    describe(`${Ast.NodeKind.FunctionType}`, () => {
         it(`type function () as number`, async () => {
             await runAbridgedNodeTest(`type function () as number`, [
-                [Language.Ast.NodeKind.TypePrimaryType, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.FunctionType, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ParameterList, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.AsType, 2],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.TypePrimaryType, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.FunctionType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ParameterList, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.AsType, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
             ]);
         });
 
         it(`type function (x as number) as number`, async () => {
             await runAbridgedNodeTest(`type function (x as number) as number`, [
-                [Language.Ast.NodeKind.TypePrimaryType, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.FunctionType, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ParameterList, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.Parameter, 0],
-                [Language.Ast.NodeKind.Identifier, 1],
-                [Language.Ast.NodeKind.AsType, 2],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.PrimitiveType, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.AsType, 2],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.TypePrimaryType, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.FunctionType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ParameterList, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.Parameter, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.AsType, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.AsType, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
             ]);
         });
     });
 
-    // Ast.NodeKind.FieldTypeSpecification covered by AsType
+    // Ast.Ast.NodeKind.FieldTypeSpecification covered by AsType
 
-    describe(`${Language.Ast.NodeKind.GeneralizedIdentifier}`, () => {
+    describe(`${Ast.NodeKind.GeneralizedIdentifier}`, () => {
         it(`[foo bar]`, async () => {
             await runAbridgedNodeTest(`[foo bar]`, [
-                [Language.Ast.NodeKind.FieldSelector, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.FieldSelector, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`[1]`, async () => {
             await runAbridgedNodeTest(`[1]`, [
-                [Language.Ast.NodeKind.FieldSelector, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.FieldSelector, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`[a.1]`, async () => {
             await runAbridgedNodeTest(`[a.1]`, [
-                [Language.Ast.NodeKind.FieldSelector, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.FieldSelector, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`[#"a""" = 1]`, async () => {
             await runAbridgedNodeTest(`[#"a""" = 1]`, [
-                [Language.Ast.NodeKind.RecordExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifierPairedExpression, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.RecordExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.GeneralizedIdentifierPairedExpression, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
     });
 
-    it(`Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral`, async () => {
+    it(`Ast.Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral`, async () => {
         await runAbridgedNodeTest(`[x=1] section;`, [
-            [Language.Ast.NodeKind.Section, undefined],
-            [Language.Ast.NodeKind.RecordLiteral, 0],
-            [Language.Ast.NodeKind.Constant, 0],
-            [Language.Ast.NodeKind.ArrayWrapper, 1],
-            [Language.Ast.NodeKind.Csv, 0],
-            [Language.Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, 0],
-            [Language.Ast.NodeKind.GeneralizedIdentifier, 0],
-            [Language.Ast.NodeKind.Constant, 1],
-            [Language.Ast.NodeKind.LiteralExpression, 2],
-            [Language.Ast.NodeKind.Constant, 2],
-            [Language.Ast.NodeKind.Constant, 1],
-            [Language.Ast.NodeKind.Constant, 3],
-            [Language.Ast.NodeKind.ArrayWrapper, 4],
+            [Ast.NodeKind.Section, undefined],
+            [Ast.NodeKind.RecordLiteral, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.ArrayWrapper, 1],
+            [Ast.NodeKind.Csv, 0],
+            [Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, 0],
+            [Ast.NodeKind.GeneralizedIdentifier, 0],
+            [Ast.NodeKind.Constant, 1],
+            [Ast.NodeKind.LiteralExpression, 2],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.Constant, 1],
+            [Ast.NodeKind.Constant, 3],
+            [Ast.NodeKind.ArrayWrapper, 4],
         ]);
     });
 
-    it(`${Language.Ast.NodeKind.GeneralizedIdentifierPairedExpression}`, async () => {
+    it(`${Ast.NodeKind.GeneralizedIdentifierPairedExpression}`, async () => {
         await runAbridgedNodeTest(`[x=1]`, [
-            [Language.Ast.NodeKind.RecordExpression, undefined],
-            [Language.Ast.NodeKind.Constant, 0],
-            [Language.Ast.NodeKind.ArrayWrapper, 1],
-            [Language.Ast.NodeKind.Csv, 0],
-            [Language.Ast.NodeKind.GeneralizedIdentifierPairedExpression, 0],
-            [Language.Ast.NodeKind.GeneralizedIdentifier, 0],
-            [Language.Ast.NodeKind.Constant, 1],
-            [Language.Ast.NodeKind.LiteralExpression, 2],
-            [Language.Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.RecordExpression, undefined],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.ArrayWrapper, 1],
+            [Ast.NodeKind.Csv, 0],
+            [Ast.NodeKind.GeneralizedIdentifierPairedExpression, 0],
+            [Ast.NodeKind.GeneralizedIdentifier, 0],
+            [Ast.NodeKind.Constant, 1],
+            [Ast.NodeKind.LiteralExpression, 2],
+            [Ast.NodeKind.Constant, 2],
         ]);
     });
 
-    // Ast.NodeKind.Identifier covered by many
+    // Ast.Ast.NodeKind.Identifier covered by many
 
-    describe(`${Language.Ast.NodeKind.IdentifierExpression}`, () => {
+    describe(`${Ast.NodeKind.IdentifierExpression}`, () => {
         it(`@foo`, async () => {
             await runAbridgedNodeTest(`@foo`, [
-                [Language.Ast.NodeKind.IdentifierExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.IdentifierExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.Identifier, 1],
             ]);
         });
 
         it(`零`, async () => {
             await runAbridgedNodeTest(`零`, [
-                [Language.Ast.NodeKind.IdentifierExpression, undefined],
-                [Language.Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.IdentifierExpression, undefined],
+                [Ast.NodeKind.Identifier, 1],
             ]);
         });
     });
 
-    it(`${Language.Ast.NodeKind.IdentifierPairedExpression}`, async () => {
+    it(`${Ast.NodeKind.IdentifierPairedExpression}`, async () => {
         await runAbridgedNodeTest(`section; x = 1;`, [
-            [Language.Ast.NodeKind.Section, undefined],
-            [Language.Ast.NodeKind.Constant, 1],
-            [Language.Ast.NodeKind.Constant, 3],
-            [Language.Ast.NodeKind.ArrayWrapper, 4],
-            [Language.Ast.NodeKind.SectionMember, 0],
-            [Language.Ast.NodeKind.IdentifierPairedExpression, 2],
-            [Language.Ast.NodeKind.Identifier, 0],
-            [Language.Ast.NodeKind.Constant, 1],
-            [Language.Ast.NodeKind.LiteralExpression, 2],
-            [Language.Ast.NodeKind.Constant, 3],
+            [Ast.NodeKind.Section, undefined],
+            [Ast.NodeKind.Constant, 1],
+            [Ast.NodeKind.Constant, 3],
+            [Ast.NodeKind.ArrayWrapper, 4],
+            [Ast.NodeKind.SectionMember, 0],
+            [Ast.NodeKind.IdentifierPairedExpression, 2],
+            [Ast.NodeKind.Identifier, 0],
+            [Ast.NodeKind.Constant, 1],
+            [Ast.NodeKind.LiteralExpression, 2],
+            [Ast.NodeKind.Constant, 3],
         ]);
     });
 
-    it(`${Language.Ast.NodeKind.IfExpression}`, async () => {
+    it(`${Ast.NodeKind.IfExpression}`, async () => {
         await runAbridgedNodeTest(`if x then x else x`, [
-            [Language.Ast.NodeKind.IfExpression, undefined],
-            [Language.Ast.NodeKind.Constant, 0],
-            [Language.Ast.NodeKind.IdentifierExpression, 1],
-            [Language.Ast.NodeKind.Identifier, 1],
-            [Language.Ast.NodeKind.Constant, 2],
-            [Language.Ast.NodeKind.IdentifierExpression, 3],
-            [Language.Ast.NodeKind.Identifier, 1],
-            [Language.Ast.NodeKind.Constant, 4],
-            [Language.Ast.NodeKind.IdentifierExpression, 5],
-            [Language.Ast.NodeKind.Identifier, 1],
+            [Ast.NodeKind.IfExpression, undefined],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.IdentifierExpression, 1],
+            [Ast.NodeKind.Identifier, 1],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.IdentifierExpression, 3],
+            [Ast.NodeKind.Identifier, 1],
+            [Ast.NodeKind.Constant, 4],
+            [Ast.NodeKind.IdentifierExpression, 5],
+            [Ast.NodeKind.Identifier, 1],
         ]);
     });
 
-    it(`${Language.Ast.NodeKind.InvokeExpression}`, async () => {
+    it(`${Ast.NodeKind.InvokeExpression}`, async () => {
         await runAbridgedNodeTest(`foo()`, [
-            [Language.Ast.NodeKind.RecursivePrimaryExpression, undefined],
-            [Language.Ast.NodeKind.IdentifierExpression, 0],
-            [Language.Ast.NodeKind.Identifier, 1],
-            [Language.Ast.NodeKind.ArrayWrapper, 1],
-            [Language.Ast.NodeKind.InvokeExpression, 0],
-            [Language.Ast.NodeKind.Constant, 0],
-            [Language.Ast.NodeKind.ArrayWrapper, 1],
-            [Language.Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.RecursivePrimaryExpression, undefined],
+            [Ast.NodeKind.IdentifierExpression, 0],
+            [Ast.NodeKind.Identifier, 1],
+            [Ast.NodeKind.ArrayWrapper, 1],
+            [Ast.NodeKind.InvokeExpression, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.ArrayWrapper, 1],
+            [Ast.NodeKind.Constant, 2],
         ]);
     });
 
-    describe(`${Language.Ast.NodeKind.IsExpression}`, () => {
+    describe(`${Ast.NodeKind.IsExpression}`, () => {
         it(`1 is number`, async () => {
             await runAbridgedNodeTest(`1 is number`, [
-                [Language.Ast.NodeKind.IsExpression, undefined],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.PrimitiveType, 2],
+                [Ast.NodeKind.IsExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.PrimitiveType, 2],
             ]);
         });
 
         it(`1 is number is number`, async () => {
             await runAbridgedNodeTest(`1 is number is number`, [
-                [Language.Ast.NodeKind.IsExpression, undefined],
-                [Language.Ast.NodeKind.IsExpression, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.PrimitiveType, 2],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.PrimitiveType, 2],
+                [Ast.NodeKind.IsExpression, undefined],
+                [Ast.NodeKind.IsExpression, 0],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.PrimitiveType, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.PrimitiveType, 2],
             ]);
         });
     });
 
-    it(`${Language.Ast.NodeKind.ItemAccessExpression}`, async () => {
+    it(`${Ast.NodeKind.ItemAccessExpression}`, async () => {
         await runAbridgedNodeTest(`x{1}`, [
-            [Language.Ast.NodeKind.RecursivePrimaryExpression, undefined],
-            [Language.Ast.NodeKind.IdentifierExpression, 0],
-            [Language.Ast.NodeKind.Identifier, 1],
-            [Language.Ast.NodeKind.ArrayWrapper, 1],
-            [Language.Ast.NodeKind.ItemAccessExpression, 0],
-            [Language.Ast.NodeKind.Constant, 0],
-            [Language.Ast.NodeKind.LiteralExpression, 1],
-            [Language.Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.RecursivePrimaryExpression, undefined],
+            [Ast.NodeKind.IdentifierExpression, 0],
+            [Ast.NodeKind.Identifier, 1],
+            [Ast.NodeKind.ArrayWrapper, 1],
+            [Ast.NodeKind.ItemAccessExpression, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.LiteralExpression, 1],
+            [Ast.NodeKind.Constant, 2],
         ]);
     });
 
-    it(`${Language.Ast.NodeKind.ItemAccessExpression} optional`, async () => {
+    it(`${Ast.NodeKind.ItemAccessExpression} optional`, async () => {
         await runAbridgedNodeTest(`x{1}?`, [
-            [Language.Ast.NodeKind.RecursivePrimaryExpression, undefined],
-            [Language.Ast.NodeKind.IdentifierExpression, 0],
-            [Language.Ast.NodeKind.Identifier, 1],
-            [Language.Ast.NodeKind.ArrayWrapper, 1],
-            [Language.Ast.NodeKind.ItemAccessExpression, 0],
-            [Language.Ast.NodeKind.Constant, 0],
-            [Language.Ast.NodeKind.LiteralExpression, 1],
-            [Language.Ast.NodeKind.Constant, 2],
-            [Language.Ast.NodeKind.Constant, 3],
+            [Ast.NodeKind.RecursivePrimaryExpression, undefined],
+            [Ast.NodeKind.IdentifierExpression, 0],
+            [Ast.NodeKind.Identifier, 1],
+            [Ast.NodeKind.ArrayWrapper, 1],
+            [Ast.NodeKind.ItemAccessExpression, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.LiteralExpression, 1],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.Constant, 3],
         ]);
     });
 
     describe(`keywords`, () => {
         it(`#sections`, async () => {
             await runAbridgedNodeTest(`#sections`, [
-                [Language.Ast.NodeKind.IdentifierExpression, undefined],
-                [Language.Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.IdentifierExpression, undefined],
+                [Ast.NodeKind.Identifier, 1],
             ]);
         });
 
         it(`#shared`, async () => {
             await runAbridgedNodeTest(`#shared`, [
-                [Language.Ast.NodeKind.IdentifierExpression, undefined],
-                [Language.Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.IdentifierExpression, undefined],
+                [Ast.NodeKind.Identifier, 1],
             ]);
         });
     });
 
-    describe(`${Language.Ast.NodeKind.LetExpression}`, () => {
+    describe(`${Ast.NodeKind.LetExpression}`, () => {
         it(`let x = 1 in x`, async () => {
             await runAbridgedNodeTest(`let x = 1 in x`, [
-                [Language.Ast.NodeKind.LetExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.IdentifierPairedExpression, 0],
-                [Language.Ast.NodeKind.Identifier, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.IdentifierExpression, 3],
-                [Language.Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.LetExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.IdentifierPairedExpression, 0],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.IdentifierExpression, 3],
+                [Ast.NodeKind.Identifier, 1],
             ]);
         });
 
         it(`let x = 1 in try x`, async () => {
             await runAbridgedNodeTest(`let x = 1 in try x`, [
-                [Language.Ast.NodeKind.LetExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.IdentifierPairedExpression, 0],
-                [Language.Ast.NodeKind.Identifier, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.ErrorHandlingExpression, 3],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.IdentifierExpression, 1],
-                [Language.Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.LetExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.IdentifierPairedExpression, 0],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.ErrorHandlingExpression, 3],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.IdentifierExpression, 1],
+                [Ast.NodeKind.Identifier, 1],
             ]);
         });
 
         it(`let a = let argh`, async () => {
             await runAbridgedNodeTest(`let a = let argh`, [
-                [Language.Ast.NodeKind.LetExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.IdentifierPairedExpression, 0],
-                [Language.Ast.NodeKind.Identifier, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LetExpression, 2],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.IdentifierPairedExpression, 0],
-                [Language.Ast.NodeKind.Identifier, 0],
-                [Language.Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LetExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.IdentifierPairedExpression, 0],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LetExpression, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.IdentifierPairedExpression, 0],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
             ]);
         });
     });
 
-    describe(`${Language.Ast.NodeKind.ListExpression}`, () => {
+    describe(`${Ast.NodeKind.ListExpression}`, () => {
         it(`{}`, async () => {
             await runAbridgedNodeTest(`{}`, [
-                [Language.Ast.NodeKind.ListExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.ListExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`{1, 2}`, async () => {
             await runAbridgedNodeTest(`{1, 2}`, [
-                [Language.Ast.NodeKind.ListExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Csv, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.ListExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Csv, 1],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`{1..2}`, async () => {
             await runAbridgedNodeTest(`{1..2}`, [
-                [Language.Ast.NodeKind.ListExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.RangeExpression, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.ListExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.RangeExpression, 0],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`{1..2, 3..4}`, async () => {
             await runAbridgedNodeTest(`{1..2, 3..4}`, [
-                [Language.Ast.NodeKind.ListExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.RangeExpression, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Csv, 1],
-                [Language.Ast.NodeKind.RangeExpression, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.ListExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.RangeExpression, 0],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Csv, 1],
+                [Ast.NodeKind.RangeExpression, 0],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`{1, 2..3}`, async () => {
             await runAbridgedNodeTest(`{1, 2..3}`, [
-                [Language.Ast.NodeKind.ListExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Csv, 1],
-                [Language.Ast.NodeKind.RangeExpression, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.ListExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Csv, 1],
+                [Ast.NodeKind.RangeExpression, 0],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`{1..2, 3}`, async () => {
             await runAbridgedNodeTest(`{1..2, 3}`, [
-                [Language.Ast.NodeKind.ListExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.RangeExpression, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Csv, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.ListExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.RangeExpression, 0],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Csv, 1],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`let x = 1, y = {x..2} in y`, async () => {
             await runAbridgedNodeTest(`let x = 1, y = {x..2} in y`, [
-                [Language.Ast.NodeKind.LetExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.IdentifierPairedExpression, 0],
-                [Language.Ast.NodeKind.Identifier, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Csv, 1],
-                [Language.Ast.NodeKind.IdentifierPairedExpression, 0],
-                [Language.Ast.NodeKind.Identifier, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.ListExpression, 2],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.RangeExpression, 0],
-                [Language.Ast.NodeKind.IdentifierExpression, 0],
-                [Language.Ast.NodeKind.Identifier, 1],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.IdentifierExpression, 3],
-                [Language.Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.LetExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.IdentifierPairedExpression, 0],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Csv, 1],
+                [Ast.NodeKind.IdentifierPairedExpression, 0],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.ListExpression, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.RangeExpression, 0],
+                [Ast.NodeKind.IdentifierExpression, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.IdentifierExpression, 3],
+                [Ast.NodeKind.Identifier, 1],
             ]);
         });
     });
 
-    describe(`${Language.Ast.NodeKind.ListLiteral}`, () => {
+    describe(`${Ast.NodeKind.ListLiteral}`, () => {
         it(`[foo = {1}] section;`, async () => {
             await runAbridgedNodeTest(`[foo = {1}] section;`, [
-                [Language.Ast.NodeKind.Section, undefined],
-                [Language.Ast.NodeKind.RecordLiteral, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.ListLiteral, 2],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Constant, 3],
-                [Language.Ast.NodeKind.ArrayWrapper, 4],
+                [Ast.NodeKind.Section, undefined],
+                [Ast.NodeKind.RecordLiteral, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.ListLiteral, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.ArrayWrapper, 4],
             ]);
         });
 
         it(`[foo = {}] section;`, async () => {
             await runAbridgedNodeTest(`[foo = {}] section;`, [
-                [Language.Ast.NodeKind.Section, undefined],
-                [Language.Ast.NodeKind.RecordLiteral, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.ListLiteral, 2],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Constant, 3],
-                [Language.Ast.NodeKind.ArrayWrapper, 4],
+                [Ast.NodeKind.Section, undefined],
+                [Ast.NodeKind.RecordLiteral, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.ListLiteral, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.ArrayWrapper, 4],
             ]);
         });
     });
 
-    it(`${Language.Ast.NodeKind.ListType}`, async () => {
+    it(`${Ast.NodeKind.ListType}`, async () => {
         await runAbridgedNodeTest(`type {number}`, [
-            [Language.Ast.NodeKind.TypePrimaryType, undefined],
-            [Language.Ast.NodeKind.Constant, 0],
-            [Language.Ast.NodeKind.ListType, 1],
-            [Language.Ast.NodeKind.Constant, 0],
-            [Language.Ast.NodeKind.PrimitiveType, 1],
-            [Language.Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.TypePrimaryType, undefined],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.ListType, 1],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.PrimitiveType, 1],
+            [Ast.NodeKind.Constant, 2],
         ]);
     });
 
-    describe(`${Language.Ast.NodeKind.LiteralExpression}`, () => {
+    describe(`${Ast.NodeKind.LiteralExpression}`, () => {
         it(`true`, async () => {
-            await runAbridgedNodeTest(`true`, [[Language.Ast.NodeKind.LiteralExpression, undefined]]);
+            await runAbridgedNodeTest(`true`, [[Ast.NodeKind.LiteralExpression, undefined]]);
         });
 
         it(`false`, async () => {
-            await runAbridgedNodeTest(`false`, [[Language.Ast.NodeKind.LiteralExpression, undefined]]);
+            await runAbridgedNodeTest(`false`, [[Ast.NodeKind.LiteralExpression, undefined]]);
         });
 
         it(`1`, async () => {
-            await runAbridgedNodeTest(`1`, [[Language.Ast.NodeKind.LiteralExpression, undefined]]);
+            await runAbridgedNodeTest(`1`, [[Ast.NodeKind.LiteralExpression, undefined]]);
         });
 
         it(`0x1`, async () => {
-            await runAbridgedNodeTest(`0x1`, [[Language.Ast.NodeKind.LiteralExpression, undefined]]);
+            await runAbridgedNodeTest(`0x1`, [[Ast.NodeKind.LiteralExpression, undefined]]);
         });
 
         it(`0X1`, async () => {
-            await runAbridgedNodeTest(`0X1`, [[Language.Ast.NodeKind.LiteralExpression, undefined]]);
+            await runAbridgedNodeTest(`0X1`, [[Ast.NodeKind.LiteralExpression, undefined]]);
         });
 
         it(`1.2`, async () => {
-            await runAbridgedNodeTest(`1.2`, [[Language.Ast.NodeKind.LiteralExpression, undefined]]);
+            await runAbridgedNodeTest(`1.2`, [[Ast.NodeKind.LiteralExpression, undefined]]);
         });
 
         it(`.1`, async () => {
-            await runAbridgedNodeTest(".1", [[Language.Ast.NodeKind.LiteralExpression, undefined]]);
+            await runAbridgedNodeTest(".1", [[Ast.NodeKind.LiteralExpression, undefined]]);
         });
 
         it(`1e2`, async () => {
-            await runAbridgedNodeTest("1e2", [[Language.Ast.NodeKind.LiteralExpression, undefined]]);
+            await runAbridgedNodeTest("1e2", [[Ast.NodeKind.LiteralExpression, undefined]]);
         });
 
         it(`1e+2`, async () => {
-            await runAbridgedNodeTest("1e+2", [[Language.Ast.NodeKind.LiteralExpression, undefined]]);
+            await runAbridgedNodeTest("1e+2", [[Ast.NodeKind.LiteralExpression, undefined]]);
         });
 
         it(`1e-2`, async () => {
-            await runAbridgedNodeTest("1e-2", [[Language.Ast.NodeKind.LiteralExpression, undefined]]);
+            await runAbridgedNodeTest("1e-2", [[Ast.NodeKind.LiteralExpression, undefined]]);
         });
 
         it(`#nan`, async () => {
-            await runAbridgedNodeTest(`#nan`, [[Language.Ast.NodeKind.LiteralExpression, undefined]]);
+            await runAbridgedNodeTest(`#nan`, [[Ast.NodeKind.LiteralExpression, undefined]]);
         });
 
         it(`#infinity`, async () => {
-            await runAbridgedNodeTest(`#infinity`, [[Language.Ast.NodeKind.LiteralExpression, undefined]]);
+            await runAbridgedNodeTest(`#infinity`, [[Ast.NodeKind.LiteralExpression, undefined]]);
         });
 
         it(`""`, async () => {
-            await runAbridgedNodeTest(`""`, [[Language.Ast.NodeKind.LiteralExpression, undefined]]);
+            await runAbridgedNodeTest(`""`, [[Ast.NodeKind.LiteralExpression, undefined]]);
         });
 
         it(`""""`, async () => {
-            await runAbridgedNodeTest(`""""`, [[Language.Ast.NodeKind.LiteralExpression, undefined]]);
+            await runAbridgedNodeTest(`""""`, [[Ast.NodeKind.LiteralExpression, undefined]]);
         });
 
         it(`null`, async () => {
-            await runAbridgedNodeTest(`null`, [[Language.Ast.NodeKind.LiteralExpression, undefined]]);
+            await runAbridgedNodeTest(`null`, [[Ast.NodeKind.LiteralExpression, undefined]]);
         });
     });
 
-    describe(`${Language.Ast.NodeKind.LogicalExpression}`, () => {
+    describe(`${Ast.NodeKind.LogicalExpression}`, () => {
         it(`true and true`, async () => {
             await runAbridgedNodeTest(`true and true`, [
-                [Language.Ast.NodeKind.LogicalExpression, undefined],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.LogicalExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ]);
         });
 
         it(`true or true`, async () => {
             await runAbridgedNodeTest(`true or true`, [
-                [Language.Ast.NodeKind.LogicalExpression, undefined],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.LogicalExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ]);
         });
     });
 
-    it(`${Language.Ast.NodeKind.MetadataExpression}`, async () => {
+    it(`${Ast.NodeKind.MetadataExpression}`, async () => {
         await runAbridgedNodeTest(`1 meta 1`, [
-            [Language.Ast.NodeKind.MetadataExpression, undefined],
-            [Language.Ast.NodeKind.LiteralExpression, 0],
-            [Language.Ast.NodeKind.Constant, 1],
-            [Language.Ast.NodeKind.LiteralExpression, 2],
+            [Ast.NodeKind.MetadataExpression, undefined],
+            [Ast.NodeKind.LiteralExpression, 0],
+            [Ast.NodeKind.Constant, 1],
+            [Ast.NodeKind.LiteralExpression, 2],
         ]);
     });
 
-    it(`${Language.Ast.NodeKind.NotImplementedExpression}`, async () => {
+    it(`${Ast.NodeKind.NotImplementedExpression}`, async () => {
         await runAbridgedNodeTest(`...`, [
-            [Language.Ast.NodeKind.NotImplementedExpression, undefined],
-            [Language.Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.NotImplementedExpression, undefined],
+            [Ast.NodeKind.Constant, 0],
         ]);
     });
 
-    it(`${Language.Ast.NodeKind.NullablePrimitiveType}`, async () => {
+    it(`${Ast.NodeKind.NullablePrimitiveType}`, async () => {
         await runAbridgedNodeTest(`1 is nullable number`, [
-            [Language.Ast.NodeKind.IsExpression, undefined],
-            [Language.Ast.NodeKind.LiteralExpression, 0],
-            [Language.Ast.NodeKind.Constant, 1],
-            [Language.Ast.NodeKind.NullablePrimitiveType, 2],
-            [Language.Ast.NodeKind.Constant, 0],
-            [Language.Ast.NodeKind.PrimitiveType, 1],
+            [Ast.NodeKind.IsExpression, undefined],
+            [Ast.NodeKind.LiteralExpression, 0],
+            [Ast.NodeKind.Constant, 1],
+            [Ast.NodeKind.NullablePrimitiveType, 2],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.PrimitiveType, 1],
         ]);
     });
 
-    it(`${Language.Ast.NodeKind.NullableType}`, async () => {
+    it(`${Ast.NodeKind.NullableType}`, async () => {
         await runAbridgedNodeTest(`type nullable number`, [
-            [Language.Ast.NodeKind.TypePrimaryType, undefined],
-            [Language.Ast.NodeKind.Constant, 0],
-            [Language.Ast.NodeKind.NullableType, 1],
-            [Language.Ast.NodeKind.Constant, 0],
-            [Language.Ast.NodeKind.PrimitiveType, 1],
+            [Ast.NodeKind.TypePrimaryType, undefined],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.NullableType, 1],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.PrimitiveType, 1],
         ]);
     });
 
-    describe(`${Language.Ast.NodeKind.NullCoalescingExpression}`, () => {
+    describe(`${Ast.NodeKind.NullCoalescingExpression}`, () => {
         it(`1 ?? a`, async () => {
             await runAbridgedNodeTest(`1 ?? a`, [
-                [Language.Ast.NodeKind.NullCoalescingExpression, undefined],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.IdentifierExpression, 2],
-                [Language.Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.IdentifierExpression, 2],
+                [Ast.NodeKind.Identifier, 1],
             ]);
         });
 
         it(`1 ?? 1 ?? 1`, async () => {
             await runAbridgedNodeTest(`1 ?? 1 ?? 1`, [
-                [Language.Ast.NodeKind.NullCoalescingExpression, undefined],
-                [Language.Ast.NodeKind.NullCoalescingExpression, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.NullCoalescingExpression, 0],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ]);
         });
     });
 
-    // Ast.NodeKind.OtherwiseExpression covered by `${Language.Ast.NodeKind.ErrorHandlingExpression} otherwise`
+    // Ast.Ast.NodeKind.OtherwiseExpression covered by `${Ast.NodeKind.ErrorHandlingExpression} otherwise`
 
-    // Ast.NodeKind.Parameter covered by many
+    // Ast.Ast.NodeKind.Parameter covered by many
 
-    // Ast.NodeKind.ParameterList covered by many
+    // Ast.Ast.NodeKind.ParameterList covered by many
 
-    describe(`${Language.Ast.NodeKind.ParenthesizedExpression}`, () => {
+    describe(`${Ast.NodeKind.ParenthesizedExpression}`, () => {
         it(`(1)`, async () => {
             await runAbridgedNodeTest(`(1)`, [
-                [Language.Ast.NodeKind.ParenthesizedExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 1],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.ParenthesizedExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`(1) + 1`, async () => {
             await runAbridgedNodeTest(`(1) + 1`, [
-                [Language.Ast.NodeKind.ArithmeticExpression, undefined],
-                [Language.Ast.NodeKind.ParenthesizedExpression, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.ArithmeticExpression, undefined],
+                [Ast.NodeKind.ParenthesizedExpression, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ]);
         });
 
         it(`(if true then true else false) and true`, async () => {
             await runAbridgedNodeTest(`(if true then true else false) and true`, [
-                [Language.Ast.NodeKind.LogicalExpression, undefined],
-                [Language.Ast.NodeKind.ParenthesizedExpression, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.IfExpression, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.LiteralExpression, 3],
-                [Language.Ast.NodeKind.Constant, 4],
-                [Language.Ast.NodeKind.LiteralExpression, 5],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.LogicalExpression, undefined],
+                [Ast.NodeKind.ParenthesizedExpression, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.IfExpression, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.LiteralExpression, 3],
+                [Ast.NodeKind.Constant, 4],
+                [Ast.NodeKind.LiteralExpression, 5],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ]);
         });
 
         it(`((1)) and true`, async () => {
             await runAbridgedNodeTest(`((1)) and true`, [
-                [Language.Ast.NodeKind.LogicalExpression, undefined],
-                [Language.Ast.NodeKind.ParenthesizedExpression, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ParenthesizedExpression, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.LogicalExpression, undefined],
+                [Ast.NodeKind.ParenthesizedExpression, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ParenthesizedExpression, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ]);
         });
     });
 
-    describe(`${Language.Ast.NodeKind.PrimitiveType}`, () => {
+    describe(`${Ast.NodeKind.PrimitiveType}`, () => {
         it(`1 as time`, async () => {
             await runAbridgedNodeTest(`1 as time`, [
-                [Language.Ast.NodeKind.AsExpression, undefined],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.PrimitiveType, 2],
+                [Ast.NodeKind.AsExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.PrimitiveType, 2],
             ]);
         });
     });
 
-    describe(`${Language.Ast.NodeKind.RecordExpression}`, () => {
+    describe(`${Ast.NodeKind.RecordExpression}`, () => {
         it(`[x=1]`, async () => {
             await runAbridgedNodeTest(`[x=1]`, [
-                [Language.Ast.NodeKind.RecordExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifierPairedExpression, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.RecordExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.GeneralizedIdentifierPairedExpression, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`[]`, async () => {
             await runAbridgedNodeTest(`[]`, [
-                [Language.Ast.NodeKind.RecordExpression, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.RecordExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
     });
 
-    // Ast.NodeKind.RecordLiteral covered by many
+    // Ast.Ast.NodeKind.RecordLiteral covered by many
 
-    describe(`${Language.Ast.NodeKind.RecordType}`, () => {
+    describe(`${Ast.NodeKind.RecordType}`, () => {
         it(`type [x]`, async () => {
             await runAbridgedNodeTest(`type [x]`, [
-                [Language.Ast.NodeKind.TypePrimaryType, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.RecordType, 1],
-                [Language.Ast.NodeKind.FieldSpecificationList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.FieldSpecification, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.TypePrimaryType, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.RecordType, 1],
+                [Ast.NodeKind.FieldSpecificationList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.FieldSpecification, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`type [x, ...]`, async () => {
             await runAbridgedNodeTest(`type [x, ...]`, [
-                [Language.Ast.NodeKind.TypePrimaryType, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.RecordType, 1],
-                [Language.Ast.NodeKind.FieldSpecificationList, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.FieldSpecification, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.TypePrimaryType, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.RecordType, 1],
+                [Ast.NodeKind.FieldSpecificationList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.FieldSpecification, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 3],
             ]);
         });
     });
 
-    // Ast.NodeKind.RecursivePrimaryExpression covered by many
+    // Ast.Ast.NodeKind.RecursivePrimaryExpression covered by many
 
-    describe(`${Language.Ast.NodeKind.RelationalExpression}`, () => {
+    describe(`${Ast.NodeKind.RelationalExpression}`, () => {
         it(`1 > 2`, async () => {
             await runAbridgedNodeAndOperatorTest(`1 > 2`, Constant.RelationalOperator.GreaterThan, [
-                [Language.Ast.NodeKind.RelationalExpression, undefined],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.RelationalExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ]);
         });
 
         it(`1 >= 2`, async () => {
             await runAbridgedNodeAndOperatorTest(`1 >= 2`, Constant.RelationalOperator.GreaterThanEqualTo, [
-                [Language.Ast.NodeKind.RelationalExpression, undefined],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.RelationalExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ]);
         });
 
         it(`1 < 2`, async () => {
             await runAbridgedNodeAndOperatorTest(`1 < 2`, Constant.RelationalOperator.LessThan, [
-                [Language.Ast.NodeKind.RelationalExpression, undefined],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.RelationalExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ]);
         });
 
         it(`1 <= 2`, async () => {
             await runAbridgedNodeAndOperatorTest(`1 <= 2`, Constant.RelationalOperator.LessThanEqualTo, [
-                [Language.Ast.NodeKind.RelationalExpression, undefined],
-                [Language.Ast.NodeKind.LiteralExpression, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.RelationalExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ]);
         });
     });
 
-    describe(`${Language.Ast.NodeKind.Section}`, () => {
+    describe(`${Ast.NodeKind.Section}`, () => {
         it(`section;`, async () => {
             await runAbridgedNodeTest(`section;`, [
-                [Language.Ast.NodeKind.Section, undefined],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Constant, 3],
-                [Language.Ast.NodeKind.ArrayWrapper, 4],
+                [Ast.NodeKind.Section, undefined],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.ArrayWrapper, 4],
             ]);
         });
 
         it(`[] section;`, async () => {
             await runAbridgedNodeTest(`[] section;`, [
-                [Language.Ast.NodeKind.Section, undefined],
-                [Language.Ast.NodeKind.RecordLiteral, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Constant, 3],
-                [Language.Ast.NodeKind.ArrayWrapper, 4],
+                [Ast.NodeKind.Section, undefined],
+                [Ast.NodeKind.RecordLiteral, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.ArrayWrapper, 4],
             ]);
         });
 
         it(`section foo;`, async () => {
             await runAbridgedNodeTest(`section foo;`, [
-                [Language.Ast.NodeKind.Section, undefined],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Identifier, 2],
-                [Language.Ast.NodeKind.Constant, 3],
-                [Language.Ast.NodeKind.ArrayWrapper, 4],
+                [Ast.NodeKind.Section, undefined],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Identifier, 2],
+                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.ArrayWrapper, 4],
             ]);
         });
 
         it(`section; x = 1;`, async () => {
             await runAbridgedNodeTest(`section; x = 1;`, [
-                [Language.Ast.NodeKind.Section, undefined],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Constant, 3],
-                [Language.Ast.NodeKind.ArrayWrapper, 4],
-                [Language.Ast.NodeKind.SectionMember, 0],
-                [Language.Ast.NodeKind.IdentifierPairedExpression, 2],
-                [Language.Ast.NodeKind.Identifier, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.Section, undefined],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.ArrayWrapper, 4],
+                [Ast.NodeKind.SectionMember, 0],
+                [Ast.NodeKind.IdentifierPairedExpression, 2],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 3],
             ]);
         });
 
         it(`section; x = 1; y = 2;`, async () => {
             await runAbridgedNodeTest(`section; x = 1; y = 2;`, [
-                [Language.Ast.NodeKind.Section, undefined],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Constant, 3],
-                [Language.Ast.NodeKind.ArrayWrapper, 4],
-                [Language.Ast.NodeKind.SectionMember, 0],
-                [Language.Ast.NodeKind.IdentifierPairedExpression, 2],
-                [Language.Ast.NodeKind.Identifier, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 3],
-                [Language.Ast.NodeKind.SectionMember, 1],
-                [Language.Ast.NodeKind.IdentifierPairedExpression, 2],
-                [Language.Ast.NodeKind.Identifier, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.Section, undefined],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.ArrayWrapper, 4],
+                [Ast.NodeKind.SectionMember, 0],
+                [Ast.NodeKind.IdentifierPairedExpression, 2],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.SectionMember, 1],
+                [Ast.NodeKind.IdentifierPairedExpression, 2],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 3],
             ]);
         });
     });
 
-    describe(`${Language.Ast.NodeKind.SectionMember}`, () => {
+    describe(`${Ast.NodeKind.SectionMember}`, () => {
         it(`section; x = 1;`, async () => {
             await runAbridgedNodeTest(`section; x = 1;`, [
-                [Language.Ast.NodeKind.Section, undefined],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Constant, 3],
-                [Language.Ast.NodeKind.ArrayWrapper, 4],
-                [Language.Ast.NodeKind.SectionMember, 0],
-                [Language.Ast.NodeKind.IdentifierPairedExpression, 2],
-                [Language.Ast.NodeKind.Identifier, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.Section, undefined],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.ArrayWrapper, 4],
+                [Ast.NodeKind.SectionMember, 0],
+                [Ast.NodeKind.IdentifierPairedExpression, 2],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 3],
             ]);
         });
 
         it(`section; [] x = 1;`, async () => {
             await runAbridgedNodeTest(`section; [] x = 1;`, [
-                [Language.Ast.NodeKind.Section, undefined],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Constant, 3],
-                [Language.Ast.NodeKind.ArrayWrapper, 4],
-                [Language.Ast.NodeKind.SectionMember, 0],
-                [Language.Ast.NodeKind.RecordLiteral, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Constant, 2],
-                [Language.Ast.NodeKind.IdentifierPairedExpression, 2],
-                [Language.Ast.NodeKind.Identifier, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.Section, undefined],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.ArrayWrapper, 4],
+                [Ast.NodeKind.SectionMember, 0],
+                [Ast.NodeKind.RecordLiteral, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.IdentifierPairedExpression, 2],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 3],
             ]);
         });
 
         it(`section; shared x = 1;`, async () => {
             await runAbridgedNodeTest(`section; shared x = 1;`, [
-                [Language.Ast.NodeKind.Section, undefined],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.Constant, 3],
-                [Language.Ast.NodeKind.ArrayWrapper, 4],
-                [Language.Ast.NodeKind.SectionMember, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.IdentifierPairedExpression, 2],
-                [Language.Ast.NodeKind.Identifier, 0],
-                [Language.Ast.NodeKind.Constant, 1],
-                [Language.Ast.NodeKind.LiteralExpression, 2],
-                [Language.Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.Section, undefined],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.ArrayWrapper, 4],
+                [Ast.NodeKind.SectionMember, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.IdentifierPairedExpression, 2],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 3],
             ]);
         });
     });
 
-    describe(`${Language.Ast.NodeKind.TableType}`, () => {
+    describe(`${Ast.NodeKind.TableType}`, () => {
         it(`type table [x]`, async () => {
             await runAbridgedNodeTest(`type table [x]`, [
-                [Language.Ast.NodeKind.TypePrimaryType, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.TableType, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.FieldSpecificationList, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ArrayWrapper, 1],
-                [Language.Ast.NodeKind.Csv, 0],
-                [Language.Ast.NodeKind.FieldSpecification, 0],
-                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.TypePrimaryType, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.TableType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.FieldSpecificationList, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.FieldSpecification, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
 
         it(`type table (x)`, async () => {
             await runAbridgedNodeTest(`type table (x)`, [
-                [Language.Ast.NodeKind.TypePrimaryType, undefined],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.TableType, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.ParenthesizedExpression, 1],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.IdentifierExpression, 1],
-                [Language.Ast.NodeKind.Identifier, 1],
-                [Language.Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.TypePrimaryType, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.TableType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ParenthesizedExpression, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.IdentifierExpression, 1],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.Constant, 2],
             ]);
         });
     });
 
-    // Ast.NodeKind.TypePrimaryType covered by many
+    // Ast.Ast.NodeKind.TypePrimaryType covered by many
 
-    describe(`${Language.Ast.NodeKind.UnaryExpression}`, () => {
+    describe(`${Ast.NodeKind.UnaryExpression}`, () => {
         it(`-1`, async () => {
             await runAbridgedNodeAndOperatorTest(`-1`, Constant.UnaryOperator.Negative, [
-                [Language.Ast.NodeKind.UnaryExpression, undefined],
-                [Language.Ast.NodeKind.ArrayWrapper, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.UnaryExpression, undefined],
+                [Ast.NodeKind.ArrayWrapper, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
             ]);
         });
 
         it(`not 1`, async () => {
             await runAbridgedNodeAndOperatorTest(`not 1`, Constant.UnaryOperator.Not, [
-                [Language.Ast.NodeKind.UnaryExpression, undefined],
-                [Language.Ast.NodeKind.ArrayWrapper, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.UnaryExpression, undefined],
+                [Ast.NodeKind.ArrayWrapper, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
             ]);
         });
 
         it(`+1`, async () => {
             await runAbridgedNodeAndOperatorTest(`+1`, Constant.UnaryOperator.Positive, [
-                [Language.Ast.NodeKind.UnaryExpression, undefined],
-                [Language.Ast.NodeKind.ArrayWrapper, 0],
-                [Language.Ast.NodeKind.Constant, 0],
-                [Language.Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.UnaryExpression, undefined],
+                [Ast.NodeKind.ArrayWrapper, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
             ]);
         });
     });
