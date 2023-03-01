@@ -18,6 +18,7 @@ import {
     Traverse,
 } from "../../..";
 import { NodeIdMap, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
+import { Constant } from "../../../powerquery-parser/language";
 import { NoOpTraceManagerInstance } from "../../../powerquery-parser/common/trace";
 import { TestAssertUtils } from "../../testUtils";
 
@@ -31,7 +32,7 @@ interface NthNodeOfKindState extends Traverse.ITraversalState<Language.Ast.TNode
     nthCounter: number;
 }
 
-async function collectAbridgeNodeFromContext(text: string): Promise<ReadonlyArray<AbridgedNode>> {
+async function collectAbridgeNodeFromXor(text: string): Promise<ReadonlyArray<AbridgedNode>> {
     const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
 
     let root: TXorNode;
@@ -134,8 +135,24 @@ async function nthNodeEarlyExit(state: NthNodeOfKindState, _: Language.Ast.TNode
 
 describe("Parser.AbridgedNode", () => {
     async function runAbridgedNodeTest(text: string, expected: ReadonlyArray<AbridgedNode>): Promise<void> {
-        const actual: ReadonlyArray<AbridgedNode> = await collectAbridgeNodeFromContext(text);
+        const actual: ReadonlyArray<AbridgedNode> = await collectAbridgeNodeFromXor(text);
         expect(actual).to.deep.equal(expected);
+    }
+
+    async function runAbridgedNodeAndOperatorTest(
+        text: string,
+        constant: Constant.TConstant,
+        expected: ReadonlyArray<AbridgedNode>,
+    ): Promise<void> {
+        await runAbridgedNodeTest(text, expected);
+
+        const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
+            text,
+            Language.Ast.NodeKind.Constant,
+            1,
+        );
+
+        expect(operatorNode.constantKind).to.equal(constant);
     }
 
     describe(`custom IParser.read`, () => {
@@ -157,98 +174,48 @@ describe("Parser.AbridgedNode", () => {
 
     describe(`${Language.Ast.NodeKind.ArithmeticExpression}`, () => {
         it(`1 & 2`, async () => {
-            const text: string = `1 & 2`;
-
-            await runAbridgedNodeTest(text, [
+            await runAbridgedNodeAndOperatorTest(`1 & 2`, Constant.ArithmeticOperator.And, [
                 [Language.Ast.NodeKind.ArithmeticExpression, undefined],
                 [Language.Ast.NodeKind.LiteralExpression, 0],
                 [Language.Ast.NodeKind.Constant, 1],
                 [Language.Ast.NodeKind.LiteralExpression, 2],
             ]);
-
-            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
-                text,
-                Language.Ast.NodeKind.Constant,
-                1,
-            );
-
-            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperator.And);
         });
 
         it(`1 * 2`, async () => {
-            const text: string = `1 * 2`;
-
-            await runAbridgedNodeTest(text, [
+            await runAbridgedNodeAndOperatorTest(`1 * 2`, Constant.ArithmeticOperator.Multiplication, [
                 [Language.Ast.NodeKind.ArithmeticExpression, undefined],
                 [Language.Ast.NodeKind.LiteralExpression, 0],
                 [Language.Ast.NodeKind.Constant, 1],
                 [Language.Ast.NodeKind.LiteralExpression, 2],
             ]);
-
-            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
-                text,
-                Language.Ast.NodeKind.Constant,
-                1,
-            );
-
-            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperator.Multiplication);
         });
 
         it(`1 / 2`, async () => {
-            const text: string = `1 / 2`;
-
-            await runAbridgedNodeTest(`1 / 2`, [
+            await runAbridgedNodeAndOperatorTest(`1 / 2`, Constant.ArithmeticOperator.Division, [
                 [Language.Ast.NodeKind.ArithmeticExpression, undefined],
                 [Language.Ast.NodeKind.LiteralExpression, 0],
                 [Language.Ast.NodeKind.Constant, 1],
                 [Language.Ast.NodeKind.LiteralExpression, 2],
             ]);
-
-            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
-                text,
-                Language.Ast.NodeKind.Constant,
-                1,
-            );
-
-            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperator.Division);
         });
 
         it(`1 + 2`, async () => {
-            const text: string = `1 + 2`;
-
-            await runAbridgedNodeTest(`1 + 2`, [
+            await runAbridgedNodeAndOperatorTest(`1 + 2`, Constant.ArithmeticOperator.Addition, [
                 [Language.Ast.NodeKind.ArithmeticExpression, undefined],
                 [Language.Ast.NodeKind.LiteralExpression, 0],
                 [Language.Ast.NodeKind.Constant, 1],
                 [Language.Ast.NodeKind.LiteralExpression, 2],
             ]);
-
-            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
-                text,
-                Language.Ast.NodeKind.Constant,
-                1,
-            );
-
-            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperator.Addition);
         });
 
         it(`1 - 2`, async () => {
-            const text: string = `1 - 2`;
-
-            await runAbridgedNodeTest(`1 - 2`, [
+            await runAbridgedNodeAndOperatorTest(`1 - 2`, Constant.ArithmeticOperator.Subtraction, [
                 [Language.Ast.NodeKind.ArithmeticExpression, undefined],
                 [Language.Ast.NodeKind.LiteralExpression, 0],
                 [Language.Ast.NodeKind.Constant, 1],
                 [Language.Ast.NodeKind.LiteralExpression, 2],
             ]);
-
-            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
-                text,
-                Language.Ast.NodeKind.Constant,
-                1,
-            );
-
-            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperator.Subtraction);
         });
 
         it(`1 + 2 + 3 + 4`, async () => {
@@ -314,41 +281,21 @@ describe("Parser.AbridgedNode", () => {
 
     describe(`${Language.Ast.NodeKind.EqualityExpression}`, () => {
         it(`1 = 2`, async () => {
-            const text: string = `1 = 2`;
-
-            await runAbridgedNodeTest(`1 = 2`, [
+            await runAbridgedNodeAndOperatorTest(`1 = 2`, Constant.EqualityOperator.EqualTo, [
                 [Language.Ast.NodeKind.EqualityExpression, undefined],
                 [Language.Ast.NodeKind.LiteralExpression, 0],
                 [Language.Ast.NodeKind.Constant, 1],
                 [Language.Ast.NodeKind.LiteralExpression, 2],
             ]);
-
-            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
-                text,
-                Language.Ast.NodeKind.Constant,
-                1,
-            );
-
-            expect(operatorNode.constantKind).to.equal(Language.Constant.EqualityOperator.EqualTo);
         });
 
         it(`1 <> 2`, async () => {
-            const text: string = `1 <> 2`;
-
-            await runAbridgedNodeTest(`1 <> 2`, [
+            await runAbridgedNodeAndOperatorTest(`1 <> 2`, Constant.EqualityOperator.NotEqualTo, [
                 [Language.Ast.NodeKind.EqualityExpression, undefined],
                 [Language.Ast.NodeKind.LiteralExpression, 0],
                 [Language.Ast.NodeKind.Constant, 1],
                 [Language.Ast.NodeKind.LiteralExpression, 2],
             ]);
-
-            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
-                text,
-                Language.Ast.NodeKind.Constant,
-                1,
-            );
-
-            expect(operatorNode.constantKind).to.equal(Language.Constant.EqualityOperator.NotEqualTo);
         });
     });
 
@@ -931,9 +878,7 @@ describe("Parser.AbridgedNode", () => {
     });
 
     it(`${Language.Ast.NodeKind.IdentifierPairedExpression}`, async () => {
-        const text: string = `section; x = 1;`;
-
-        await runAbridgedNodeTest(text, [
+        await runAbridgedNodeTest(`section; x = 1;`, [
             [Language.Ast.NodeKind.Section, undefined],
             [Language.Ast.NodeKind.Constant, 1],
             [Language.Ast.NodeKind.Constant, 3],
@@ -948,9 +893,7 @@ describe("Parser.AbridgedNode", () => {
     });
 
     it(`${Language.Ast.NodeKind.IfExpression}`, async () => {
-        const text: string = `if x then x else x`;
-
-        await runAbridgedNodeTest(text, [
+        await runAbridgedNodeTest(`if x then x else x`, [
             [Language.Ast.NodeKind.IfExpression, undefined],
             [Language.Ast.NodeKind.Constant, 0],
             [Language.Ast.NodeKind.IdentifierExpression, 1],
@@ -965,9 +908,7 @@ describe("Parser.AbridgedNode", () => {
     });
 
     it(`${Language.Ast.NodeKind.InvokeExpression}`, async () => {
-        const text: string = `foo()`;
-
-        await runAbridgedNodeTest(text, [
+        await runAbridgedNodeTest(`foo()`, [
             [Language.Ast.NodeKind.RecursivePrimaryExpression, undefined],
             [Language.Ast.NodeKind.IdentifierExpression, 0],
             [Language.Ast.NodeKind.Identifier, 1],
@@ -1003,9 +944,7 @@ describe("Parser.AbridgedNode", () => {
     });
 
     it(`${Language.Ast.NodeKind.ItemAccessExpression}`, async () => {
-        const text: string = `x{1}`;
-
-        await runAbridgedNodeTest(text, [
+        await runAbridgedNodeTest(`x{1}`, [
             [Language.Ast.NodeKind.RecursivePrimaryExpression, undefined],
             [Language.Ast.NodeKind.IdentifierExpression, 0],
             [Language.Ast.NodeKind.Identifier, 1],
@@ -1018,9 +957,7 @@ describe("Parser.AbridgedNode", () => {
     });
 
     it(`${Language.Ast.NodeKind.ItemAccessExpression} optional`, async () => {
-        const text: string = `x{1}?`;
-
-        await runAbridgedNodeTest(text, [
+        await runAbridgedNodeTest(`x{1}?`, [
             [Language.Ast.NodeKind.RecursivePrimaryExpression, undefined],
             [Language.Ast.NodeKind.IdentifierExpression, 0],
             [Language.Ast.NodeKind.Identifier, 1],
@@ -1368,9 +1305,7 @@ describe("Parser.AbridgedNode", () => {
     });
 
     it(`${Language.Ast.NodeKind.MetadataExpression}`, async () => {
-        const text: string = `1 meta 1`;
-
-        await runAbridgedNodeTest(text, [
+        await runAbridgedNodeTest(`1 meta 1`, [
             [Language.Ast.NodeKind.MetadataExpression, undefined],
             [Language.Ast.NodeKind.LiteralExpression, 0],
             [Language.Ast.NodeKind.Constant, 1],
@@ -1379,18 +1314,14 @@ describe("Parser.AbridgedNode", () => {
     });
 
     it(`${Language.Ast.NodeKind.NotImplementedExpression}`, async () => {
-        const text: string = `...`;
-
-        await runAbridgedNodeTest(text, [
+        await runAbridgedNodeTest(`...`, [
             [Language.Ast.NodeKind.NotImplementedExpression, undefined],
             [Language.Ast.NodeKind.Constant, 0],
         ]);
     });
 
     it(`${Language.Ast.NodeKind.NullablePrimitiveType}`, async () => {
-        const text: string = `1 is nullable number`;
-
-        await runAbridgedNodeTest(text, [
+        await runAbridgedNodeTest(`1 is nullable number`, [
             [Language.Ast.NodeKind.IsExpression, undefined],
             [Language.Ast.NodeKind.LiteralExpression, 0],
             [Language.Ast.NodeKind.Constant, 1],
@@ -1401,9 +1332,7 @@ describe("Parser.AbridgedNode", () => {
     });
 
     it(`${Language.Ast.NodeKind.NullableType}`, async () => {
-        const text: string = `type nullable number`;
-
-        await runAbridgedNodeTest(text, [
+        await runAbridgedNodeTest(`type nullable number`, [
             [Language.Ast.NodeKind.TypePrimaryType, undefined],
             [Language.Ast.NodeKind.Constant, 0],
             [Language.Ast.NodeKind.NullableType, 1],
@@ -1574,79 +1503,39 @@ describe("Parser.AbridgedNode", () => {
 
     describe(`${Language.Ast.NodeKind.RelationalExpression}`, () => {
         it(`1 > 2`, async () => {
-            const text: string = `1 > 2`;
-
-            await runAbridgedNodeTest(`1 > 2`, [
+            await runAbridgedNodeAndOperatorTest(`1 > 2`, Constant.RelationalOperator.GreaterThan, [
                 [Language.Ast.NodeKind.RelationalExpression, undefined],
                 [Language.Ast.NodeKind.LiteralExpression, 0],
                 [Language.Ast.NodeKind.Constant, 1],
                 [Language.Ast.NodeKind.LiteralExpression, 2],
             ]);
-
-            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
-                text,
-                Language.Ast.NodeKind.Constant,
-                1,
-            );
-
-            expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperator.GreaterThan);
         });
 
         it(`1 >= 2`, async () => {
-            const text: string = `1 >= 2`;
-
-            await runAbridgedNodeTest(`1 >= 2`, [
+            await runAbridgedNodeAndOperatorTest(`1 >= 2`, Constant.RelationalOperator.GreaterThanEqualTo, [
                 [Language.Ast.NodeKind.RelationalExpression, undefined],
                 [Language.Ast.NodeKind.LiteralExpression, 0],
                 [Language.Ast.NodeKind.Constant, 1],
                 [Language.Ast.NodeKind.LiteralExpression, 2],
             ]);
-
-            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
-                text,
-                Language.Ast.NodeKind.Constant,
-                1,
-            );
-
-            expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperator.GreaterThanEqualTo);
         });
 
         it(`1 < 2`, async () => {
-            const text: string = `1 < 2`;
-
-            await runAbridgedNodeTest(`1 < 2`, [
+            await runAbridgedNodeAndOperatorTest(`1 < 2`, Constant.RelationalOperator.LessThan, [
                 [Language.Ast.NodeKind.RelationalExpression, undefined],
                 [Language.Ast.NodeKind.LiteralExpression, 0],
                 [Language.Ast.NodeKind.Constant, 1],
                 [Language.Ast.NodeKind.LiteralExpression, 2],
             ]);
-
-            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
-                text,
-                Language.Ast.NodeKind.Constant,
-                1,
-            );
-
-            expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperator.LessThan);
         });
 
         it(`1 <= 2`, async () => {
-            const text: string = `1 <= 2`;
-
-            await runAbridgedNodeTest(`1 <= 2`, [
+            await runAbridgedNodeAndOperatorTest(`1 <= 2`, Constant.RelationalOperator.LessThanEqualTo, [
                 [Language.Ast.NodeKind.RelationalExpression, undefined],
                 [Language.Ast.NodeKind.LiteralExpression, 0],
                 [Language.Ast.NodeKind.Constant, 1],
                 [Language.Ast.NodeKind.LiteralExpression, 2],
             ]);
-
-            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
-                text,
-                Language.Ast.NodeKind.Constant,
-                1,
-            );
-
-            expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperator.LessThanEqualTo);
         });
     });
 
@@ -1808,60 +1697,30 @@ describe("Parser.AbridgedNode", () => {
 
     describe(`${Language.Ast.NodeKind.UnaryExpression}`, () => {
         it(`-1`, async () => {
-            const text: string = `-1`;
-
-            await runAbridgedNodeTest(`-1`, [
+            await runAbridgedNodeAndOperatorTest(`-1`, Constant.UnaryOperator.Negative, [
                 [Language.Ast.NodeKind.UnaryExpression, undefined],
                 [Language.Ast.NodeKind.ArrayWrapper, 0],
                 [Language.Ast.NodeKind.Constant, 0],
                 [Language.Ast.NodeKind.LiteralExpression, 1],
             ]);
-
-            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
-                text,
-                Language.Ast.NodeKind.Constant,
-                1,
-            );
-
-            expect(operatorNode.constantKind).to.equal(Language.Constant.UnaryOperator.Negative);
         });
 
         it(`not 1`, async () => {
-            const text: string = `not 1`;
-
-            await runAbridgedNodeTest(`not 1`, [
+            await runAbridgedNodeAndOperatorTest(`not 1`, Constant.UnaryOperator.Not, [
                 [Language.Ast.NodeKind.UnaryExpression, undefined],
                 [Language.Ast.NodeKind.ArrayWrapper, 0],
                 [Language.Ast.NodeKind.Constant, 0],
                 [Language.Ast.NodeKind.LiteralExpression, 1],
             ]);
-
-            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
-                text,
-                Language.Ast.NodeKind.Constant,
-                1,
-            );
-
-            expect(operatorNode.constantKind).to.equal(Language.Constant.UnaryOperator.Not);
         });
 
         it(`+1`, async () => {
-            const text: string = `+1`;
-
-            await runAbridgedNodeTest(`+1`, [
+            await runAbridgedNodeAndOperatorTest(`+1`, Constant.UnaryOperator.Positive, [
                 [Language.Ast.NodeKind.UnaryExpression, undefined],
                 [Language.Ast.NodeKind.ArrayWrapper, 0],
                 [Language.Ast.NodeKind.Constant, 0],
                 [Language.Ast.NodeKind.LiteralExpression, 1],
             ]);
-
-            const operatorNode: Language.Ast.TConstant = await assertGetNthNodeOfKind<Language.Ast.TConstant>(
-                text,
-                Language.Ast.NodeKind.Constant,
-                1,
-            );
-
-            expect(operatorNode.constantKind).to.equal(Language.Constant.UnaryOperator.Positive);
         });
     });
 });
