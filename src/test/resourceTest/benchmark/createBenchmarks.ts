@@ -11,7 +11,7 @@ import { DefaultSettings, Settings } from "../../..";
 import { BenchmarkTraceManager } from "../../../powerquery-parser/common/trace";
 import { TestFileUtils } from "../../testUtils";
 
-const NumberOfRunsPerFile: number = 1;
+const NumberOfRunsPerFile: number = 100;
 const ResourceDirectory: string = path.dirname(__filename);
 const SourceFilesDirectory: string = path.join(ResourceDirectory, "sourceFiles");
 const OutputDirectory: string = path.join(ResourceDirectory, "logs");
