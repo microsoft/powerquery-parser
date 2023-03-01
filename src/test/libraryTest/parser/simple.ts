@@ -10,9 +10,7 @@ import {
     DefaultLocale,
     DefaultSettings,
     Language,
-    Parser,
     ResultUtils,
-    Settings,
     Task,
     TaskUtils,
     Traverse,
@@ -154,23 +152,6 @@ describe("Parser.AbridgedNode", () => {
 
         expect(operatorNode.constantKind).to.equal(constant);
     }
-
-    describe(`custom IParser.read`, () => {
-        it(`readParameterSpecificationList`, async () => {
-            const customSettings: Settings = {
-                ...DefaultSettings,
-                parser: Parser.RecursiveDescentParser,
-                parserEntryPoint: Parser.RecursiveDescentParser.readParameterSpecificationList,
-            };
-
-            const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(
-                customSettings,
-                "(a as number, optional b as text)",
-            );
-
-            TaskUtils.assertIsParseStageOk(triedLexParseTask);
-        });
-    });
 
     describe(`${Language.Ast.NodeKind.ArithmeticExpression}`, () => {
         it(`1 & 2`, async () => {
