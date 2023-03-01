@@ -11,7 +11,7 @@ import { DefaultSettings, Settings } from "../../..";
 import { BenchmarkTraceManager } from "../../../powerquery-parser/common/trace";
 import { TestFileUtils } from "../../testUtils";
 
-const NumberOfRunsPerFile: number = 100;
+const NumberOfRunsPerFile: number = 25;
 const ResourceDirectory: string = path.dirname(__filename);
 const SourceFilesDirectory: string = path.join(ResourceDirectory, "sourceFiles");
 const OutputDirectory: string = path.join(ResourceDirectory, "logs");
@@ -35,38 +35,52 @@ function createOutputDirectoryIfNeeded(): void {
     }
 }
 
-for (const filePath of TestFileUtils.getPowerQueryFilesRecursively(SourceFilesDirectory)) {
-    const fileStart: number = performanceNow();
+async function runTest(filePath: string, iteration: number): Promise<string> {
+    console.log(`Starting iteration ${iteration + 1} out of ${NumberOfRunsPerFile} for ${path.basename(filePath)}`);
 
-    for (let iteration: number = 0; iteration < NumberOfRunsPerFile; iteration += 1) {
-        const iterationStream: fs.WriteStream = createIterationOutputStream(filePath, iteration);
+    let contents: string = "";
 
-        iterationStream.on("open", async () => {
-            if (iteration % 2 === 0 || iteration === NumberOfRunsPerFile - 1) {
-                console.log(
-                    `Running iteration ${iteration + 1} out of ${NumberOfRunsPerFile} for ${path.basename(filePath)}`,
-                );
-            }
+    const benchmarkSettings: Settings = {
+        ...DefaultSettings,
+        traceManager: new BenchmarkTraceManager((message: string) => (contents = contents + message)),
+    };
 
-            const benchmarkSettings: Settings = {
-                ...DefaultSettings,
-                traceManager: new BenchmarkTraceManager((message: string) => iterationStream.write(message)),
-            };
+    await TestFileUtils.tryLexParse(benchmarkSettings, filePath);
 
-            await TestFileUtils.tryLexParse(benchmarkSettings, filePath);
+    console.log(`Finished iteration ${iteration + 1} out of ${NumberOfRunsPerFile} for ${path.basename(filePath)}`);
 
-            iterationStream.close();
+    return contents;
+}
+
+async function main(): Promise<void> {
+    for (const filePath of TestFileUtils.getPowerQueryFilesRecursively(SourceFilesDirectory)) {
+        const fileStart: number = performanceNow();
+
+        for (let iteration: number = 0; iteration < NumberOfRunsPerFile; iteration += 1) {
+            // eslint-disable-next-line no-await-in-loop
+            const contents: string = await runTest(filePath, iteration);
+
+            const iterationStream: fs.WriteStream = createIterationOutputStream(filePath, iteration);
+
+            iterationStream.on("open", () => {
+                iterationStream.write(contents);
+            });
+        }
+
+        const fileEnd: number = performanceNow();
+        const fileDuration: number = fileEnd - fileStart;
+        const fileAverage: number = fileDuration / NumberOfRunsPerFile;
+
+        const summaryStream: fs.WriteStream = createOutputStream(`${path.basename(filePath)}.summary`);
+
+        summaryStream.on("open", () => {
+            summaryStream.write(`Total time: ${fileDuration}ms\nAverage time: ${fileAverage}ms\n`);
+            summaryStream.close();
         });
     }
-
-    const fileEnd: number = performanceNow();
-    const fileDuration: number = fileEnd - fileStart;
-    const fileAverage: number = fileDuration / NumberOfRunsPerFile;
-
-    const summaryStream: fs.WriteStream = createOutputStream(`${path.basename(filePath)}.summary`);
-
-    summaryStream.on("open", () => {
-        summaryStream.write(`Total time: ${fileDuration}ms\nAverage time: ${fileAverage}ms\n`);
-        summaryStream.close();
-    });
 }
+
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
+(async (): Promise<void> => {
+    void (await main());
+})();
