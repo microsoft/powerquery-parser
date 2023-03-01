@@ -47,8 +47,6 @@ async function runTest(filePath: string, iteration: number): Promise<string> {
 
     await TestFileUtils.tryLexParse(benchmarkSettings, filePath);
 
-    console.log(`Finished iteration ${iteration + 1} out of ${NumberOfRunsPerFile} for ${path.basename(filePath)}`);
-
     return contents;
 }
 
