@@ -52,6 +52,8 @@ export const enum TraceConstant {
 }
 
 export class Trace {
+    public readonly timeCreated: number = performanceNow();
+
     constructor(
         protected readonly emitter: (trace: Trace, message: string, details?: object) => void,
         public readonly phase: string,
@@ -126,9 +128,15 @@ export abstract class TraceManager {
         const detailsJson: string = details !== undefined ? this.safeJsonStringify(details) : TraceConstant.Empty;
 
         return (
-            [trace.phase, trace.task, trace.id, trace.correlationId, performanceNow(), message, detailsJson].join(
-                this.valueDelimiter,
-            ) + this.newline
+            [
+                trace.phase,
+                trace.task,
+                trace.id,
+                trace.correlationId,
+                performanceNow() - trace.timeCreated,
+                message,
+                detailsJson,
+            ].join(this.valueDelimiter) + this.newline
         );
     }
 

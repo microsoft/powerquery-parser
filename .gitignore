@@ -334,5 +334,5 @@ test-results.xml
 tsconfig.tsbuildinfo
 *.tgz
 
-# Files created by `npm run resourceTest'.
-src/test/resourceTest/benchmarkResources/logs/*.perf
+# Files created by `npm run test:benchmark'.
+src/test/resourceTest/benchmark/logs/*
