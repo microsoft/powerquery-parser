@@ -989,13 +989,6 @@ describe("Parser.AbridgedNode", () => {
             ]);
         });
 
-        // it(`WIP 1 is`, async () => {
-        //     const text: string = `1 is`;
-        //     await runAbridgedNodeTest(text, [[Language.Ast.NodeKind.IsExpression, undefined]];
-
-        //     await assertAbridgeContextNodes(text, expected);
-        // });
-
         it(`1 is number is number`, async () => {
             await runAbridgedNodeTest(`1 is number is number`, [
                 [Language.Ast.NodeKind.IsExpression, undefined],
