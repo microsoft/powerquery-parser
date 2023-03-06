@@ -17,6 +17,10 @@ export interface ResourceTestRun {
     readonly triedLexParse: Task.TriedLexParseTask;
 }
 
+export function getResourcePaths(): ReadonlyArray<string> {
+    return TestFileUtils.getPowerQueryFilePathsRecursively(ResourcesDirectory);
+}
+
 export async function visitResources(visitFn: (filePath: string) => Promise<void>): Promise<void> {
     for (const filePath of TestFileUtils.getPowerQueryFilePathsRecursively(ResourcesDirectory)) {
         // eslint-disable-next-line no-await-in-loop
@@ -31,7 +35,7 @@ export function runResourceTestSuite(
     visitFn: (testRun: ResourceTestRun) => void,
 ): void {
     describe(suiteName, () => {
-        for (const filePath of TestFileUtils.getPowerQueryFilePathsRecursively(ResourcesDirectory)) {
+        for (const filePath of getResourcePaths()) {
             it(testNameFn(filePath), async () => {
                 const fileContents: string = TestFileUtils.readContents(filePath);
                 const timeStart: number = performanceNow();

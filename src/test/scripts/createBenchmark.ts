@@ -6,46 +6,61 @@ import performanceNow = require("performance-now");
 
 import * as path from "path";
 
-import { DefaultSettings, Settings } from "../../powerquery-parser";
+import { ArrayUtils, DefaultSettings, Parser, Settings } from "../../powerquery-parser";
 import { TestFileUtils, TestResourceUtils } from "../testUtils";
 import { BenchmarkTraceManager } from "../../powerquery-parser/common/trace";
 
-const NumberOfRunsPerFile: number = 3;
-const ResourceDirectory: string = path.dirname(__filename);
-const OutputDirectory: string = path.join(ResourceDirectory, "logs");
+const NumberOfRunsPerFile: number = 25;
+const OutputDirectory: string = path.join(__dirname, "logs");
+
+const parsers: ReadonlyArray<[Parser.Parser, string]> = [
+    [Parser.CombinatorialParser, "CombinatorialParser"],
+    [Parser.RecursiveDescentParser, "RecursiveDescentParser"],
+];
 
 async function main(): Promise<void> {
-    await TestResourceUtils.visitResources(async (filePath: string): Promise<void> => {
-        const fileName: string = path.parse(filePath).name;
-        const fileStart: number = performanceNow();
+    const resourcePaths: ReadonlyArray<string> = TestResourceUtils.getResourcePaths();
 
-        for (let iteration: number = 0; iteration < NumberOfRunsPerFile; iteration += 1) {
-            console.log(
-                `Starting iteration ${iteration + 1} out of ${NumberOfRunsPerFile} for ${path.basename(filePath)}`,
+    for (const [parser, parserName] of parsers) {
+        for (const filePath of resourcePaths) {
+            const resourcePath: string = ArrayUtils.assertGet(filePath.split("microsoft-DataConnectors\\"), 1);
+            const normalizedResourcePath: string = resourcePath.replace(/\\/g, "-");
+            const fileStart: number = performanceNow();
+
+            for (let iteration: number = 0; iteration < NumberOfRunsPerFile; iteration += 1) {
+                console.log(
+                    `Starting iteration ${
+                        iteration + 1
+                    } out of ${NumberOfRunsPerFile} for ${normalizedResourcePath} using ${parserName}`,
+                );
+
+                let contents: string = "";
+
+                const benchmarkSettings: Settings = {
+                    ...DefaultSettings,
+                    parser,
+                    traceManager: new BenchmarkTraceManager((message: string) => (contents = contents + message)),
+                };
+
+                // eslint-disable-next-line no-await-in-loop
+                await TestFileUtils.tryLexParse(benchmarkSettings, filePath);
+
+                TestFileUtils.writeContents(
+                    path.join(OutputDirectory, `${normalizedResourcePath}_${parserName}_${iteration}.log`),
+                    contents,
+                );
+            }
+
+            const fileEnd: number = performanceNow();
+            const fileDuration: number = fileEnd - fileStart;
+            const fileAverage: number = fileDuration / NumberOfRunsPerFile;
+
+            TestFileUtils.writeContents(
+                path.join(OutputDirectory, `${normalizedResourcePath}_${parserName}_summary.log`),
+                [`Total time: ${fileDuration}ms`, `Average time: ${fileAverage}ms\n`].join(`\r\n`),
             );
-
-            let contents: string = "";
-
-            const benchmarkSettings: Settings = {
-                ...DefaultSettings,
-                traceManager: new BenchmarkTraceManager((message: string) => (contents = contents + message)),
-            };
-
-            // eslint-disable-next-line no-await-in-loop
-            await TestFileUtils.tryLexParse(benchmarkSettings, filePath);
-
-            TestFileUtils.writeContents(`${fileName}_example_${iteration}.log`, contents);
         }
-
-        const fileEnd: number = performanceNow();
-        const fileDuration: number = fileEnd - fileStart;
-        const fileAverage: number = fileDuration / NumberOfRunsPerFile;
-
-        TestFileUtils.writeContents(
-            path.join(OutputDirectory, fileName),
-            [`Total time: ${fileDuration}ms`, `Average time: ${fileAverage}ms\n`].join(`\r\n`),
-        );
-    });
+    }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises

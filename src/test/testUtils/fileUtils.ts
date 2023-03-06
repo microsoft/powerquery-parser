@@ -44,11 +44,7 @@ export function writeContents(filePath: string, contents: string): void {
     }
 
     // tslint:disable-next-line: non-literal-fs-path
-    fs.writeFile(filePath, contents, { encoding: "utf8" }, (err: NodeJS.ErrnoException | null) => {
-        if (err !== null) {
-            throw err;
-        }
-    });
+    fs.writeFileSync(filePath, contents, { encoding: "utf8" });
 }
 
 export async function tryLexParse(

@@ -133,7 +133,7 @@ export abstract class TraceManager {
                 trace.task,
                 trace.id,
                 trace.correlationId,
-                performanceNow() - trace.timeCreated,
+                Math.floor(performanceNow() - trace.timeCreated),
                 message,
                 detailsJson,
             ].join(this.valueDelimiter) + this.newline
