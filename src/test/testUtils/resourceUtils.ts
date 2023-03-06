@@ -17,7 +17,7 @@ export interface ResourceTestRun {
     readonly triedLexParse: Task.TriedLexParseTask;
 }
 
-export function getResourcePaths(): ReadonlyArray<string> {
+export function getResourceFilePaths(): ReadonlyArray<string> {
     return TestFileUtils.getPowerQueryFilePathsRecursively(ResourcesDirectory);
 }
 
@@ -35,7 +35,7 @@ export function runResourceTestSuite(
     visitFn: (testRun: ResourceTestRun) => void,
 ): void {
     describe(suiteName, () => {
-        for (const filePath of getResourcePaths()) {
+        for (const filePath of getResourceFilePaths()) {
             it(testNameFn(filePath), async () => {
                 const fileContents: string = TestFileUtils.readContents(filePath);
                 const timeStart: number = performanceNow();
