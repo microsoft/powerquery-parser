@@ -23,17 +23,17 @@ interface ParserSummary {
     readonly durationAverage: number;
     readonly durations: ReadonlyArray<number>;
     readonly durationSummed: number;
-    readonly parserName: string;
     readonly failedToParseResourcePaths: ReadonlyArray<string> | null;
+    readonly parserName: string;
 }
 
 interface ResourceSummary {
     readonly durationAverage: number;
     readonly durations: ReadonlyArray<number>;
     readonly durationSummed: number;
+    readonly failedToParse: boolean;
     readonly parserName: string;
     readonly resourcePath: string;
-    readonly failedToParse: boolean;
 }
 
 function jsonStringify(value: unknown): string {
