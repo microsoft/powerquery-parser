@@ -38,18 +38,15 @@ export function runResourceTestSuite(
         for (const filePath of getResourceFilePaths()) {
             it(testNameFn(filePath), async () => {
                 const fileContents: string = TestFileUtils.readContents(filePath);
-                const timeStart: number = performanceNow();
+                const testStart: number = performanceNow();
 
                 // eslint-disable-next-line no-await-in-loop
                 const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(settings, fileContents);
 
-                const timeEnd: number = performanceNow();
-                const timeDuration: number = timeEnd - timeStart;
-
                 visitFn({
                     fileContents,
                     filePath,
-                    testDuration: timeDuration,
+                    testDuration: Math.floor(performanceNow() - testStart),
                     triedLexParse,
                 });
             });
