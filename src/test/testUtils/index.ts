@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as TestAssertUtils from "./assertUtils";
-import * as TestFileUtils from "./fileUtils";
-
-export { TestAssertUtils, TestFileUtils };
+export * as TestAssertUtils from "./assertUtils";
+export * as TestFileUtils from "./fileUtils";
+export * as TestResourceUtils from "./resourceUtils";

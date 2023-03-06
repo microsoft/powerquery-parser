@@ -11,7 +11,7 @@ import { DefaultSettings, Settings } from "../../..";
 import { BenchmarkTraceManager } from "../../../powerquery-parser/common/trace";
 import { TestFileUtils } from "../../testUtils";
 
-const NumberOfRunsPerFile: number = 25;
+const NumberOfRunsPerFile: number = 0;
 const ResourceDirectory: string = path.dirname(__filename);
 const SourceFilesDirectory: string = path.join(ResourceDirectory, "sourceFiles");
 const OutputDirectory: string = path.join(ResourceDirectory, "logs");
@@ -51,7 +51,7 @@ async function runTest(filePath: string, iteration: number): Promise<string> {
 }
 
 async function main(): Promise<void> {
-    for (const filePath of TestFileUtils.getPowerQueryFilesRecursively(SourceFilesDirectory)) {
+    for (const filePath of TestFileUtils.getPowerQueryFilePathsRecursively(SourceFilesDirectory)) {
         const fileStart: number = performanceNow();
 
         for (let iteration: number = 0; iteration < NumberOfRunsPerFile; iteration += 1) {

@@ -12,12 +12,12 @@ import { TaskUtils } from "../../powerquery-parser";
 
 const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"];
 
-export function getPowerQueryFilesRecursively(rootDirectory: string): ReadonlyArray<string> {
+export function getPowerQueryFilePathsRecursively(rootDirectory: string): ReadonlyArray<string> {
     const dirs: ReadonlyArray<string> = getDirectoryPaths(rootDirectory);
 
     let files: ReadonlyArray<string> = dirs
         // go through each directory
-        .map(getPowerQueryFilesRecursively)
+        .map(getPowerQueryFilePathsRecursively)
         // map returns a 2d array (array of file arrays) so flatten
         .reduce((a: ReadonlyArray<string>, b: ReadonlyArray<string>) => a.concat(b), []);
 

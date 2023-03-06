@@ -2,11 +2,10 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import * as path from "path";
 
-import { DefaultSettings, Parser, Settings, Task } from "../..";
-import { TaskUtils } from "../../powerquery-parser";
-import { TestFileUtils } from "../testUtils";
+import { ArrayUtils, TaskUtils } from "../../powerquery-parser";
+import { DefaultSettings, Parser, Settings } from "../..";
+import { TestResourceUtils } from "../testUtils";
 
 const parsers: ReadonlyArray<[Settings, string]> = [
     [createSettings(Parser.CombinatorialParser), "CombinatorialParser"],
@@ -20,25 +19,17 @@ function createSettings(parser: Parser.Parser): Settings {
     };
 }
 
-for (const [settings, parserName] of parsers) {
-    parseAllFiles(settings, parserName);
-}
-
 function testNameFromFilePath(filePath: string): string {
-    return filePath.replace(path.dirname(__filename), ".");
+    return ArrayUtils.assertGet(filePath.split("microsoft-DataConnectors"), 1);
 }
 
-function parseAllFiles(settings: Settings, parserName: string): void {
-    describe(`Run ${parserName} on lexParseResources directory`, () => {
-        const fileDirectory: string = path.join(path.dirname(__filename), "lexParseResources");
-
-        for (const filePath of TestFileUtils.getPowerQueryFilesRecursively(fileDirectory)) {
-            const testName: string = testNameFromFilePath(filePath);
-
-            it(testName, async () => {
-                const triedLexParseTask: Task.TriedLexParseTask = await TestFileUtils.tryLexParse(settings, filePath);
-                TaskUtils.assertIsParseStageOk(triedLexParseTask);
-            });
-        }
-    });
+for (const [settings, parserName] of parsers) {
+    TestResourceUtils.runResourceTestSuite(
+        settings,
+        `Run ${parserName} on lexParseResources directory`,
+        testNameFromFilePath,
+        (testRun: TestResourceUtils.TestRun) => {
+            TaskUtils.assertIsParseStageOk(testRun.triedLexParse);
+        },
+    );
 }
