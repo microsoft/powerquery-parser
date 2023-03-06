@@ -14,7 +14,7 @@ const IterationsPerFile: number = 100;
 const BenchmarkDirectory: string = path.join(__dirname, "benchmark");
 const WriteTracesToDisk: boolean = false;
 
-const parserByParserName: Map<string, Parser.Parser> = new Map([
+const parserByParserName: ReadonlyMap<string, Parser.Parser> = new Map([
     ["CombinatorialParser", Parser.CombinatorialParser],
     ["RecursiveDescentParser", Parser.RecursiveDescentParser],
 ]);
@@ -53,7 +53,7 @@ function zFill(value: number): string {
 async function main(): Promise<void> {
     // Even though we want to sum up the durations by parser it's better to order
     // the triple-for-loop this way due to file IO.
-    const resourceSummariesByParserName: Map<string, ResourceSummary[]> = new Map();
+    const resourceSummariesByParserName: Map<string, ReadonlyArray<ResourceSummary>> = new Map();
     const resourceFilePaths: ReadonlyArray<string> = TestResourceUtils.getResourceFilePaths();
     const numResources: number = resourceFilePaths.length;
 
@@ -127,7 +127,7 @@ async function main(): Promise<void> {
                 resourcePath,
             };
 
-            const resourceSummaries: ResourceSummary[] = resourceSummariesByParserName.get(parserName) ?? [];
+            const resourceSummaries: ResourceSummary[] = [...(resourceSummariesByParserName.get(parserName) ?? [])];
             resourceSummaries.push(resourceSummary);
             resourceSummariesByParserName.set(parserName, resourceSummaries);
 
