@@ -6,9 +6,9 @@ import performanceNow = require("performance-now");
 
 import * as path from "path";
 
-import { DefaultSettings, Settings } from "../powerquery-parser";
-import { TestFileUtils, TestResourceUtils } from "../test/testUtils";
-import { BenchmarkTraceManager } from "../powerquery-parser/common/trace";
+import { DefaultSettings, Settings } from "../../powerquery-parser";
+import { TestFileUtils, TestResourceUtils } from "../testUtils";
+import { BenchmarkTraceManager } from "../../powerquery-parser/common/trace";
 
 const NumberOfRunsPerFile: number = 3;
 const ResourceDirectory: string = path.dirname(__filename);
