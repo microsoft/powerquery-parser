@@ -7,8 +7,17 @@ import performanceNow = require("performance-now");
 import * as path from "path";
 
 import { ArrayUtils, DefaultSettings, Parser, Settings, TaskUtils } from "../../powerquery-parser";
+import { BenchmarkTraceManager, NoOpTraceManagerInstance } from "../../powerquery-parser/common/trace";
 import { TestFileUtils, TestResourceUtils } from "../testUtils";
-import { BenchmarkTraceManager } from "../../powerquery-parser/common/trace";
+
+const IterationsPerFile: number = 100;
+const BenchmarkDirectory: string = path.join(__dirname, "benchmark");
+const WriteTracesToDisk: boolean = false;
+
+const parserByParserName: Map<string, Parser.Parser> = new Map([
+    ["CombinatorialParser", Parser.CombinatorialParser],
+    ["RecursiveDescentParser", Parser.RecursiveDescentParser],
+]);
 
 type ParserSummary = Omit<ResourceSummary, "resourceName">;
 
@@ -19,14 +28,6 @@ interface ResourceSummary {
     readonly parserName: string;
     readonly resourceName: string;
 }
-
-const IterationsPerFile: number = 100;
-const BenchmarkDirectory: string = path.join(__dirname, "benchmark");
-
-const parserByParserName: Map<string, Parser.Parser> = new Map([
-    ["CombinatorialParser", Parser.CombinatorialParser],
-    ["RecursiveDescentParser", Parser.RecursiveDescentParser],
-]);
 
 function jsonStringify(value: unknown): string {
     return JSON.stringify(value, undefined, 4);
@@ -39,10 +40,9 @@ function zFill(value: number): string {
 // Triple for-loop with parsers, resource filepaths, and an iteration count being the parameters.
 // The inner most loop is run ${IterationsPerFile} times and calls `TaskUtils.tryLexParse`.
 // It's to find the average duration of a parse for a given (file, parser) pair.
-// Additionally, traces for each iteration run are generated.
-// Finally the outer loop summarizes the aggregate durations for each parser across all files.
-//
 // Durations are initially measured in fractional milliseconds, then the fractional component is dropped.
+// The outer loop summarizes the aggregate durations for each parser across all files.
+// Optionally writes traces to disk with $WriteTracesToDIsk.
 async function main(): Promise<void> {
     const resourcePaths: ReadonlyArray<string> = TestResourceUtils.getResourceFilePaths();
 
@@ -74,7 +74,9 @@ async function main(): Promise<void> {
                 const benchmarkSettings: Settings = {
                     ...DefaultSettings,
                     parser,
-                    traceManager: new BenchmarkTraceManager((message: string) => (contents = contents + message)),
+                    traceManager: WriteTracesToDisk
+                        ? new BenchmarkTraceManager((message: string) => (contents = contents + message))
+                        : NoOpTraceManagerInstance,
                 };
 
                 const iterationStart: number = performanceNow();
@@ -82,18 +84,20 @@ async function main(): Promise<void> {
                 // eslint-disable-next-line no-await-in-loop
                 await TaskUtils.tryLexParse(benchmarkSettings, resourceContents);
 
-                TestFileUtils.writeContents(
-                    path.join(
-                        BenchmarkDirectory,
-                        "traces",
-                        parserName,
-                        resourceName,
-                        `iteration_${zFill(iteration)}.log`,
-                    ),
-                    contents,
-                );
-
                 durations.push(Math.floor(performanceNow() - iterationStart));
+
+                if (WriteTracesToDisk) {
+                    TestFileUtils.writeContents(
+                        path.join(
+                            BenchmarkDirectory,
+                            "traces",
+                            parserName,
+                            resourceName,
+                            `iteration_${zFill(iteration)}.log`,
+                        ),
+                        contents,
+                    );
+                }
             }
 
             const durationSummed: number = Math.floor(durations.reduce((a: number, b: number) => a + b, 0));
