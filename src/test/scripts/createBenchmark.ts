@@ -11,7 +11,7 @@ import { TestFileUtils, TestResourceUtils } from "../testUtils";
 import { BenchmarkTraceManager } from "../../powerquery-parser/common/trace";
 
 const NumberOfRunsPerFile: number = 25;
-const OutputDirectory: string = path.join(__dirname, "logs");
+const OutputDirectory: string = path.join(__dirname, "benchmark");
 
 const parsers: ReadonlyArray<[Parser.Parser, string]> = [
     [Parser.CombinatorialParser, "CombinatorialParser"],
@@ -23,15 +23,18 @@ async function main(): Promise<void> {
 
     for (const [parser, parserName] of parsers) {
         for (const filePath of resourcePaths) {
-            const resourcePath: string = ArrayUtils.assertGet(filePath.split("microsoft-DataConnectors\\"), 1);
-            const normalizedResourcePath: string = resourcePath.replace(/\\/g, "-");
+            const resourcePath: string = ArrayUtils.assertGet(filePath.split("microsoft-DataConnectors\\"), 1).replace(
+                /\\/g,
+                "-",
+            );
+
             const fileStart: number = performanceNow();
 
             for (let iteration: number = 0; iteration < NumberOfRunsPerFile; iteration += 1) {
                 console.log(
                     `Starting iteration ${
                         iteration + 1
-                    } out of ${NumberOfRunsPerFile} for ${normalizedResourcePath} using ${parserName}`,
+                    } out of ${NumberOfRunsPerFile} for ${resourcePath} using ${parserName}`,
                 );
 
                 let contents: string = "";
@@ -46,7 +49,7 @@ async function main(): Promise<void> {
                 await TestFileUtils.tryLexParse(benchmarkSettings, filePath);
 
                 TestFileUtils.writeContents(
-                    path.join(OutputDirectory, `${normalizedResourcePath}_${parserName}_${iteration}.log`),
+                    path.join(OutputDirectory, `${resourcePath}_${parserName}_${iteration}.log`),
                     contents,
                 );
             }
@@ -56,7 +59,7 @@ async function main(): Promise<void> {
             const fileAverage: number = fileDuration / NumberOfRunsPerFile;
 
             TestFileUtils.writeContents(
-                path.join(OutputDirectory, `${normalizedResourcePath}_${parserName}_summary.log`),
+                path.join(OutputDirectory, `${resourcePath}_${parserName}_summary.log`),
                 [`Total time: ${fileDuration}ms`, `Average time: ${fileAverage}ms\n`].join(`\r\n`),
             );
         }
