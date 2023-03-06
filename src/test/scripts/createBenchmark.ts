@@ -6,7 +6,7 @@ import performanceNow = require("performance-now");
 
 import * as path from "path";
 
-import { ArrayUtils, DefaultSettings, Parser, Settings, TaskUtils } from "../../powerquery-parser";
+import { ArrayUtils, DefaultSettings, Parser, Settings, Task, TaskUtils } from "../../powerquery-parser";
 import { BenchmarkTraceManager, NoOpTraceManagerInstance } from "../../powerquery-parser/common/trace";
 import { TestFileUtils, TestResourceUtils } from "../testUtils";
 
@@ -19,14 +19,21 @@ const parserByParserName: Map<string, Parser.Parser> = new Map([
     ["RecursiveDescentParser", Parser.RecursiveDescentParser],
 ]);
 
-type ParserSummary = Omit<ResourceSummary, "resourceName">;
+interface ParserSummary {
+    readonly durationAverage: number;
+    readonly durations: ReadonlyArray<number>;
+    readonly durationSummed: number;
+    readonly parserName: string;
+    readonly failedToParseResourcePaths: ReadonlyArray<string> | null;
+}
 
 interface ResourceSummary {
     readonly durationAverage: number;
     readonly durations: ReadonlyArray<number>;
     readonly durationSummed: number;
     readonly parserName: string;
-    readonly resourceName: string;
+    readonly resourcePath: string;
+    readonly failedToParse: boolean;
 }
 
 function jsonStringify(value: unknown): string {
@@ -44,26 +51,27 @@ function zFill(value: number): string {
 // The outer loop summarizes the aggregate durations for each parser across all files.
 // Optionally writes traces to disk with $WriteTracesToDIsk.
 async function main(): Promise<void> {
-    const resourcePaths: ReadonlyArray<string> = TestResourceUtils.getResourceFilePaths();
-
     // Even though we want to sum up the durations by parser it's better to order
     // the triple-for-loop this way due to file IO.
     const resourceSummariesByParserName: Map<string, ResourceSummary[]> = new Map();
+    const resourceFilePaths: ReadonlyArray<string> = TestResourceUtils.getResourceFilePaths();
+    const numResources: number = resourceFilePaths.length;
 
-    const numResources: number = resourcePaths.length;
+    for (let resourceIndex: number = 0; resourceIndex < numResources; resourceIndex += 1) {
+        const resourcePath: string = ArrayUtils.assertGet(resourceFilePaths, resourceIndex);
 
-    for (let resourceIndex: number = 0; resourceIndex <= numResources; resourceIndex += 1) {
-        const filePath: string = ArrayUtils.assertGet(resourcePaths, resourceIndex);
-        const resourceContents: string = TestFileUtils.readContents(filePath);
+        const resourceName: string = ArrayUtils.assertGet(
+            resourcePath.split("microsoft-DataConnectors\\"),
+            1,
+            `expected ${resourcePath} to include "microsoft-DataConnectors\\"`,
+        ).replace(/\\/g, "-");
 
-        console.log(`Starting resource ${zFill(resourceIndex)} out of ${numResources}: ${filePath}`);
+        const resourceContents: string = TestFileUtils.readContents(resourcePath);
+
+        console.log(`Starting resource ${zFill(resourceIndex + 1)} out of ${numResources}: ${resourcePath}`);
 
         for (const [parserName, parser] of parserByParserName.entries()) {
-            const resourceName: string = ArrayUtils.assertGet(filePath.split("microsoft-DataConnectors\\"), 1).replace(
-                /\\/g,
-                "-",
-            );
-
+            let failedToParse: boolean = false;
             const durations: number[] = [];
 
             for (let iteration: number = 0; iteration < IterationsPerFile; iteration += 1) {
@@ -82,9 +90,16 @@ async function main(): Promise<void> {
                 const iterationStart: number = performanceNow();
 
                 // eslint-disable-next-line no-await-in-loop
-                await TaskUtils.tryLexParse(benchmarkSettings, resourceContents);
+                const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(
+                    benchmarkSettings,
+                    resourceContents,
+                );
 
                 durations.push(Math.floor(performanceNow() - iterationStart));
+
+                if (!TaskUtils.isParseStageOk(triedLexParse)) {
+                    failedToParse = true;
+                }
 
                 if (WriteTracesToDisk) {
                     TestFileUtils.writeContents(
@@ -107,8 +122,9 @@ async function main(): Promise<void> {
                 durationAverage,
                 durations,
                 durationSummed,
+                failedToParse,
                 parserName,
-                resourceName,
+                resourcePath,
             };
 
             const resourceSummaries: ResourceSummary[] = resourceSummariesByParserName.get(parserName) ?? [];
@@ -127,6 +143,10 @@ async function main(): Promise<void> {
             (resourceSummary: ResourceSummary) => resourceSummary.durationAverage,
         );
 
+        const failedToParseResourcePaths: ReadonlyArray<string> = resourceSummaries
+            .filter((resourceSummary: ResourceSummary) => resourceSummary.failedToParse)
+            .map((resourceSummary: ResourceSummary) => resourceSummary.resourcePath);
+
         const durationSummed: number = Math.floor(durations.reduce((a: number, b: number) => a + b, 0));
         const durationAverage: number = Math.floor(durationSummed / resourceSummariesByParserName.size);
 
@@ -134,6 +154,7 @@ async function main(): Promise<void> {
             durationAverage,
             durations,
             durationSummed,
+            failedToParseResourcePaths: failedToParseResourcePaths ? failedToParseResourcePaths : null,
             parserName,
         };
 
