@@ -19,16 +19,16 @@ function createSettings(parser: Parser.Parser): Settings {
     };
 }
 
-function testNameFromFilePath(filePath: string): string {
-    return ArrayUtils.assertGet(filePath.split("microsoft-DataConnectors"), 1);
-}
-
 for (const [settings, parserName] of parsers) {
     TestResourceUtils.runResourceTestSuite(
         settings,
-        `Run ${parserName} on lexParseResources directory`,
-        testNameFromFilePath,
-        (testRun: TestResourceUtils.TestRun) => {
+        `Attempt lex and parse resources (${parserName})`,
+        (filePath: string) => {
+            const filePathSlice: string = ArrayUtils.assertGet(filePath.split("microsoft-DataConnectors\\"), 1);
+
+            return `${filePathSlice}`;
+        },
+        (testRun: TestResourceUtils.ResourceTestRun) => {
             TaskUtils.assertIsParseStageOk(testRun.triedLexParse);
         },
     );

@@ -44,7 +44,7 @@
             "request": "launch",
             "runtimeExecutable": "node",
             "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"],
-            "args": ["src/test/resourceTest/benchmark/createBenchmarks.ts"],
+            "args": ["src/scripts/createBenchmarks.ts"],
             "cwd": "${workspaceRoot}",
             "internalConsoleOptions": "openOnSessionStart",
             "skipFiles": ["<node_internals>/**", "node_modules/**"]

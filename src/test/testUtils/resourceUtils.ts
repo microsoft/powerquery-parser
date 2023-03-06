@@ -10,16 +10,17 @@ import * as path from "path";
 import { Settings, Task, TaskUtils } from "../../powerquery-parser";
 import { TestFileUtils } from ".";
 
-export interface TestRun {
-    readonly triedLexParse: Task.TriedLexParseTask;
-    readonly filePath: string;
+export interface ResourceTestRun {
     readonly fileContents: string;
+    readonly filePath: string;
     readonly testDuration: number;
+    readonly triedLexParse: Task.TriedLexParseTask;
 }
 
-export function visitResources(visitFn: (filePath: string) => void): void {
+export async function visitResources(visitFn: (filePath: string) => Promise<void>): Promise<void> {
     for (const filePath of TestFileUtils.getPowerQueryFilePathsRecursively(ResourcesDirectory)) {
-        visitFn(filePath);
+        // eslint-disable-next-line no-await-in-loop
+        await visitFn(filePath);
     }
 }
 
@@ -27,10 +28,10 @@ export function runResourceTestSuite(
     settings: Settings,
     suiteName: string,
     testNameFn: (filePath: string) => string,
-    visitFn: (testRun: TestRun) => void,
+    visitFn: (testRun: ResourceTestRun) => void,
 ): void {
     describe(suiteName, () => {
-        visitResources((filePath: string) => {
+        for (const filePath of TestFileUtils.getPowerQueryFilePathsRecursively(ResourcesDirectory)) {
             it(testNameFn(filePath), async () => {
                 const fileContents: string = TestFileUtils.readContents(filePath);
                 const timeStart: number = performanceNow();
@@ -48,7 +49,7 @@ export function runResourceTestSuite(
                     triedLexParse,
                 });
             });
-        });
+        }
     });
 }
 
