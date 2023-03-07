@@ -3,17 +3,8 @@
 
 import * as path from "path";
 
-import {
-    Assert,
-    DefaultSettings,
-    Parser,
-    ResultUtils,
-    Settings,
-    Task,
-    TaskUtils,
-    Traverse,
-} from "../../powerquery-parser";
-import { NodeIdMap, TXorNode, XorNodeUtils } from "../../powerquery-parser/parser";
+import { Assert, DefaultSettings, Parser, Settings, Task, TaskUtils } from "../../powerquery-parser";
+import { NodeIdMap, NodeIdMapIterator, TXorNode, XorNodeUtils } from "../../powerquery-parser/parser";
 import { TestFileUtils, TestResourceUtils } from "../testUtils";
 import { Resource } from "../testUtils/resourceUtils";
 
@@ -22,8 +13,6 @@ interface NodeDumpTask {
     readonly resourceName: string;
     readonly nodeDump: string;
 }
-
-type TraverseState = Traverse.ITraversalState<string>;
 
 const OutputDirectory: string = path.join(__dirname, "nodeDump");
 
@@ -34,7 +23,6 @@ const parserByParserName: ReadonlyMap<string, Parser.Parser> = new Map([
 
 async function main(): Promise<void> {
     const resources: ReadonlyArray<Resource> = TestResourceUtils.getResources();
-    const tasks: Promise<NodeDumpTask>[] = [];
 
     for (const [parserName, parser] of parserByParserName.entries()) {
         const settings: Settings = {
@@ -43,15 +31,16 @@ async function main(): Promise<void> {
         };
 
         for (const resource of resources) {
-            tasks.push(createNodeDumpTask(settings, parserName, resource));
-        }
-    }
+            console.log(`Starting ${resource.filePath} using ${parserName}}`);
 
-    for (const completedTask of await Promise.all(tasks)) {
-        TestFileUtils.writeContents(
-            path.join(OutputDirectory, `${completedTask.parserName}`, `${completedTask.resourceName}.log`),
-            completedTask.nodeDump,
-        );
+            // eslint-disable-next-line no-await-in-loop
+            const nodeDump: NodeDumpTask = await createNodeDumpTask(settings, parserName, resource);
+
+            TestFileUtils.writeContents(
+                path.join(OutputDirectory, nodeDump.parserName, `${nodeDump.resourceName}.log`),
+                nodeDump.nodeDump,
+            );
+        }
     }
 }
 
@@ -73,39 +62,38 @@ async function createNodeDumpTask(settings: Settings, parserName: string, resour
         );
     }
 
-    const triedTraverse: Traverse.TriedTraverse<string> = await Traverse.tryTraverseXor<TraverseState, string>(
-        {
-            initialCorrelationId: undefined,
-            traceManager: DefaultSettings.traceManager,
-            cancellationToken: undefined,
-            locale: DefaultSettings.locale,
-            result: "",
-        },
-        nodeIdMapCollection,
-        root,
-        Traverse.VisitNodeStrategy.BreadthFirst,
-        visitXorNode,
-        Traverse.assertGetAllXorChildren,
-        undefined,
-    );
+    const queue: (TXorNode | number)[] = [root];
+    const chunks: string[] = [];
+    let indentation: number = 0;
 
-    ResultUtils.assertIsOk(triedTraverse);
+    while (queue.length > 0) {
+        const next: TXorNode | number = Assert.asDefined(queue.shift());
+
+        if (typeof next === "number") {
+            indentation += next;
+
+            continue;
+        }
+
+        chunks.push("\t".repeat(indentation) + [next.kind, next.node.kind, next.node.id].join(","));
+
+        const children: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterChildrenXor(
+            nodeIdMapCollection,
+            next.node.id,
+        );
+
+        if (children.length > 0) {
+            indentation += 1;
+            queue.push(...children);
+            queue.push(-1);
+        }
+    }
 
     return {
+        nodeDump: chunks.join("\r\n"),
         parserName,
-        nodeDump: triedTraverse.value,
         resourceName: resource.resourceName,
     };
-}
-
-// eslint-disable-next-line require-await
-async function visitXorNode(
-    state: TraverseState,
-    xorNode: TXorNode,
-    _correlationId: number | undefined,
-): Promise<void> {
-    // eslint-disable-next-line prefer-template
-    state.result += [xorNode.kind, xorNode.node.kind, xorNode.node.id, xorNode.node.attributeIndex].join("\t") + "\n";
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises

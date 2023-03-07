@@ -41,7 +41,7 @@ export function writeContents(filePath: string, contents: string): void {
     if (!fs.existsSync(dirPath)) {
         // tslint:disable-next-line: non-literal-fs-path
         fs.mkdirSync(dirPath, { recursive: true });
-}
+    }
 
     // tslint:disable-next-line: non-literal-fs-path
     fs.writeFileSync(filePath, contents, { encoding: "utf8" });

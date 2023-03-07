@@ -35,7 +35,9 @@ export function getResources(): ReadonlyArray<Resource> {
             filePath.split(ResourcesDirectory),
             1,
             `expected ${filePath} to include ResourcesDirectory: ${ResourcesDirectory}}`,
-        ).replace(/\\/g, "-");
+        )
+            .replace(/\\/g, "-")
+            .replace(/^-/g, "");
 
         return {
             fileContents,
