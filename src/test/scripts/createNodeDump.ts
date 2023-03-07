@@ -39,6 +39,8 @@ type ContextNodeDump = Pick<ParseContext.TNode, "kind" | "attributeIndex" | "id"
 async function main(): Promise<void> {
     const resources: ReadonlyArray<TestResource> = TestResourceUtils.getResources();
 
+    const resourcesWithErrors: string[] = [];
+
     for (const [parserName, parser] of TestConstants.ParserByParserName.entries()) {
         const settings: Settings = {
             ...DefaultSettings,
@@ -46,7 +48,7 @@ async function main(): Promise<void> {
         };
 
         for (const resource of resources) {
-            console.log(`Starting ${resource.filePath} using ${parserName}}`);
+            console.log(`Starting ${resource.filePath} using ${parserName}`);
 
             try {
                 // eslint-disable-next-line no-await-in-loop
@@ -57,10 +59,13 @@ async function main(): Promise<void> {
                     JSON.stringify(nodeDump, undefined, 2),
                 );
             } catch (caught: unknown) {
-                console.error(`Unknown error for ${resource.filePath} using ${parserName}}`);
-                throw caught;
+                resourcesWithErrors.push(`Error for ${resource.filePath} using ${parserName}: ${caught}`);
             }
         }
+    }
+
+    if (resourcesWithErrors) {
+        JSON.stringify(console.error(resourcesWithErrors), null, 4);
     }
 }
 
