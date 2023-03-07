@@ -6,19 +6,14 @@ import performanceNow = require("performance-now");
 
 import * as path from "path";
 
-import { ArrayUtils, DefaultSettings, Parser, Settings, Task, TaskUtils } from "../../powerquery-parser";
+import { ArrayUtils, DefaultSettings, Settings, Task, TaskUtils } from "../../powerquery-parser";
 import { BenchmarkTraceManager, NoOpTraceManagerInstance } from "../../powerquery-parser/common/trace";
-import { TestFileUtils, TestResourceUtils } from "../testUtils";
+import { TestConstants, TestFileUtils, TestResourceUtils } from "../testUtils";
 import { TestResource } from "../testUtils/resourceUtils";
 
 const IterationsPerFile: number = 1;
 const BenchmarkDirectory: string = path.join(__dirname, "benchmark");
 const WriteTracesToDisk: boolean = false;
-
-const parserByParserName: ReadonlyMap<string, Parser.Parser> = new Map([
-    ["CombinatorialParser", Parser.CombinatorialParser],
-    ["RecursiveDescentParser", Parser.RecursiveDescentParser],
-]);
 
 interface ParserSummary {
     readonly durationAverage: number;
@@ -63,7 +58,7 @@ async function main(): Promise<void> {
 
         console.log(`Starting resource ${zFill(resourceIndex + 1)} out of ${numResources}: ${filePath}`);
 
-        for (const [parserName, parser] of parserByParserName.entries()) {
+        for (const [parserName, parser] of TestConstants.ParserByParserName.entries()) {
             let failedToParse: boolean = false;
             const durations: number[] = [];
 

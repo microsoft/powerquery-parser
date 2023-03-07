@@ -3,9 +3,10 @@
 
 import * as path from "path";
 
-import { Assert, DefaultSettings, Parser, Settings, Task, TaskUtils } from "../../powerquery-parser";
+import { Assert, DefaultSettings, Settings, Task, TaskUtils } from "../../powerquery-parser";
+import { Ast, AstUtils } from "../../powerquery-parser/language";
 import { NodeIdMap, NodeIdMapIterator, TXorNode, XorNodeUtils } from "../../powerquery-parser/parser";
-import { TestFileUtils, TestResourceUtils } from "../testUtils";
+import { TestConstants, TestFileUtils, TestResourceUtils } from "../testUtils";
 import { TestResource } from "../testUtils/resourceUtils";
 
 interface NodeDumpTask {
@@ -15,16 +16,24 @@ interface NodeDumpTask {
 }
 
 const OutputDirectory: string = path.join(__dirname, "nodeDump");
+const IndentationString: string = "\t";
+const JoiningString: string = ",";
+const NewlineString: string = "\r\n";
 
-const parserByParserName: ReadonlyMap<string, Parser.Parser> = new Map([
-    ["CombinatorialParser", Parser.CombinatorialParser],
-    ["RecursiveDescentParser", Parser.RecursiveDescentParser],
-]);
+const enum QueueObjectKind {
+    EnterScope = "EnterScope",
+    ExitScope = "ExitScope",
+}
+
+interface QueueObject {
+    readonly kind: QueueObjectKind;
+    readonly xorNode: TXorNode;
+}
 
 async function main(): Promise<void> {
     const resources: ReadonlyArray<TestResource> = TestResourceUtils.getResources();
 
-    for (const [parserName, parser] of parserByParserName.entries()) {
+    for (const [parserName, parser] of TestConstants.ParserByParserName.entries()) {
         const settings: Settings = {
             ...DefaultSettings,
             parser,
@@ -66,38 +75,131 @@ async function createNodeDumpTask(
         );
     }
 
-    const queue: (TXorNode | number)[] = [root];
-    const chunks: string[] = [];
+    let queue: QueueObject[] = [
+        {
+            xorNode: root,
+            kind: QueueObjectKind.EnterScope,
+        },
+    ];
+
+    const nodeDumpChunks: string[] = [];
+
     let indentation: number = 0;
 
     while (queue.length > 0) {
-        const next: TXorNode | number = Assert.asDefined(queue.shift());
+        const queueObject: QueueObject = Assert.asDefined(queue.shift());
+        const nodeChunks: string[] = [];
 
-        if (typeof next === "number") {
-            indentation += next;
+        switch (queueObject.kind) {
+            case QueueObjectKind.EnterScope: {
+                nodeChunks.push(IndentationString.repeat(indentation) + visitQueueObject(queueObject));
+                queue = expandQueue(nodeIdMapCollection, queue, queueObject);
+                indentation += 1;
 
-            continue;
+                const leafLiteral: string | undefined = getLeafContent(queueObject.xorNode);
+
+                if (leafLiteral !== undefined) {
+                    nodeChunks.push(IndentationString.repeat(indentation) + leafLiteral);
+                }
+
+                break;
+            }
+
+            case QueueObjectKind.ExitScope: {
+                indentation -= 1;
+                nodeChunks.push(IndentationString.repeat(indentation) + visitQueueObject(queueObject));
+
+                break;
+            }
+
+            default:
+                throw Assert.isNever(queueObject.kind);
         }
 
-        chunks.push("\t".repeat(indentation) + [next.kind, next.node.kind, next.node.id].join(","));
-
-        const children: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterChildrenXor(
-            nodeIdMapCollection,
-            next.node.id,
-        );
-
-        if (children.length > 0) {
-            indentation += 1;
-            queue.push(...children);
-            queue.push(-1);
-        }
+        nodeDumpChunks.push(nodeChunks.join(NewlineString));
     }
 
     return {
-        nodeDump: chunks.join("\r\n"),
+        nodeDump: nodeDumpChunks.join(NewlineString),
         parserName,
         resourceName: resource.resourceName,
     };
+}
+
+function visitQueueObject(queueObject: QueueObject): string {
+    let kindLiteral: string;
+
+    switch (queueObject.kind) {
+        case QueueObjectKind.EnterScope:
+            kindLiteral = ">>>";
+            break;
+
+        case QueueObjectKind.ExitScope:
+            kindLiteral = "<<<";
+            break;
+
+        default:
+            throw Assert.isNever(queueObject.kind);
+    }
+
+    return `${kindLiteral} ${[
+        queueObject.xorNode.kind,
+        queueObject.xorNode.node.kind,
+        queueObject.xorNode.node.attributeIndex?.toString() ?? "undefined",
+    ].join(JoiningString)}`;
+}
+
+// DFS expansion of the AST.
+function expandQueue(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    queue: QueueObject[],
+    current: QueueObject,
+): QueueObject[] {
+    const children: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterChildrenXor(
+        nodeIdMapCollection,
+        current.xorNode.node.id,
+    );
+
+    return [
+        ...children.map((xorNode: TXorNode) => ({
+            kind: QueueObjectKind.EnterScope,
+            xorNode,
+        })),
+        {
+            kind: QueueObjectKind.ExitScope,
+            xorNode: current.xorNode,
+        },
+        ...queue,
+    ];
+}
+
+function getLeafContent(xorNode: TXorNode): string | undefined {
+    if (!XorNodeUtils.isAstXor(xorNode) || !AstUtils.isLeaf(xorNode.node)) {
+        return undefined;
+    }
+
+    let leafContent: string;
+
+    switch (xorNode.node.kind) {
+        case Ast.NodeKind.GeneralizedIdentifier:
+        case Ast.NodeKind.Identifier:
+        case Ast.NodeKind.LiteralExpression:
+            leafContent = xorNode.node.literal;
+            break;
+
+        case Ast.NodeKind.PrimitiveType:
+            leafContent = xorNode.node.primitiveTypeKind;
+            break;
+
+        case Ast.NodeKind.Constant:
+            leafContent = xorNode.node.constantKind;
+            break;
+
+        default:
+            throw Assert.isNever(xorNode.node);
+    }
+
+    return leafContent;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
