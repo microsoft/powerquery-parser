@@ -5,30 +5,36 @@ import * as path from "path";
 
 import { Assert, DefaultSettings, Settings, Task, TaskUtils } from "../../powerquery-parser";
 import { Ast, AstUtils } from "../../powerquery-parser/language";
-import { NodeIdMap, NodeIdMapIterator, TXorNode, XorNodeUtils } from "../../powerquery-parser/parser";
+import {
+    NodeIdMap,
+    NodeIdMapIterator,
+    ParseContext,
+    TXorNode,
+    XorNodeKind,
+    XorNodeUtils,
+} from "../../powerquery-parser/parser";
 import { TestConstants, TestFileUtils, TestResourceUtils } from "../testUtils";
 import { TestResource } from "../testUtils/resourceUtils";
 
-interface NodeDumpTask {
-    readonly parserName: string;
-    readonly resourceName: string;
-    readonly nodeDump: string;
-}
-
 const OutputDirectory: string = path.join(__dirname, "nodeDump");
-const IndentationString: string = "\t";
-const JoiningString: string = ",";
-const NewlineString: string = "\r\n";
 
-const enum QueueObjectKind {
-    EnterScope = "EnterScope",
-    ExitScope = "ExitScope",
-}
+type TNodeDump = AstNodeDump | AstLeafNodeDump | ContextNodeDump;
 
-interface QueueObject {
-    readonly kind: QueueObjectKind;
-    readonly xorNode: TXorNode;
-}
+type AstNodeDump = Pick<Ast.TNode, "kind" | "attributeIndex" | "id"> & {
+    readonly xorNodeKind: XorNodeKind.Ast;
+    readonly tokenIndexStart: number;
+    readonly tokenIndexEnd: number;
+    readonly children: ReadonlyArray<TNodeDump>;
+};
+
+type AstLeafNodeDump = Omit<AstNodeDump, "children"> & {
+    readonly leafContent: string;
+};
+
+type ContextNodeDump = Pick<ParseContext.TNode, "kind" | "attributeIndex" | "id" | "tokenIndexStart"> & {
+    readonly xorNodeKind: XorNodeKind.Context;
+    readonly children: ReadonlyArray<TNodeDump>;
+};
 
 async function main(): Promise<void> {
     const resources: ReadonlyArray<TestResource> = TestResourceUtils.getResources();
@@ -42,161 +48,104 @@ async function main(): Promise<void> {
         for (const resource of resources) {
             console.log(`Starting ${resource.filePath} using ${parserName}}`);
 
-            // eslint-disable-next-line no-await-in-loop
-            const nodeDump: NodeDumpTask = await createNodeDumpTask(settings, parserName, resource);
+            try {
+                // eslint-disable-next-line no-await-in-loop
+                const nodeDump: TNodeDump = await lexParseDump(settings, resource);
 
-            TestFileUtils.writeContents(
-                path.join(OutputDirectory, nodeDump.parserName, `${nodeDump.resourceName}.log`),
-                nodeDump.nodeDump,
-            );
+                TestFileUtils.writeContents(
+                    path.join(OutputDirectory, parserName, `${resource.resourceName}.log`),
+                    JSON.stringify(nodeDump, undefined, 2),
+                );
+            } catch (caught: unknown) {
+                console.error(`Unknown error for ${resource.filePath} using ${parserName}}`);
+                throw caught;
+            }
         }
     }
 }
 
-async function createNodeDumpTask(
-    settings: Settings,
-    parserName: string,
-    resource: TestResource,
-): Promise<NodeDumpTask> {
+async function lexParseDump(settings: Settings, resource: TestResource): Promise<TNodeDump> {
     const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(settings, resource.fileContents);
 
-    let root: TXorNode;
-    let nodeIdMapCollection: NodeIdMap.Collection;
-
     if (TaskUtils.isParseStageOk(triedLexParse)) {
-        root = XorNodeUtils.boxAst(triedLexParse.ast);
-        nodeIdMapCollection = triedLexParse.nodeIdMapCollection;
+        return createAstNodeDump(triedLexParse.nodeIdMapCollection, triedLexParse.ast);
     } else if (TaskUtils.isParseStageParseError(triedLexParse)) {
-        root = XorNodeUtils.boxContext(Assert.asDefined(triedLexParse.parseState.currentContextNode));
-        nodeIdMapCollection = triedLexParse.nodeIdMapCollection;
+        return createContextNodeDump(
+            triedLexParse.nodeIdMapCollection,
+            Assert.asDefined(triedLexParse.parseState.currentContextNode),
+        );
     } else {
         throw new Error(
             `Unexpected task stage / result kind (${triedLexParse.stage} / ${triedLexParse.resultKind}) for ${resource.filePath}`,
         );
     }
+}
 
-    let queue: QueueObject[] = [
-        {
-            xorNode: root,
-            kind: QueueObjectKind.EnterScope,
-        },
-    ];
-
-    const nodeDumpChunks: string[] = [];
-
-    let indentation: number = 0;
-
-    while (queue.length > 0) {
-        const queueObject: QueueObject = Assert.asDefined(queue.shift());
-        const nodeChunks: string[] = [];
-
-        switch (queueObject.kind) {
-            case QueueObjectKind.EnterScope: {
-                nodeChunks.push(IndentationString.repeat(indentation) + visitQueueObject(queueObject));
-                queue = expandQueue(nodeIdMapCollection, queue, queueObject);
-                indentation += 1;
-
-                const leafLiteral: string | undefined = getLeafContent(queueObject.xorNode);
-
-                if (leafLiteral !== undefined) {
-                    nodeChunks.push(IndentationString.repeat(indentation) + leafLiteral);
-                }
-
-                break;
-            }
-
-            case QueueObjectKind.ExitScope: {
-                indentation -= 1;
-                nodeChunks.push(IndentationString.repeat(indentation) + visitQueueObject(queueObject));
-
-                break;
-            }
-
-            default:
-                throw Assert.isNever(queueObject.kind);
-        }
-
-        nodeDumpChunks.push(nodeChunks.join(NewlineString));
-    }
+function createAstNodeDump(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    astNode: Ast.TNode,
+): AstNodeDump | AstLeafNodeDump {
+    const leafContent: string | undefined = getLeafContent(astNode);
 
     return {
-        nodeDump: nodeDumpChunks.join(NewlineString),
-        parserName,
-        resourceName: resource.resourceName,
+        kind: astNode.kind,
+        xorNodeKind: XorNodeKind.Ast,
+        tokenIndexStart: astNode.tokenRange.tokenIndexStart,
+        tokenIndexEnd: astNode.tokenRange.tokenIndexEnd,
+        attributeIndex: astNode.attributeIndex,
+        id: astNode.id,
+        ...(leafContent
+            ? { leafContent }
+            : {
+                  children: NodeIdMapIterator.assertIterChildrenAst(nodeIdMapCollection, astNode.id).map(
+                      (child: Ast.TNode) => createAstNodeDump(nodeIdMapCollection, child),
+                  ),
+              }),
     };
 }
 
-function visitQueueObject(queueObject: QueueObject): string {
-    let kindLiteral: string;
-
-    switch (queueObject.kind) {
-        case QueueObjectKind.EnterScope:
-            kindLiteral = ">>>";
-            break;
-
-        case QueueObjectKind.ExitScope:
-            kindLiteral = "<<<";
-            break;
-
-        default:
-            throw Assert.isNever(queueObject.kind);
-    }
-
-    return `${kindLiteral} ${[
-        queueObject.xorNode.kind,
-        queueObject.xorNode.node.kind,
-        queueObject.xorNode.node.attributeIndex?.toString() ?? "undefined",
-    ].join(JoiningString)}`;
-}
-
-// DFS expansion of the AST.
-function expandQueue(
+function createContextNodeDump(
     nodeIdMapCollection: NodeIdMap.Collection,
-    queue: QueueObject[],
-    current: QueueObject,
-): QueueObject[] {
-    const children: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterChildrenXor(
-        nodeIdMapCollection,
-        current.xorNode.node.id,
-    );
-
-    return [
-        ...children.map((xorNode: TXorNode) => ({
-            kind: QueueObjectKind.EnterScope,
-            xorNode,
-        })),
-        {
-            kind: QueueObjectKind.ExitScope,
-            xorNode: current.xorNode,
-        },
-        ...queue,
-    ];
+    contextNode: ParseContext.TNode,
+): ContextNodeDump {
+    return {
+        kind: contextNode.kind,
+        xorNodeKind: XorNodeKind.Context,
+        tokenIndexStart: contextNode.tokenIndexStart,
+        attributeIndex: contextNode.attributeIndex,
+        id: contextNode.id,
+        children: NodeIdMapIterator.assertIterChildrenXor(nodeIdMapCollection, contextNode.id).map((child: TXorNode) =>
+            XorNodeUtils.isAstXor(child)
+                ? createAstNodeDump(nodeIdMapCollection, child.node)
+                : createContextNodeDump(nodeIdMapCollection, child.node),
+        ),
+    };
 }
 
-function getLeafContent(xorNode: TXorNode): string | undefined {
-    if (!XorNodeUtils.isAstXor(xorNode) || !AstUtils.isLeaf(xorNode.node)) {
+function getLeafContent(astNode: Ast.TNode): string | undefined {
+    if (!AstUtils.isLeaf(astNode)) {
         return undefined;
     }
 
     let leafContent: string;
 
-    switch (xorNode.node.kind) {
+    switch (astNode.kind) {
         case Ast.NodeKind.GeneralizedIdentifier:
         case Ast.NodeKind.Identifier:
         case Ast.NodeKind.LiteralExpression:
-            leafContent = xorNode.node.literal;
+            leafContent = astNode.literal;
             break;
 
         case Ast.NodeKind.PrimitiveType:
-            leafContent = xorNode.node.primitiveTypeKind;
+            leafContent = astNode.primitiveTypeKind;
             break;
 
         case Ast.NodeKind.Constant:
-            leafContent = xorNode.node.constantKind;
+            leafContent = astNode.constantKind;
             break;
 
         default:
-            throw Assert.isNever(xorNode.node);
+            throw Assert.isNever(astNode);
     }
 
     return leafContent;
