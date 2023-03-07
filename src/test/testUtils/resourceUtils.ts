@@ -17,7 +17,7 @@ export interface ResourceTestRun {
     readonly triedLexParse: Task.TriedLexParseTask;
 }
 
-export interface Resource {
+export interface TestResource {
     readonly fileContents: string;
     readonly filePath: string;
     readonly resourceName: string;
@@ -27,7 +27,7 @@ export function getResourceFilePaths(): ReadonlyArray<string> {
     return TestFileUtils.getPowerQueryFilePathsRecursively(ResourcesDirectory);
 }
 
-export function getResources(): ReadonlyArray<Resource> {
+export function getResources(): ReadonlyArray<TestResource> {
     return getResourceFilePaths().map((filePath: string) => {
         const fileContents: string = TestFileUtils.readContents(filePath);
 

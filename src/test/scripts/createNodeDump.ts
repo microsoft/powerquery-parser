@@ -6,7 +6,7 @@ import * as path from "path";
 import { Assert, DefaultSettings, Parser, Settings, Task, TaskUtils } from "../../powerquery-parser";
 import { NodeIdMap, NodeIdMapIterator, TXorNode, XorNodeUtils } from "../../powerquery-parser/parser";
 import { TestFileUtils, TestResourceUtils } from "../testUtils";
-import { Resource } from "../testUtils/resourceUtils";
+import { TestResource } from "../testUtils/resourceUtils";
 
 interface NodeDumpTask {
     readonly parserName: string;
@@ -22,7 +22,7 @@ const parserByParserName: ReadonlyMap<string, Parser.Parser> = new Map([
 ]);
 
 async function main(): Promise<void> {
-    const resources: ReadonlyArray<Resource> = TestResourceUtils.getResources();
+    const resources: ReadonlyArray<TestResource> = TestResourceUtils.getResources();
 
     for (const [parserName, parser] of parserByParserName.entries()) {
         const settings: Settings = {
@@ -44,7 +44,11 @@ async function main(): Promise<void> {
     }
 }
 
-async function createNodeDumpTask(settings: Settings, parserName: string, resource: Resource): Promise<NodeDumpTask> {
+async function createNodeDumpTask(
+    settings: Settings,
+    parserName: string,
+    resource: TestResource,
+): Promise<NodeDumpTask> {
     const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(settings, resource.fileContents);
 
     let root: TXorNode;

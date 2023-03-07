@@ -9,7 +9,7 @@ import * as path from "path";
 import { ArrayUtils, DefaultSettings, Parser, Settings, Task, TaskUtils } from "../../powerquery-parser";
 import { BenchmarkTraceManager, NoOpTraceManagerInstance } from "../../powerquery-parser/common/trace";
 import { TestFileUtils, TestResourceUtils } from "../testUtils";
-import { Resource } from "../testUtils/resourceUtils";
+import { TestResource } from "../testUtils/resourceUtils";
 
 const IterationsPerFile: number = 1;
 const BenchmarkDirectory: string = path.join(__dirname, "benchmark");
@@ -55,11 +55,11 @@ async function main(): Promise<void> {
     // Even though we want to sum up the durations by parser it's better to order
     // the triple-for-loop this way due to file IO.
     const resourceSummariesByParserName: Map<string, ReadonlyArray<ResourceSummary>> = new Map();
-    const resources: ReadonlyArray<Resource> = TestResourceUtils.getResources();
+    const resources: ReadonlyArray<TestResource> = TestResourceUtils.getResources();
     const numResources: number = resources.length;
 
     for (let resourceIndex: number = 0; resourceIndex < numResources; resourceIndex += 1) {
-        const { fileContents, filePath, resourceName }: Resource = ArrayUtils.assertGet(resources, resourceIndex);
+        const { fileContents, filePath, resourceName }: TestResource = ArrayUtils.assertGet(resources, resourceIndex);
 
         console.log(`Starting resource ${zFill(resourceIndex + 1)} out of ${numResources}: ${filePath}`);
 
