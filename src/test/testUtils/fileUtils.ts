@@ -67,9 +67,7 @@ function isFile(filePath: string): boolean {
 }
 
 function isPowerQueryFile(filePath: string): boolean {
-    return (
-        isFile(filePath) && isPowerQueryExtension(path.extname(filePath)) && filePath.includes("ImpalaODBC.query.pq")
-    );
+    return isFile(filePath) && isPowerQueryExtension(path.extname(filePath));
 }
 
 function isPowerQueryExtension(extension: string): boolean {
