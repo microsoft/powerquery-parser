@@ -48,22 +48,16 @@ function jsonStringify(value: unknown): string {
     return JSON.stringify(value, undefined, 4);
 }
 
-function zFill(value: number): string {
-    return value.toString().padStart(Math.ceil(Math.log10(IterationsPerFile + 1)), "0");
+function zFill(currentValue: number, upperBound: number): string {
+    return currentValue.toString().padStart(Math.ceil(Math.log10(upperBound + 1)), "0");
 }
 
 function createParserSummaryDurations(
     resourceSummaries: ReadonlyArray<ResourceSummary>,
     filterOutOutliers: boolean,
 ): Durations {
-    const durationCollections: ReadonlyArray<Durations> = [...resourceSummaries].map(
-        (resourceSummary: ResourceSummary) =>
-            filterOutOutliers ? resourceSummary.durationsFiltered : resourceSummary.durations,
-    );
-
-    const durations: ReadonlyArray<number> = durationCollections.reduce(
-        (acc: number[], curr: Durations) => acc.concat(curr.durations),
-        [],
+    const durations: ReadonlyArray<number> = [...resourceSummaries].map((resourceSummary: ResourceSummary) =>
+        filterOutOutliers ? resourceSummary.durationsFiltered.average : resourceSummary.durations.average,
     );
 
     const summed: number = durations.reduce((acc: number, curr: number) => acc + curr, 0);
@@ -71,7 +65,7 @@ function createParserSummaryDurations(
     return {
         durations,
         summed,
-        average: summed / resourceSummaries.length / durations.length,
+        average: summed / resourceSummaries.length,
     };
 }
 
@@ -106,14 +100,19 @@ async function main(): Promise<void> {
     for (let resourceIndex: number = 0; resourceIndex < numResources; resourceIndex += 1) {
         const { fileContents, filePath, resourceName }: TestResource = ArrayUtils.assertGet(resources, resourceIndex);
 
-        console.log(`Starting resource ${zFill(resourceIndex + 1)} out of ${numResources}: ${filePath}`);
+        console.log(`Starting resource ${zFill(resourceIndex + 1, numResources)} out of ${numResources}: ${filePath}`);
 
         for (const [parserName, parser] of TestConstants.ParserByParserName.entries()) {
             let failedToParse: boolean = false;
             const durations: number[] = [];
 
             for (let iteration: number = 0; iteration < IterationsPerFile; iteration += 1) {
-                console.log(`\tIteration ${zFill(iteration + 1)} out of ${IterationsPerFile} using ${parserName}`);
+                console.log(
+                    `\tIteration ${zFill(
+                        iteration + 1,
+                        IterationsPerFile,
+                    )} out of ${IterationsPerFile} using ${parserName}`,
+                );
 
                 let contents: string = "";
 
@@ -146,7 +145,7 @@ async function main(): Promise<void> {
                             "traces",
                             parserName,
                             resourceName,
-                            `iteration_${zFill(iteration)}.log`,
+                            `iteration_${zFill(iteration, IterationsPerFile)}.log`,
                         ),
                         contents,
                     );
