@@ -13,6 +13,7 @@
         "test": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -r ts-node/register src/test/libraryTest/**/*.ts",
         "test:resources": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -r ts-node/register src/test/resourceTest/**/*.ts",
         "script:benchmark": "npx ts-node src/test/scripts/createBenchmark.ts",
+        "script:nodeDump": "npx ts-node src/test/scripts/createNodeDump.ts",
         "lint": "eslint src --ext ts",
         "prepublishOnly": "git clean -xdf && npm install-clean && npm run lint && npm run build && npm run test && npm run test:resources"
     },

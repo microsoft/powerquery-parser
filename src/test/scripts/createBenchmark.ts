@@ -6,18 +6,14 @@ import performanceNow = require("performance-now");
 
 import * as path from "path";
 
-import { ArrayUtils, DefaultSettings, Parser, Settings, Task, TaskUtils } from "../../powerquery-parser";
+import { ArrayUtils, DefaultSettings, Settings, Task, TaskUtils } from "../../powerquery-parser";
 import { BenchmarkTraceManager, NoOpTraceManagerInstance } from "../../powerquery-parser/common/trace";
-import { TestFileUtils, TestResourceUtils } from "../testUtils";
+import { TestConstants, TestFileUtils, TestResourceUtils } from "../testUtils";
+import { TestResource } from "../testUtils/resourceUtils";
 
-const IterationsPerFile: number = 100;
+const IterationsPerFile: number = 1;
 const BenchmarkDirectory: string = path.join(__dirname, "benchmark");
 const WriteTracesToDisk: boolean = false;
-
-const parserByParserName: ReadonlyMap<string, Parser.Parser> = new Map([
-    ["CombinatorialParser", Parser.CombinatorialParser],
-    ["RecursiveDescentParser", Parser.RecursiveDescentParser],
-]);
 
 interface ParserSummary {
     readonly durationAverage: number;
@@ -33,7 +29,7 @@ interface ResourceSummary {
     readonly durationSummed: number;
     readonly failedToParse: boolean;
     readonly parserName: string;
-    readonly resourcePath: string;
+    readonly filePath: string;
 }
 
 function jsonStringify(value: unknown): string {
@@ -54,23 +50,15 @@ async function main(): Promise<void> {
     // Even though we want to sum up the durations by parser it's better to order
     // the triple-for-loop this way due to file IO.
     const resourceSummariesByParserName: Map<string, ReadonlyArray<ResourceSummary>> = new Map();
-    const resourceFilePaths: ReadonlyArray<string> = TestResourceUtils.getResourceFilePaths();
-    const numResources: number = resourceFilePaths.length;
+    const resources: ReadonlyArray<TestResource> = TestResourceUtils.getResources();
+    const numResources: number = resources.length;
 
     for (let resourceIndex: number = 0; resourceIndex < numResources; resourceIndex += 1) {
-        const resourcePath: string = ArrayUtils.assertGet(resourceFilePaths, resourceIndex);
+        const { fileContents, filePath, resourceName }: TestResource = ArrayUtils.assertGet(resources, resourceIndex);
 
-        const resourceName: string = ArrayUtils.assertGet(
-            resourcePath.split("microsoft-DataConnectors\\"),
-            1,
-            `expected ${resourcePath} to include "microsoft-DataConnectors\\"`,
-        ).replace(/\\/g, "-");
+        console.log(`Starting resource ${zFill(resourceIndex + 1)} out of ${numResources}: ${filePath}`);
 
-        const resourceContents: string = TestFileUtils.readContents(resourcePath);
-
-        console.log(`Starting resource ${zFill(resourceIndex + 1)} out of ${numResources}: ${resourcePath}`);
-
-        for (const [parserName, parser] of parserByParserName.entries()) {
+        for (const [parserName, parser] of TestConstants.ParserByParserName.entries()) {
             let failedToParse: boolean = false;
             const durations: number[] = [];
 
@@ -92,7 +80,7 @@ async function main(): Promise<void> {
                 // eslint-disable-next-line no-await-in-loop
                 const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(
                     benchmarkSettings,
-                    resourceContents,
+                    fileContents,
                 );
 
                 durations.push(Math.floor(performanceNow() - iterationStart));
@@ -124,7 +112,7 @@ async function main(): Promise<void> {
                 durationSummed,
                 failedToParse,
                 parserName,
-                resourcePath,
+                filePath,
             };
 
             const resourceSummaries: ResourceSummary[] = [...(resourceSummariesByParserName.get(parserName) ?? [])];
@@ -145,7 +133,7 @@ async function main(): Promise<void> {
 
         const failedToParseResourcePaths: ReadonlyArray<string> = resourceSummaries
             .filter((resourceSummary: ResourceSummary) => resourceSummary.failedToParse)
-            .map((resourceSummary: ResourceSummary) => resourceSummary.resourcePath);
+            .map((resourceSummary: ResourceSummary) => resourceSummary.filePath);
 
         const durationSummed: number = Math.floor(durations.reduce((a: number, b: number) => a + b, 0));
         const durationAverage: number = Math.floor(durationSummed / resourceSummariesByParserName.size);

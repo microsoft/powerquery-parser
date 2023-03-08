@@ -7,7 +7,7 @@ import performanceNow = require("performance-now");
 import "mocha";
 import * as path from "path";
 
-import { Settings, Task, TaskUtils } from "../../powerquery-parser";
+import { ArrayUtils, Settings, Task, TaskUtils } from "../../powerquery-parser";
 import { TestFileUtils } from ".";
 
 export interface ResourceTestRun {
@@ -17,8 +17,34 @@ export interface ResourceTestRun {
     readonly triedLexParse: Task.TriedLexParseTask;
 }
 
+export interface TestResource {
+    readonly fileContents: string;
+    readonly filePath: string;
+    readonly resourceName: string;
+}
+
 export function getResourceFilePaths(): ReadonlyArray<string> {
     return TestFileUtils.getPowerQueryFilePathsRecursively(ResourcesDirectory);
+}
+
+export function getResources(): ReadonlyArray<TestResource> {
+    return getResourceFilePaths().map((filePath: string) => {
+        const fileContents: string = TestFileUtils.readContents(filePath);
+
+        const resourceName: string = ArrayUtils.assertGet(
+            filePath.split(ResourcesDirectory),
+            1,
+            `expected ${filePath} to include ResourcesDirectory: ${ResourcesDirectory}}`,
+        )
+            .replace(/\\/g, "-")
+            .replace(/^-/g, "");
+
+        return {
+            fileContents,
+            filePath,
+            resourceName,
+        };
+    });
 }
 
 export async function visitResources(visitFn: (filePath: string) => Promise<void>): Promise<void> {

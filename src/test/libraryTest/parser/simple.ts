@@ -20,22 +20,10 @@ interface NthNodeOfKindState extends Traverse.ITraversalState<Ast.TNode | undefi
     nthCounter: number;
 }
 
-async function collectAbridgeNodeFromXor(text: string): Promise<ReadonlyArray<AbridgedNode>> {
-    const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
-
-    let root: TXorNode;
-    let nodeIdMapCollection: NodeIdMap.Collection;
-
-    if (TaskUtils.isParseStageOk(triedLexParse)) {
-        root = XorNodeUtils.boxAst(triedLexParse.ast);
-        nodeIdMapCollection = triedLexParse.nodeIdMapCollection;
-    } else if (TaskUtils.isParseStageParseError(triedLexParse)) {
-        root = XorNodeUtils.boxContext(Assert.asDefined(triedLexParse.parseState.contextState.root));
-        nodeIdMapCollection = triedLexParse.nodeIdMapCollection;
-    } else {
-        throw new Error(`expected parse stage to be ok or parse error, got ${triedLexParse.stage}`);
-    }
-
+async function collectAbridgeNodeFromXor(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    root: TXorNode,
+): Promise<ReadonlyArray<AbridgedNode>> {
     const state: CollectAbridgeNodeState = {
         locale: DefaultLocale,
         result: [],
@@ -119,9 +107,63 @@ async function nthNodeEarlyExit(state: NthNodeOfKindState, _: Ast.TNode): Promis
     return state.nthCounter === state.nthRequired;
 }
 
+function validateNodeIdMapCollection(nodeIdMapCollection: NodeIdMap.Collection, root: TXorNode): void {
+    const astNodeIds: Set<number> = new Set(nodeIdMapCollection.astNodeById.keys());
+    const contextNodeIds: Set<number> = new Set(nodeIdMapCollection.contextNodeById.keys());
+    const allNodeIds: Set<number> = new Set([...astNodeIds].concat([...contextNodeIds]));
+
+    expect(nodeIdMapCollection.parentIdById).to.not.have.key(root.node.id.toString());
+
+    expect(nodeIdMapCollection.parentIdById.size).to.equal(
+        allNodeIds.size - 1,
+        "parentIdById should have one less entry than allNodeIds",
+    );
+
+    expect(astNodeIds.size + contextNodeIds.size).to.equal(
+        allNodeIds.size,
+        "allNodeIds should be a union of astNodeIds and contextNodeIds",
+    );
+
+    for (const [childId, parentId] of nodeIdMapCollection.parentIdById.entries()) {
+        expect(allNodeIds).to.include(childId, "keys for parentIdById should be in allNodeIds");
+        expect(allNodeIds).to.include(parentId, "values for parentIdById should be in allNodeIds");
+    }
+
+    for (const [parentId, childrenIds] of nodeIdMapCollection.childIdsById.entries()) {
+        expect(allNodeIds).to.include(parentId, "keys for childIdsById should be in allNodeIds");
+
+        for (const childId of childrenIds) {
+            expect(allNodeIds).to.include(childId, "childIds should be in allNodeIds");
+
+            if (astNodeIds.has(parentId)) {
+                expect(astNodeIds).to.include(childId, "if a parent is an astNode then so should be its children");
+            }
+        }
+    }
+}
+
 describe("Parser.AbridgedNode", () => {
     async function runAbridgedNodeTest(text: string, expected: ReadonlyArray<AbridgedNode>): Promise<void> {
-        const actual: ReadonlyArray<AbridgedNode> = await collectAbridgeNodeFromXor(text);
+        const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
+
+        let root: TXorNode;
+        let nodeIdMapCollection: NodeIdMap.Collection;
+
+        if (TaskUtils.isParseStageOk(triedLexParse)) {
+            root = XorNodeUtils.boxAst(triedLexParse.ast);
+            nodeIdMapCollection = triedLexParse.nodeIdMapCollection;
+        } else if (TaskUtils.isParseStageParseError(triedLexParse)) {
+            root = XorNodeUtils.boxContext(Assert.asDefined(triedLexParse.parseState.contextState.root));
+            nodeIdMapCollection = triedLexParse.nodeIdMapCollection;
+        } else {
+            throw new Error(
+                `expected ParseSTageOk/ParseStageParseError, got ${triedLexParse.stage} ${triedLexParse.resultKind}`,
+            );
+        }
+
+        validateNodeIdMapCollection(nodeIdMapCollection, root);
+
+        const actual: ReadonlyArray<AbridgedNode> = await collectAbridgeNodeFromXor(nodeIdMapCollection, root);
         expect(actual).to.deep.equal(expected);
     }
 
