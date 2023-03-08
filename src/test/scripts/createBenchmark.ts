@@ -11,7 +11,7 @@ import { BenchmarkTraceManager, NoOpTraceManagerInstance } from "../../powerquer
 import { TestConstants, TestFileUtils, TestResourceUtils } from "../testUtils";
 import { TestResource } from "../testUtils/resourceUtils";
 
-const IterationsPerFile: number = 100;
+const IterationsPerFile: number = 1;
 const BenchmarkDirectory: string = path.join(__dirname, "benchmark");
 const WriteTracesToDisk: boolean = false;
 
