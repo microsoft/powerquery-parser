@@ -24,13 +24,24 @@ import { Trace } from "../../common/trace";
 // 2)
 // readUnaryExpression uses limited look ahead to eliminate several function calls on the call stack.
 export const CombinatorialParser: Parser = {
-    ...NaiveParseSteps,
     applyState: ParseStateUtils.applyState,
     copyState: ParseStateUtils.copyState,
     checkpoint: ParserUtils.checkpoint,
     restoreCheckpoint: ParserUtils.restoreCheckpoint,
 
-    // 12.2.3.2 Logical expressions
+    readIdentifier: NaiveParseSteps.readIdentifier,
+    readGeneralizedIdentifier: NaiveParseSteps.readGeneralizedIdentifier,
+    readKeyword: NaiveParseSteps.readKeyword,
+
+    readDocument: NaiveParseSteps.readDocument,
+
+    readSectionDocument: NaiveParseSteps.readSectionDocument,
+    readSectionMembers: NaiveParseSteps.readSectionMembers,
+    readSectionMember: NaiveParseSteps.readSectionMember,
+
+    readNullCoalescingExpression: NaiveParseSteps.readNullCoalescingExpression,
+    readExpression: NaiveParseSteps.readExpression,
+
     readLogicalExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
         readBinOpExpression(
             state,
@@ -39,15 +50,13 @@ export const CombinatorialParser: Parser = {
             correlationId,
         ) as Promise<Ast.TLogicalExpression>,
 
-    // 12.2.3.3 Is expression
     readIsExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
         readBinOpExpression(state, parser, Ast.NodeKind.IsExpression, correlationId) as Promise<Ast.TIsExpression>,
+    readNullablePrimitiveType: NaiveParseSteps.readNullablePrimitiveType,
 
-    // 12.2.3.4 As expression
     readAsExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
         readBinOpExpression(state, parser, Ast.NodeKind.AsExpression, correlationId) as Promise<Ast.TAsExpression>,
 
-    // 12.2.3.5 Equality expression
     readEqualityExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
         readBinOpExpression(
             state,
@@ -56,7 +65,6 @@ export const CombinatorialParser: Parser = {
             correlationId,
         ) as Promise<Ast.TEqualityExpression>,
 
-    // 12.2.3.6 Relational expression
     readRelationalExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
         readBinOpExpression(
             state,
@@ -65,7 +73,6 @@ export const CombinatorialParser: Parser = {
             correlationId,
         ) as Promise<Ast.TRelationalExpression>,
 
-    // 12.2.3.7 Arithmetic expressions
     readArithmeticExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
         readBinOpExpression(
             state,
@@ -74,7 +81,6 @@ export const CombinatorialParser: Parser = {
             correlationId,
         ) as Promise<Ast.TArithmeticExpression>,
 
-    // 12.2.3.8 Metadata expression
     readMetadataExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
         readBinOpExpression(
             state,
@@ -83,8 +89,67 @@ export const CombinatorialParser: Parser = {
             correlationId,
         ) as Promise<Ast.TMetadataExpression>,
 
-    // 12.2.3.9 Unary expression
     readUnaryExpression,
+
+    readPrimaryExpression: NaiveParseSteps.readPrimaryExpression,
+    readRecursivePrimaryExpression: NaiveParseSteps.readRecursivePrimaryExpression,
+
+    readLiteralExpression: NaiveParseSteps.readLiteralExpression,
+
+    readIdentifierExpression: NaiveParseSteps.readIdentifierExpression,
+
+    readParenthesizedExpression: NaiveParseSteps.readParenthesizedExpression,
+
+    readNotImplementedExpression: NaiveParseSteps.readNotImplementedExpression,
+
+    readInvokeExpression: NaiveParseSteps.readInvokeExpression,
+
+    readListExpression: NaiveParseSteps.readListExpression,
+    readListItem: NaiveParseSteps.readListItem,
+
+    readRecordExpression: NaiveParseSteps.readRecordExpression,
+
+    readItemAccessExpression: NaiveParseSteps.readItemAccessExpression,
+
+    readFieldSelection: NaiveParseSteps.readFieldSelection,
+    readFieldProjection: NaiveParseSteps.readFieldProjection,
+    readFieldSelector: NaiveParseSteps.readFieldSelector,
+
+    readFunctionExpression: NaiveParseSteps.readFunctionExpression,
+    readParameterList: NaiveParseSteps.readParameterList,
+    readAsType: NaiveParseSteps.readAsType,
+
+    readEachExpression: NaiveParseSteps.readEachExpression,
+
+    readLetExpression: NaiveParseSteps.readLetExpression,
+
+    readIfExpression: NaiveParseSteps.readIfExpression,
+
+    readTypeExpression: NaiveParseSteps.readTypeExpression,
+    readType: NaiveParseSteps.readType,
+    readPrimaryType: NaiveParseSteps.readPrimaryType,
+    readRecordType: NaiveParseSteps.readRecordType,
+    readTableType: NaiveParseSteps.readTableType,
+    readFieldSpecificationList: NaiveParseSteps.readFieldSpecificationList,
+    readListType: NaiveParseSteps.readListType,
+    readFunctionType: NaiveParseSteps.readFunctionType,
+    readParameterSpecificationList: NaiveParseSteps.readParameterSpecificationList,
+    readNullableType: NaiveParseSteps.readNullableType,
+
+    readErrorRaisingExpression: NaiveParseSteps.readErrorRaisingExpression,
+
+    readErrorHandlingExpression: NaiveParseSteps.readErrorHandlingExpression,
+
+    readRecordLiteral: NaiveParseSteps.readRecordLiteral,
+    readFieldNamePairedAnyLiterals: NaiveParseSteps.readFieldNamePairedAnyLiterals,
+    readListLiteral: NaiveParseSteps.readListLiteral,
+    readAnyLiteral: NaiveParseSteps.readAnyLiteral,
+    readPrimitiveType: NaiveParseSteps.readPrimitiveType,
+
+    readIdentifierPairedExpressions: NaiveParseSteps.readIdentifierPairedExpressions,
+    readIdentifierPairedExpression: NaiveParseSteps.readIdentifierPairedExpression,
+    readGeneralizedIdentifierPairedExpressions: NaiveParseSteps.readGeneralizedIdentifierPairedExpressions,
+    readGeneralizedIdentifierPairedExpression: NaiveParseSteps.readGeneralizedIdentifierPairedExpression,
 };
 
 const enum CombinatorialTraceConstant {
