@@ -15,7 +15,8 @@ const BenchmarkDirectory: string = path.join(__dirname, "benchmark");
 
 // We want to run each file ${IterationsPerFile} times to get a more accurate average duration.
 const IterationsPerFile: number = 100;
-// Additionally, we drop the top and bottom % of durations from iterations to reduce the impact of outliers.
+// Additionally, we drop the top and bottom ${IterationPercentageDropped}% of
+// durations from iterations to reduce the impact of outliers.
 const IterationPercentageDropped: number = 0.05;
 const NumIterationsDropped: number = Math.floor(IterationsPerFile * IterationPercentageDropped);
 
@@ -89,10 +90,8 @@ function createResourceSummaryDurations(durations: ReadonlyArray<number>, filter
 // It's to find the average duration of a parse for a given (file, parser) pair.
 // Durations are initially measured in fractional milliseconds, then the fractional component is dropped.
 // The outer loop summarizes the aggregate durations for each parser across all files.
-// Optionally writes traces to disk with $WriteTracesToDIsk.
+// Optionally writes traces to disk with $WriteTracesToDisk.
 async function main(): Promise<void> {
-    // Even though we want to sum up the durations by parser it's better to order
-    // the triple-for-loop this way due to file IO.
     const resourceSummariesByParserName: Map<string, ReadonlyArray<ResourceSummary>> = new Map();
     const resources: ReadonlyArray<TestResource> = TestResourceUtils.getResources();
     const numResources: number = resources.length;
