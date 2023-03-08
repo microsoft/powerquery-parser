@@ -24,7 +24,7 @@ type AstNodeDump = Pick<Ast.TNode, "kind" | "attributeIndex" | "id"> & {
     readonly xorNodeKind: XorNodeKind.Ast;
     readonly tokenIndexStart: number;
     readonly tokenIndexEnd: number;
-    readonly children: ReadonlyArray<TNodeDump>;
+    readonly children: ReadonlyArray<TNodeDump> | undefined;
 };
 
 type AstLeafNodeDump = Omit<AstNodeDump, "children"> & {
@@ -39,8 +39,6 @@ type ContextNodeDump = Pick<ParseContext.TNode, "kind" | "attributeIndex" | "id"
 async function main(): Promise<void> {
     const resources: ReadonlyArray<TestResource> = TestResourceUtils.getResources();
 
-    const resourcesWithErrors: string[] = [];
-
     for (const [parserName, parser] of TestConstants.ParserByParserName.entries()) {
         const settings: Settings = {
             ...DefaultSettings,
@@ -50,22 +48,14 @@ async function main(): Promise<void> {
         for (const resource of resources) {
             console.log(`Starting ${resource.filePath} using ${parserName}`);
 
-            try {
-                // eslint-disable-next-line no-await-in-loop
-                const nodeDump: TNodeDump = await lexParseDump(settings, resource);
+            // eslint-disable-next-line no-await-in-loop
+            const nodeDump: TNodeDump = await lexParseDump(settings, resource);
 
-                TestFileUtils.writeContents(
-                    path.join(OutputDirectory, parserName, `${resource.resourceName}.log`),
-                    JSON.stringify(nodeDump, undefined, 2),
-                );
-            } catch (caught: unknown) {
-                resourcesWithErrors.push(`Error for ${resource.filePath} using ${parserName}: ${caught}`);
-            }
+            TestFileUtils.writeContents(
+                path.join(OutputDirectory, parserName, `${resource.resourceName}.log`),
+                JSON.stringify(nodeDump, undefined, 2),
+            );
         }
-    }
-
-    if (resourcesWithErrors) {
-        JSON.stringify(console.error(resourcesWithErrors), null, 4);
     }
 }
 
@@ -92,21 +82,30 @@ function createAstNodeDump(
 ): AstNodeDump | AstLeafNodeDump {
     const leafContent: string | undefined = getLeafContent(astNode);
 
-    return {
-        kind: astNode.kind,
-        xorNodeKind: XorNodeKind.Ast,
-        tokenIndexStart: astNode.tokenRange.tokenIndexStart,
-        tokenIndexEnd: astNode.tokenRange.tokenIndexEnd,
-        attributeIndex: astNode.attributeIndex,
-        id: astNode.id,
-        ...(leafContent
-            ? { leafContent }
-            : {
-                  children: NodeIdMapIterator.assertIterChildrenAst(nodeIdMapCollection, astNode.id).map(
-                      (child: Ast.TNode) => createAstNodeDump(nodeIdMapCollection, child),
-                  ),
-              }),
-    };
+    // If the node is a leaf, we don't need to recurse into its children.
+    if (leafContent) {
+        return {
+            kind: astNode.kind,
+            xorNodeKind: XorNodeKind.Ast,
+            tokenIndexStart: astNode.tokenRange.tokenIndexStart,
+            tokenIndexEnd: astNode.tokenRange.tokenIndexEnd,
+            attributeIndex: astNode.attributeIndex,
+            id: astNode.id,
+            leafContent,
+        };
+    } else {
+        return {
+            kind: astNode.kind,
+            xorNodeKind: XorNodeKind.Ast,
+            tokenIndexStart: astNode.tokenRange.tokenIndexStart,
+            tokenIndexEnd: astNode.tokenRange.tokenIndexEnd,
+            attributeIndex: astNode.attributeIndex,
+            id: astNode.id,
+            children: NodeIdMapIterator.iterChildrenAst(nodeIdMapCollection, astNode.id)?.map((child: Ast.TNode) =>
+                createAstNodeDump(nodeIdMapCollection, child),
+            ),
+        };
+    }
 }
 
 function createContextNodeDump(
