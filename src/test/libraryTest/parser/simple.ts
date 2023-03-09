@@ -156,9 +156,7 @@ describe("Parser.AbridgedNode", () => {
             root = XorNodeUtils.boxContext(Assert.asDefined(triedLexParse.parseState.contextState.root));
             nodeIdMapCollection = triedLexParse.nodeIdMapCollection;
         } else {
-            throw new Error(
-                `expected ParseSTageOk/ParseStageParseError, got ${triedLexParse.stage} ${triedLexParse.resultKind}`,
-            );
+            throw new Error(`expected isParseStageOk/isParseStageParseError`);
         }
 
         validateNodeIdMapCollection(nodeIdMapCollection, root);
