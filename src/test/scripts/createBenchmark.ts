@@ -8,7 +8,7 @@ import * as path from "path";
 
 import { ArrayUtils, DefaultSettings, Settings, Task, TaskUtils } from "../../powerquery-parser";
 import { BenchmarkTraceManager, NoOpTraceManagerInstance } from "../../powerquery-parser/common/trace";
-import { TestConstants, TestFileUtils, TestResourceUtils } from "../testUtils";
+import { TestConstants, TestFileUtils, TestResourceUtils, TestUtils } from "../testUtils";
 import { TestResource } from "../testUtils/resourceUtils";
 
 const BenchmarkDirectory: string = path.join(__dirname, "benchmark");
@@ -47,10 +47,6 @@ interface Durations {
 
 function jsonStringify(value: unknown): string {
     return JSON.stringify(value, undefined, 4);
-}
-
-function zFill(currentValue: number, upperBound: number): string {
-    return currentValue.toString().padStart(Math.ceil(Math.log10(upperBound + 1)), "0");
 }
 
 function createParserSummaryDurations(
@@ -99,7 +95,9 @@ async function main(): Promise<void> {
     for (let resourceIndex: number = 0; resourceIndex < numResources; resourceIndex += 1) {
         const { fileContents, filePath, resourceName }: TestResource = ArrayUtils.assertGet(resources, resourceIndex);
 
-        console.log(`Starting resource ${zFill(resourceIndex + 1, numResources)} out of ${numResources}: ${filePath}`);
+        console.log(
+            `Starting resource ${TestUtils.zFill(resourceIndex + 1, numResources)} out of ${numResources}: ${filePath}`,
+        );
 
         for (const [parserName, parser] of TestConstants.ParserByParserName.entries()) {
             let failedToParse: boolean = false;
@@ -107,7 +105,7 @@ async function main(): Promise<void> {
 
             for (let iteration: number = 0; iteration < IterationsPerFile; iteration += 1) {
                 console.log(
-                    `\tIteration ${zFill(
+                    `\tIteration ${TestUtils.zFill(
                         iteration + 1,
                         IterationsPerFile,
                     )} out of ${IterationsPerFile} using ${parserName}`,
@@ -144,7 +142,7 @@ async function main(): Promise<void> {
                             "traces",
                             parserName,
                             resourceName,
-                            `iteration_${zFill(iteration, IterationsPerFile)}.log`,
+                            `iteration_${TestUtils.zFill(iteration, IterationsPerFile)}.log`,
                         ),
                         contents,
                     );
