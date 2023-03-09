@@ -8,36 +8,77 @@ import * as path from "path";
 
 import { ArrayUtils, DefaultSettings, Settings, Task, TaskUtils } from "../../powerquery-parser";
 import { BenchmarkTraceManager, NoOpTraceManagerInstance } from "../../powerquery-parser/common/trace";
-import { TestConstants, TestFileUtils, TestResourceUtils } from "../testUtils";
+import { TestConstants, TestFileUtils, TestResourceUtils, TestUtils } from "../testUtils";
 import { TestResource } from "../testUtils/resourceUtils";
 
-const IterationsPerFile: number = 1;
 const BenchmarkDirectory: string = path.join(__dirname, "benchmark");
+
+// We want to run each file ${IterationsPerFile} times to get a more accurate average duration.
+const IterationsPerFile: number = 100;
+// Additionally, we drop the top and bottom ${IterationPercentageDropped}% of
+// durations from iterations to reduce the impact of outliers.
+const IterationPercentageDropped: number = 0.05;
+const NumIterationsDropped: number = Math.floor(IterationsPerFile * IterationPercentageDropped);
+
+// Writes a bunch of trace entries to disk.
+// Usually not useful or needed, especially since it adds a bunch of IO overhead.
 const WriteTracesToDisk: boolean = false;
 
 interface ParserSummary {
-    readonly durationAverage: number;
-    readonly durations: ReadonlyArray<number>;
-    readonly durationSummed: number;
+    readonly durations: Durations;
+    readonly durationsFiltered: Durations;
     readonly failedToParseResourcePaths: ReadonlyArray<string> | null;
     readonly parserName: string;
 }
 
 interface ResourceSummary {
-    readonly durationAverage: number;
-    readonly durations: ReadonlyArray<number>;
-    readonly durationSummed: number;
+    readonly durations: Durations;
+    readonly durationsFiltered: Durations;
     readonly failedToParse: boolean;
-    readonly parserName: string;
     readonly filePath: string;
+    readonly parserName: string;
+}
+
+interface Durations {
+    readonly average: number;
+    readonly durations: ReadonlyArray<number>;
+    readonly summed: number;
 }
 
 function jsonStringify(value: unknown): string {
     return JSON.stringify(value, undefined, 4);
 }
 
-function zFill(value: number): string {
-    return value.toString().padStart(Math.ceil(Math.log10(IterationsPerFile + 1)), "0");
+function createParserSummaryDurations(
+    resourceSummaries: ReadonlyArray<ResourceSummary>,
+    filterOutOutliers: boolean,
+): Durations {
+    const durations: ReadonlyArray<number> = [...resourceSummaries].map((resourceSummary: ResourceSummary) =>
+        filterOutOutliers ? resourceSummary.durationsFiltered.average : resourceSummary.durations.average,
+    );
+
+    const summed: number = durations.reduce((acc: number, curr: number) => acc + curr, 0);
+
+    return {
+        durations,
+        summed,
+        average: summed / resourceSummaries.length,
+    };
+}
+
+function createResourceSummaryDurations(durations: ReadonlyArray<number>, filterOutOutliers: boolean): Durations {
+    if (filterOutOutliers) {
+        durations = [...durations].sort().slice(NumIterationsDropped, durations.length - NumIterationsDropped);
+    }
+
+    const summed: number = durations.reduce((acc: number, curr: number) => acc + curr, 0);
+    const average: number = summed / durations.length;
+
+    return {
+        durations,
+        summed,
+        average,
+    };
 }
 
 // Triple for-loop with parsers, resource filepaths, and an iteration count being the parameters.
@@ -45,10 +86,8 @@ function zFill(value: number): string {
 // It's to find the average duration of a parse for a given (file, parser) pair.
 // Durations are initially measured in fractional milliseconds, then the fractional component is dropped.
 // The outer loop summarizes the aggregate durations for each parser across all files.
-// Optionally writes traces to disk with $WriteTracesToDIsk.
+// Optionally writes traces to disk with $WriteTracesToDisk.
 async function main(): Promise<void> {
-    // Even though we want to sum up the durations by parser it's better to order
-    // the triple-for-loop this way due to file IO.
     const resourceSummariesByParserName: Map<string, ReadonlyArray<ResourceSummary>> = new Map();
     const resources: ReadonlyArray<TestResource> = TestResourceUtils.getResources();
     const numResources: number = resources.length;
@@ -56,14 +95,21 @@ async function main(): Promise<void> {
     for (let resourceIndex: number = 0; resourceIndex < numResources; resourceIndex += 1) {
         const { fileContents, filePath, resourceName }: TestResource = ArrayUtils.assertGet(resources, resourceIndex);
 
-        console.log(`Starting resource ${zFill(resourceIndex + 1)} out of ${numResources}: ${filePath}`);
+        console.log(
+            `Starting resource ${TestUtils.zFill(resourceIndex + 1, numResources)} out of ${numResources}: ${filePath}`,
+        );
 
         for (const [parserName, parser] of TestConstants.ParserByParserName.entries()) {
             let failedToParse: boolean = false;
             const durations: number[] = [];
 
             for (let iteration: number = 0; iteration < IterationsPerFile; iteration += 1) {
-                console.log(`\tIteration ${zFill(iteration + 1)} out of ${IterationsPerFile} using ${parserName}`);
+                console.log(
+                    `\tIteration ${TestUtils.zFill(
+                        iteration + 1,
+                        IterationsPerFile,
+                    )} out of ${IterationsPerFile} using ${parserName}`,
+                );
 
                 let contents: string = "";
 
@@ -96,20 +142,16 @@ async function main(): Promise<void> {
                             "traces",
                             parserName,
                             resourceName,
-                            `iteration_${zFill(iteration)}.log`,
+                            `iteration_${TestUtils.zFill(iteration, IterationsPerFile)}.log`,
                         ),
                         contents,
                     );
                 }
             }
 
-            const durationSummed: number = Math.floor(durations.reduce((a: number, b: number) => a + b, 0));
-            const durationAverage: number = Math.floor(durationSummed / durations.length);
-
             const resourceSummary: ResourceSummary = {
-                durationAverage,
-                durations,
-                durationSummed,
+                durations: createResourceSummaryDurations(durations, false),
+                durationsFiltered: createResourceSummaryDurations(durations, true),
                 failedToParse,
                 parserName,
                 filePath,
@@ -127,21 +169,14 @@ async function main(): Promise<void> {
     }
 
     for (const [parserName, resourceSummaries] of resourceSummariesByParserName.entries()) {
-        const durations: ReadonlyArray<number> = resourceSummaries.map(
-            (resourceSummary: ResourceSummary) => resourceSummary.durationAverage,
-        );
-
         const failedToParseResourcePaths: ReadonlyArray<string> = resourceSummaries
             .filter((resourceSummary: ResourceSummary) => resourceSummary.failedToParse)
-            .map((resourceSummary: ResourceSummary) => resourceSummary.filePath);
-
-        const durationSummed: number = Math.floor(durations.reduce((a: number, b: number) => a + b, 0));
-        const durationAverage: number = Math.floor(durationSummed / resourceSummariesByParserName.size);
+            .map((resourceSummary: ResourceSummary) => resourceSummary.filePath)
+            .sort();
 
         const parserSummary: ParserSummary = {
-            durationAverage,
-            durations,
-            durationSummed,
+            durations: createParserSummaryDurations(resourceSummaries, false),
+            durationsFiltered: createParserSummaryDurations(resourceSummaries, true),
             failedToParseResourcePaths: failedToParseResourcePaths ? failedToParseResourcePaths : null,
             parserName,
         };

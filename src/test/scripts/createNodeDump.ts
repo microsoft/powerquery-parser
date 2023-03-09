@@ -3,7 +3,7 @@
 
 import * as path from "path";
 
-import { Assert, DefaultSettings, Settings, Task, TaskUtils } from "../../powerquery-parser";
+import { ArrayUtils, Assert, DefaultSettings, Settings, Task, TaskUtils } from "../../powerquery-parser";
 import { Ast, AstUtils } from "../../powerquery-parser/language";
 import {
     NodeIdMap,
@@ -13,7 +13,7 @@ import {
     XorNodeKind,
     XorNodeUtils,
 } from "../../powerquery-parser/parser";
-import { TestConstants, TestFileUtils, TestResourceUtils } from "../testUtils";
+import { TestConstants, TestFileUtils, TestResourceUtils, TestUtils } from "../testUtils";
 import { TestResource } from "../testUtils/resourceUtils";
 
 const OutputDirectory: string = path.join(__dirname, "nodeDump");
@@ -45,8 +45,17 @@ async function main(): Promise<void> {
             parser,
         };
 
-        for (const resource of resources) {
-            console.log(`Starting ${resource.filePath} using ${parserName}`);
+        const numResources: number = resources.length;
+
+        for (let index: number = 0; index < numResources; index += 1) {
+            const resource: TestResource = ArrayUtils.assertGet(resources, index);
+
+            console.log(
+                `Starting ${resource.filePath} using ${parserName} (${TestUtils.zFill(
+                    index + 1,
+                    numResources,
+                )} out of ${numResources})`,
+            );
 
             // eslint-disable-next-line no-await-in-loop
             const nodeDump: TNodeDump = await lexParseDump(settings, resource);
