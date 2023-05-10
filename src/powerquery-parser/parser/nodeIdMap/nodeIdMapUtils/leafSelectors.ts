@@ -17,7 +17,7 @@ export function assertLeftMostLeaf(nodeIdMapCollection: Collection, nodeId: numb
     );
 }
 
-export function assertGetLeftMostXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
+export function assertLeftMostXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
     return Assert.asDefined(leftMostXor(nodeIdMapCollection, nodeId), `nodeId does not exist in nodeIdMapCollection`, {
         nodeId,
     });
