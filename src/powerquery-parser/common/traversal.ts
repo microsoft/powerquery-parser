@@ -118,7 +118,7 @@ export async function assertGetAllAstChildren<State extends ITraversalState<Resu
     const childIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(astNode.id);
 
     return childIds
-        ? childIds.map((nodeId: number) => NodeIdMapUtils.assertUnboxAst(nodeIdMapCollection.astNodeById, nodeId))
+        ? childIds.map((nodeId: number) => NodeIdMapUtils.assertAst(nodeIdMapCollection.astNodeById, nodeId))
         : [];
 }
 

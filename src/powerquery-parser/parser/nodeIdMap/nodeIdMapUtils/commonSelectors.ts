@@ -8,11 +8,11 @@ import { ParseContext, ParseContextUtils } from "../../context";
 import { TXorNode, XorNode } from "../xorNode";
 import { XorNodeUtils } from "..";
 
-export function assertGetXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
+export function assertXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
     return Assert.asDefined(xor(nodeIdMapCollection, nodeId), undefined, { nodeId });
 }
 
-export function assertGetXorChecked<T extends Ast.TNode>(
+export function assertXorChecked<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
@@ -23,7 +23,7 @@ export function assertGetXorChecked<T extends Ast.TNode>(
     });
 }
 
-export function assertUnboxAst(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
+export function assertAst(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
     const node: Ast.TNode = Assert.asDefined(
         MapUtils.assertGet(astNodeById, nodeId, "failed to find the given ast node", { nodeId }),
     );
@@ -31,18 +31,18 @@ export function assertUnboxAst(astNodeById: AstNodeById, nodeId: number): Ast.TN
     return node;
 }
 
-export function assertUnboxAstChecked<T extends Ast.TNode>(
+export function assertAstChecked<T extends Ast.TNode>(
     astNodeById: AstNodeById,
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): T {
-    const astNode: Ast.TNode = assertUnboxAst(astNodeById, nodeId);
+    const astNode: Ast.TNode = assertAst(astNodeById, nodeId);
     AstUtils.assertIsNodeKind(astNode, expectedNodeKinds);
 
     return astNode;
 }
 
-export function assertUnboxContext(contextNodeById: ContextNodeById, nodeId: number): ParseContext.TNode {
+export function assertContext(contextNodeById: ContextNodeById, nodeId: number): ParseContext.TNode {
     const node: ParseContext.TNode = Assert.asDefined(
         MapUtils.assertGet(contextNodeById, nodeId, "failed to find the given context node", { nodeId }),
     );
@@ -50,12 +50,12 @@ export function assertUnboxContext(contextNodeById: ContextNodeById, nodeId: num
     return node;
 }
 
-export function assertUnboxContextChecked<T extends Ast.TNode>(
+export function assertContextChecked<T extends Ast.TNode>(
     contextNodeById: ContextNodeById,
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): ParseContext.Node<T> {
-    const contextNode: ParseContext.TNode = assertUnboxContext(contextNodeById, nodeId);
+    const contextNode: ParseContext.TNode = assertContext(contextNodeById, nodeId);
     ParseContextUtils.assertIsNodeKind(contextNode, expectedNodeKinds);
 
     return contextNode;
@@ -98,9 +98,9 @@ export function astChecked<T extends Ast.TNode>(
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): T | undefined {
-    const xorNode: TXorNode | undefined = xor(nodeIdMapCollection, nodeId);
+    const astNode: Ast.TNode | undefined = ast(nodeIdMapCollection, nodeId);
 
-    return xorNode && XorNodeUtils.isAstXorChecked(xorNode, expectedNodeKinds) ? xorNode.node : undefined;
+    return astNode && AstUtils.isNodeKind(astNode, expectedNodeKinds) ? astNode : undefined;
 }
 
 export function context(nodeIdMapCollection: Collection, nodeId: number): ParseContext.TNode | undefined {
@@ -114,7 +114,7 @@ export function contextChecked<T extends Ast.TNode>(
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): ParseContext.Node<T> | undefined {
-    const xorNode: TXorNode | undefined = xorChecked(nodeIdMapCollection, nodeId, expectedNodeKinds);
+    const contextNode: ParseContext.TNode | undefined = context(nodeIdMapCollection, nodeId);
 
-    return xorNode && XorNodeUtils.isContextXorChecked(xorNode, expectedNodeKinds) ? xorNode.node : undefined;
+    return contextNode && ParseContextUtils.isNodeKind(contextNode, expectedNodeKinds) ? contextNode : undefined;
 }

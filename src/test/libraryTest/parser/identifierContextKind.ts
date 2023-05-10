@@ -14,7 +14,7 @@ function assertGetIdentifierByLiteral(parseOk: ParseOk, identifierLiteral: strin
     const matches: Ast.Identifier[] = [];
 
     for (const identifierId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.Identifier) ?? []) {
-        const identifier: Ast.Identifier = NodeIdMapUtils.assertUnboxAstChecked(
+        const identifier: Ast.Identifier = NodeIdMapUtils.assertAstChecked(
             nodeIdMapCollection.astNodeById,
             identifierId,
             Ast.NodeKind.Identifier,

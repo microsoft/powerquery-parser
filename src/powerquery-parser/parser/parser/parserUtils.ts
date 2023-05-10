@@ -180,7 +180,7 @@ export async function restoreCheckpoint(state: ParseState, checkpoint: ParseStat
     }
 
     if (checkpoint.contextNodeId) {
-        state.currentContextNode = NodeIdMapUtils.assertUnboxContext(
+        state.currentContextNode = NodeIdMapUtils.assertContext(
             state.contextState.nodeIdMapCollection.contextNodeById,
             checkpoint.contextNodeId,
         );

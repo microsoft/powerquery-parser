@@ -240,7 +240,7 @@ function applyDelta(
         const oldKind: Ast.NodeKind =
             delta.astNodeById.get(oldId)?.kind ||
             delta.contextNodeById.get(oldId)?.kind ||
-            NodeIdMapUtils.assertGetXor(nodeIdMapCollection, oldId).node.kind;
+            NodeIdMapUtils.assertXor(nodeIdMapCollection, oldId).node.kind;
 
         idsForSpecificNodeKind.add(newId);
 

@@ -62,7 +62,7 @@ export function assertIterChildrenAst(
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
 
     return assertIterChildIds(nodeIdMapCollection.childIdsById, parentId).map((childId: number) =>
-        NodeIdMapUtils.assertUnboxAst(astNodeById, childId),
+        NodeIdMapUtils.assertAst(astNodeById, childId),
     );
 }
 
@@ -86,7 +86,7 @@ export function assertIterXor(
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeIds: ReadonlyArray<number>,
 ): ReadonlyArray<TXorNode> {
-    return nodeIds.map((nodeId: number) => NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId));
+    return nodeIds.map((nodeId: number) => NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId));
 }
 
 // If any exist, returns all Ast nodes under the given node.
@@ -102,7 +102,7 @@ export function iterChildrenAst(
 
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
 
-    return childIds.map((childId: number) => NodeIdMapUtils.assertUnboxAst(astNodeById, childId));
+    return childIds.map((childId: number) => NodeIdMapUtils.assertAst(astNodeById, childId));
 }
 
 export function nextSiblingXor(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): TXorNode | undefined {
@@ -116,7 +116,7 @@ export function nthSiblingXor(
     nodeId: number,
     offset: number,
 ): TXorNode | undefined {
-    const childXorNode: TXorNode = NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId);
+    const childXorNode: TXorNode = NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId);
 
     if (childXorNode.node.attributeIndex === undefined) {
         return undefined;

@@ -283,7 +283,7 @@ export function deleteContext(state: ParseContext.State, nodeId: number): ParseC
         }
 
         // The child Node inherits the attributeIndex.
-        const childXorNode: TXorNode = NodeIdMapUtils.assertGetXor(state.nodeIdMapCollection, childId);
+        const childXorNode: TXorNode = NodeIdMapUtils.assertXor(state.nodeIdMapCollection, childId);
         const mutableChildXorNode: TypeScriptUtils.StripReadonly<Ast.TNode | ParseContext.TNode> = childXorNode.node;
         mutableChildXorNode.attributeIndex = contextNode.attributeIndex;
     }
@@ -303,13 +303,13 @@ export function deleteContext(state: ParseContext.State, nodeId: number): ParseC
     leafIds.delete(nodeId);
 
     // Return the node's parent if it exits
-    return parentId !== undefined ? NodeIdMapUtils.assertUnboxContext(contextNodeById, parentId) : undefined;
+    return parentId !== undefined ? NodeIdMapUtils.assertContext(contextNodeById, parentId) : undefined;
 }
 
 function deleteFromKindMap(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): void {
     const idsByNodeKind: NodeIdMap.IdsByNodeKind = nodeIdMapCollection.idsByNodeKind;
 
-    const nodeKind: Ast.NodeKind = NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId).node.kind;
+    const nodeKind: Ast.NodeKind = NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId).node.kind;
 
     const nodeIds: Set<number> = MapUtils.assertGet(
         idsByNodeKind,

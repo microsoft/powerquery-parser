@@ -1,14 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import {
-    assertGetNthChild,
-    assertGetNthChildChecked,
-    nthChildChecked,
-    unboxNthChildIfAstChecked,
-} from "./childSelectors";
+import { assertNthChild, assertNthChildChecked, nthChildChecked, unboxNthChildIfAstChecked } from "./childSelectors";
 import { assertGetParentXor, assertGetParentXorChecked } from "./parentSelectors";
-import { assertGetXor, assertGetXorChecked } from "./commonSelectors";
+import { assertXor, assertXorChecked } from "./commonSelectors";
 import { NodeIdMap, NodeIdMapIterator, XorNodeUtils } from "..";
 import { TXorNode, XorNode } from "../xorNode";
 import { Ast } from "../../../language";
@@ -22,7 +17,7 @@ export function assertRecursiveExpressionPreviousSibling<T extends Ast.TNode>(
     nodeId: number,
     expectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
 ): TXorNode {
-    const xorNode: TXorNode = assertGetXor(nodeIdMapCollection, nodeId);
+    const xorNode: TXorNode = assertXor(nodeIdMapCollection, nodeId);
     const arrayWrapper: TXorNode = assertGetParentXorChecked(nodeIdMapCollection, nodeId, Ast.NodeKind.ArrayWrapper);
     const primaryExpressionAttributeId: number | undefined = xorNode.node.attributeIndex;
 
@@ -53,21 +48,21 @@ export function assertRecursiveExpressionPreviousSibling<T extends Ast.TNode>(
         }
 
         return expectedNodeKinds
-            ? assertGetNthChildChecked(
+            ? assertNthChildChecked(
                   nodeIdMapCollection,
                   arrayWrapper.node.id,
                   indexOfPrimaryExpressionId - 1,
                   expectedNodeKinds,
               )
-            : assertGetNthChild(nodeIdMapCollection, arrayWrapper.node.id, indexOfPrimaryExpressionId - 1);
+            : assertNthChild(nodeIdMapCollection, arrayWrapper.node.id, indexOfPrimaryExpressionId - 1);
     }
     // It's the first element in ArrayWrapper, meaning we must grab RecursivePrimaryExpression.head
     else {
         const recursivePrimaryExpression: TXorNode = assertGetParentXor(nodeIdMapCollection, arrayWrapper.node.id);
 
         return expectedNodeKinds
-            ? assertGetNthChildChecked(nodeIdMapCollection, recursivePrimaryExpression.node.id, 0, expectedNodeKinds)
-            : assertGetNthChild(nodeIdMapCollection, recursivePrimaryExpression.node.id, 0);
+            ? assertNthChildChecked(nodeIdMapCollection, recursivePrimaryExpression.node.id, 0, expectedNodeKinds)
+            : assertNthChild(nodeIdMapCollection, recursivePrimaryExpression.node.id, 0);
     }
 }
 
@@ -77,7 +72,7 @@ export function invokeExpressionIdentifier(
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
 ): XorNode<Ast.IdentifierExpression> | undefined {
-    const invokeExprXorNode: TXorNode = assertGetXorChecked(nodeIdMapCollection, nodeId, Ast.NodeKind.InvokeExpression);
+    const invokeExprXorNode: TXorNode = assertXorChecked(nodeIdMapCollection, nodeId, Ast.NodeKind.InvokeExpression);
 
     // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
     // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
@@ -149,7 +144,7 @@ export function invokeExpressionIdentifierLiteral(
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
 ): string | undefined {
-    assertGetXorChecked(nodeIdMapCollection, nodeId, Ast.NodeKind.InvokeExpression);
+    assertXorChecked(nodeIdMapCollection, nodeId, Ast.NodeKind.InvokeExpression);
 
     const identifierExpressionXorNode: XorNode<Ast.IdentifierExpression> | undefined = invokeExpressionIdentifier(
         nodeIdMapCollection,

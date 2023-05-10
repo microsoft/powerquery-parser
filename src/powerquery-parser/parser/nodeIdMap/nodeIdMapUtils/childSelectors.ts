@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError } from "../../../common";
-import { assertGetXor, xor } from "./commonSelectors";
+import { assertXor, xor } from "./commonSelectors";
 import { Ast, AstUtils } from "../../../language";
 import { ChildIdsById, Collection } from "../nodeIdMap";
 import { ParseContext, ParseContextUtils } from "../../context";
@@ -18,11 +18,11 @@ import { XorNodeUtils } from "..";
 // The `INode` interface has the nullable field `attributeIndex`.
 // A truthy value indicates it contains a parent and if so what attribute number it is under the parent.
 
-export function assertGetChildren(childIdsById: ChildIdsById, parentId: number): ReadonlyArray<number> {
+export function assertChildIds(childIdsById: ChildIdsById, parentId: number): ReadonlyArray<number> {
     return Assert.asDefined(childIdsById.get(parentId), `parentId doesn't have any children`, { parentId });
 }
 
-export function assertGetNthChild(nodeIdMapCollection: Collection, parentId: number, attributeIndex: number): TXorNode {
+export function assertNthChild(nodeIdMapCollection: Collection, parentId: number, attributeIndex: number): TXorNode {
     return Assert.asDefined(
         nthChild(nodeIdMapCollection, parentId, attributeIndex),
         `parentId doesn't have a child at the given index`,
@@ -30,13 +30,13 @@ export function assertGetNthChild(nodeIdMapCollection: Collection, parentId: num
     );
 }
 
-export function assertGetNthChildChecked<T extends Ast.TNode>(
+export function assertNthChildChecked<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> {
-    const xorNode: TXorNode = assertGetNthChild(nodeIdMapCollection, parentId, attributeIndex);
+    const xorNode: TXorNode = assertNthChild(nodeIdMapCollection, parentId, attributeIndex);
     XorNodeUtils.assertIsNodeKind(xorNode, expectedNodeKinds);
 
     return xorNode;
@@ -128,7 +128,7 @@ export function nthChild(
 
     // Iterate over the children and try to find one which matches attributeIndex.
     for (const childId of childIds) {
-        const xorNode: TXorNode = assertGetXor(nodeIdMapCollection, childId);
+        const xorNode: TXorNode = assertXor(nodeIdMapCollection, childId);
 
         if (xorNode.node.attributeIndex === attributeIndex) {
             return xorNode;
