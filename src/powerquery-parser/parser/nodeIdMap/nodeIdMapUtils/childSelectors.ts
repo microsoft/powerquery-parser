@@ -202,22 +202,6 @@ export function unboxNthChildIfContextChecked<T extends Ast.TNode>(
     return contextNode && ParseContextUtils.isNodeKind(contextNode, expectedNodeKinds) ? contextNode : undefined;
 }
 
-export function unboxIfAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode | undefined {
-    const xorNode: TXorNode | undefined = xor(nodeIdMapCollection, nodeId);
-
-    return xorNode && XorNodeUtils.isAstXor(xorNode) ? xorNode.node : undefined;
-}
-
-export function unboxIfAstChecked<T extends Ast.TNode>(
-    nodeIdMapCollection: Collection,
-    nodeId: number,
-    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): T | undefined {
-    const xorNode: TXorNode | undefined = xor(nodeIdMapCollection, nodeId);
-
-    return xorNode && XorNodeUtils.isAstXorChecked(xorNode, expectedNodeKinds) ? xorNode.node : undefined;
-}
-
 export function unboxWrappedContent(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
     const wrapperXorNode: TXorNode | undefined = xor(nodeIdMapCollection, nodeId);
 

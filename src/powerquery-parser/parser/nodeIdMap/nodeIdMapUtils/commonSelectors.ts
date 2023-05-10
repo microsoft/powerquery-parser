@@ -86,3 +86,35 @@ export function xorChecked<T extends Ast.TNode>(
 
     return xorNode && XorNodeUtils.isNodeKind(xorNode, expectedNodeKinds) ? xorNode : undefined;
 }
+
+export function ast(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode | undefined {
+    const xorNode: TXorNode | undefined = xor(nodeIdMapCollection, nodeId);
+
+    return xorNode && XorNodeUtils.isAstXor(xorNode) ? xorNode.node : undefined;
+}
+
+export function astChecked<T extends Ast.TNode>(
+    nodeIdMapCollection: Collection,
+    nodeId: number,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): T | undefined {
+    const xorNode: TXorNode | undefined = xor(nodeIdMapCollection, nodeId);
+
+    return xorNode && XorNodeUtils.isAstXorChecked(xorNode, expectedNodeKinds) ? xorNode.node : undefined;
+}
+
+export function context(nodeIdMapCollection: Collection, nodeId: number): ParseContext.TNode | undefined {
+    const xorNode: TXorNode | undefined = xor(nodeIdMapCollection, nodeId);
+
+    return xorNode && XorNodeUtils.isContextXor(xorNode) ? xorNode.node : undefined;
+}
+
+export function contextChecked<T extends Ast.TNode>(
+    nodeIdMapCollection: Collection,
+    nodeId: number,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): ParseContext.Node<T> | undefined {
+    const xorNode: TXorNode | undefined = xorChecked(nodeIdMapCollection, nodeId, expectedNodeKinds);
+
+    return xorNode && XorNodeUtils.isContextXorChecked(xorNode, expectedNodeKinds) ? xorNode.node : undefined;
+}
