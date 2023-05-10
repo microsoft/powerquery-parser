@@ -6,6 +6,15 @@ import { Ast, Token } from "../../language";
 import { NodeIdMap, ParseContext } from "..";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
 
+export function assertAsNodeKind<T extends Ast.TNode>(
+    node: ParseContext.TNode,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): ParseContext.Node<T> {
+    assertIsNodeKind(node, expectedNodeKinds);
+
+    return node;
+}
+
 export function assertIsNodeKind<T extends Ast.TNode>(
     node: ParseContext.TNode,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],

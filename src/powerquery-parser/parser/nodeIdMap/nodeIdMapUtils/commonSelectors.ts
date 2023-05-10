@@ -23,7 +23,7 @@ export function assertXorChecked<T extends Ast.TNode>(
 }
 
 export function assertAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
-    return Assert.asDefined(ast(nodeIdMapCollection, nodeId), "failed to find the expected node", {
+    return Assert.asDefined(ast(nodeIdMapCollection, nodeId), "failed to find the expected Ast node", {
         nodeId,
     });
 }
@@ -40,7 +40,9 @@ export function assertAstChecked<T extends Ast.TNode>(
 }
 
 export function assertContext(nodeIdMapCollection: Collection, nodeId: number): ParseContext.TNode {
-    return Assert.asDefined(context(nodeIdMapCollection, nodeId), "failed to find the expected node", { nodeId });
+    return Assert.asDefined(context(nodeIdMapCollection, nodeId), "failed to find the expected Context node", {
+        nodeId,
+    });
 }
 
 export function assertContextChecked<T extends Ast.TNode>(

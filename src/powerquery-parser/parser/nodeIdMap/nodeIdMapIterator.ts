@@ -164,7 +164,11 @@ export function iterArrayWrapper(
                 break;
 
             case XorNodeKind.Context: {
-                const child: TXorNode | undefined = NodeIdMapUtils.nthChild(nodeIdMapCollection, csvXorNode.node.id, 0);
+                const child: TXorNode | undefined = NodeIdMapUtils.nthChildXor(
+                    nodeIdMapCollection,
+                    csvXorNode.node.id,
+                    0,
+                );
 
                 if (child !== undefined) {
                     partial.push(child);
@@ -232,12 +236,13 @@ export function iterFunctionExpressionParameters(
         );
     }
 
-    const parameterList: XorNode<Ast.TParameterList> | undefined = NodeIdMapUtils.nthChildChecked<Ast.TParameterList>(
-        nodeIdMapCollection,
-        functionExpression.node.id,
-        0,
-        Ast.NodeKind.ParameterList,
-    );
+    const parameterList: XorNode<Ast.TParameterList> | undefined =
+        NodeIdMapUtils.nthChildXorChecked<Ast.TParameterList>(
+            nodeIdMapCollection,
+            functionExpression.node.id,
+            0,
+            Ast.NodeKind.ParameterList,
+        );
 
     if (parameterList === undefined) {
         return [];
@@ -307,7 +312,7 @@ export function iterFieldSpecificationList(
             );
 
         const value: XorNode<Ast.FieldSpecification> | undefined =
-            NodeIdMapUtils.nthChildChecked<Ast.FieldSpecification>(
+            NodeIdMapUtils.nthChildXorChecked<Ast.FieldSpecification>(
                 nodeIdMapCollection,
                 fieldSpecification.node.id,
                 2,
@@ -399,7 +404,7 @@ export function iterRecordType(
     XorNodeUtils.assertIsRecordType(recordType);
 
     const fields: XorNode<Ast.FieldSpecificationList> | undefined =
-        NodeIdMapUtils.nthChildChecked<Ast.FieldSpecificationList>(
+        NodeIdMapUtils.nthChildXorChecked<Ast.FieldSpecificationList>(
             nodeIdMapCollection,
             recordType.node.id,
             0,
@@ -437,7 +442,7 @@ export function iterSection(
     }
 
     const sectionMemberArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined =
-        NodeIdMapUtils.nthChildChecked<Ast.TArrayWrapper>(
+        NodeIdMapUtils.nthChildXorChecked<Ast.TArrayWrapper>(
             nodeIdMapCollection,
             section.node.id,
             4,
@@ -452,7 +457,7 @@ export function iterSection(
 
     for (const sectionMember of assertIterChildrenXor(nodeIdMapCollection, sectionMemberArrayWrapper.node.id)) {
         const keyValuePair: XorNode<Ast.IdentifierPairedExpression> | undefined =
-            NodeIdMapUtils.nthChildChecked<Ast.IdentifierPairedExpression>(
+            NodeIdMapUtils.nthChildXorChecked<Ast.IdentifierPairedExpression>(
                 nodeIdMapCollection,
                 sectionMember.node.id,
                 2,
@@ -484,7 +489,7 @@ export function iterSection(
             key,
             keyLiteral,
             normalizedKeyLiteral: TextUtils.normalizeIdentifier(keyLiteral),
-            value: NodeIdMapUtils.nthChild(nodeIdMapCollection, keyValuePairNodeId, 2),
+            value: NodeIdMapUtils.nthChildXor(nodeIdMapCollection, keyValuePairNodeId, 2),
             pairKind: PairKind.SectionMember,
         });
     }
@@ -515,7 +520,7 @@ function iterKeyValuePairs<
             key,
             keyLiteral,
             normalizedKeyLiteral: TextUtils.normalizeIdentifier(keyLiteral),
-            value: NodeIdMapUtils.nthChild(nodeIdMapCollection, keyValuePair.node.id, 2),
+            value: NodeIdMapUtils.nthChildXor(nodeIdMapCollection, keyValuePair.node.id, 2),
             pairKind,
         } as KVP);
     }

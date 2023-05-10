@@ -137,6 +137,15 @@ export function assertAsMetadataExpression(node: Ast.TNode): Ast.MetadataExpress
     return assertAs(node, [Ast.NodeKind.MetadataExpression]);
 }
 
+export function assertAsNodeKind<T extends Ast.TNode>(
+    node: Ast.TNode,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): T {
+    assertIsNodeKind(node, expectedNodeKinds);
+
+    return node;
+}
+
 export function assertAsNotImplementedExpression(node: Ast.TNode): Ast.NotImplementedExpression {
     return assertAs(node, [Ast.NodeKind.NotImplementedExpression]);
 }
