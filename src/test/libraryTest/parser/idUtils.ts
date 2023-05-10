@@ -194,7 +194,7 @@ function assertTraverseMatchesState(traverseState: TraverseState, nodeIdMapColle
 
 // eslint-disable-next-line require-await
 async function traverseVisitNode(state: TraverseState, xorNode: TXorNode): Promise<void> {
-    if (XorNodeUtils.isAstXor(xorNode)) {
+    if (XorNodeUtils.isAst(xorNode)) {
         state.astIds.push(xorNode.node.id);
 
         if (xorNode.node.isLeaf) {

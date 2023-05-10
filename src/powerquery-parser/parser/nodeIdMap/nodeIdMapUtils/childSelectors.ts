@@ -108,7 +108,7 @@ export function assertUnboxArrayWrapperAst(nodeIdMapCollection: Collection, node
         },
     );
 
-    XorNodeUtils.assertIsAstXor(xorNode);
+    XorNodeUtils.assertIsAst(xorNode);
 
     return xorNode.node;
 }
@@ -155,7 +155,7 @@ export function nthChildAst(
 ): Ast.TNode | undefined {
     const xorNode: TXorNode | undefined = nthChildXor(nodeIdMapCollection, parentId, attributeIndex);
 
-    return xorNode && XorNodeUtils.isAstXor(xorNode) ? xorNode.node : undefined;
+    return xorNode && XorNodeUtils.isAst(xorNode) ? xorNode.node : undefined;
 }
 
 export function nthChildAstChecked<T extends Ast.TNode>(
@@ -176,7 +176,7 @@ export function nthChildContext(
 ): ParseContext.TNode | undefined {
     const xorNode: TXorNode | undefined = nthChildXor(nodeIdMapCollection, parentId, attributeIndex);
 
-    return xorNode && XorNodeUtils.isContextXor(xorNode) ? xorNode.node : undefined;
+    return xorNode && XorNodeUtils.isContext(xorNode) ? xorNode.node : undefined;
 }
 
 export function nthChildContextChecked<T extends Ast.TNode>(
@@ -220,7 +220,7 @@ export function unboxWrappedContentChecked<C extends Ast.TWrapped["content"]>(
 export function unboxWrappedContentAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode | undefined {
     const xorNode: TXorNode | undefined = unboxWrappedContent(nodeIdMapCollection, nodeId);
 
-    return xorNode && XorNodeUtils.isAstXor(xorNode) ? xorNode.node : undefined;
+    return xorNode && XorNodeUtils.isAst(xorNode) ? xorNode.node : undefined;
 }
 
 export function unboxWrappedContentAstChecked<C extends Ast.TWrapped["content"]>(

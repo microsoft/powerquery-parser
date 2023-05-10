@@ -143,7 +143,7 @@ export function iterArrayWrapper(
 ): ReadonlyArray<TXorNode> {
     XorNodeUtils.assertIsNodeKind(arrayWrapper, Ast.NodeKind.ArrayWrapper);
 
-    if (XorNodeUtils.isAstXor(arrayWrapper)) {
+    if (XorNodeUtils.isAst(arrayWrapper)) {
         return (arrayWrapper.node as Ast.TCsvArray).elements.map((wrapper: Ast.TCsv) =>
             XorNodeUtils.boxAst(wrapper.node),
         );
@@ -209,7 +209,7 @@ export function iterFieldProjectionNames(
                 Ast.NodeKind.GeneralizedIdentifier,
             );
 
-        if (identifier && XorNodeUtils.isAstXor(identifier)) {
+        if (identifier && XorNodeUtils.isAst(identifier)) {
             result.push(identifier.node.literal);
         }
     }
@@ -223,7 +223,7 @@ export function iterFunctionExpressionParameters(
 ): ReadonlyArray<TXorNode> {
     XorNodeUtils.assertIsNodeKind(functionExpression, Ast.NodeKind.FunctionExpression);
 
-    if (XorNodeUtils.isAstXorChecked<Ast.FunctionExpression>(functionExpression, Ast.NodeKind.FunctionExpression)) {
+    if (XorNodeUtils.isAstChecked<Ast.FunctionExpression>(functionExpression, Ast.NodeKind.FunctionExpression)) {
         return functionExpression.node.parameters.content.elements.map(
             (parameter: Ast.ICsv<Ast.IParameter<Ast.AsNullablePrimitiveType | undefined>>) =>
                 XorNodeUtils.boxAst(parameter.node),
@@ -419,7 +419,7 @@ export function iterSection(
 ): ReadonlyArray<SectionKeyValuePair> {
     XorNodeUtils.assertIsNodeKind(section, Ast.NodeKind.Section);
 
-    if (XorNodeUtils.isAstXorChecked<Ast.Section>(section, Ast.NodeKind.Section)) {
+    if (XorNodeUtils.isAstChecked<Ast.Section>(section, Ast.NodeKind.Section)) {
         return section.node.sectionMembers.elements.map((sectionMember: Ast.SectionMember) => {
             const namePairedExpression: Ast.IdentifierPairedExpression = sectionMember.namePairedExpression;
             const keyLiteral: string = namePairedExpression.key.literal;

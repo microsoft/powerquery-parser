@@ -128,7 +128,7 @@ function createContextNodeDump(
         attributeIndex: contextNode.attributeIndex,
         id: contextNode.id,
         children: NodeIdMapIterator.assertIterChildrenXor(nodeIdMapCollection, contextNode.id).map((child: TXorNode) =>
-            XorNodeUtils.isAstXor(child)
+            XorNodeUtils.isAst(child)
                 ? createAstNodeDump(nodeIdMapCollection, child.node)
                 : createContextNodeDump(nodeIdMapCollection, child.node),
         ),

@@ -77,7 +77,7 @@ export function xorChecked<T extends Ast.TNode>(
 export function ast(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode | undefined {
     const xorNode: TXorNode | undefined = xor(nodeIdMapCollection, nodeId);
 
-    return xorNode && XorNodeUtils.isAstXor(xorNode) ? xorNode.node : undefined;
+    return xorNode && XorNodeUtils.isAst(xorNode) ? xorNode.node : undefined;
 }
 
 export function astChecked<T extends Ast.TNode>(
@@ -93,7 +93,7 @@ export function astChecked<T extends Ast.TNode>(
 export function context(nodeIdMapCollection: Collection, nodeId: number): ParseContext.TNode | undefined {
     const xorNode: TXorNode | undefined = xor(nodeIdMapCollection, nodeId);
 
-    return xorNode && XorNodeUtils.isContextXor(xorNode) ? xorNode.node : undefined;
+    return xorNode && XorNodeUtils.isContext(xorNode) ? xorNode.node : undefined;
 }
 
 export function contextChecked<T extends Ast.TNode>(

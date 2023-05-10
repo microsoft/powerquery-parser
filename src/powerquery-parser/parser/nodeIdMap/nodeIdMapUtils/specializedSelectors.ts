@@ -98,7 +98,7 @@ export function invokeExpressionIdentifier(
 
     // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
     // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
-    if (XorNodeUtils.isContextXor(headXorNode)) {
+    if (XorNodeUtils.isContext(headXorNode)) {
         const details: {
             identifierExpressionNodeId: number;
             invokeExpressionNodeId: number;
@@ -151,7 +151,7 @@ export function invokeExpressionIdentifierLiteral(
         nodeId,
     );
 
-    if (identifierExpressionXorNode === undefined || XorNodeUtils.isContextXor(identifierExpressionXorNode)) {
+    if (identifierExpressionXorNode === undefined || XorNodeUtils.isContext(identifierExpressionXorNode)) {
         return undefined;
     }
 

@@ -82,12 +82,12 @@ describe("nodeIdMapIterator", () => {
             expect(parameters.length).to.equal(2);
 
             const firstParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
-                XorNodeUtils.assertUnboxAst(parameters[0]),
+                XorNodeUtils.assertAst(parameters[0]),
                 Ast.NodeKind.Parameter,
             );
 
             const secondParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
-                XorNodeUtils.assertUnboxAst(parameters[1]),
+                XorNodeUtils.assertAst(parameters[1]),
                 Ast.NodeKind.Parameter,
             );
 
@@ -121,12 +121,12 @@ describe("nodeIdMapIterator", () => {
             expect(parameters.length).to.equal(2);
 
             const firstParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
-                XorNodeUtils.assertUnboxAst(parameters[0]),
+                XorNodeUtils.assertAst(parameters[0]),
                 Ast.NodeKind.Parameter,
             );
 
             const secondParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
-                XorNodeUtils.assertUnboxAst(parameters[1]),
+                XorNodeUtils.assertAst(parameters[1]),
                 Ast.NodeKind.Parameter,
             );
 
@@ -263,7 +263,7 @@ describe(`nodeIdMapUtils`, () => {
                 NodeIdMapUtils.invokeExpressionIdentifier(nodeIdMapCollection, invokeExpressionNodeId),
             );
 
-            XorNodeUtils.assertIsAstXor(invokeExpressionIdentifier);
+            XorNodeUtils.assertIsAst(invokeExpressionIdentifier);
             expect(invokeExpressionIdentifier.node.identifier.literal).to.equal("Foo");
         });
 
@@ -288,7 +288,7 @@ describe(`nodeIdMapUtils`, () => {
                 NodeIdMapUtils.invokeExpressionIdentifier(nodeIdMapCollection, invokeExpressionNodeId),
             );
 
-            XorNodeUtils.assertIsAstXor(invokeExpressionIdentifier);
+            XorNodeUtils.assertIsAst(invokeExpressionIdentifier);
             expect(invokeExpressionIdentifier.node.identifier.literal).to.equal("Foo");
         });
     });
@@ -306,7 +306,7 @@ describe(`nodeIdMapUtils`, () => {
             expect(recordExpressionNodeIds.size).to.equal(1);
             const recordExpressionNodeId: number = recordExpressionNodeIds.values().next().value;
 
-            XorNodeUtils.assertUnboxAstChecked(
+            XorNodeUtils.assertAstChecked(
                 Assert.asDefined(NodeIdMapUtils.unboxWrappedContent(nodeIdMapCollection, recordExpressionNodeId)),
                 Ast.NodeKind.ArrayWrapper,
             );
@@ -329,7 +329,7 @@ describe(`nodeIdMapUtils`, () => {
             expect(recordExpressionNodeIds.size).to.equal(1);
             const recordExpressionNodeId: number = recordExpressionNodeIds.values().next().value;
 
-            XorNodeUtils.assertUnboxAstChecked(
+            XorNodeUtils.assertAstChecked(
                 Assert.asDefined(NodeIdMapUtils.unboxWrappedContent(nodeIdMapCollection, recordExpressionNodeId)),
                 Ast.NodeKind.ArrayWrapper,
             );
