@@ -9,7 +9,7 @@ import { Collection } from "../nodeIdMap";
 import { XorNodeUtils } from "..";
 
 export function assertXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
-    return Assert.asDefined(xor(nodeIdMapCollection, nodeId), "failed to find the xor node", { nodeId });
+    return Assert.asDefined(xor(nodeIdMapCollection, nodeId), "failed to find the expected node", { nodeId });
 }
 
 export function assertXorChecked<T extends Ast.TNode>(
@@ -17,14 +17,13 @@ export function assertXorChecked<T extends Ast.TNode>(
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> {
-    return Assert.asDefined(xorChecked(nodeIdMapCollection, nodeId, expectedNodeKinds), "failed to find the xor node", {
-        nodeId,
-        expectedNodeKinds,
-    });
+    const xorNode: TXorNode = assertXor(nodeIdMapCollection, nodeId);
+
+    return XorNodeUtils.assertAsNodeKind<T>(xorNode, expectedNodeKinds);
 }
 
 export function assertAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
-    return Assert.asDefined(ast(nodeIdMapCollection, nodeId), "failed to find the ast node", {
+    return Assert.asDefined(ast(nodeIdMapCollection, nodeId), "failed to find the expected node", {
         nodeId,
     });
 }
@@ -34,14 +33,14 @@ export function assertAstChecked<T extends Ast.TNode>(
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): T {
-    return Assert.asDefined(astChecked(nodeIdMapCollection, nodeId, expectedNodeKinds), "failed to find the ast node", {
-        nodeId,
-        expectedNodeKinds,
-    });
+    const astNode: Ast.TNode = assertAst(nodeIdMapCollection, nodeId);
+    AstUtils.assertIsNodeKind(astNode, expectedNodeKinds);
+
+    return astNode;
 }
 
 export function assertContext(nodeIdMapCollection: Collection, nodeId: number): ParseContext.TNode {
-    return Assert.asDefined(context(nodeIdMapCollection, nodeId), "failed to find the context node", { nodeId });
+    return Assert.asDefined(context(nodeIdMapCollection, nodeId), "failed to find the expected node", { nodeId });
 }
 
 export function assertContextChecked<T extends Ast.TNode>(
@@ -49,14 +48,10 @@ export function assertContextChecked<T extends Ast.TNode>(
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): ParseContext.Node<T> {
-    return Assert.asDefined(
-        contextChecked(nodeIdMapCollection, nodeId, expectedNodeKinds),
-        "failed to find the context node",
-        {
-            nodeId,
-            expectedNodeKinds,
-        },
-    );
+    const contextNode: ParseContext.TNode = assertContext(nodeIdMapCollection, nodeId);
+    ParseContextUtils.assertIsNodeKind(contextNode, expectedNodeKinds);
+
+    return contextNode;
 }
 
 export function xor(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {

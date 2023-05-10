@@ -8,7 +8,8 @@ import { Ast } from "../../../language";
 import { TXorNode } from "../xorNode";
 import { xor } from "./commonSelectors";
 
-export function assertUnboxLeftMostLeaf(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
+// As it's a leaf it's expected to be a Ast.TNode.
+export function assertLeftMostLeaf(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
     return XorNodeUtils.assertUnboxAst(
         Assert.asDefined(leftMostXor(nodeIdMapCollection, nodeId), `nodeId does not exist in nodeIdMapCollection`, {
             nodeId,

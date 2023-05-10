@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { assertNthChild, assertNthChildChecked, nthChildChecked, unboxNthChildIfAstChecked } from "./childSelectors";
-import { assertGetParentXor, assertGetParentXorChecked } from "./parentSelectors";
+import { assertNthChild, assertNthChildChecked, nthChildChecked, nthChildAstChecked } from "./childSelectors";
+import { assertGetParentXor, assertParentXorChecked } from "./parentSelectors";
 import { assertXor, assertXorChecked } from "./commonSelectors";
 import { NodeIdMap, NodeIdMapIterator, XorNodeUtils } from "..";
 import { TXorNode, XorNode } from "../xorNode";
@@ -18,7 +18,7 @@ export function assertRecursiveExpressionPreviousSibling<T extends Ast.TNode>(
     expectedNodeKinds?: ReadonlyArray<T["kind"]> | T["kind"] | undefined,
 ): TXorNode {
     const xorNode: TXorNode = assertXor(nodeIdMapCollection, nodeId);
-    const arrayWrapper: TXorNode = assertGetParentXorChecked(nodeIdMapCollection, nodeId, Ast.NodeKind.ArrayWrapper);
+    const arrayWrapper: TXorNode = assertParentXorChecked(nodeIdMapCollection, nodeId, Ast.NodeKind.ArrayWrapper);
     const primaryExpressionAttributeId: number | undefined = xorNode.node.attributeIndex;
 
     // It's not the first element in the ArrayWrapper.
@@ -121,7 +121,7 @@ export function unboxIdentifier(
     nodeIdMapCollection: NodeIdMap.Collection,
     functionParameter: TXorNode,
 ): Ast.Identifier | undefined {
-    return unboxNthChildIfAstChecked<Ast.Identifier>(
+    return nthChildAstChecked<Ast.Identifier>(
         nodeIdMapCollection,
         functionParameter.node.id,
         1,

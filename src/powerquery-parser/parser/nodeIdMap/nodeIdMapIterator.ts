@@ -287,7 +287,7 @@ export function iterFieldSpecificationList(
     const result: FieldSpecificationKeyValuePair[] = [];
 
     for (const fieldSpecification of iterArrayWrapperInWrappedContent(nodeIdMapCollection, fieldSpecificationList)) {
-        const key: Ast.GeneralizedIdentifier | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked(
+        const key: Ast.GeneralizedIdentifier | undefined = NodeIdMapUtils.nthChildAstChecked(
             nodeIdMapCollection,
             fieldSpecification.node.id,
             1,
@@ -299,7 +299,7 @@ export function iterFieldSpecificationList(
         }
 
         const optional: Ast.IConstant<Constant.LanguageConstant.Optional> | undefined =
-            NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.IConstant<Constant.LanguageConstant.Optional>>(
+            NodeIdMapUtils.nthChildAstChecked<Ast.IConstant<Constant.LanguageConstant.Optional>>(
                 nodeIdMapCollection,
                 fieldSpecification.node.id,
                 0,
@@ -465,7 +465,7 @@ export function iterSection(
 
         const keyValuePairNodeId: number = keyValuePair.node.id;
 
-        const keyKey: Ast.Identifier | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked(
+        const keyKey: Ast.Identifier | undefined = NodeIdMapUtils.nthChildAstChecked(
             nodeIdMapCollection,
             keyValuePair.node.id,
             0,
@@ -499,12 +499,10 @@ function iterKeyValuePairs<
     const partial: KVP[] = [];
 
     for (const keyValuePair of iterArrayWrapper(nodeIdMapCollection, arrayWrapper)) {
-        const key: Key | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked(
-            nodeIdMapCollection,
-            keyValuePair.node.id,
-            0,
-            [Ast.NodeKind.GeneralizedIdentifier, Ast.NodeKind.Identifier],
-        );
+        const key: Key | undefined = NodeIdMapUtils.nthChildAstChecked(nodeIdMapCollection, keyValuePair.node.id, 0, [
+            Ast.NodeKind.GeneralizedIdentifier,
+            Ast.NodeKind.Identifier,
+        ]);
 
         if (key === undefined) {
             break;
