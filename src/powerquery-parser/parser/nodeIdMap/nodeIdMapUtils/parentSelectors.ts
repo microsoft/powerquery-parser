@@ -10,7 +10,9 @@ import { Collection } from "../nodeIdMap";
 import { XorNodeUtils } from "..";
 
 export function assertParentXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
-    return Assert.asDefined(parentXor(nodeIdMapCollection, nodeId), `nodeId doesn't have a parent`, { nodeId });
+    return Assert.asDefined(parentXor(nodeIdMapCollection, nodeId), `nodeId doesn't have a parent`, {
+        nodeId,
+    });
 }
 
 export function assertParentXorChecked<T extends Ast.TNode>(
@@ -25,7 +27,9 @@ export function assertParentAst(nodeIdMapCollection: Collection, nodeId: number)
     return Assert.asDefined(
         parentAst(nodeIdMapCollection, nodeId),
         "couldn't find the expected parent Ast for nodeId",
-        { nodeId },
+        {
+            nodeId,
+        },
     );
 }
 
@@ -41,7 +45,9 @@ export function assertParentContext(nodeIdMapCollection: Collection, nodeId: num
     return Assert.asDefined(
         parentContext(nodeIdMapCollection, nodeId),
         "couldn't find the expected parent ParseContext for nodeId",
-        { nodeId },
+        {
+            nodeId,
+        },
     );
 }
 

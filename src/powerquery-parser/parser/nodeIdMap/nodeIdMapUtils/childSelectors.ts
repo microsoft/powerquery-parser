@@ -26,7 +26,10 @@ export function assertNthChildXor(nodeIdMapCollection: Collection, parentId: num
     return Assert.asDefined(
         nthChildXor(nodeIdMapCollection, parentId, attributeIndex),
         `parentId doesn't have a child at the given index`,
-        { parentId, attributeIndex },
+        {
+            parentId,
+            attributeIndex,
+        },
     );
 }
 
@@ -77,7 +80,10 @@ export function assertNthChildContext(
     return Assert.asDefined(
         nthChildContext(nodeIdMapCollection, parentId, attributeIndex),
         `parentId doesn't have a ParseContext child at the given index`,
-        { parentId, attributeIndex },
+        {
+            parentId,
+            attributeIndex,
+        },
     );
 }
 
@@ -97,7 +103,9 @@ export function assertUnboxArrayWrapperAst(nodeIdMapCollection: Collection, node
     const xorNode: XorNode<Ast.TArrayWrapper> | undefined = Assert.asDefined(
         unboxArrayWrapper(nodeIdMapCollection, nodeId),
         "failure in assertUnboxArrayWrapperAst",
-        { nodeId },
+        {
+            nodeId,
+        },
     );
 
     XorNodeUtils.assertIsAstXor(xorNode);

@@ -17,9 +17,7 @@ export function assertXorChecked<T extends Ast.TNode>(
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> {
-    const xorNode: TXorNode = assertXor(nodeIdMapCollection, nodeId);
-
-    return XorNodeUtils.assertAsNodeKind<T>(xorNode, expectedNodeKinds);
+    return XorNodeUtils.assertAsNodeKind<T>(assertXor(nodeIdMapCollection, nodeId), expectedNodeKinds);
 }
 
 export function assertAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
@@ -33,10 +31,7 @@ export function assertAstChecked<T extends Ast.TNode>(
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): T {
-    const astNode: Ast.TNode = assertAst(nodeIdMapCollection, nodeId);
-    AstUtils.assertIsNodeKind(astNode, expectedNodeKinds);
-
-    return astNode;
+    return AstUtils.assertAsNodeKind(assertAst(nodeIdMapCollection, nodeId), expectedNodeKinds);
 }
 
 export function assertContext(nodeIdMapCollection: Collection, nodeId: number): ParseContext.TNode {
@@ -50,10 +45,7 @@ export function assertContextChecked<T extends Ast.TNode>(
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): ParseContext.Node<T> {
-    const contextNode: ParseContext.TNode = assertContext(nodeIdMapCollection, nodeId);
-    ParseContextUtils.assertIsNodeKind(contextNode, expectedNodeKinds);
-
-    return contextNode;
+    return ParseContextUtils.assertAsNodeKind(assertContext(nodeIdMapCollection, nodeId), expectedNodeKinds);
 }
 
 export function xor(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
