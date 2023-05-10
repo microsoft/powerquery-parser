@@ -128,7 +128,7 @@ export function nthSiblingXor(
         return undefined;
     }
 
-    const parentXorNode: TXorNode = NodeIdMapUtils.assertGetParentXor(nodeIdMapCollection, nodeId);
+    const parentXorNode: TXorNode = NodeIdMapUtils.assertParentXor(nodeIdMapCollection, nodeId);
     const childIds: ReadonlyArray<number> = assertIterChildIds(nodeIdMapCollection.childIdsById, parentXorNode.node.id);
 
     if (childIds.length >= attributeIndex) {
