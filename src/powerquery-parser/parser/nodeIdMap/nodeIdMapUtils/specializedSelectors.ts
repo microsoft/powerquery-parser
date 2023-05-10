@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { assertNthChildXor, assertNthChildXorChecked, nthChildXorChecked, nthChildAstChecked } from "./childSelectors";
+import { assertNthChildXor, assertNthChildXorChecked, nthChildAstChecked, nthChildXorChecked } from "./childSelectors";
 import { assertParentXor, assertParentXorChecked } from "./parentSelectors";
 import { assertXor, assertXorChecked } from "./commonSelectors";
-import { NodeIdMap, NodeIdMapIterator, XorNodeUtils } from "..";
+import { NodeIdMap, NodeIdMapUtils, XorNodeUtils } from "..";
 import { TXorNode, XorNode } from "../xorNode";
 import { Ast } from "../../../language";
 import { CommonError } from "../../../common";
@@ -23,7 +23,7 @@ export function assertRecursiveExpressionPreviousSibling<T extends Ast.TNode>(
 
     // It's not the first element in the ArrayWrapper.
     if (primaryExpressionAttributeId && primaryExpressionAttributeId > 0) {
-        const childIds: ReadonlyArray<number> = NodeIdMapIterator.assertIterChildIds(
+        const childIds: ReadonlyArray<number> = NodeIdMapUtils.assertChildIds(
             nodeIdMapCollection.childIdsById,
             arrayWrapper.node.id,
         );

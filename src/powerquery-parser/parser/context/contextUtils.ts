@@ -4,7 +4,7 @@
 import { ArrayUtils, Assert, CommonError, MapUtils, SetUtils, TypeScriptUtils } from "../../common";
 import { Ast, Token } from "../../language";
 import { NodeIdMap, ParseContext } from "..";
-import { NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
+import { NodeIdMapUtils, TXorNode } from "../nodeIdMap";
 
 export function assertAsNodeKind<T extends Ast.TNode>(
     node: ParseContext.TNode,
@@ -344,7 +344,7 @@ function removeOrReplaceChildId(
     replacementId: number | undefined,
 ): void {
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
-    const childIds: ReadonlyArray<number> = NodeIdMapIterator.assertIterChildIds(childIdsById, parentId);
+    const childIds: ReadonlyArray<number> = NodeIdMapUtils.assertChildIds(childIdsById, parentId);
 
     const replacementIndex: number = ArrayUtils.assertIn(
         childIds,

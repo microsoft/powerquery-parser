@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, MapUtils } from "../../common";
 import { Ast, Constant, TextUtils } from "../../language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
+import { Assert } from "../../common";
 import { IConstant } from "../../language/ast/ast";
 import { unboxIdentifier } from "./nodeIdMapUtils";
 import { XorNode } from "./xorNode";
@@ -47,19 +47,13 @@ export const enum PairKind {
 // -------- Simple iters  --------
 // -------------------------------
 
-// Assert the existence of children for the node.
-// Returns an array of nodeIds of children for the given node.
-export function assertIterChildIds(childIdsById: NodeIdMap.ChildIdsById, nodeId: number): ReadonlyArray<number> {
-    return MapUtils.assertGet(childIdsById, nodeId);
-}
-
 // Assert the existence of children for the node and that they are Ast nodes.
 // Returns an array of children (which are TNodes) for the given node.
 export function assertIterChildrenAst(
     nodeIdMapCollection: NodeIdMap.Collection,
     parentId: number,
 ): ReadonlyArray<Ast.TNode> {
-    return assertIterChildIds(nodeIdMapCollection.childIdsById, parentId).map((childId: number) =>
+    return NodeIdMapUtils.assertChildIds(nodeIdMapCollection.childIdsById, parentId).map((childId: number) =>
         NodeIdMapUtils.assertAst(nodeIdMapCollection, childId),
     );
 }
@@ -125,7 +119,11 @@ export function nthSiblingXor(
     }
 
     const parentXorNode: TXorNode = NodeIdMapUtils.assertParentXor(nodeIdMapCollection, nodeId);
-    const childIds: ReadonlyArray<number> = assertIterChildIds(nodeIdMapCollection.childIdsById, parentXorNode.node.id);
+
+    const childIds: ReadonlyArray<number> = NodeIdMapUtils.assertChildIds(
+        nodeIdMapCollection.childIdsById,
+        parentXorNode.node.id,
+    );
 
     if (childIds.length >= attributeIndex) {
         return undefined;

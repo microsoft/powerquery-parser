@@ -209,18 +209,18 @@ export function unboxWrappedContentChecked<C extends Ast.TWrapped["content"]>(
     return xorNode && XorNodeUtils.isNodeKind(xorNode, expectedNodeKinds) ? xorNode : undefined;
 }
 
-export function unboxWrappedContentIfAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode | undefined {
+export function unboxWrappedContentAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode | undefined {
     const xorNode: TXorNode | undefined = unboxWrappedContent(nodeIdMapCollection, nodeId);
 
     return xorNode && XorNodeUtils.isAstXor(xorNode) ? xorNode.node : undefined;
 }
 
-export function unboxWrappedContentIfAstChecked<C extends Ast.TWrapped["content"]>(
+export function unboxWrappedContentAstChecked<C extends Ast.TWrapped["content"]>(
     nodeIdMapCollection: Collection,
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<C["kind"]> | C["kind"],
 ): C | undefined {
-    const astNode: Ast.TNode | undefined = unboxWrappedContentIfAst(nodeIdMapCollection, nodeId);
+    const astNode: Ast.TNode | undefined = unboxWrappedContentAst(nodeIdMapCollection, nodeId);
 
     return astNode && AstUtils.isNodeKind<C>(astNode, expectedNodeKinds) ? astNode : undefined;
 }
