@@ -203,14 +203,14 @@ export function assertIsIdentifier(
     assertIsNodeKind(xorNode, [Ast.NodeKind.Identifier, Ast.NodeKind.IdentifierExpression]);
 }
 
+export function assertIsList(xorNode: TXorNode): asserts xorNode is XorNode<Ast.ListExpression | Ast.ListLiteral> {
+    assertIsNodeKind(xorNode, [Ast.NodeKind.ListExpression, Ast.NodeKind.ListLiteral]);
+}
+
 export function assertIsRecord(
     xorNode: TXorNode,
 ): asserts xorNode is XorNode<Ast.RecordExpression | Ast.RecordLiteral> {
     assertIsNodeKind(xorNode, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);
-}
-
-export function assertIsList(xorNode: TXorNode): asserts xorNode is XorNode<Ast.ListExpression | Ast.ListLiteral> {
-    assertIsNodeKind(xorNode, [Ast.NodeKind.ListExpression, Ast.NodeKind.ListLiteral]);
 }
 
 export function isTWrapped(xorNode: TXorNode): xorNode is XorNode<Ast.TWrapped> {
