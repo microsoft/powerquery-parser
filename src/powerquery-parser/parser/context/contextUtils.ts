@@ -303,7 +303,7 @@ export function deleteContext(state: ParseContext.State, nodeId: number): ParseC
     leafIds.delete(nodeId);
 
     // Return the node's parent if it exits
-    return parentId !== undefined ? NodeIdMapUtils.assertContext(contextNodeById, parentId) : undefined;
+    return parentId !== undefined ? NodeIdMapUtils.assertContext(nodeIdMapCollection, parentId) : undefined;
 }
 
 function deleteFromKindMap(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): void {

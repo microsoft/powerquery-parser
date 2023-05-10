@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, MapUtils } from "../../../common";
 import { Ast, AstUtils } from "../../../language";
-import { AstNodeById, Collection, ContextNodeById } from "../nodeIdMap";
 import { ParseContext, ParseContextUtils } from "../../context";
 import { TXorNode, XorNode } from "../xorNode";
+import { Assert } from "../../../common";
+import { Collection } from "../nodeIdMap";
 import { XorNodeUtils } from "..";
 
 export function assertXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
-    return Assert.asDefined(xor(nodeIdMapCollection, nodeId), undefined, { nodeId });
+    return Assert.asDefined(xor(nodeIdMapCollection, nodeId), "failed to find the xor node", { nodeId });
 }
 
 export function assertXorChecked<T extends Ast.TNode>(
@@ -17,48 +17,46 @@ export function assertXorChecked<T extends Ast.TNode>(
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> {
-    return Assert.asDefined(xorChecked(nodeIdMapCollection, nodeId, expectedNodeKinds), undefined, {
+    return Assert.asDefined(xorChecked(nodeIdMapCollection, nodeId, expectedNodeKinds), "failed to find the xor node", {
         nodeId,
         expectedNodeKinds,
     });
 }
 
-export function assertAst(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
-    const node: Ast.TNode = Assert.asDefined(
-        MapUtils.assertGet(astNodeById, nodeId, "failed to find the given ast node", { nodeId }),
-    );
-
-    return node;
+export function assertAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
+    return Assert.asDefined(ast(nodeIdMapCollection, nodeId), "failed to find the ast node", {
+        nodeId,
+    });
 }
 
 export function assertAstChecked<T extends Ast.TNode>(
-    astNodeById: AstNodeById,
+    nodeIdMapCollection: Collection,
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): T {
-    const astNode: Ast.TNode = assertAst(astNodeById, nodeId);
-    AstUtils.assertIsNodeKind(astNode, expectedNodeKinds);
-
-    return astNode;
+    return Assert.asDefined(astChecked(nodeIdMapCollection, nodeId, expectedNodeKinds), "failed to find the ast node", {
+        nodeId,
+        expectedNodeKinds,
+    });
 }
 
-export function assertContext(contextNodeById: ContextNodeById, nodeId: number): ParseContext.TNode {
-    const node: ParseContext.TNode = Assert.asDefined(
-        MapUtils.assertGet(contextNodeById, nodeId, "failed to find the given context node", { nodeId }),
-    );
-
-    return node;
+export function assertContext(nodeIdMapCollection: Collection, nodeId: number): ParseContext.TNode {
+    return Assert.asDefined(context(nodeIdMapCollection, nodeId), "failed to find the context node", { nodeId });
 }
 
 export function assertContextChecked<T extends Ast.TNode>(
-    contextNodeById: ContextNodeById,
+    nodeIdMapCollection: Collection,
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): ParseContext.Node<T> {
-    const contextNode: ParseContext.TNode = assertContext(contextNodeById, nodeId);
-    ParseContextUtils.assertIsNodeKind(contextNode, expectedNodeKinds);
-
-    return contextNode;
+    return Assert.asDefined(
+        contextChecked(nodeIdMapCollection, nodeId, expectedNodeKinds),
+        "failed to find the context node",
+        {
+            nodeId,
+            expectedNodeKinds,
+        },
+    );
 }
 
 export function xor(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
