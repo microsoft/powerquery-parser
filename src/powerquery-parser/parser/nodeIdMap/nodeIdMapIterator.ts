@@ -59,10 +59,8 @@ export function assertIterChildrenAst(
     nodeIdMapCollection: NodeIdMap.Collection,
     parentId: number,
 ): ReadonlyArray<Ast.TNode> {
-    const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
-
     return assertIterChildIds(nodeIdMapCollection.childIdsById, parentId).map((childId: number) =>
-        NodeIdMapUtils.assertAst(astNodeById, childId),
+        NodeIdMapUtils.assertAst(nodeIdMapCollection, childId),
     );
 }
 
@@ -100,9 +98,7 @@ export function iterChildrenAst(
         return undefined;
     }
 
-    const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
-
-    return childIds.map((childId: number) => NodeIdMapUtils.assertAst(astNodeById, childId));
+    return childIds.map((childId: number) => NodeIdMapUtils.assertAst(nodeIdMapCollection, childId));
 }
 
 export function nextSiblingXor(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): TXorNode | undefined {

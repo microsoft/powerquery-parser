@@ -15,7 +15,7 @@ function assertGetIdentifierByLiteral(parseOk: ParseOk, identifierLiteral: strin
 
     for (const identifierId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.Identifier) ?? []) {
         const identifier: Ast.Identifier = NodeIdMapUtils.assertAstChecked(
-            nodeIdMapCollection.astNodeById,
+            nodeIdMapCollection,
             identifierId,
             Ast.NodeKind.Identifier,
         );
