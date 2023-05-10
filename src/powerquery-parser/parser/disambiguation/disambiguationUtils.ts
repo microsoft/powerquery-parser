@@ -452,7 +452,7 @@ async function readParenthesizedExpressionOrBinOpExpression(
 
     const leftMostNode: Ast.TNode = NodeIdMapUtils.assertLeftMostLeaf(state.contextState.nodeIdMapCollection, node.id);
 
-    AstUtils.assertAsTConstant(leftMostNode);
+    AstUtils.assertAsNodeKind<Ast.TConstant>(leftMostNode, Ast.NodeKind.Constant);
 
     Assert.isTrue(
         leftMostNode.kind === Ast.NodeKind.Constant &&

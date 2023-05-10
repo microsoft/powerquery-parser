@@ -59,36 +59,6 @@ export function assertAsNodeKind<T extends Ast.TNode>(
     return xorNode;
 }
 
-export function assertAsFunctionParameterList(xorNode: TXorNode): XorNode<Ast.FieldSpecificationList> {
-    assertIsFieldSpecificationList(xorNode);
-
-    return xorNode;
-}
-
-export function assertAsInvokeExpression(xorNode: TXorNode): XorNode<Ast.InvokeExpression> {
-    assertIsInvokeExpression(xorNode);
-
-    return xorNode;
-}
-
-export function assertAsLetExpression(xorNode: TXorNode): XorNode<Ast.LetExpression> {
-    assertIsLetExpression(xorNode);
-
-    return xorNode;
-}
-
-export function assertAsList(xorNode: TXorNode): XorNode<Ast.ListExpression | Ast.ListLiteral> {
-    assertIsList(xorNode);
-
-    return xorNode;
-}
-
-export function assertAsParameter(xorNode: TXorNode): XorNode<Ast.TParameter> {
-    assertIsParameter(xorNode);
-
-    return xorNode;
-}
-
 export function assertIsNodeKind<T extends Ast.TNode>(
     xorNode: TXorNode,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
@@ -150,30 +120,8 @@ export function assertIsRecord(
     assertIsNodeKind(xorNode, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);
 }
 
-export function assertIsRecordType(xorNode: TXorNode): asserts xorNode is XorNode<Ast.RecordType> {
-    assertIsNodeKind(xorNode, Ast.NodeKind.RecordType);
-}
-
-export function assertIsFieldSpecificationList(
-    xorNode: TXorNode,
-): asserts xorNode is XorNode<Ast.FieldSpecificationList> {
-    assertIsNodeKind(xorNode, Ast.NodeKind.FieldSpecificationList);
-}
-
-export function assertIsInvokeExpression(xorNode: TXorNode): asserts xorNode is XorNode<Ast.InvokeExpression> {
-    assertIsNodeKind(xorNode, Ast.NodeKind.InvokeExpression);
-}
-
-export function assertIsLetExpression(xorNode: TXorNode): asserts xorNode is XorNode<Ast.LetExpression> {
-    assertIsNodeKind(xorNode, Ast.NodeKind.LetExpression);
-}
-
 export function assertIsList(xorNode: TXorNode): asserts xorNode is XorNode<Ast.ListExpression | Ast.ListLiteral> {
     assertIsNodeKind(xorNode, [Ast.NodeKind.ListExpression, Ast.NodeKind.ListLiteral]);
-}
-
-export function assertIsParameter(xorNode: TXorNode): asserts xorNode is XorNode<Ast.TParameter> {
-    assertIsNodeKind(xorNode, Ast.NodeKind.Parameter);
 }
 
 export function assertUnboxAst(xorNode: TXorNode): Ast.TNode {

@@ -395,7 +395,7 @@ export function iterRecordType(
     nodeIdMapCollection: NodeIdMap.Collection,
     recordType: TXorNode,
 ): ReadonlyArray<FieldSpecificationKeyValuePair> {
-    XorNodeUtils.assertIsRecordType(recordType);
+    XorNodeUtils.assertIsNodeKind<Ast.RecordType>(recordType, Ast.NodeKind.RecordType);
 
     const fields: XorNode<Ast.FieldSpecificationList> | undefined =
         NodeIdMapUtils.nthChildXorChecked<Ast.FieldSpecificationList>(

@@ -81,12 +81,14 @@ describe("nodeIdMapIterator", () => {
 
             expect(parameters.length).to.equal(2);
 
-            const firstParameter: Ast.TParameter = Language.AstUtils.assertAsParameter(
+            const firstParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
                 XorNodeUtils.assertUnboxAst(parameters[0]),
+                Ast.NodeKind.Parameter,
             );
 
-            const secondParameter: Ast.TParameter = Language.AstUtils.assertAsParameter(
+            const secondParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
                 XorNodeUtils.assertUnboxAst(parameters[1]),
+                Ast.NodeKind.Parameter,
             );
 
             expect(firstParameter.name.literal).to.equal("x");
@@ -118,12 +120,14 @@ describe("nodeIdMapIterator", () => {
 
             expect(parameters.length).to.equal(2);
 
-            const firstParameter: Ast.TParameter = Language.AstUtils.assertAsParameter(
+            const firstParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
                 XorNodeUtils.assertUnboxAst(parameters[0]),
+                Ast.NodeKind.Parameter,
             );
 
-            const secondParameter: Ast.TParameter = Language.AstUtils.assertAsParameter(
+            const secondParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
                 XorNodeUtils.assertUnboxAst(parameters[1]),
+                Ast.NodeKind.Parameter,
             );
 
             expect(firstParameter.name.literal).to.equal("x");
