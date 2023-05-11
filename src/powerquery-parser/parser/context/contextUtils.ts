@@ -4,7 +4,16 @@
 import { ArrayUtils, Assert, CommonError, MapUtils, SetUtils, TypeScriptUtils } from "../../common";
 import { Ast, Token } from "../../language";
 import { NodeIdMap, ParseContext } from "..";
-import { NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
+import { NodeIdMapUtils, TXorNode } from "../nodeIdMap";
+
+export function assertAsNodeKind<T extends Ast.TNode>(
+    node: ParseContext.TNode,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): ParseContext.Node<T> {
+    assertIsNodeKind(node, expectedNodeKinds);
+
+    return node;
+}
 
 export function assertIsNodeKind<T extends Ast.TNode>(
     node: ParseContext.TNode,
@@ -283,7 +292,7 @@ export function deleteContext(state: ParseContext.State, nodeId: number): ParseC
         }
 
         // The child Node inherits the attributeIndex.
-        const childXorNode: TXorNode = NodeIdMapUtils.assertGetXor(state.nodeIdMapCollection, childId);
+        const childXorNode: TXorNode = NodeIdMapUtils.assertXor(state.nodeIdMapCollection, childId);
         const mutableChildXorNode: TypeScriptUtils.StripReadonly<Ast.TNode | ParseContext.TNode> = childXorNode.node;
         mutableChildXorNode.attributeIndex = contextNode.attributeIndex;
     }
@@ -303,13 +312,13 @@ export function deleteContext(state: ParseContext.State, nodeId: number): ParseC
     leafIds.delete(nodeId);
 
     // Return the node's parent if it exits
-    return parentId !== undefined ? NodeIdMapUtils.assertUnboxContext(contextNodeById, parentId) : undefined;
+    return parentId !== undefined ? NodeIdMapUtils.assertContext(nodeIdMapCollection, parentId) : undefined;
 }
 
 function deleteFromKindMap(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): void {
     const idsByNodeKind: NodeIdMap.IdsByNodeKind = nodeIdMapCollection.idsByNodeKind;
 
-    const nodeKind: Ast.NodeKind = NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId).node.kind;
+    const nodeKind: Ast.NodeKind = NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId).node.kind;
 
     const nodeIds: Set<number> = MapUtils.assertGet(
         idsByNodeKind,
@@ -335,7 +344,7 @@ function removeOrReplaceChildId(
     replacementId: number | undefined,
 ): void {
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
-    const childIds: ReadonlyArray<number> = NodeIdMapIterator.assertIterChildIds(childIdsById, parentId);
+    const childIds: ReadonlyArray<number> = NodeIdMapUtils.assertChildIds(childIdsById, parentId);
 
     const replacementIndex: number = ArrayUtils.assertIn(
         childIds,

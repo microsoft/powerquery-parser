@@ -8,15 +8,16 @@ import { Ast } from "../../../language";
 import { TXorNode } from "../xorNode";
 import { xor } from "./commonSelectors";
 
-export function assertUnboxLeftMostLeaf(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
-    return XorNodeUtils.assertUnboxAst(
+// As it's a leaf it's expected to be a Ast.TNode.
+export function assertLeftMostLeaf(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
+    return XorNodeUtils.assertAst(
         Assert.asDefined(leftMostXor(nodeIdMapCollection, nodeId), `nodeId does not exist in nodeIdMapCollection`, {
             nodeId,
         }),
     );
 }
 
-export function assertGetLeftMostXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
+export function assertLeftMostXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
     return Assert.asDefined(leftMostXor(nodeIdMapCollection, nodeId), `nodeId does not exist in nodeIdMapCollection`, {
         nodeId,
     });
@@ -45,7 +46,7 @@ export function leftMostXor(nodeIdMapCollection: Collection, nodeId: number): TX
 export function leftMostLeaf(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): Ast.TNode | undefined {
     const xorNode: TXorNode | undefined = leftMostXor(nodeIdMapCollection, nodeId);
 
-    return xorNode && XorNodeUtils.isAstXor(xorNode) ? xorNode.node : undefined;
+    return xorNode && XorNodeUtils.isAst(xorNode) ? xorNode.node : undefined;
 }
 
 // There are a few assumed invariants about children:

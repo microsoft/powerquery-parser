@@ -36,7 +36,7 @@ describe("nodeIdMapIterator", () => {
 
         const fieldSpecificationListId: number = Assert.asDefined([...fieldSpecificationListIds.values()][0]);
 
-        const fieldSpecificationList: TXorNode = NodeIdMapUtils.assertGetXor(
+        const fieldSpecificationList: TXorNode = NodeIdMapUtils.assertXor(
             parseOk.nodeIdMapCollection,
             fieldSpecificationListId,
         );
@@ -69,7 +69,7 @@ describe("nodeIdMapIterator", () => {
 
             const functionExpressionId: number = Assert.asDefined([...functionExpressionIds.values()][0]);
 
-            const functionExpression: TXorNode = NodeIdMapUtils.assertGetXor(
+            const functionExpression: TXorNode = NodeIdMapUtils.assertXor(
                 parseOk.nodeIdMapCollection,
                 functionExpressionId,
             );
@@ -81,12 +81,14 @@ describe("nodeIdMapIterator", () => {
 
             expect(parameters.length).to.equal(2);
 
-            const firstParameter: Ast.TParameter = Language.AstUtils.assertAsParameter(
-                XorNodeUtils.assertUnboxAst(parameters[0]),
+            const firstParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
+                XorNodeUtils.assertAst(parameters[0]),
+                Ast.NodeKind.Parameter,
             );
 
-            const secondParameter: Ast.TParameter = Language.AstUtils.assertAsParameter(
-                XorNodeUtils.assertUnboxAst(parameters[1]),
+            const secondParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
+                XorNodeUtils.assertAst(parameters[1]),
+                Ast.NodeKind.Parameter,
             );
 
             expect(firstParameter.name.literal).to.equal("x");
@@ -106,7 +108,7 @@ describe("nodeIdMapIterator", () => {
 
             const functionExpressionId: number = Assert.asDefined([...functionExpressionIds.values()][0]);
 
-            const functionExpression: TXorNode = NodeIdMapUtils.assertGetXor(
+            const functionExpression: TXorNode = NodeIdMapUtils.assertXor(
                 parseError.state.contextState.nodeIdMapCollection,
                 functionExpressionId,
             );
@@ -118,12 +120,14 @@ describe("nodeIdMapIterator", () => {
 
             expect(parameters.length).to.equal(2);
 
-            const firstParameter: Ast.TParameter = Language.AstUtils.assertAsParameter(
-                XorNodeUtils.assertUnboxAst(parameters[0]),
+            const firstParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
+                XorNodeUtils.assertAst(parameters[0]),
+                Ast.NodeKind.Parameter,
             );
 
-            const secondParameter: Ast.TParameter = Language.AstUtils.assertAsParameter(
-                XorNodeUtils.assertUnboxAst(parameters[1]),
+            const secondParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
+                XorNodeUtils.assertAst(parameters[1]),
+                Ast.NodeKind.Parameter,
             );
 
             expect(firstParameter.name.literal).to.equal("x");
@@ -145,7 +149,7 @@ describe("nodeIdMapIterator", () => {
 
             const functionExpressionId: number = Assert.asDefined([...functionExpressionIds.values()][0]);
 
-            const functionExpression: TXorNode = NodeIdMapUtils.assertGetXor(
+            const functionExpression: TXorNode = NodeIdMapUtils.assertXor(
                 parseOk.nodeIdMapCollection,
                 functionExpressionId,
             );
@@ -171,7 +175,7 @@ describe("nodeIdMapIterator", () => {
 
             const functionExpressionId: number = Assert.asDefined([...functionExpressionIds.values()][0]);
 
-            const functionExpression: TXorNode = NodeIdMapUtils.assertGetXor(
+            const functionExpression: TXorNode = NodeIdMapUtils.assertXor(
                 parseError.state.contextState.nodeIdMapCollection,
                 functionExpressionId,
             );
@@ -198,7 +202,7 @@ describe("nodeIdMapIterator", () => {
             expect(recordIds.size).to.equal(1);
 
             const recordId: number = Assert.asDefined([...recordIds.values()][0]);
-            const record: TXorNode = NodeIdMapUtils.assertGetXor(parseOk.nodeIdMapCollection, recordId);
+            const record: TXorNode = NodeIdMapUtils.assertXor(parseOk.nodeIdMapCollection, recordId);
 
             const recordKeyValuePairs: ReadonlyArray<RecordKeyValuePair> = NodeIdMapIterator.iterRecord(
                 parseOk.nodeIdMapCollection,
@@ -224,7 +228,7 @@ describe("nodeIdMapIterator", () => {
         expect(recordTypeIds.size).to.equal(1);
 
         const recordTypeId: number = Assert.asDefined([...recordTypeIds.values()][0]);
-        const recordType: TXorNode = NodeIdMapUtils.assertGetXor(parseOk.nodeIdMapCollection, recordTypeId);
+        const recordType: TXorNode = NodeIdMapUtils.assertXor(parseOk.nodeIdMapCollection, recordTypeId);
 
         const fieldSpecificationKeyValuePairs: ReadonlyArray<FieldSpecificationKeyValuePair> =
             NodeIdMapIterator.iterRecordType(parseOk.nodeIdMapCollection, recordType);
@@ -259,7 +263,7 @@ describe(`nodeIdMapUtils`, () => {
                 NodeIdMapUtils.invokeExpressionIdentifier(nodeIdMapCollection, invokeExpressionNodeId),
             );
 
-            XorNodeUtils.assertIsAstXor(invokeExpressionIdentifier);
+            XorNodeUtils.assertIsAst(invokeExpressionIdentifier);
             expect(invokeExpressionIdentifier.node.identifier.literal).to.equal("Foo");
         });
 
@@ -284,7 +288,7 @@ describe(`nodeIdMapUtils`, () => {
                 NodeIdMapUtils.invokeExpressionIdentifier(nodeIdMapCollection, invokeExpressionNodeId),
             );
 
-            XorNodeUtils.assertIsAstXor(invokeExpressionIdentifier);
+            XorNodeUtils.assertIsAst(invokeExpressionIdentifier);
             expect(invokeExpressionIdentifier.node.identifier.literal).to.equal("Foo");
         });
     });
@@ -302,7 +306,7 @@ describe(`nodeIdMapUtils`, () => {
             expect(recordExpressionNodeIds.size).to.equal(1);
             const recordExpressionNodeId: number = recordExpressionNodeIds.values().next().value;
 
-            XorNodeUtils.assertUnboxAstChecked(
+            XorNodeUtils.assertAstChecked(
                 Assert.asDefined(NodeIdMapUtils.unboxWrappedContent(nodeIdMapCollection, recordExpressionNodeId)),
                 Ast.NodeKind.ArrayWrapper,
             );
@@ -325,7 +329,7 @@ describe(`nodeIdMapUtils`, () => {
             expect(recordExpressionNodeIds.size).to.equal(1);
             const recordExpressionNodeId: number = recordExpressionNodeIds.values().next().value;
 
-            XorNodeUtils.assertUnboxAstChecked(
+            XorNodeUtils.assertAstChecked(
                 Assert.asDefined(NodeIdMapUtils.unboxWrappedContent(nodeIdMapCollection, recordExpressionNodeId)),
                 Ast.NodeKind.ArrayWrapper,
             );

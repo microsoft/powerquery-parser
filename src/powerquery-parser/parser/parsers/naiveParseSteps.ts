@@ -1047,7 +1047,7 @@ export async function readRecursivePrimaryExpression(
     // Recalculate ids after shuffling things around.
     const newNodeIdByOldNodeId: Map<number, number> = NodeIdMapUtils.recalculateIds(
         nodeIdMapCollection,
-        NodeIdMapUtils.assertGetXor(
+        NodeIdMapUtils.assertXor(
             nodeIdMapCollection,
             MapUtils.assertGet(nodeIdMapCollection.parentIdById, currentContextNode.id),
         ),

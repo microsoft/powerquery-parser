@@ -180,7 +180,7 @@ function inspectContextParameter(
     let isNullable: boolean;
     let type: Type.TypeKind | undefined;
 
-    const name: Ast.Identifier | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked(
+    const name: Ast.Identifier | undefined = NodeIdMapUtils.nthChildAstChecked(
         nodeIdMapCollection,
         parameter.id,
         1,
@@ -191,7 +191,7 @@ function inspectContextParameter(
         return undefined;
     }
 
-    const optionalConstant: Ast.TConstant | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked(
+    const optionalConstant: Ast.TConstant | undefined = NodeIdMapUtils.nthChildAstChecked(
         nodeIdMapCollection,
         parameter.id,
         0,
@@ -200,7 +200,7 @@ function inspectContextParameter(
 
     const isOptional: boolean = optionalConstant !== undefined;
 
-    const parameterType: Ast.AsNullablePrimitiveType | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked(
+    const parameterType: Ast.AsNullablePrimitiveType | undefined = NodeIdMapUtils.nthChildAstChecked(
         nodeIdMapCollection,
         parameter.id,
         2,

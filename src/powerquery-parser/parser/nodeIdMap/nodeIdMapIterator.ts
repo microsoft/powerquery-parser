@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, MapUtils } from "../../common";
 import { Ast, Constant, TextUtils } from "../../language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
+import { Assert } from "../../common";
 import { IConstant } from "../../language/ast/ast";
 import { unboxIdentifier } from "./nodeIdMapUtils";
 import { XorNode } from "./xorNode";
@@ -47,22 +47,14 @@ export const enum PairKind {
 // -------- Simple iters  --------
 // -------------------------------
 
-// Assert the existence of children for the node.
-// Returns an array of nodeIds of children for the given node.
-export function assertIterChildIds(childIdsById: NodeIdMap.ChildIdsById, nodeId: number): ReadonlyArray<number> {
-    return MapUtils.assertGet(childIdsById, nodeId);
-}
-
 // Assert the existence of children for the node and that they are Ast nodes.
 // Returns an array of children (which are TNodes) for the given node.
 export function assertIterChildrenAst(
     nodeIdMapCollection: NodeIdMap.Collection,
     parentId: number,
 ): ReadonlyArray<Ast.TNode> {
-    const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
-
-    return assertIterChildIds(nodeIdMapCollection.childIdsById, parentId).map((childId: number) =>
-        NodeIdMapUtils.assertUnboxAst(astNodeById, childId),
+    return NodeIdMapUtils.assertChildIds(nodeIdMapCollection.childIdsById, parentId).map((childId: number) =>
+        NodeIdMapUtils.assertAst(nodeIdMapCollection, childId),
     );
 }
 
@@ -86,7 +78,7 @@ export function assertIterXor(
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeIds: ReadonlyArray<number>,
 ): ReadonlyArray<TXorNode> {
-    return nodeIds.map((nodeId: number) => NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId));
+    return nodeIds.map((nodeId: number) => NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId));
 }
 
 // If any exist, returns all Ast nodes under the given node.
@@ -100,9 +92,7 @@ export function iterChildrenAst(
         return undefined;
     }
 
-    const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
-
-    return childIds.map((childId: number) => NodeIdMapUtils.assertUnboxAst(astNodeById, childId));
+    return childIds.map((childId: number) => NodeIdMapUtils.assertAst(nodeIdMapCollection, childId));
 }
 
 export function nextSiblingXor(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): TXorNode | undefined {
@@ -116,7 +106,7 @@ export function nthSiblingXor(
     nodeId: number,
     offset: number,
 ): TXorNode | undefined {
-    const childXorNode: TXorNode = NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId);
+    const childXorNode: TXorNode = NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId);
 
     if (childXorNode.node.attributeIndex === undefined) {
         return undefined;
@@ -128,8 +118,12 @@ export function nthSiblingXor(
         return undefined;
     }
 
-    const parentXorNode: TXorNode = NodeIdMapUtils.assertGetParentXor(nodeIdMapCollection, nodeId);
-    const childIds: ReadonlyArray<number> = assertIterChildIds(nodeIdMapCollection.childIdsById, parentXorNode.node.id);
+    const parentXorNode: TXorNode = NodeIdMapUtils.assertParentXor(nodeIdMapCollection, nodeId);
+
+    const childIds: ReadonlyArray<number> = NodeIdMapUtils.assertChildIds(
+        nodeIdMapCollection.childIdsById,
+        parentXorNode.node.id,
+    );
 
     if (childIds.length >= attributeIndex) {
         return undefined;
@@ -149,7 +143,7 @@ export function iterArrayWrapper(
 ): ReadonlyArray<TXorNode> {
     XorNodeUtils.assertIsNodeKind(arrayWrapper, Ast.NodeKind.ArrayWrapper);
 
-    if (XorNodeUtils.isAstXor(arrayWrapper)) {
+    if (XorNodeUtils.isAst(arrayWrapper)) {
         return (arrayWrapper.node as Ast.TCsvArray).elements.map((wrapper: Ast.TCsv) =>
             XorNodeUtils.boxAst(wrapper.node),
         );
@@ -164,7 +158,11 @@ export function iterArrayWrapper(
                 break;
 
             case XorNodeKind.Context: {
-                const child: TXorNode | undefined = NodeIdMapUtils.nthChild(nodeIdMapCollection, csvXorNode.node.id, 0);
+                const child: TXorNode | undefined = NodeIdMapUtils.nthChildXor(
+                    nodeIdMapCollection,
+                    csvXorNode.node.id,
+                    0,
+                );
 
                 if (child !== undefined) {
                     partial.push(child);
@@ -211,7 +209,7 @@ export function iterFieldProjectionNames(
                 Ast.NodeKind.GeneralizedIdentifier,
             );
 
-        if (identifier && XorNodeUtils.isAstXor(identifier)) {
+        if (identifier && XorNodeUtils.isAst(identifier)) {
             result.push(identifier.node.literal);
         }
     }
@@ -225,19 +223,20 @@ export function iterFunctionExpressionParameters(
 ): ReadonlyArray<TXorNode> {
     XorNodeUtils.assertIsNodeKind(functionExpression, Ast.NodeKind.FunctionExpression);
 
-    if (XorNodeUtils.isAstXorChecked<Ast.FunctionExpression>(functionExpression, Ast.NodeKind.FunctionExpression)) {
+    if (XorNodeUtils.isAstChecked<Ast.FunctionExpression>(functionExpression, Ast.NodeKind.FunctionExpression)) {
         return functionExpression.node.parameters.content.elements.map(
             (parameter: Ast.ICsv<Ast.IParameter<Ast.AsNullablePrimitiveType | undefined>>) =>
                 XorNodeUtils.boxAst(parameter.node),
         );
     }
 
-    const parameterList: XorNode<Ast.TParameterList> | undefined = NodeIdMapUtils.nthChildChecked<Ast.TParameterList>(
-        nodeIdMapCollection,
-        functionExpression.node.id,
-        0,
-        Ast.NodeKind.ParameterList,
-    );
+    const parameterList: XorNode<Ast.TParameterList> | undefined =
+        NodeIdMapUtils.nthChildXorChecked<Ast.TParameterList>(
+            nodeIdMapCollection,
+            functionExpression.node.id,
+            0,
+            Ast.NodeKind.ParameterList,
+        );
 
     if (parameterList === undefined) {
         return [];
@@ -287,7 +286,7 @@ export function iterFieldSpecificationList(
     const result: FieldSpecificationKeyValuePair[] = [];
 
     for (const fieldSpecification of iterArrayWrapperInWrappedContent(nodeIdMapCollection, fieldSpecificationList)) {
-        const key: Ast.GeneralizedIdentifier | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked(
+        const key: Ast.GeneralizedIdentifier | undefined = NodeIdMapUtils.nthChildAstChecked(
             nodeIdMapCollection,
             fieldSpecification.node.id,
             1,
@@ -299,7 +298,7 @@ export function iterFieldSpecificationList(
         }
 
         const optional: Ast.IConstant<Constant.LanguageConstant.Optional> | undefined =
-            NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.IConstant<Constant.LanguageConstant.Optional>>(
+            NodeIdMapUtils.nthChildAstChecked<Ast.IConstant<Constant.LanguageConstant.Optional>>(
                 nodeIdMapCollection,
                 fieldSpecification.node.id,
                 0,
@@ -307,7 +306,7 @@ export function iterFieldSpecificationList(
             );
 
         const value: XorNode<Ast.FieldSpecification> | undefined =
-            NodeIdMapUtils.nthChildChecked<Ast.FieldSpecification>(
+            NodeIdMapUtils.nthChildXorChecked<Ast.FieldSpecification>(
                 nodeIdMapCollection,
                 fieldSpecification.node.id,
                 2,
@@ -396,10 +395,10 @@ export function iterRecordType(
     nodeIdMapCollection: NodeIdMap.Collection,
     recordType: TXorNode,
 ): ReadonlyArray<FieldSpecificationKeyValuePair> {
-    XorNodeUtils.assertIsRecordType(recordType);
+    XorNodeUtils.assertIsNodeKind<Ast.RecordType>(recordType, Ast.NodeKind.RecordType);
 
     const fields: XorNode<Ast.FieldSpecificationList> | undefined =
-        NodeIdMapUtils.nthChildChecked<Ast.FieldSpecificationList>(
+        NodeIdMapUtils.nthChildXorChecked<Ast.FieldSpecificationList>(
             nodeIdMapCollection,
             recordType.node.id,
             0,
@@ -420,7 +419,7 @@ export function iterSection(
 ): ReadonlyArray<SectionKeyValuePair> {
     XorNodeUtils.assertIsNodeKind(section, Ast.NodeKind.Section);
 
-    if (XorNodeUtils.isAstXorChecked<Ast.Section>(section, Ast.NodeKind.Section)) {
+    if (XorNodeUtils.isAstChecked<Ast.Section>(section, Ast.NodeKind.Section)) {
         return section.node.sectionMembers.elements.map((sectionMember: Ast.SectionMember) => {
             const namePairedExpression: Ast.IdentifierPairedExpression = sectionMember.namePairedExpression;
             const keyLiteral: string = namePairedExpression.key.literal;
@@ -437,7 +436,7 @@ export function iterSection(
     }
 
     const sectionMemberArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined =
-        NodeIdMapUtils.nthChildChecked<Ast.TArrayWrapper>(
+        NodeIdMapUtils.nthChildXorChecked<Ast.TArrayWrapper>(
             nodeIdMapCollection,
             section.node.id,
             4,
@@ -452,7 +451,7 @@ export function iterSection(
 
     for (const sectionMember of assertIterChildrenXor(nodeIdMapCollection, sectionMemberArrayWrapper.node.id)) {
         const keyValuePair: XorNode<Ast.IdentifierPairedExpression> | undefined =
-            NodeIdMapUtils.nthChildChecked<Ast.IdentifierPairedExpression>(
+            NodeIdMapUtils.nthChildXorChecked<Ast.IdentifierPairedExpression>(
                 nodeIdMapCollection,
                 sectionMember.node.id,
                 2,
@@ -465,7 +464,7 @@ export function iterSection(
 
         const keyValuePairNodeId: number = keyValuePair.node.id;
 
-        const keyKey: Ast.Identifier | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked(
+        const keyKey: Ast.Identifier | undefined = NodeIdMapUtils.nthChildAstChecked(
             nodeIdMapCollection,
             keyValuePair.node.id,
             0,
@@ -484,7 +483,7 @@ export function iterSection(
             key,
             keyLiteral,
             normalizedKeyLiteral: TextUtils.normalizeIdentifier(keyLiteral),
-            value: NodeIdMapUtils.nthChild(nodeIdMapCollection, keyValuePairNodeId, 2),
+            value: NodeIdMapUtils.nthChildXor(nodeIdMapCollection, keyValuePairNodeId, 2),
             pairKind: PairKind.SectionMember,
         });
     }
@@ -499,12 +498,10 @@ function iterKeyValuePairs<
     const partial: KVP[] = [];
 
     for (const keyValuePair of iterArrayWrapper(nodeIdMapCollection, arrayWrapper)) {
-        const key: Key | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked(
-            nodeIdMapCollection,
-            keyValuePair.node.id,
-            0,
-            [Ast.NodeKind.GeneralizedIdentifier, Ast.NodeKind.Identifier],
-        );
+        const key: Key | undefined = NodeIdMapUtils.nthChildAstChecked(nodeIdMapCollection, keyValuePair.node.id, 0, [
+            Ast.NodeKind.GeneralizedIdentifier,
+            Ast.NodeKind.Identifier,
+        ]);
 
         if (key === undefined) {
             break;
@@ -517,7 +514,7 @@ function iterKeyValuePairs<
             key,
             keyLiteral,
             normalizedKeyLiteral: TextUtils.normalizeIdentifier(keyLiteral),
-            value: NodeIdMapUtils.nthChild(nodeIdMapCollection, keyValuePair.node.id, 2),
+            value: NodeIdMapUtils.nthChildXor(nodeIdMapCollection, keyValuePair.node.id, 2),
             pairKind,
         } as KVP);
     }

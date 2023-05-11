@@ -117,9 +117,7 @@ export async function assertGetAllAstChildren<State extends ITraversalState<Resu
 ): Promise<ReadonlyArray<Ast.TNode>> {
     const childIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(astNode.id);
 
-    return childIds
-        ? childIds.map((nodeId: number) => NodeIdMapUtils.assertUnboxAst(nodeIdMapCollection.astNodeById, nodeId))
-        : [];
+    return childIds ? childIds.map((nodeId: number) => NodeIdMapUtils.assertAst(nodeIdMapCollection, nodeId)) : [];
 }
 
 // a TExpandNodesFn usable by tryTraverseXor which visits all nodes.

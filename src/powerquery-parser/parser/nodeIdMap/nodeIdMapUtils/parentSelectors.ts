@@ -9,59 +9,80 @@ import { Assert } from "../../../common";
 import { Collection } from "../nodeIdMap";
 import { XorNodeUtils } from "..";
 
-export function assertUnboxParentAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
-    return Assert.asDefined(
-        parentAst(nodeIdMapCollection, nodeId),
-        "couldn't find the expected parent Ast for nodeId",
-        { nodeId },
-    );
+export function assertParentXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
+    return Assert.asDefined(parentXor(nodeIdMapCollection, nodeId), `nodeId doesn't have a parent`, {
+        nodeId,
+    });
 }
 
-export function assertUnboxParentAstChecked<T extends Ast.TNode>(
-    nodeIdMapCollection: Collection,
-    nodeId: number,
-    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): T {
-    const astNode: Ast.TNode = assertUnboxParentAst(nodeIdMapCollection, nodeId);
-    AstUtils.assertIsNodeKind(astNode, expectedNodeKinds);
-
-    return astNode;
-}
-
-export function assertUnboxParentContext(nodeIdMapCollection: Collection, nodeId: number): ParseContext.TNode {
-    return Assert.asDefined(
-        parentContext(nodeIdMapCollection, nodeId),
-        "couldn't find the expected parent context for nodeId",
-        { nodeId },
-    );
-}
-
-export function assertUnboxParentContextChecked<T extends Ast.TNode>(
-    nodeIdMapCollection: Collection,
-    nodeId: number,
-    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): ParseContext.Node<T> {
-    const contextNode: ParseContext.TNode = assertUnboxParentContext(nodeIdMapCollection, nodeId);
-    ParseContextUtils.assertIsNodeKind(contextNode, expectedNodeKinds);
-
-    return contextNode;
-}
-
-export function assertGetParentXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
-    const node: TXorNode | undefined = parentXor(nodeIdMapCollection, nodeId);
-
-    return Assert.asDefined(node, `nodeId doesn't have a parent`, { nodeId, nodeKind: node?.node.kind });
-}
-
-export function assertGetParentXorChecked<T extends Ast.TNode>(
+export function assertParentXorChecked<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> {
-    const xorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, nodeId);
-    XorNodeUtils.assertIsNodeKind(xorNode, expectedNodeKinds);
+    return XorNodeUtils.assertAsNodeKind<T>(assertParentXor(nodeIdMapCollection, nodeId), expectedNodeKinds);
+}
 
-    return xorNode;
+export function assertParentAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
+    return Assert.asDefined(
+        parentAst(nodeIdMapCollection, nodeId),
+        "couldn't find the expected parent Ast for nodeId",
+        {
+            nodeId,
+        },
+    );
+}
+
+export function assertParentAstChecked<T extends Ast.TNode>(
+    nodeIdMapCollection: Collection,
+    nodeId: number,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): T {
+    return AstUtils.assertAsNodeKind(assertParentAst(nodeIdMapCollection, nodeId), expectedNodeKinds);
+}
+
+export function assertParentContext(nodeIdMapCollection: Collection, nodeId: number): ParseContext.TNode {
+    return Assert.asDefined(
+        parentContext(nodeIdMapCollection, nodeId),
+        "couldn't find the expected parent ParseContext for nodeId",
+        {
+            nodeId,
+        },
+    );
+}
+
+export function assertParentContextChecked<T extends Ast.TNode>(
+    nodeIdMapCollection: Collection,
+    nodeId: number,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): ParseContext.Node<T> {
+    return ParseContextUtils.assertAsNodeKind(assertParentContext(nodeIdMapCollection, nodeId), expectedNodeKinds);
+}
+
+export function parentXor(nodeIdMapCollection: Collection, childId: number): TXorNode | undefined {
+    const astNode: Ast.TNode | undefined = parentAst(nodeIdMapCollection, childId);
+
+    if (astNode !== undefined) {
+        return boxAst(astNode);
+    }
+
+    const context: ParseContext.TNode | undefined = parentContext(nodeIdMapCollection, childId);
+
+    if (context !== undefined) {
+        return boxContext(context);
+    }
+
+    return undefined;
+}
+
+export function parentXorChecked<T extends Ast.TNode>(
+    nodeIdMapCollection: Collection,
+    childId: number,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): XorNode<T> | undefined {
+    const xorNode: TXorNode | undefined = parentXor(nodeIdMapCollection, childId);
+
+    return xorNode && XorNodeUtils.isNodeKind(xorNode, expectedNodeKinds) ? xorNode : undefined;
 }
 
 export function parentAst(nodeIdMapCollection: Collection, childId: number): Ast.TNode | undefined {
@@ -94,30 +115,4 @@ export function parentContextChecked<T extends Ast.TNode>(
     const contextNode: ParseContext.TNode | undefined = parentContext(nodeIdMapCollection, childId);
 
     return contextNode && ParseContextUtils.isNodeKind(contextNode, expectedNodeKinds) ? contextNode : undefined;
-}
-
-export function parentXor(nodeIdMapCollection: Collection, childId: number): TXorNode | undefined {
-    const astNode: Ast.TNode | undefined = parentAst(nodeIdMapCollection, childId);
-
-    if (astNode !== undefined) {
-        return boxAst(astNode);
-    }
-
-    const context: ParseContext.TNode | undefined = parentContext(nodeIdMapCollection, childId);
-
-    if (context !== undefined) {
-        return boxContext(context);
-    }
-
-    return undefined;
-}
-
-export function parentXorChecked<T extends Ast.TNode>(
-    nodeIdMapCollection: Collection,
-    childId: number,
-    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): XorNode<T> | undefined {
-    const xorNode: TXorNode | undefined = parentXor(nodeIdMapCollection, childId);
-
-    return xorNode && XorNodeUtils.isNodeKind(xorNode, expectedNodeKinds) ? xorNode : undefined;
 }

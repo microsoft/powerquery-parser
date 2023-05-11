@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError } from "../../../common";
-import { assertGetXor, xor } from "./commonSelectors";
+import { assertXor, xor } from "./commonSelectors";
 import { Ast, AstUtils } from "../../../language";
 import { ChildIdsById, Collection } from "../nodeIdMap";
 import { ParseContext, ParseContextUtils } from "../../context";
 import { TXorNode, XorNode } from "../xorNode";
+import { Assert } from "../../../common";
 import { XorNodeUtils } from "..";
 
 // You can think of a node as a collection which holds other nodes.
@@ -18,103 +18,102 @@ import { XorNodeUtils } from "..";
 // The `INode` interface has the nullable field `attributeIndex`.
 // A truthy value indicates it contains a parent and if so what attribute number it is under the parent.
 
-export function assertGetChildren(childIdsById: ChildIdsById, parentId: number): ReadonlyArray<number> {
+export function assertChildIds(childIdsById: ChildIdsById, parentId: number): ReadonlyArray<number> {
     return Assert.asDefined(childIdsById.get(parentId), `parentId doesn't have any children`, { parentId });
 }
 
-export function assertGetNthChild(nodeIdMapCollection: Collection, parentId: number, attributeIndex: number): TXorNode {
+export function assertNthChildXor(nodeIdMapCollection: Collection, parentId: number, attributeIndex: number): TXorNode {
     return Assert.asDefined(
-        nthChild(nodeIdMapCollection, parentId, attributeIndex),
+        nthChildXor(nodeIdMapCollection, parentId, attributeIndex),
         `parentId doesn't have a child at the given index`,
-        { parentId, attributeIndex },
+        {
+            parentId,
+            attributeIndex,
+        },
     );
 }
 
-export function assertGetNthChildChecked<T extends Ast.TNode>(
+export function assertNthChildXorChecked<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> {
-    const xorNode: TXorNode = assertGetNthChild(nodeIdMapCollection, parentId, attributeIndex);
-    XorNodeUtils.assertIsNodeKind(xorNode, expectedNodeKinds);
+    return XorNodeUtils.assertAsNodeKind(
+        assertNthChildXor(nodeIdMapCollection, parentId, attributeIndex),
+        expectedNodeKinds,
+    );
+}
 
-    return xorNode;
+export function assertNthChildAst(
+    nodeIdMapCollection: Collection,
+    parentId: number,
+    attributeIndex: number,
+): Ast.TNode {
+    return Assert.asDefined(
+        nthChildAst(nodeIdMapCollection, parentId, attributeIndex),
+        `parentId doesn't have an Ast child at the given index`,
+        {
+            parentId,
+            attributeIndex,
+        },
+    );
+}
+
+export function assertNthChildAstChecked<T extends Ast.TNode>(
+    nodeIdMapCollection: Collection,
+    parentId: number,
+    attributeIndex: number,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): T {
+    return AstUtils.assertAsNodeKind(
+        assertNthChildAst(nodeIdMapCollection, parentId, attributeIndex),
+        expectedNodeKinds,
+    );
+}
+
+export function assertNthChildContext(
+    nodeIdMapCollection: Collection,
+    parentId: number,
+    attributeIndex: number,
+): ParseContext.TNode {
+    return Assert.asDefined(
+        nthChildContext(nodeIdMapCollection, parentId, attributeIndex),
+        `parentId doesn't have a ParseContext child at the given index`,
+        {
+            parentId,
+            attributeIndex,
+        },
+    );
+}
+
+export function assertNthChildContextChecked<T extends Ast.TNode>(
+    nodeIdMapCollection: Collection,
+    parentId: number,
+    attributeIndex: number,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): ParseContext.Node<T> {
+    return ParseContextUtils.assertAsNodeKind(
+        assertNthChildContext(nodeIdMapCollection, parentId, attributeIndex),
+        expectedNodeKinds,
+    );
 }
 
 export function assertUnboxArrayWrapperAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TArrayWrapper {
     const xorNode: XorNode<Ast.TArrayWrapper> | undefined = Assert.asDefined(
         unboxArrayWrapper(nodeIdMapCollection, nodeId),
         "failure in assertUnboxArrayWrapperAst",
-        { nodeId },
+        {
+            nodeId,
+        },
     );
 
-    XorNodeUtils.assertIsAstXor(xorNode);
+    XorNodeUtils.assertIsAst(xorNode);
 
     return xorNode.node;
 }
 
-export function assertUnboxNthChildAsAst(
-    nodeIdMapCollection: Collection,
-    parentId: number,
-    attributeIndex: number,
-): Ast.TNode {
-    return Assert.asDefined(
-        unboxNthChildIfAst(nodeIdMapCollection, parentId, attributeIndex),
-        `parentId doesn't have an Ast child at the given index`,
-        { parentId, attributeIndex },
-    );
-}
-
-export function assertUnboxNthChildAsAstChecked<T extends Ast.TNode>(
-    nodeIdMapCollection: Collection,
-    parentId: number,
-    attributeIndex: number,
-    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): T {
-    const astNode: Ast.TNode = assertUnboxNthChildAsAst(nodeIdMapCollection, parentId, attributeIndex);
-    AstUtils.assertIsNodeKind(astNode, expectedNodeKinds);
-
-    return astNode;
-}
-
-export function assertUnboxNthChildAsContext(
-    nodeIdMapCollection: Collection,
-    parentId: number,
-    attributeIndex: number,
-): ParseContext.TNode {
-    return Assert.asDefined(
-        nthChildIfContext(nodeIdMapCollection, parentId, attributeIndex),
-        `parentId doesn't have a context child at the given index`,
-        { parentId, attributeIndex },
-    );
-}
-
-export function assertUnboxNthChildAsContextChecked<T extends Ast.TNode>(
-    nodeIdMapCollection: Collection,
-    parentId: number,
-    attributeIndex: number,
-    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): ParseContext.Node<T> {
-    const parseContext: ParseContext.TNode = assertUnboxNthChildAsContext(
-        nodeIdMapCollection,
-        parentId,
-        attributeIndex,
-    );
-
-    if (!ParseContextUtils.isNodeKind(parseContext, expectedNodeKinds)) {
-        throw new CommonError.InvariantError("expected a different node kind", {
-            parentId,
-            expectedNodeKinds,
-            nodeId: parseContext.id,
-            nodeKind: parseContext.kind,
-        });
-    }
-
-    return parseContext;
-}
-
-export function nthChild(
+export function nthChildXor(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
@@ -128,7 +127,7 @@ export function nthChild(
 
     // Iterate over the children and try to find one which matches attributeIndex.
     for (const childId of childIds) {
-        const xorNode: TXorNode = assertGetXor(nodeIdMapCollection, childId);
+        const xorNode: TXorNode = assertXor(nodeIdMapCollection, childId);
 
         if (xorNode.node.attributeIndex === attributeIndex) {
             return xorNode;
@@ -138,84 +137,64 @@ export function nthChild(
     return undefined;
 }
 
-export function nthChildChecked<T extends Ast.TNode>(
+export function nthChildXorChecked<T extends Ast.TNode>(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): XorNode<T> | undefined {
-    const xorNode: TXorNode | undefined = nthChild(nodeIdMapCollection, parentId, attributeIndex);
+    const xorNode: TXorNode | undefined = nthChildXor(nodeIdMapCollection, parentId, attributeIndex);
 
     return xorNode && XorNodeUtils.isNodeKind(xorNode, expectedNodeKinds) ? xorNode : undefined;
 }
 
-export function nthChildIfContext(
+export function nthChildAst(
+    nodeIdMapCollection: Collection,
+    parentId: number,
+    attributeIndex: number,
+): Ast.TNode | undefined {
+    const xorNode: TXorNode | undefined = nthChildXor(nodeIdMapCollection, parentId, attributeIndex);
+
+    return xorNode && XorNodeUtils.isAst(xorNode) ? xorNode.node : undefined;
+}
+
+export function nthChildAstChecked<T extends Ast.TNode>(
+    nodeIdMapCollection: Collection,
+    parentId: number,
+    attributeIndex: number,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): T | undefined {
+    const astNode: Ast.TNode | undefined = nthChildAst(nodeIdMapCollection, parentId, attributeIndex);
+
+    return astNode && AstUtils.isNodeKind(astNode, expectedNodeKinds) ? astNode : undefined;
+}
+
+export function nthChildContext(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
 ): ParseContext.TNode | undefined {
-    const xorNode: TXorNode | undefined = nthChild(nodeIdMapCollection, parentId, attributeIndex);
+    const xorNode: TXorNode | undefined = nthChildXor(nodeIdMapCollection, parentId, attributeIndex);
 
-    return xorNode && XorNodeUtils.isContextXor(xorNode) ? xorNode.node : undefined;
+    return xorNode && XorNodeUtils.isContext(xorNode) ? xorNode.node : undefined;
+}
+
+export function nthChildContextChecked<T extends Ast.TNode>(
+    nodeIdMapCollection: Collection,
+    parentId: number,
+    attributeIndex: number,
+    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
+): ParseContext.Node<T> | undefined {
+    const contextNode: ParseContext.TNode | undefined = nthChildContext(nodeIdMapCollection, parentId, attributeIndex);
+
+    return contextNode && ParseContextUtils.isNodeKind(contextNode, expectedNodeKinds) ? contextNode : undefined;
 }
 
 export function unboxArrayWrapper(
     nodeIdMapCollection: Collection,
     nodeId: number,
 ): XorNode<Ast.TArrayWrapper> | undefined {
-    return nthChildChecked<Ast.TArrayWrapper>(nodeIdMapCollection, nodeId, 1, Ast.NodeKind.ArrayWrapper);
-}
-
-export function unboxNthChildIfAst(
-    nodeIdMapCollection: Collection,
-    parentId: number,
-    attributeIndex: number,
-): Ast.TNode | undefined {
-    const xorNode: TXorNode | undefined = nthChild(nodeIdMapCollection, parentId, attributeIndex);
-
-    return xorNode && XorNodeUtils.isAstXor(xorNode) ? xorNode.node : undefined;
-}
-
-export function unboxNthChildIfAstChecked<T extends Ast.TNode>(
-    nodeIdMapCollection: Collection,
-    parentId: number,
-    attributeIndex: number,
-    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): T | undefined {
-    const astNode: Ast.TNode | undefined = unboxNthChildIfAst(nodeIdMapCollection, parentId, attributeIndex);
-
-    return astNode && AstUtils.isNodeKind(astNode, expectedNodeKinds) ? astNode : undefined;
-}
-
-export function unboxNthChildIfContextChecked<T extends Ast.TNode>(
-    nodeIdMapCollection: Collection,
-    parentId: number,
-    attributeIndex: number,
-    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): ParseContext.Node<T> | undefined {
-    const contextNode: ParseContext.TNode | undefined = nthChildIfContext(
-        nodeIdMapCollection,
-        parentId,
-        attributeIndex,
-    );
-
-    return contextNode && ParseContextUtils.isNodeKind(contextNode, expectedNodeKinds) ? contextNode : undefined;
-}
-
-export function unboxIfAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode | undefined {
-    const xorNode: TXorNode | undefined = xor(nodeIdMapCollection, nodeId);
-
-    return xorNode && XorNodeUtils.isAstXor(xorNode) ? xorNode.node : undefined;
-}
-
-export function unboxIfAstChecked<T extends Ast.TNode>(
-    nodeIdMapCollection: Collection,
-    nodeId: number,
-    expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
-): T | undefined {
-    const xorNode: TXorNode | undefined = xor(nodeIdMapCollection, nodeId);
-
-    return xorNode && XorNodeUtils.isAstXorChecked(xorNode, expectedNodeKinds) ? xorNode.node : undefined;
+    return nthChildXorChecked<Ast.TArrayWrapper>(nodeIdMapCollection, nodeId, 1, Ast.NodeKind.ArrayWrapper);
 }
 
 export function unboxWrappedContent(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
@@ -225,7 +204,7 @@ export function unboxWrappedContent(nodeIdMapCollection: Collection, nodeId: num
         return undefined;
     }
 
-    return nthChild(nodeIdMapCollection, nodeId, 1);
+    return nthChildXor(nodeIdMapCollection, nodeId, 1);
 }
 
 export function unboxWrappedContentChecked<C extends Ast.TWrapped["content"]>(
@@ -238,18 +217,18 @@ export function unboxWrappedContentChecked<C extends Ast.TWrapped["content"]>(
     return xorNode && XorNodeUtils.isNodeKind(xorNode, expectedNodeKinds) ? xorNode : undefined;
 }
 
-export function unboxWrappedContentIfAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode | undefined {
+export function unboxWrappedContentAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode | undefined {
     const xorNode: TXorNode | undefined = unboxWrappedContent(nodeIdMapCollection, nodeId);
 
-    return xorNode && XorNodeUtils.isAstXor(xorNode) ? xorNode.node : undefined;
+    return xorNode && XorNodeUtils.isAst(xorNode) ? xorNode.node : undefined;
 }
 
-export function unboxWrappedContentIfAstChecked<C extends Ast.TWrapped["content"]>(
+export function unboxWrappedContentAstChecked<C extends Ast.TWrapped["content"]>(
     nodeIdMapCollection: Collection,
     nodeId: number,
     expectedNodeKinds: ReadonlyArray<C["kind"]> | C["kind"],
 ): C | undefined {
-    const astNode: Ast.TNode | undefined = unboxWrappedContentIfAst(nodeIdMapCollection, nodeId);
+    const astNode: Ast.TNode | undefined = unboxWrappedContentAst(nodeIdMapCollection, nodeId);
 
     return astNode && AstUtils.isNodeKind<C>(astNode, expectedNodeKinds) ? astNode : undefined;
 }
