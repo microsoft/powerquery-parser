@@ -90,6 +90,7 @@ export function updateNodeIds(
     );
 
     applyCollectionDelta(nodeIdMapCollection, newIdByOldId, xorNodes, partialDelta, traceManager, trace.id);
+
     trace.exit();
 }
 
