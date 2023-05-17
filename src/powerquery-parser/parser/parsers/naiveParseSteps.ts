@@ -1012,7 +1012,7 @@ export async function readRecursivePrimaryExpression(
 
     state.cancellationToken?.throwIfCancelled();
 
-    state.currentContextNode = ParseStateUtils.insertContextAsParent(state, nodeKind, head.id, trace.id);
+    state.currentContextNode = ParseStateUtils.startContextAsParent(state, nodeKind, head.id, trace.id);
 
     const recursiveArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     ParseStateUtils.startContext(state, recursiveArrayNodeKind);

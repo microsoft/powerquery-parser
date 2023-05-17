@@ -130,7 +130,7 @@ export function startContext<T extends Ast.TNode>(
 // To maintain that invariant the caller needs to also call:
 //  - NodeIdMapUtils.recalculateIds
 //  - NodeIdMapUtils.updateNodeIds
-export function insertContextAsParent<T extends Ast.TNode>(
+export function startContextAsParent<T extends Ast.TNode>(
     state: ParseContext.State,
     nodeKind: T["kind"],
     existingNodeId: number,

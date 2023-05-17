@@ -75,8 +75,8 @@ export function startContext<T extends Ast.TNode>(state: ParseState, nodeKind: T
 }
 
 // Inserts a new context as the parent of an existing node.
-// Re-calculates all node ids under the inserted context.
-export function insertContextAsParent<T extends Ast.TNode>(
+// Requires a re-calculation of all nodeIds associated with or under the inserted context.
+export function startContextAsParent<T extends Ast.TNode>(
     state: ParseState,
     nodeKind: T["kind"],
     existingNodeId: number,
@@ -84,7 +84,7 @@ export function insertContextAsParent<T extends Ast.TNode>(
 ): ParseContext.Node<T> {
     const trace: Trace = state.traceManager.entry(
         ParseStateUtilsTraceConstant.ParseStateUtils,
-        insertContextAsParent.name,
+        startContextAsParent.name,
         correlationId,
         { existingNodeId },
     );
@@ -97,7 +97,7 @@ export function insertContextAsParent<T extends Ast.TNode>(
         ? ArrayUtils.assertGet(state.lexerSnapshot.tokens, existingNode.node.tokenRange.tokenIndexStart)
         : existingNode.node.tokenStart;
 
-    const insertedContext: ParseContext.Node<T> = ParseContextUtils.insertContextAsParent(
+    const insertedContext: ParseContext.Node<T> = ParseContextUtils.startContextAsParent(
         state.contextState,
         nodeKind,
         existingNodeId,
