@@ -1045,12 +1045,9 @@ export async function readRecursivePrimaryExpression(
     mutableHead.attributeIndex = 0;
 
     // Recalculate ids after shuffling things around.
-    const newNodeIdByOldNodeId: Map<number, number> = NodeIdMapUtils.recalculateIds(
+    const newNodeIdByOldNodeId: ReadonlyMap<number, number> = NodeIdMapUtils.recalculateIds(
         nodeIdMapCollection,
-        NodeIdMapUtils.assertXor(
-            nodeIdMapCollection,
-            MapUtils.assertGet(nodeIdMapCollection.parentIdById, currentContextNode.id),
-        ),
+        MapUtils.assertGet(nodeIdMapCollection.parentIdById, currentContextNode.id),
         state.traceManager,
         trace.id,
     );
