@@ -1014,53 +1014,6 @@ export async function readRecursivePrimaryExpression(
 
     state.currentContextNode = ParseStateUtils.insertContextAsParent(state, nodeKind, head.id, trace.id);
 
-    // ParseStateUtils.startContext(state, nodeKind);
-
-    // const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
-
-    // const currentContextNode: ParseContext.TNode = Assert.asDefined(
-    //     state.currentContextNode,
-    //     "state.currentContextNode",
-    // );
-
-    // // Update parent attributes.
-    // const parentOfHeadId: number = MapUtils.assertGet(nodeIdMapCollection.parentIdById, head.id);
-
-    // nodeIdMapCollection.childIdsById.set(
-    //     parentOfHeadId,
-    //     ArrayUtils.removeFirstInstance(
-    //         MapUtils.assertGet(nodeIdMapCollection.childIdsById, parentOfHeadId), head.id),
-    // );
-
-    // nodeIdMapCollection.childIdsById.set(currentContextNode.id, [head.id]);
-    // nodeIdMapCollection.parentIdById.set(head.id, currentContextNode.id);
-
-    // const newTokenIndexStart: number = head.tokenRange.tokenIndexStart;
-    // const mutableContext: TypeScriptUtils.StripReadonly<ParseContext.TNode> = currentContextNode;
-    // const mutableHead: TypeScriptUtils.StripReadonly<Ast.TPrimaryExpression> = head;
-
-    // // Update token start to match the first parsed node under it, aka the head.
-    // mutableContext.tokenStart = state.lexerSnapshot.tokens[newTokenIndexStart];
-    // mutableContext.tokenIndexStart = newTokenIndexStart;
-
-    // // Update attribute counters.
-    // mutableContext.attributeCounter = 1;
-    // mutableHead.attributeIndex = 0;
-
-    // // Recalculate ids after shuffling things around.
-    // const newNodeIdByOldNodeId: Map<number, number> = NodeIdMapUtils.recalculateIds(
-    //     nodeIdMapCollection,
-    //     NodeIdMapUtils.assertXor(
-    //         nodeIdMapCollection,
-    //         MapUtils.assertGet(nodeIdMapCollection.parentIdById, currentContextNode.id),
-    //     ),
-    //     state.traceManager,
-    //     trace.id,
-    // );
-
-    // NodeIdMapUtils.updateNodeIds(nodeIdMapCollection, newNodeIdByOldNodeId, state.traceManager, trace.id);
-
-    // Begin normal parsing.
     const recursiveArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     ParseStateUtils.startContext(state, recursiveArrayNodeKind);
 
@@ -3831,17 +3784,17 @@ function readConstantKindOrUndefined<ConstantKind extends Constant.TConstant>(
     }
 }
 
-async function readLiteralAttributes(
+function readLiteralAttributes(
     state: ParseState,
     parser: Parser,
     correlationId: number | undefined,
 ): Promise<Ast.RecordLiteral | undefined> {
     if (ParseStateUtils.isOnTokenKind(state, TokenKind.LeftBracket)) {
-        return await parser.readRecordLiteral(state, parser, correlationId);
+        return parser.readRecordLiteral(state, parser, correlationId);
     } else {
         ParseStateUtils.incrementAttributeCounter(state);
 
-        return undefined;
+        return Promise.resolve(undefined);
     }
 }
 

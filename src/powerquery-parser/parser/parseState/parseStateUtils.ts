@@ -1,18 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, MapUtils } from "../../common";
+import { ArrayUtils, Assert, CommonError, MapUtils } from "../../common";
 import { Ast, Constant, Token } from "../../language";
-import {
-    NodeIdMap,
-    NodeIdMapUtils,
-    ParseContext,
-    ParseContextUtils,
-    ParseError,
-    TXorNode,
-    XorNodeKind,
-    XorNodeUtils,
-} from "..";
+import { NodeIdMap, NodeIdMapUtils, ParseContext, ParseContextUtils, ParseError, TXorNode, XorNodeUtils } from "..";
 import { NoOpTraceManagerInstance, Trace } from "../../common/trace";
 import { DefaultLocale } from "../../localization";
 import { Disambiguation } from "../disambiguation";
@@ -101,22 +92,10 @@ export function insertContextAsParent<T extends Ast.TNode>(
     // We need to find the starting token for the existing node as it'll be the starting token for the new context.
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
     const existingNode: TXorNode = NodeIdMapUtils.assertXor(nodeIdMapCollection, existingNodeId);
-    let tokenStart: Token.Token | undefined;
 
-    switch (existingNode.kind) {
-        case XorNodeKind.Ast: {
-            const tokenIndexStart: number = existingNode.node.tokenRange.tokenIndexStart;
-            tokenStart = state.lexerSnapshot.tokens[tokenIndexStart];
-            break;
-        }
-
-        case XorNodeKind.Context:
-            tokenStart = existingNode.node.tokenStart;
-            break;
-
-        default:
-            throw Assert.isNever(existingNode);
-    }
+    const tokenStart: Token.Token | undefined = XorNodeUtils.isAst(existingNode)
+        ? ArrayUtils.assertGet(state.lexerSnapshot.tokens, existingNode.node.tokenRange.tokenIndexStart)
+        : existingNode.node.tokenStart;
 
     const insertedContext: ParseContext.Node<T> = ParseContextUtils.insertContextAsParent(
         state.contextState,
@@ -125,9 +104,9 @@ export function insertContextAsParent<T extends Ast.TNode>(
         tokenStart,
     );
 
-    const newNodeIdByOldNodeId: Map<number, number> = NodeIdMapUtils.recalculateIds(
+    const newNodeIdByOldNodeId: ReadonlyMap<number, number> = NodeIdMapUtils.recalculateIds(
         nodeIdMapCollection,
-        XorNodeUtils.boxContext(insertedContext),
+        insertedContext.id,
         state.traceManager,
         trace.id,
     );

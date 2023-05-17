@@ -449,7 +449,7 @@ async function readUnaryExpression(
         case Token.TokenKind.KeywordType:
             trace.exit();
 
-            return await NaiveParseSteps.readTypeExpression(state, parser, trace.id);
+            return NaiveParseSteps.readTypeExpression(state, parser, trace.id);
 
         case Token.TokenKind.KeywordHashSections:
         case Token.TokenKind.KeywordHashShared:
@@ -467,13 +467,13 @@ async function readUnaryExpression(
         default:
             trace.exit();
 
-            return await NaiveParseSteps.readUnaryExpression(state, parser, trace.id);
+            return NaiveParseSteps.readUnaryExpression(state, parser, trace.id);
     }
 
     if (ParseStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex)) {
         trace.exit();
 
-        return await parser.readRecursivePrimaryExpression(state, parser, primaryExpression, trace.id);
+        return parser.readRecursivePrimaryExpression(state, parser, primaryExpression, trace.id);
     } else {
         trace.exit();
 

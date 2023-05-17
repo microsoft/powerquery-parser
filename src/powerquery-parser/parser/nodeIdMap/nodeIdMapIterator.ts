@@ -494,7 +494,11 @@ export function iterSection(
 function iterKeyValuePairs<
     Key extends Ast.GeneralizedIdentifier | Ast.Identifier,
     KVP extends TKeyValuePair & IKeyValuePair<Key>,
->(nodeIdMapCollection: NodeIdMap.Collection, arrayWrapper: TXorNode, pairKind: KVP["pairKind"]): ReadonlyArray<KVP> {
+>(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    arrayWrapper: TXorNode,
+    pairKind: TKeyValuePair["pairKind"],
+): ReadonlyArray<KVP> {
     const partial: KVP[] = [];
 
     for (const keyValuePair of iterArrayWrapper(nodeIdMapCollection, arrayWrapper)) {

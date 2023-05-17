@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, MapUtils, TypeScriptUtils } from "../../../common";
+import { MapUtils, TypeScriptUtils } from "../../../common";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, XorNodeUtils } from "..";
 import { Trace, TraceManager } from "../../../common/trace";
 import { Ast } from "../../../language";
@@ -11,43 +11,46 @@ import { TXorNode } from "../xorNode";
 
 // Helper functions which are related to updating / remapping nodeIds for NodeIdMap.Collection
 
-// Returns a map of `oldId -> newId` which follows the ID ordering invariant.
-// Expected to be immediately consumed by updateNodeIds.
-// Used to restore the nodeId ordering invariant after manual mangling of the Ast.
+// Builds up a list of all nodeIds under the given nodeId (including itself),
+// then creates a Map<oldId, newId> such that the Ids are in a BFS ordering.
+// Does not include nodeIds which remain unchanged.
 export function recalculateIds(
     nodeIdMapCollection: NodeIdMap.Collection,
-    nodeStart: TXorNode,
+    nodeId: number,
     traceManager: TraceManager,
     correlationId: number | undefined,
-): Map<number, number> {
+): ReadonlyMap<number, number> {
     const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, recalculateIds.name, correlationId);
 
-    const visitedNodeIds: TXorNode[] = [];
-    const nodeIds: number[] = [];
+    const visitedNodeIds: number[] = [];
+    let currentNodeId: number | undefined = nodeId;
+    let nodeIdStack: number[] = [];
 
-    let nodeStack: TXorNode[] = [];
-    let currentNode: TXorNode | undefined = nodeStart;
+    while (currentNodeId) {
+        visitedNodeIds.push(currentNodeId);
 
-    while (currentNode !== undefined) {
-        nodeIds.push(currentNode.node.id);
-        visitedNodeIds.push(currentNode);
+        const childIdsOfCurrentNode: ReadonlyArray<number> | undefined =
+            nodeIdMapCollection.childIdsById.get(currentNodeId);
 
-        const childrenOfCurrentNode: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterChildrenXor(
-            nodeIdMapCollection,
-            currentNode.node.id,
-        );
+        if (childIdsOfCurrentNode) {
+            nodeIdStack = nodeIdStack.concat([...childIdsOfCurrentNode].reverse());
+        }
 
-        const reversedChildrenOfCurrentNode: ReadonlyArray<TXorNode> = [...childrenOfCurrentNode].reverse();
-        nodeStack = nodeStack.concat(reversedChildrenOfCurrentNode);
-
-        currentNode = nodeStack.pop();
+        currentNodeId = nodeIdStack.pop();
     }
 
-    nodeIds.sort((left: number, right: number) => left - right);
+    const numNodeIds: number = visitedNodeIds.length;
+    const sortedNodeIds: ReadonlyArray<number> = [...visitedNodeIds].sort();
+    const newNodeIdByOldNodeId: Map<number, number> = new Map();
 
-    const newNodeIdByOldNodeId: Map<number, number> = new Map(
-        visitedNodeIds.map((xorNode: TXorNode, index: number) => [xorNode.node.id, nodeIds[index]]),
-    );
+    for (let index: number = 0; index < numNodeIds; index += 1) {
+        const oldNodeId: number = visitedNodeIds[index];
+        const newNodeId: number = sortedNodeIds[index];
+
+        if (oldNodeId !== newNodeId) {
+            newNodeIdByOldNodeId.set(oldNodeId, newNodeId);
+        }
+    }
 
     trace.exit();
 
@@ -58,7 +61,7 @@ export function recalculateIds(
 // Assumes the given arguments are valid as this function does no validation.
 export function updateNodeIds(
     nodeIdMapCollection: Collection,
-    newIdByOldId: Map<number, number>,
+    newIdByOldId: ReadonlyMap<number, number>,
     traceManager: TraceManager,
     correlationId: number | undefined,
 ): void {
@@ -99,7 +102,7 @@ type CollectionDelta = Omit<Collection, "leafIds" | "rightMostLeaf" | "idsByNode
 
 function createDelta(
     nodeIdMapCollection: Collection,
-    newIdByOldId: Map<number, number>,
+    newIdByOldId: ReadonlyMap<number, number>,
     xorNodes: ReadonlyArray<TXorNode>,
     traceManager: TraceManager,
     correlationId: number,
@@ -119,7 +122,7 @@ function createDelta(
     // Build up the change delta.
     for (const xorNode of xorNodes) {
         const oldId: number = xorNode.node.id;
-        const newId: number = Assert.asDefined(newIdByOldId.get(oldId));
+        const newId: number = MapUtils.assertGet(newIdByOldId, oldId);
 
         if (XorNodeUtils.isAst(xorNode)) {
             partialCollection.astNodeById.set(newId, xorNode.node);
@@ -171,7 +174,7 @@ function createDelta(
 
 function applyDelta(
     nodeIdMapCollection: Collection,
-    newIdByOldId: Map<number, number>,
+    newIdByOldId: ReadonlyMap<number, number>,
     xorNodes: ReadonlyArray<TXorNode>,
     delta: CollectionDelta,
     traceManager: TraceManager,
