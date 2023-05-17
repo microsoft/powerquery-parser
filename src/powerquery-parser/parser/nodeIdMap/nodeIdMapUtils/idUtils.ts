@@ -75,7 +75,7 @@ export function updateNodeIds(
         return;
     }
 
-    // We'll be iterating over them twice, so grab them once.
+    // We'll be iterating over them twice (creating delta, applying delta) we'll grab them once.
     const xorNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterXor(nodeIdMapCollection, [
         ...newIdByOldId.keys(),
     ]);
