@@ -19,6 +19,28 @@ export function assertNotIn<K, V>(map: Map<K, V> | ReadonlyMap<K, V>, key: K, me
     Assert.isFalse(map.has(key), message ?? `key is present`, { key });
 }
 
+export function filter<K, V>(map: Map<K, V> | ReadonlyMap<K, V>, predicate: (key: K, value: V) => boolean): Map<K, V> {
+    const filtered: Map<K, V> = new Map();
+
+    for (const [key, value] of map.entries()) {
+        if (predicate(key, value)) {
+            filtered.set(key, value);
+        }
+    }
+
+    return filtered;
+}
+
+export function hasKeys<K, V>(map: Map<K, V> | ReadonlyMap<K, V>, keys: ReadonlyArray<K>): boolean {
+    for (const key of keys) {
+        if (!map.has(key)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 export function isEqualMap<K, V>(
     left: Map<K, V> | ReadonlyMap<K, V>,
     right: Map<K, V> | ReadonlyMap<K, V>,
@@ -57,10 +79,6 @@ export function isSubsetMap<K, V>(
     }
 
     return true;
-}
-
-export function hasCollection<K, V>(map: Map<K, V> | ReadonlyMap<K, V>, keys: ReadonlyArray<K>): boolean {
-    return keys.map((key: K) => map.has(key)).indexOf(false) === -1;
 }
 
 export function pick<K, V>(map: Map<K, V> | ReadonlyMap<K, V>, keys: ReadonlyArray<K>): Map<K, V> {

@@ -214,7 +214,7 @@ async function readBinOpExpression(
 
     // There was a single TUnaryExpression, not a TBinOpExpression.
     if (expressions.length === 1) {
-        ParseStateUtils.deleteContext(state, placeholderContextId);
+        ParseStateUtils.deleteContext(state, undefined);
         trace.exit();
 
         return expressions[0];

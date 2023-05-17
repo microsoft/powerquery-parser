@@ -323,19 +323,19 @@ export function deleteAst(state: ParseContext.State, nodeId: number, parentWillB
 
 export function deleteContext(state: ParseContext.State, nodeId: number): ParseContext.TNode | undefined {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
     const contextNodeById: NodeIdMap.ContextNodeById = nodeIdMapCollection.contextNodeById;
     const leafIds: Set<number> = nodeIdMapCollection.leafIds;
     const parentIdById: NodeIdMap.ParentIdById = nodeIdMapCollection.parentIdById;
 
-    const contextNode: ParseContext.TNode | undefined = contextNodeById.get(nodeId);
-
-    if (contextNode === undefined) {
-        throw new CommonError.InvariantError(`failed to deleteContext as the given nodeId isn't a valid context node`, {
+    const contextNode: ParseContext.TNode | undefined = MapUtils.assertGet(
+        contextNodeById,
+        nodeId,
+        `failed to deleteContext as the given nodeId isn't a valid context node`,
+        {
             nodeId,
-        });
-    }
+        },
+    );
 
     const parentId: number | undefined = parentIdById.get(nodeId);
     const childIds: ReadonlyArray<number> | undefined = childIdsById.get(nodeId);

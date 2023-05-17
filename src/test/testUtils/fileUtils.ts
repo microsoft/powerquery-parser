@@ -47,13 +47,10 @@ export function writeContents(filePath: string, contents: string): void {
     fs.writeFileSync(filePath, contents, { encoding: "utf8" });
 }
 
-export async function tryLexParse(
-    settings: LexSettings & ParseSettings,
-    filePath: string,
-): Promise<Task.TriedLexParseTask> {
+export function tryLexParse(settings: LexSettings & ParseSettings, filePath: string): Promise<Task.TriedLexParseTask> {
     const contents: string = readContents(filePath);
 
-    return await TaskUtils.tryLexParse(settings, contents);
+    return TaskUtils.tryLexParse(settings, contents);
 }
 
 function isDirectory(path: string): boolean {

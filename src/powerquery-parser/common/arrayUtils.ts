@@ -16,15 +16,15 @@ export function all<T>(
     return true;
 }
 
+export function assertGet<T>(collection: ReadonlyArray<T>, index: number, message?: string, details?: object): T {
+    return Assert.asDefined(collection[index], message, details);
+}
+
 export function assertIn<T>(collection: ReadonlyArray<T>, item: T, message?: string, details?: object): number {
     const index: number = collection.indexOf(item);
     Assert.isTrue(index !== -1, message, details ?? { item });
 
     return index;
-}
-
-export function assertGet<T>(collection: ReadonlyArray<T>, index: number, message?: string, details?: object): T {
-    return Assert.asDefined(collection[index], message, details);
 }
 
 export function assertIndexOfPredicate<T>(
