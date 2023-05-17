@@ -22,39 +22,39 @@ export function recalculateIds(
 ): ReadonlyMap<number, number> {
     const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, recalculateIds.name, correlationId);
 
-    const visitedNodeIds: number[] = [];
-    let currentNodeId: number | undefined = nodeId;
-    let nodeIdStack: number[] = [];
+    const encounteredIds: number[] = [];
+    let currentId: number | undefined = nodeId;
+    let idQueue: number[] = [];
 
-    while (currentNodeId) {
-        visitedNodeIds.push(currentNodeId);
+    while (currentId) {
+        encounteredIds.push(currentId);
 
         const childIdsOfCurrentNode: ReadonlyArray<number> | undefined =
-            nodeIdMapCollection.childIdsById.get(currentNodeId);
+            nodeIdMapCollection.childIdsById.get(currentId);
 
         if (childIdsOfCurrentNode) {
-            nodeIdStack = nodeIdStack.concat([...childIdsOfCurrentNode].reverse());
+            idQueue = childIdsOfCurrentNode.concat(idQueue);
         }
 
-        currentNodeId = nodeIdStack.pop();
+        currentId = idQueue.shift();
     }
 
-    const numNodeIds: number = visitedNodeIds.length;
-    const sortedNodeIds: ReadonlyArray<number> = [...visitedNodeIds].sort();
-    const newNodeIdByOldNodeId: Map<number, number> = new Map();
+    const numIds: number = encounteredIds.length;
+    const sortedIds: ReadonlyArray<number> = [...encounteredIds].sort();
+    const newIdByOldId: Map<number, number> = new Map();
 
-    for (let index: number = 0; index < numNodeIds; index += 1) {
-        const oldNodeId: number = visitedNodeIds[index];
-        const newNodeId: number = sortedNodeIds[index];
+    for (let index: number = 0; index < numIds; index += 1) {
+        const oldId: number = encounteredIds[index];
+        const newId: number = sortedIds[index];
 
-        if (oldNodeId !== newNodeId) {
-            newNodeIdByOldNodeId.set(oldNodeId, newNodeId);
+        if (oldId !== newId) {
+            newIdByOldId.set(oldId, newId);
         }
     }
 
     trace.exit();
 
-    return newNodeIdByOldNodeId;
+    return newIdByOldId;
 }
 
 // Given a mapping of (existingId) => (newId) this mutates the NodeIdMap.Collection and the TXorNodes it holds.
@@ -75,7 +75,7 @@ export function updateNodeIds(
         return;
     }
 
-    // We'll be iterating over them twice, so grab them once.
+    // We'll be iterating over them twice (creating delta, applying delta) we'll grab them once.
     const xorNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterXor(nodeIdMapCollection, [
         ...newIdByOldId.keys(),
     ]);
@@ -89,7 +89,8 @@ export function updateNodeIds(
         trace.id,
     );
 
-    applySmallDelta(nodeIdMapCollection, newIdByOldId, xorNodes, partialDelta, traceManager, trace.id);
+    applyCollectionDelta(nodeIdMapCollection, newIdByOldId, xorNodes, partialDelta, traceManager, trace.id);
+
     trace.exit();
 }
 
@@ -208,7 +209,7 @@ function createDelta(
     return collectionDelta;
 }
 
-function applySmallDelta(
+function applyCollectionDelta(
     nodeIdMapCollection: Collection,
     newIdByOldId: ReadonlyMap<number, number>,
     xorNodes: ReadonlyArray<TXorNode>,
@@ -216,7 +217,7 @@ function applySmallDelta(
     traceManager: TraceManager,
     correlationId: number,
 ): void {
-    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, applySmallDelta.name, correlationId);
+    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, applyCollectionDelta.name, correlationId);
 
     const newNodeIds: Set<number> = new Set<number>(newIdByOldId.values());
 
@@ -224,7 +225,7 @@ function applySmallDelta(
         const oldId: number = xorNode.node.id;
         const newId: number = MapUtils.assertGet(newIdByOldId, oldId);
 
-        // First: mutate the TXorNode's Id to their new Id.
+        // First, mutate the TXorNode's Id to their new Id.
         const mutableNode: TypeScriptUtils.StripReadonly<Ast.TNode | ParseContext.TNode> = xorNode.node;
         mutableNode.id = newId;
 
