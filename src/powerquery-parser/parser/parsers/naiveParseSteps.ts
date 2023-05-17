@@ -3784,17 +3784,17 @@ function readConstantKindOrUndefined<ConstantKind extends Constant.TConstant>(
     }
 }
 
-async function readLiteralAttributes(
+function readLiteralAttributes(
     state: ParseState,
     parser: Parser,
     correlationId: number | undefined,
 ): Promise<Ast.RecordLiteral | undefined> {
     if (ParseStateUtils.isOnTokenKind(state, TokenKind.LeftBracket)) {
-        return await parser.readRecordLiteral(state, parser, correlationId);
+        return parser.readRecordLiteral(state, parser, correlationId);
     } else {
         ParseStateUtils.incrementAttributeCounter(state);
 
-        return undefined;
+        return Promise.resolve(undefined);
     }
 }
 

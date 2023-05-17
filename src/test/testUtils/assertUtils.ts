@@ -51,7 +51,7 @@ export async function assertGetParseOk(settings: LexSettings & ParseSettings, te
 
 // I only care about errors coming from the parse stage.
 // If I use tryLexParse I might get a CommonError which could have come either from lexing or parsing.
-async function assertGetTriedParse(settings: LexSettings & ParseSettings, text: string): Promise<Parser.TriedParse> {
+function assertGetTriedParse(settings: LexSettings & ParseSettings, text: string): Promise<Parser.TriedParse> {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(settings, text);
     ResultUtils.assertIsOk(triedLex);
     const lexerState: Lexer.State = triedLex.value;
@@ -61,5 +61,5 @@ async function assertGetTriedParse(settings: LexSettings & ParseSettings, text: 
     ResultUtils.assertIsOk(triedSnapshot);
     const lexerSnapshot: Lexer.LexerSnapshot = triedSnapshot.value;
 
-    return await Parser.ParserUtils.tryParse(settings, lexerSnapshot);
+    return Parser.ParserUtils.tryParse(settings, lexerSnapshot);
 }

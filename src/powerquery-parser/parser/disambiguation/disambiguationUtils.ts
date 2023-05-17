@@ -358,12 +358,12 @@ async function thoroughReadAmbiguousBracket(
 // Copy the current state and attempt to read for each of the following:
 //  FunctionExpression, ParenthesisExpression.
 // Mutates the given state with the read attempt which matched the most tokens.
-async function thoroughReadAmbiguousParenthesis(
+function thoroughReadAmbiguousParenthesis(
     state: ParseState,
     parser: Parser,
     correlationId: number | undefined,
 ): Promise<TAmbiguousParenthesisNode> {
-    return await thoroughReadAmbiguous<TAmbiguousParenthesisNode>(
+    return thoroughReadAmbiguous<TAmbiguousParenthesisNode>(
         state,
         parser,
         [parser.readFunctionExpression, readParenthesizedExpressionOrBinOpExpression],
