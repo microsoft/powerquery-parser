@@ -22,31 +22,31 @@ export function recalculateIds(
 ): Map<number, number> {
     const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, recalculateIds.name, correlationId);
 
-    const visitedXorNodes: TXorNode[] = [];
+    const visitedNodeIds: TXorNode[] = [];
     const nodeIds: number[] = [];
 
     let nodeStack: TXorNode[] = [];
-    let currentNodeId: TXorNode | undefined = nodeStart;
+    let currentNode: TXorNode | undefined = nodeStart;
 
-    while (currentNodeId !== undefined) {
-        nodeIds.push(currentNodeId.node.id);
-        visitedXorNodes.push(currentNodeId);
+    while (currentNode !== undefined) {
+        nodeIds.push(currentNode.node.id);
+        visitedNodeIds.push(currentNode);
 
         const childrenOfCurrentNode: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterChildrenXor(
             nodeIdMapCollection,
-            currentNodeId.node.id,
+            currentNode.node.id,
         );
 
         const reversedChildrenOfCurrentNode: ReadonlyArray<TXorNode> = [...childrenOfCurrentNode].reverse();
         nodeStack = nodeStack.concat(reversedChildrenOfCurrentNode);
 
-        currentNodeId = nodeStack.pop();
+        currentNode = nodeStack.pop();
     }
 
     nodeIds.sort((left: number, right: number) => left - right);
 
     const newNodeIdByOldNodeId: Map<number, number> = new Map(
-        visitedXorNodes.map((xorNode: TXorNode, index: number) => [xorNode.node.id, nodeIds[index]]),
+        visitedNodeIds.map((xorNode: TXorNode, index: number) => [xorNode.node.id, nodeIds[index]]),
     );
 
     trace.exit();
