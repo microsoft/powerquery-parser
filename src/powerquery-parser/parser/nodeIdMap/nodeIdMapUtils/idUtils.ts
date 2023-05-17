@@ -22,29 +22,29 @@ export function recalculateIds(
 ): ReadonlyMap<number, number> {
     const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, recalculateIds.name, correlationId);
 
-    const visitedNodeIds: number[] = [];
+    const encounteredIds: number[] = [];
     let currentId: number | undefined = nodeId;
-    let idStack: number[] = [];
+    let idQueue: number[] = [];
 
     while (currentId) {
-        visitedNodeIds.push(currentId);
+        encounteredIds.push(currentId);
 
         const childIdsOfCurrentNode: ReadonlyArray<number> | undefined =
             nodeIdMapCollection.childIdsById.get(currentId);
 
         if (childIdsOfCurrentNode) {
-            idStack = idStack.concat([...childIdsOfCurrentNode].reverse());
+            idQueue = childIdsOfCurrentNode.concat(idQueue);
         }
 
-        currentId = idStack.pop();
+        currentId = idQueue.shift();
     }
 
-    const numIds: number = visitedNodeIds.length;
-    const sortedIds: ReadonlyArray<number> = [...visitedNodeIds].sort();
+    const numIds: number = encounteredIds.length;
+    const sortedIds: ReadonlyArray<number> = [...encounteredIds].sort();
     const newIdByOldId: Map<number, number> = new Map();
 
     for (let index: number = 0; index < numIds; index += 1) {
-        const oldId: number = visitedNodeIds[index];
+        const oldId: number = encounteredIds[index];
         const newId: number = sortedIds[index];
 
         if (oldId !== newId) {
