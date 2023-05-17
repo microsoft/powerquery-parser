@@ -89,7 +89,7 @@ export function updateNodeIds(
         trace.id,
     );
 
-    applySmallDelta(nodeIdMapCollection, newIdByOldId, xorNodes, partialDelta, traceManager, trace.id);
+    applyCollectionDelta(nodeIdMapCollection, newIdByOldId, xorNodes, partialDelta, traceManager, trace.id);
     trace.exit();
 }
 
@@ -208,7 +208,7 @@ function createDelta(
     return collectionDelta;
 }
 
-function applySmallDelta(
+function applyCollectionDelta(
     nodeIdMapCollection: Collection,
     newIdByOldId: ReadonlyMap<number, number>,
     xorNodes: ReadonlyArray<TXorNode>,
@@ -216,7 +216,7 @@ function applySmallDelta(
     traceManager: TraceManager,
     correlationId: number,
 ): void {
-    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, applySmallDelta.name, correlationId);
+    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, applyCollectionDelta.name, correlationId);
 
     const newNodeIds: Set<number> = new Set<number>(newIdByOldId.values());
 
