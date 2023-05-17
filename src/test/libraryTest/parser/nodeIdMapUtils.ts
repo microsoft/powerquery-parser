@@ -312,7 +312,7 @@ describe(`nodeIdMapUtils`, () => {
             );
         });
 
-        it("WIP Context", async () => {
+        it("Context", async () => {
             const text: string = `[a = 1][`;
 
             const parseError: Parser.ParseError.ParseError = await TestAssertUtils.assertGetParseError(
