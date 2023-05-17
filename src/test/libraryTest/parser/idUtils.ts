@@ -282,7 +282,7 @@ describe("idUtils", () => {
         await expectLinksMatch(triedLexParse, expected);
     });
 
-    it(`foo()`, async () => {
+    it(`WIP foo()`, async () => {
         const text: string = `foo()`;
 
         const expected: AbridgedNodeIdMapCollection = {

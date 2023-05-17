@@ -26,21 +26,21 @@ export function recalculateIds(
     const nodeIds: number[] = [];
 
     let nodeStack: TXorNode[] = [];
-    let currentNode: TXorNode | undefined = nodeStart;
+    let currentNodeId: TXorNode | undefined = nodeStart;
 
-    while (currentNode !== undefined) {
-        nodeIds.push(currentNode.node.id);
-        visitedXorNodes.push(currentNode);
+    while (currentNodeId !== undefined) {
+        nodeIds.push(currentNodeId.node.id);
+        visitedXorNodes.push(currentNodeId);
 
         const childrenOfCurrentNode: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterChildrenXor(
             nodeIdMapCollection,
-            currentNode.node.id,
+            currentNodeId.node.id,
         );
 
         const reversedChildrenOfCurrentNode: ReadonlyArray<TXorNode> = [...childrenOfCurrentNode].reverse();
         nodeStack = nodeStack.concat(reversedChildrenOfCurrentNode);
 
-        currentNode = nodeStack.pop();
+        currentNodeId = nodeStack.pop();
     }
 
     nodeIds.sort((left: number, right: number) => left - right);

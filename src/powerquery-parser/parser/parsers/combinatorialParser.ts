@@ -283,8 +283,8 @@ async function readBinOpExpression(
             right,
         } as Ast.TBinOpExpression;
 
-        operators = ArrayUtils.removeAtIndex(operators, minPrecedenceIndex);
-        operatorConstants = ArrayUtils.removeAtIndex(operatorConstants, minPrecedenceIndex);
+        operators = ArrayUtils.assertRemoveAtIndex(operators, minPrecedenceIndex);
+        operatorConstants = ArrayUtils.assertRemoveAtIndex(operatorConstants, minPrecedenceIndex);
 
         expressions = expressions = [
             ...expressions.slice(0, minPrecedenceIndex),
@@ -313,14 +313,17 @@ async function readBinOpExpression(
 
         // All TUnaryExpression and operatorConstants start by being placed under the context node.
         // They need to be removed for deleteContext(placeholderContextId) to succeed.
-        placeholderContextChildren = ArrayUtils.removeFirstInstance(placeholderContextChildren, operatorConstant.id);
+        placeholderContextChildren = ArrayUtils.assertRemoveFirstInstance(
+            placeholderContextChildren,
+            operatorConstant.id,
+        );
 
         if (left.id <= newNodeThreshold) {
-            placeholderContextChildren = ArrayUtils.removeFirstInstance(placeholderContextChildren, left.id);
+            placeholderContextChildren = ArrayUtils.assertRemoveFirstInstance(placeholderContextChildren, left.id);
         }
 
         if (right.id <= newNodeThreshold) {
-            placeholderContextChildren = ArrayUtils.removeFirstInstance(placeholderContextChildren, right.id);
+            placeholderContextChildren = ArrayUtils.assertRemoveFirstInstance(placeholderContextChildren, right.id);
         }
 
         nodeIdMapCollection.childIdsById.set(placeholderContextId, placeholderContextChildren);

@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, Assert, CommonError, MapUtils, Result, ResultUtils, TypeScriptUtils } from "../../common";
+import { Assert, CommonError, Result, ResultUtils } from "../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, TextUtils, Token } from "../../language";
 import { Disambiguation, DisambiguationUtils } from "../disambiguation";
-import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
+import { ParseContext, ParseContextUtils, ParseError } from "..";
 import { Parser, ParseStateCheckpoint } from "../parser";
 import { ParseState, ParseStateUtils } from "../parseState";
 import { Trace, TraceConstant } from "../../common/trace";
 import { LexerSnapshot } from "../../lexer";
-import { NodeIdMapUtils } from "../nodeIdMap";
 import { TokenKind } from "../../language/token";
 
 const enum NaiveTraceConstant {
@@ -1012,50 +1011,54 @@ export async function readRecursivePrimaryExpression(
     );
 
     state.cancellationToken?.throwIfCancelled();
-    ParseStateUtils.startContext(state, nodeKind);
 
-    const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
+    state.currentContextNode = ParseStateUtils.insertContextAsParent(state, nodeKind, head.id, trace.id);
 
-    const currentContextNode: ParseContext.TNode = Assert.asDefined(
-        state.currentContextNode,
-        "state.currentContextNode",
-    );
+    // ParseStateUtils.startContext(state, nodeKind);
 
-    // Update parent attributes.
-    const parentOfHeadId: number = MapUtils.assertGet(nodeIdMapCollection.parentIdById, head.id);
+    // const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
 
-    nodeIdMapCollection.childIdsById.set(
-        parentOfHeadId,
-        ArrayUtils.removeFirstInstance(MapUtils.assertGet(nodeIdMapCollection.childIdsById, parentOfHeadId), head.id),
-    );
+    // const currentContextNode: ParseContext.TNode = Assert.asDefined(
+    //     state.currentContextNode,
+    //     "state.currentContextNode",
+    // );
 
-    nodeIdMapCollection.childIdsById.set(currentContextNode.id, [head.id]);
-    nodeIdMapCollection.parentIdById.set(head.id, currentContextNode.id);
+    // // Update parent attributes.
+    // const parentOfHeadId: number = MapUtils.assertGet(nodeIdMapCollection.parentIdById, head.id);
 
-    const newTokenIndexStart: number = head.tokenRange.tokenIndexStart;
-    const mutableContext: TypeScriptUtils.StripReadonly<ParseContext.TNode> = currentContextNode;
-    const mutableHead: TypeScriptUtils.StripReadonly<Ast.TPrimaryExpression> = head;
+    // nodeIdMapCollection.childIdsById.set(
+    //     parentOfHeadId,
+    //     ArrayUtils.removeFirstInstance(
+    //         MapUtils.assertGet(nodeIdMapCollection.childIdsById, parentOfHeadId), head.id),
+    // );
 
-    // Update token start to match the first parsed node under it, aka the head.
-    mutableContext.tokenStart = state.lexerSnapshot.tokens[newTokenIndexStart];
-    mutableContext.tokenIndexStart = newTokenIndexStart;
+    // nodeIdMapCollection.childIdsById.set(currentContextNode.id, [head.id]);
+    // nodeIdMapCollection.parentIdById.set(head.id, currentContextNode.id);
 
-    // Update attribute counters.
-    mutableContext.attributeCounter = 1;
-    mutableHead.attributeIndex = 0;
+    // const newTokenIndexStart: number = head.tokenRange.tokenIndexStart;
+    // const mutableContext: TypeScriptUtils.StripReadonly<ParseContext.TNode> = currentContextNode;
+    // const mutableHead: TypeScriptUtils.StripReadonly<Ast.TPrimaryExpression> = head;
 
-    // Recalculate ids after shuffling things around.
-    const newNodeIdByOldNodeId: Map<number, number> = NodeIdMapUtils.recalculateIds(
-        nodeIdMapCollection,
-        NodeIdMapUtils.assertXor(
-            nodeIdMapCollection,
-            MapUtils.assertGet(nodeIdMapCollection.parentIdById, currentContextNode.id),
-        ),
-        state.traceManager,
-        trace.id,
-    );
+    // // Update token start to match the first parsed node under it, aka the head.
+    // mutableContext.tokenStart = state.lexerSnapshot.tokens[newTokenIndexStart];
+    // mutableContext.tokenIndexStart = newTokenIndexStart;
 
-    NodeIdMapUtils.updateNodeIds(nodeIdMapCollection, newNodeIdByOldNodeId, state.traceManager, trace.id);
+    // // Update attribute counters.
+    // mutableContext.attributeCounter = 1;
+    // mutableHead.attributeIndex = 0;
+
+    // // Recalculate ids after shuffling things around.
+    // const newNodeIdByOldNodeId: Map<number, number> = NodeIdMapUtils.recalculateIds(
+    //     nodeIdMapCollection,
+    //     NodeIdMapUtils.assertXor(
+    //         nodeIdMapCollection,
+    //         MapUtils.assertGet(nodeIdMapCollection.parentIdById, currentContextNode.id),
+    //     ),
+    //     state.traceManager,
+    //     trace.id,
+    // );
+
+    // NodeIdMapUtils.updateNodeIds(nodeIdMapCollection, newNodeIdByOldNodeId, state.traceManager, trace.id);
 
     // Begin normal parsing.
     const recursiveArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;

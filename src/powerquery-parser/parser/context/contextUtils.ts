@@ -4,7 +4,7 @@
 import { ArrayUtils, Assert, CommonError, MapUtils, SetUtils, TypeScriptUtils } from "../../common";
 import { Ast, Token } from "../../language";
 import { NodeIdMap, ParseContext } from "..";
-import { NodeIdMapUtils, TXorNode } from "../nodeIdMap";
+import { NodeIdMapUtils, TXorNode, XorNodeKind } from "../nodeIdMap";
 
 export function assertAsNodeKind<T extends Ast.TNode>(
     node: ParseContext.TNode,
@@ -77,7 +77,7 @@ export function nextAttributeIndex(parentNode: ParseContext.TNode): number {
 
 export function startContext<T extends Ast.TNode>(
     state: ParseContext.State,
-    nodeKind: Ast.NodeKind,
+    nodeKind: T["kind"],
     tokenIndexStart: number,
     tokenStart: Token.Token | undefined,
     parentNode: ParseContext.TNode | undefined,
@@ -120,16 +120,86 @@ export function startContext<T extends Ast.TNode>(
         state.root = contextNode;
     }
 
-    const idsByNodeKind: NodeIdMap.IdsByNodeKind = nodeIdMapCollection.idsByNodeKind;
-    const idsForSpecificNodeKind: Set<number> | undefined = idsByNodeKind.get(nodeKind);
-
-    if (idsForSpecificNodeKind) {
-        idsForSpecificNodeKind.add(nodeId);
-    } else {
-        idsByNodeKind.set(nodeKind, new Set([nodeId]));
-    }
+    trackNodeIdByNodeKind(nodeIdMapCollection.idsByNodeKind, nodeKind, nodeId);
 
     return contextNode;
+}
+
+// Note:
+// This doesn't hold the Id invariant where a parent's Id is always less than its children's Ids.
+// To maintain that invariant the caller needs to also call:
+//  - NodeIdMapUtils.recalculateIds
+//  - NodeIdMapUtils.updateNodeIds
+export function insertContextAsParent<T extends Ast.TNode>(
+    state: ParseContext.State,
+    nodeKind: T["kind"],
+    existingNodeId: number,
+    existingNodeTokenStart: Token.Token | undefined,
+): ParseContext.Node<T> {
+    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+    const existingNode: TXorNode = NodeIdMapUtils.assertXor(nodeIdMapCollection, existingNodeId);
+
+    let tokenIndexStart: number;
+    let attributeIndex: number | undefined;
+
+    // Update `attributeIndex` as we're inserting a new context as the parent of the existing node.
+    switch (existingNode.kind) {
+        case XorNodeKind.Ast: {
+            tokenIndexStart = existingNode.node.tokenRange.tokenIndexStart;
+            attributeIndex = existingNode.node.attributeIndex;
+
+            const mutableAst: TypeScriptUtils.StripReadonly<Ast.TNode> = existingNode.node;
+            mutableAst.attributeIndex = 0;
+
+            break;
+        }
+
+        case XorNodeKind.Context:
+            tokenIndexStart = existingNode.node.tokenIndexStart;
+            attributeIndex = existingNode.node.attributeIndex;
+
+            existingNode.node.attributeIndex = 0;
+            break;
+
+        default:
+            throw Assert.isNever(existingNode);
+    }
+
+    const newNodeId: number = nextId(state);
+
+    const insertedContext: ParseContext.Node<T> = {
+        id: newNodeId,
+        kind: nodeKind,
+        tokenIndexStart,
+        tokenStart: existingNodeTokenStart,
+        // We want to create a new context containing an existing node,
+        // so attributeCounter must be 1 as it holds the existing node.
+        attributeCounter: 1,
+        isClosed: false,
+        attributeIndex,
+    };
+
+    nodeIdMapCollection.contextNodeById.set(newNodeId, insertedContext);
+    trackNodeIdByNodeKind(nodeIdMapCollection.idsByNodeKind, nodeKind, newNodeId);
+
+    // We have one of two possible states, either:
+    //  1) grandparent <-> new <-> existing
+    //  2) new <-> existing.
+
+    // Scenario (1)
+    const grandparentNodeId: number | undefined = nodeIdMapCollection.parentIdById.get(existingNodeId);
+
+    if (grandparentNodeId) {
+        // Update `grandparent <-> existing` with `grandparent <-> new`
+        removeOrReplaceChildId(nodeIdMapCollection, grandparentNodeId, existingNodeId, newNodeId);
+    }
+
+    // Applicable to Scenario (1) and (2)
+    // Create `new <-> existing`
+    nodeIdMapCollection.parentIdById.set(existingNodeId, newNodeId);
+    nodeIdMapCollection.childIdsById.set(newNodeId, [existingNodeId]);
+
+    return insertedContext;
 }
 
 // Returns the Node's parent context (if one exists).
@@ -315,6 +385,16 @@ export function deleteContext(state: ParseContext.State, nodeId: number): ParseC
     return parentId !== undefined ? NodeIdMapUtils.assertContext(nodeIdMapCollection, parentId) : undefined;
 }
 
+function trackNodeIdByNodeKind(idsByNodeKind: NodeIdMap.IdsByNodeKind, nodeKind: Ast.NodeKind, nodeId: number): void {
+    const idsForSpecificNodeKind: Set<number> | undefined = idsByNodeKind.get(nodeKind);
+
+    if (idsForSpecificNodeKind) {
+        idsForSpecificNodeKind.add(nodeId);
+    } else {
+        idsByNodeKind.set(nodeKind, new Set([nodeId]));
+    }
+}
+
 function deleteFromKindMap(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): void {
     const idsByNodeKind: NodeIdMap.IdsByNodeKind = nodeIdMapCollection.idsByNodeKind;
 
@@ -337,6 +417,9 @@ function deleteFromKindMap(nodeIdMapCollection: NodeIdMap.Collection, nodeId: nu
     }
 }
 
+// Asserts `childId` is in the list of children in for `parentId`.
+// Either removes `childId` in its list of children if no `replcementId` is given,
+// else replaces the `childId` with `replacementId`.
 function removeOrReplaceChildId(
     nodeIdMapCollection: NodeIdMap.Collection,
     parentId: number,
@@ -346,36 +429,16 @@ function removeOrReplaceChildId(
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
     const childIds: ReadonlyArray<number> = NodeIdMapUtils.assertChildIds(childIdsById, parentId);
 
-    const replacementIndex: number = ArrayUtils.assertIn(
-        childIds,
-        childId,
-        `failed to removeOrReplaceChildId as childId isn't a child of parentId`,
-        {
-            childId,
-            parentId,
-        },
-    );
-
-    const beforeChildId: ReadonlyArray<number> = childIds.slice(0, replacementIndex);
-    const afterChildId: ReadonlyArray<number> = childIds.slice(replacementIndex + 1);
-
-    let newChildIds: ReadonlyArray<number> | undefined;
+    let newChildIds: ReadonlyArray<number>;
 
     if (replacementId) {
         nodeIdMapCollection.parentIdById.set(replacementId, parentId);
-
-        if (childIds.length === 1) {
-            newChildIds = [replacementId];
-        } else {
-            newChildIds = [...beforeChildId, replacementId, ...afterChildId];
-        }
-    } else if (childIds.length === 1) {
-        newChildIds = undefined;
+        newChildIds = ArrayUtils.assertReplaceFirstInstance(childIds, childId, replacementId);
     } else {
-        newChildIds = [...beforeChildId, ...afterChildId];
+        newChildIds = ArrayUtils.assertRemoveFirstInstance(childIds, childId);
     }
 
-    if (newChildIds) {
+    if (newChildIds.length) {
         childIdsById.set(parentId, newChildIds);
     } else {
         childIdsById.delete(parentId);

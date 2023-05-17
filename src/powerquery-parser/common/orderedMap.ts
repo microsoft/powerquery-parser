@@ -39,7 +39,7 @@ export class OrderedMap<K, V> implements Map<K, V> {
 
     public delete(key: K): boolean {
         if (this.map.delete(key)) {
-            this.order = ArrayUtils.removeFirstInstance(this.order, key);
+            this.order = ArrayUtils.assertRemoveFirstInstance(this.order, key);
 
             return true;
         } else {
@@ -74,7 +74,7 @@ export class OrderedMap<K, V> implements Map<K, V> {
     public set(key: K, value: V, maintainIndex?: boolean): this {
         if (this.has(key)) {
             if (!maintainIndex) {
-                this.order = [...ArrayUtils.removeFirstInstance(this.order, key), key];
+                this.order = [...ArrayUtils.assertRemoveFirstInstance(this.order, key), key];
             }
         } else {
             this.order = [...this.order, key];
