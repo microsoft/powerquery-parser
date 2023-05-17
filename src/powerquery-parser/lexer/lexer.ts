@@ -419,7 +419,7 @@ function deleteLine(state: State, lineNumber: number): State {
 
     return {
         ...state,
-        lines: ArrayUtils.removeAtIndex(state.lines, lineNumber),
+        lines: ArrayUtils.assertRemoveAtIndex(state.lines, lineNumber),
     };
 }
 

@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, MapUtils } from "../../common";
+import { ArrayUtils, Assert, CommonError, MapUtils } from "../../common";
 import { Ast, Constant, Token } from "../../language";
-import { ParseContext, ParseContextUtils, ParseError } from "..";
+import { NodeIdMap, NodeIdMapUtils, ParseContext, ParseContextUtils, ParseError, TXorNode, XorNodeUtils } from "..";
+import { NoOpTraceManagerInstance, Trace } from "../../common/trace";
 import { DefaultLocale } from "../../localization";
 import { Disambiguation } from "../disambiguation";
 import { LexerSnapshot } from "../../lexer";
-import { NoOpTraceManagerInstance } from "../../common/trace";
 import { ParseState } from "./parseState";
 import { SequenceKind } from "../error";
 
@@ -16,15 +16,16 @@ export function newState(lexerSnapshot: LexerSnapshot, overrides: Partial<ParseS
     const currentToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
     const currentTokenKind: Token.TokenKind | undefined = currentToken?.kind;
     const contextState: ParseContext.State = overrides?.contextState ?? ParseContextUtils.newState();
+    const nodeIdMapCollection: NodeIdMap.Collection = contextState.nodeIdMapCollection;
 
     const currentContextNodeId: number | undefined =
-        contextState.nodeIdMapCollection.contextNodeById.size > 0
-            ? Math.max(...contextState.nodeIdMapCollection.contextNodeById.keys())
+        nodeIdMapCollection.contextNodeById.size > 0
+            ? Math.max(...nodeIdMapCollection.contextNodeById.keys())
             : undefined;
 
     const currentContextNode: ParseContext.TNode | undefined =
         currentContextNodeId !== undefined
-            ? MapUtils.assertGet(contextState.nodeIdMapCollection.contextNodeById, currentContextNodeId)
+            ? MapUtils.assertGet(nodeIdMapCollection.contextNodeById, currentContextNodeId)
             : undefined;
 
     return {
@@ -71,6 +72,50 @@ export function startContext<T extends Ast.TNode>(state: ParseState, nodeKind: T
     );
 
     state.currentContextNode = newContextNode;
+}
+
+// Inserts a new context as the parent of an existing node.
+// Requires a re-calculation of all nodeIds associated with or under the inserted context.
+export function startContextAsParent<T extends Ast.TNode>(
+    state: ParseState,
+    nodeKind: T["kind"],
+    existingNodeId: number,
+    correlationId: number | undefined,
+): ParseContext.Node<T> {
+    const trace: Trace = state.traceManager.entry(
+        ParseStateUtilsTraceConstant.ParseStateUtils,
+        startContextAsParent.name,
+        correlationId,
+        { existingNodeId },
+    );
+
+    // We need to find the starting token for the existing node as it'll be the starting token for the new context.
+    const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
+    const existingNode: TXorNode = NodeIdMapUtils.assertXor(nodeIdMapCollection, existingNodeId);
+
+    const tokenStart: Token.Token | undefined = XorNodeUtils.isAst(existingNode)
+        ? ArrayUtils.assertGet(state.lexerSnapshot.tokens, existingNode.node.tokenRange.tokenIndexStart)
+        : existingNode.node.tokenStart;
+
+    const insertedContext: ParseContext.Node<T> = ParseContextUtils.startContextAsParent(
+        state.contextState,
+        nodeKind,
+        existingNodeId,
+        tokenStart,
+    );
+
+    const newNodeIdByOldNodeId: ReadonlyMap<number, number> = NodeIdMapUtils.recalculateIds(
+        nodeIdMapCollection,
+        insertedContext.id,
+        state.traceManager,
+        trace.id,
+    );
+
+    NodeIdMapUtils.updateNodeIds(nodeIdMapCollection, newNodeIdByOldNodeId, state.traceManager, trace.id);
+
+    trace.exit();
+
+    return insertedContext;
 }
 
 export function endContext<T extends Ast.TNode>(state: ParseState, astNode: T): void {
@@ -391,6 +436,10 @@ export function tokenWithColumnNumber(
         token: currentToken,
         columnNumber: state.lexerSnapshot.columnNumberStartFrom(currentToken),
     };
+}
+
+const enum ParseStateUtilsTraceConstant {
+    ParseStateUtils = "ParseStateUtils",
 }
 
 interface ContextNodeMetadata {
