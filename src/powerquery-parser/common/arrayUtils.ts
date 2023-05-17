@@ -16,15 +16,15 @@ export function all<T>(
     return true;
 }
 
+export function assertGet<T>(collection: ReadonlyArray<T>, index: number, message?: string, details?: object): T {
+    return Assert.asDefined(collection[index], message, details);
+}
+
 export function assertIn<T>(collection: ReadonlyArray<T>, item: T, message?: string, details?: object): number {
     const index: number = collection.indexOf(item);
     Assert.isTrue(index !== -1, message, details ?? { item });
 
     return index;
-}
-
-export function assertGet<T>(collection: ReadonlyArray<T>, index: number, message?: string, details?: object): T {
-    return Assert.asDefined(collection[index], message, details);
 }
 
 export function assertIndexOfPredicate<T>(
@@ -47,6 +47,32 @@ export function assertNonZeroLength<T>(collection: ReadonlyArray<T>, message?: s
             collectionLength: collection.length,
         },
     );
+}
+
+export function assertReplaceAtIndex<T>(collection: ReadonlyArray<T>, value: T, index: number): T[] {
+    Assert.isFalse(index < 0 || index >= collection.length, "index < 0 || index >= collection.length", {
+        index,
+        collectionLength: collection.length,
+    });
+
+    return [...collection.slice(0, index), value, ...collection.slice(index + 1)];
+}
+
+export function assertRemoveFirstInstance<T>(collection: ReadonlyArray<T>, element: T): T[] {
+    return assertRemoveAtIndex(collection, collection.indexOf(element));
+}
+
+export function assertReplaceFirstInstance<T>(collection: ReadonlyArray<T>, oldValue: T, newValue: T): T[] {
+    return assertReplaceAtIndex(collection, newValue, collection.indexOf(oldValue));
+}
+
+export function assertRemoveAtIndex<T>(collection: ReadonlyArray<T>, index: number): T[] {
+    Assert.isFalse(index < 0 || index >= collection.length, "index < 0 || index >= collection.length", {
+        index,
+        collectionLength: collection.length,
+    });
+
+    return [...collection.slice(0, index), ...collection.slice(index + 1)];
 }
 
 export async function mapAsync<T, U>(
@@ -150,32 +176,6 @@ export function isSubset<T>(
 export function range(size: number, startAt: number = 0): ReadonlyArray<number> {
     // tslint:disable-next-line: prefer-array-literal
     return [...Array(size).keys()].map((index: number) => index + startAt);
-}
-
-export function replaceAtIndex<T>(collection: ReadonlyArray<T>, value: T, index: number): T[] {
-    Assert.isFalse(index < 0 || index >= collection.length, "index < 0 || index >= collection.length", {
-        index,
-        collectionLength: collection.length,
-    });
-
-    return [...collection.slice(0, index), value, ...collection.slice(index + 1)];
-}
-
-export function removeFirstInstance<T>(collection: ReadonlyArray<T>, element: T): T[] {
-    return removeAtIndex(collection, collection.indexOf(element));
-}
-
-export function replaceFirstInstance<T>(collection: ReadonlyArray<T>, oldValue: T, newValue: T): T[] {
-    return replaceAtIndex(collection, newValue, collection.indexOf(oldValue));
-}
-
-export function removeAtIndex<T>(collection: ReadonlyArray<T>, index: number): T[] {
-    Assert.isFalse(index < 0 || index >= collection.length, "index < 0 || index >= collection.length", {
-        index,
-        collectionLength: collection.length,
-    });
-
-    return [...collection.slice(0, index), ...collection.slice(index + 1)];
 }
 
 export function split<T>(
