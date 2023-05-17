@@ -1045,17 +1045,14 @@ export async function readRecursivePrimaryExpression(
     mutableHead.attributeIndex = 0;
 
     // Recalculate ids after shuffling things around.
-    const newNodeIdByOldNodeId: Map<number, number> = NodeIdMapUtils.recalculateIds(
+    const newIdByOldId: ReadonlyMap<number, number> = NodeIdMapUtils.recalculateIds(
         nodeIdMapCollection,
-        NodeIdMapUtils.assertXor(
-            nodeIdMapCollection,
-            MapUtils.assertGet(nodeIdMapCollection.parentIdById, currentContextNode.id),
-        ),
+        MapUtils.assertGet(nodeIdMapCollection.parentIdById, currentContextNode.id),
         state.traceManager,
         trace.id,
     );
 
-    NodeIdMapUtils.updateNodeIds(nodeIdMapCollection, newNodeIdByOldNodeId, state.traceManager, trace.id);
+    NodeIdMapUtils.updateNodeIds(nodeIdMapCollection, newIdByOldId, state.traceManager, trace.id);
 
     // Begin normal parsing.
     const recursiveArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
