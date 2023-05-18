@@ -3007,32 +3007,19 @@ async function readRecursivelyEitherAsExpressionOrIsExpression<
         { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
-    ParseStateUtils.startContext(state, nodeKind);
-
-    const initialLeft: Node["left"] = await initialLeftReader(trace.id);
-
-    if (state.currentTokenKind !== operatorTokenKind) {
-        ParseStateUtils.deleteContext(state);
-
-        return initialLeft;
-    }
-
-    let left: Node | Node["left"] = initialLeft;
-    let firstIteration: boolean = true;
+    let left: Node | Node["left"] = await initialLeftReader(trace.id);
 
     while (state.currentTokenKind === operatorTokenKind) {
-        if (!firstIteration) {
-            ParseStateUtils.startContextAsParent(state, nodeKind, left.id, trace.id);
-        }
+        ParseStateUtils.startContextAsParent(state, nodeKind, left.id, trace.id);
 
         const operatorConstant: Node["operatorConstant"] = Assert.asDefined(
-            operatorReader(operatorTokenKind, trace.correlationId),
+            operatorReader(operatorTokenKind, trace.id),
         );
 
         // eslint-disable-next-line no-await-in-loop
         const right: Node["right"] = await rightReader(trace.id);
 
-        const binOpExpression: Node = {
+        left = {
             ...ParseStateUtils.assertGetContextNodeMetadata(state),
             kind: nodeKind,
             isLeaf: false,
@@ -3040,10 +3027,6 @@ async function readRecursivelyEitherAsExpressionOrIsExpression<
             operatorConstant,
             right,
         } as Node;
-
-        left = binOpExpression;
-
-        firstIteration = false;
     }
 
     trace.exit();
