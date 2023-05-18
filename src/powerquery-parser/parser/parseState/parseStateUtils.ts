@@ -133,7 +133,7 @@ export function endContext<T extends Ast.TNode>(state: ParseState, astNode: T): 
     state.currentContextNode = parentOfContextNode;
 }
 
-export function deleteContext(state: ParseState, nodeId: number | undefined): void {
+export function deleteContext(state: ParseState, nodeId?: number): void {
     if (nodeId === undefined) {
         nodeId = Assert.asDefined(state.currentContextNode, `can't delete a context if one doesn't exist`).id;
     }

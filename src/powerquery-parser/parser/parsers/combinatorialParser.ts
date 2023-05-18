@@ -50,12 +50,10 @@ export const CombinatorialParser: Parser = {
             correlationId,
         ) as Promise<Ast.TLogicalExpression>,
 
-    readIsExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
-        readBinOpExpression(state, parser, Ast.NodeKind.IsExpression, correlationId) as Promise<Ast.TIsExpression>,
+    readIsExpression: NaiveParseSteps.readIsExpression,
     readNullablePrimitiveType: NaiveParseSteps.readNullablePrimitiveType,
 
-    readAsExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
-        readBinOpExpression(state, parser, Ast.NodeKind.AsExpression, correlationId) as Promise<Ast.TAsExpression>,
+    readAsExpression: NaiveParseSteps.readAsExpression,
 
     readEqualityExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
         readBinOpExpression(
@@ -214,7 +212,7 @@ async function readBinOpExpression(
 
     // There was a single TUnaryExpression, not a TBinOpExpression.
     if (expressions.length === 1) {
-        ParseStateUtils.deleteContext(state, undefined);
+        ParseStateUtils.deleteContext(state);
         trace.exit();
 
         return expressions[0];
