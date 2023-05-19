@@ -741,7 +741,7 @@ export type ArithmeticExpression = IBinOpExpression<
 
 export type AsExpression = IBinOpExpression<
     NodeKind.AsExpression,
-    TEqualityExpression,
+    TAsExpression,
     Constant.KeywordConstant.As,
     TNullablePrimitiveType
 >;
@@ -755,7 +755,7 @@ export type EqualityExpression = IBinOpExpression<
 
 export type IsExpression = IBinOpExpression<
     NodeKind.IsExpression,
-    TAsExpression,
+    TIsExpression,
     Constant.KeywordConstant.Is,
     TNullablePrimitiveType
 >;

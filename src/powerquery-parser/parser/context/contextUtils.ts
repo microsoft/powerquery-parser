@@ -332,9 +332,7 @@ export function deleteContext(state: ParseContext.State, nodeId: number): ParseC
         contextNodeById,
         nodeId,
         `failed to deleteContext as the given nodeId isn't a valid context node`,
-        {
-            nodeId,
-        },
+        { nodeId },
     );
 
     const parentId: number | undefined = parentIdById.get(nodeId);

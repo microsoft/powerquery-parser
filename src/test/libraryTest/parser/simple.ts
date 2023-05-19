@@ -249,6 +249,18 @@ describe("Parser.AbridgedNode", () => {
             ]);
         });
 
+        it(`1 as number as logical`, async () => {
+            await runAbridgedNodeTest(`1 as number as logical`, [
+                [Ast.NodeKind.AsExpression, undefined],
+                [Ast.NodeKind.AsExpression, 0],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.PrimitiveType, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.PrimitiveType, 2],
+            ]);
+        });
+
         it(`type function (x as number) as number`, async () => {
             await runAbridgedNodeTest(`type function (x as number) as number`, [
                 [Ast.NodeKind.TypePrimaryType, undefined],

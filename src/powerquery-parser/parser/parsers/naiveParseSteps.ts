@@ -91,9 +91,7 @@ export async function readGeneralizedIdentifier(
         NaiveTraceConstant.Parse,
         readGeneralizedIdentifier.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     ParseStateUtils.startContext(state, nodeKind);
@@ -441,9 +439,7 @@ export async function readNullCoalescingExpression(
         NaiveTraceConstant.Parse,
         readNullCoalescingExpression.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -567,18 +563,17 @@ export async function readIsExpression(
 
     state.cancellationToken?.throwIfCancelled();
 
-    const isExpression: Ast.TIsExpression = await recursiveReadBinOpExpression<
-        Ast.NodeKind.IsExpression,
-        Ast.TAsExpression,
-        Constant.KeywordConstant.Is,
-        Ast.TNullablePrimitiveType
+    const isExpression: Ast.TIsExpression = await readRecursivelyEitherAsExpressionOrIsExpression<
+        Ast.IsExpression,
+        TokenKind.KeywordIs
     >(
         state,
         Ast.NodeKind.IsExpression,
-        () => parser.readAsExpression(state, parser, trace.id),
-        (currentTokenKind: TokenKind | undefined) =>
-            currentTokenKind === TokenKind.KeywordIs ? Constant.KeywordConstant.Is : undefined,
-        () => parser.readNullablePrimitiveType(state, parser, trace.id),
+        TokenKind.KeywordIs,
+        (correlationId: number | undefined) => parser.readAsExpression(state, parser, correlationId),
+        (tokenKind: TokenKind.KeywordIs, correlationId: number | undefined) =>
+            readTokenKindAsConstant(state, tokenKind, Constant.KeywordConstant.Is, correlationId),
+        (correlationId: number) => parser.readNullablePrimitiveType(state, parser, correlationId),
         trace.id,
     );
 
@@ -597,9 +592,7 @@ export async function readNullablePrimitiveType(
         NaiveTraceConstant.Parse,
         readNullablePrimitiveType.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -638,18 +631,17 @@ export async function readAsExpression(
 
     state.cancellationToken?.throwIfCancelled();
 
-    const asExpression: Ast.TAsExpression = await recursiveReadBinOpExpression<
-        Ast.NodeKind.AsExpression,
-        Ast.TEqualityExpression,
-        Constant.KeywordConstant.As,
-        Ast.TNullablePrimitiveType
+    const asExpression: Ast.TAsExpression = await readRecursivelyEitherAsExpressionOrIsExpression<
+        Ast.AsExpression,
+        TokenKind.KeywordAs
     >(
         state,
         Ast.NodeKind.AsExpression,
-        () => parser.readEqualityExpression(state, parser, trace.id),
-        (currentTokenKind: TokenKind | undefined) =>
-            currentTokenKind === TokenKind.KeywordAs ? Constant.KeywordConstant.As : undefined,
-        () => parser.readNullablePrimitiveType(state, parser, trace.id),
+        TokenKind.KeywordAs,
+        (correlationId: number | undefined) => parser.readEqualityExpression(state, parser, correlationId),
+        (tokenKind: TokenKind.KeywordAs, correlationId: number | undefined) =>
+            readTokenKindAsConstant(state, tokenKind, Constant.KeywordConstant.As, correlationId),
+        (correlationId: number) => parser.readNullablePrimitiveType(state, parser, correlationId),
         trace.id,
     );
 
@@ -671,9 +663,7 @@ export async function readEqualityExpression(
         NaiveTraceConstant.Parse,
         readEqualityExpression.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -710,9 +700,7 @@ export async function readRelationalExpression(
         NaiveTraceConstant.Parse,
         readRelationalExpression.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -749,9 +737,7 @@ export async function readArithmeticExpression(
         NaiveTraceConstant.Parse,
         readArithmeticExpression.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -790,9 +776,7 @@ export async function readMetadataExpression(
         NaiveTraceConstant.Parse,
         readMetadataExpression.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -828,7 +812,7 @@ export async function readMetadataExpression(
 
         return metadataExpression;
     } else {
-        ParseStateUtils.deleteContext(state, undefined);
+        ParseStateUtils.deleteContext(state);
 
         trace.exit({
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
@@ -1005,9 +989,7 @@ export async function readRecursivePrimaryExpression(
         NaiveTraceConstant.Parse,
         readRecursivePrimaryExpression.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -1156,9 +1138,7 @@ export function readIdentifierExpression(
         NaiveTraceConstant.Parse,
         readIdentifierExpression.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -1196,9 +1176,7 @@ export async function readParenthesizedExpression(
         NaiveTraceConstant.Parse,
         readParenthesizedExpression.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -1245,9 +1223,7 @@ export function readNotImplementedExpression(
         NaiveTraceConstant.Parse,
         readNotImplementedExpression.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -1410,7 +1386,7 @@ export async function readListItem(
 
         return rangeExpression;
     } else {
-        ParseStateUtils.deleteContext(state, undefined);
+        ParseStateUtils.deleteContext(state);
 
         trace.exit({
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
@@ -1479,9 +1455,7 @@ export async function readItemAccessExpression(
         NaiveTraceConstant.Parse,
         readItemAccessExpression.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -1597,9 +1571,7 @@ export async function readFunctionExpression(
         NaiveTraceConstant.Parse,
         readFunctionExpression.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -1674,9 +1646,7 @@ async function readAsNullablePrimitiveType(
         NaiveTraceConstant.Parse,
         readAsNullablePrimitiveType.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -2065,9 +2035,7 @@ export async function readFieldSpecificationList(
         NaiveTraceConstant.Parse,
         readFieldSpecificationList.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -2220,9 +2188,7 @@ async function readFieldTypeSpecification(
         NaiveTraceConstant.Parse,
         readFieldTypeSpecification.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -2255,7 +2221,7 @@ async function readFieldTypeSpecification(
         return fieldTypeSpecification;
     } else {
         ParseStateUtils.incrementAttributeCounter(state);
-        ParseStateUtils.deleteContext(state, undefined);
+        ParseStateUtils.deleteContext(state);
 
         trace.exit({
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
@@ -2401,9 +2367,7 @@ export async function readParameterSpecificationList(
         NaiveTraceConstant.Parse,
         readParameterSpecificationList.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -2457,9 +2421,7 @@ export async function readErrorRaisingExpression(
         NaiveTraceConstant.Parse,
         readErrorRaisingExpression.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -2492,9 +2454,7 @@ export async function readErrorHandlingExpression(
         NaiveTraceConstant.Parse,
         readErrorHandlingExpression.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -2649,9 +2609,7 @@ export async function readFieldNamePairedAnyLiterals(
         NaiveTraceConstant.Parse,
         readFieldNamePairedAnyLiterals.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -2904,9 +2862,7 @@ export async function readIdentifierPairedExpressions(
         NaiveTraceConstant.Parse,
         readIdentifierPairedExpression.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -2961,9 +2917,7 @@ export async function readGeneralizedIdentifierPairedExpression(
         NaiveTraceConstant.Parse,
         readGeneralizedIdentifierPairedExpression.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -2991,9 +2945,7 @@ export async function readIdentifierPairedExpression(
         NaiveTraceConstant.Parse,
         readIdentifierPairedExpression.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -3017,6 +2969,71 @@ export async function readIdentifierPairedExpression(
 // ---------- Helper functions (generic read functions) ----------
 // ---------------------------------------------------------------
 
+// We need to be able to parse nested AsExpressions/IsExpressions, such as `1 as number as logical`.
+// If we didn't have to worry about types or keeping our state in order we could use something like:
+//
+// let left = readEqualityExpression();
+// while (currentTokenKind == TokenKind.As)
+// {
+//     const operator Read(TokenKind.As);
+//     const right = ReadNullablePrimitiveType();
+//     left = new BinOp(left, operator, right);
+// }
+// return left;
+//
+// One problem with the pseudo-code above is that we can't know what what we just parsed
+// belongs under another AsExpression/IsExpression until after it's parsed. This means each
+// iteration of the while-loop needs to create a new ParseContext as the parent of
+// the previously parsed node.
+async function readRecursivelyEitherAsExpressionOrIsExpression<
+    Node extends Ast.AsExpression | Ast.IsExpression,
+    OperatorTokenKind extends TokenKind.KeywordAs | TokenKind.KeywordIs,
+>(
+    state: ParseState,
+    nodeKind: Node["kind"],
+    operatorTokenKind: OperatorTokenKind,
+    initialLeftReader: (correlationId: number | undefined) => Promise<Node["left"]>,
+    operatorReader: (
+        operatorTokenKind: OperatorTokenKind,
+        correlationId: number | undefined,
+    ) => Node["operatorConstant"] | undefined,
+    rightReader: (correlationId: number) => Promise<Node["right"]>,
+    correlationId: number | undefined,
+): Promise<Node | Node["left"]> {
+    const trace: Trace = state.traceManager.entry(
+        NaiveTraceConstant.Parse,
+        readRecursivelyEitherAsExpressionOrIsExpression.name,
+        correlationId,
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
+    );
+
+    let left: Node | Node["left"] = await initialLeftReader(trace.id);
+
+    while (state.currentTokenKind === operatorTokenKind) {
+        ParseStateUtils.startContextAsParent(state, nodeKind, left.id, trace.id);
+
+        const operatorConstant: Node["operatorConstant"] = Assert.asDefined(
+            operatorReader(operatorTokenKind, trace.id),
+        );
+
+        // eslint-disable-next-line no-await-in-loop
+        const right: Node["right"] = await rightReader(trace.id);
+
+        left = {
+            ...ParseStateUtils.assertGetContextNodeMetadata(state),
+            kind: nodeKind,
+            isLeaf: false,
+            left,
+            operatorConstant,
+            right,
+        } as Node;
+    }
+
+    trace.exit();
+
+    return left;
+}
+
 // Given the string `1 + 2 + 3` the function will parse the `1 +`,
 // then pass the remainder of the string `2 + 3` into recursiveReadBinOpExpressionHelper.
 // The helper function is nearly a copy except it replaces Left and leftReader with Right and rightReader.
@@ -3039,9 +3056,7 @@ async function recursiveReadBinOpExpression<
         NaiveTraceConstant.Parse,
         recursiveReadBinOpExpression.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     ParseStateUtils.startContext(state, nodeKind);
@@ -3056,7 +3071,7 @@ async function recursiveReadBinOpExpression<
             [NaiveTraceConstant.IsOperatorPresent]: false,
         });
 
-        ParseStateUtils.deleteContext(state, undefined);
+        ParseStateUtils.deleteContext(state);
 
         return left;
     }
@@ -3111,9 +3126,7 @@ async function recursiveReadBinOpExpressionHelper<
         NaiveTraceConstant.Parse,
         recursiveReadBinOpExpressionHelper.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     ParseStateUtils.startContext(state, nodeKind);
@@ -3122,7 +3135,7 @@ async function recursiveReadBinOpExpressionHelper<
     const operator: OperatorKind | undefined = operatorFrom(state.currentTokenKind);
 
     if (operator === undefined) {
-        ParseStateUtils.deleteContext(state, undefined);
+        ParseStateUtils.deleteContext(state);
 
         trace.exit({
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
@@ -3325,9 +3338,7 @@ async function readPairedConstantOrUndefined<
         NaiveTraceConstant.Parse,
         readPairedConstantOrUndefined.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     let pairedConstant: Ast.IPairedConstant<Kind, ConstantKind, Paired> | undefined;
@@ -3365,9 +3376,7 @@ async function genericReadParameterList<T extends Ast.TParameterType>(
         NaiveTraceConstant.Parse,
         genericReadParameterList.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     ParseStateUtils.startContext(state, nodeKind);
@@ -3594,9 +3603,7 @@ export function readClosingTokenKindAsConstant<C extends Constant.TConstant>(
         NaiveTraceConstant.Parse,
         readTokenKindAsConstant.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     const error: ParseError.ExpectedClosingTokenKind | undefined = ParseStateUtils.testClosingTokenKind(
@@ -3635,9 +3642,7 @@ export function readTokenKindAsConstant<C extends Constant.TConstant>(
         NaiveTraceConstant.Parse,
         readTokenKindAsConstant.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -3667,9 +3672,7 @@ function readTokenKindAsConstantInternal<C extends Constant.TConstant>(
         NaiveTraceConstant.Parse,
         readTokenKindAsConstant.name,
         correlationId,
-        {
-            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        },
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
     const error: ParseError.ExpectedTokenKindError | undefined = ParseStateUtils.testIsOnTokenKind(state, tokenKind);
