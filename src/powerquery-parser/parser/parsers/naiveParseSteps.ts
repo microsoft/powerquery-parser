@@ -4,7 +4,7 @@
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, TextUtils, Token } from "../../language";
 import { Disambiguation, DisambiguationUtils } from "../disambiguation";
-import { ParseContext, ParseContextUtils, ParseError } from "..";
+import { NaiveParseSteps, ParseContext, ParseContextUtils, ParseError } from "..";
 import { Parser, ParseStateCheckpoint } from "../parser";
 import { ParseState, ParseStateUtils } from "../parseState";
 import { Trace, TraceConstant } from "../../common/trace";
@@ -563,17 +563,13 @@ export async function readIsExpression(
 
     state.cancellationToken?.throwIfCancelled();
 
-    const isExpression: Ast.TIsExpression = await readRecursivelyEitherAsExpressionOrIsExpression<
-        Ast.IsExpression,
-        TokenKind.KeywordIs
-    >(
+    const isExpression: Ast.TIsExpression = await readRecursivelyEitherAsExpressionOrIsExpression<Ast.IsExpression>(
         state,
+        parser,
         Ast.NodeKind.IsExpression,
+        await parser.readAsExpression(state, parser, correlationId),
         TokenKind.KeywordIs,
-        (correlationId: number | undefined) => parser.readAsExpression(state, parser, correlationId),
-        (tokenKind: TokenKind.KeywordIs, correlationId: number | undefined) =>
-            readTokenKindAsConstant(state, tokenKind, Constant.KeywordConstant.Is, correlationId),
-        (correlationId: number) => parser.readNullablePrimitiveType(state, parser, correlationId),
+        Constant.KeywordConstant.Is,
         trace.id,
     );
 
@@ -631,17 +627,13 @@ export async function readAsExpression(
 
     state.cancellationToken?.throwIfCancelled();
 
-    const asExpression: Ast.TAsExpression = await readRecursivelyEitherAsExpressionOrIsExpression<
-        Ast.AsExpression,
-        TokenKind.KeywordAs
-    >(
+    const asExpression: Ast.TAsExpression = await readRecursivelyEitherAsExpressionOrIsExpression<Ast.AsExpression>(
         state,
+        parser,
         Ast.NodeKind.AsExpression,
+        await parser.readEqualityExpression(state, parser, correlationId),
         TokenKind.KeywordAs,
-        (correlationId: number | undefined) => parser.readEqualityExpression(state, parser, correlationId),
-        (tokenKind: TokenKind.KeywordAs, correlationId: number | undefined) =>
-            readTokenKindAsConstant(state, tokenKind, Constant.KeywordConstant.As, correlationId),
-        (correlationId: number) => parser.readNullablePrimitiveType(state, parser, correlationId),
+        Constant.KeywordConstant.As,
         trace.id,
     );
 
@@ -2969,6 +2961,11 @@ export async function readIdentifierPairedExpression(
 // ---------- Helper functions (generic read functions) ----------
 // ---------------------------------------------------------------
 
+interface AsIsTokenKindMap {
+    [Ast.NodeKind.AsExpression]: TokenKind.KeywordAs;
+    [Ast.NodeKind.IsExpression]: TokenKind.KeywordIs;
+}
+
 // We need to be able to parse nested AsExpressions/IsExpressions, such as `1 as number as logical`.
 // If we didn't have to worry about types or keeping our state in order we could use something like:
 //
@@ -2985,19 +2982,16 @@ export async function readIdentifierPairedExpression(
 // belongs under another AsExpression/IsExpression until after it's parsed. This means each
 // iteration of the while-loop needs to create a new ParseContext as the parent of
 // the previously parsed node.
-async function readRecursivelyEitherAsExpressionOrIsExpression<
+export async function readRecursivelyEitherAsExpressionOrIsExpression<
     Node extends Ast.AsExpression | Ast.IsExpression,
-    OperatorTokenKind extends TokenKind.KeywordAs | TokenKind.KeywordIs,
+    OperatorTokenKind extends AsIsTokenKindMap[Node["kind"]] = AsIsTokenKindMap[Node["kind"]],
 >(
     state: ParseState,
+    parser: Parser,
     nodeKind: Node["kind"],
+    initialLeft: Node["left"],
     operatorTokenKind: OperatorTokenKind,
-    initialLeftReader: (correlationId: number | undefined) => Promise<Node["left"]>,
-    operatorReader: (
-        operatorTokenKind: OperatorTokenKind,
-        correlationId: number | undefined,
-    ) => Node["operatorConstant"] | undefined,
-    rightReader: (correlationId: number) => Promise<Node["right"]>,
+    operatorConstantKind: Node["operatorConstant"]["constantKind"],
     correlationId: number | undefined,
 ): Promise<Node | Node["left"]> {
     const trace: Trace = state.traceManager.entry(
@@ -3007,17 +3001,16 @@ async function readRecursivelyEitherAsExpressionOrIsExpression<
         { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
 
-    let left: Node | Node["left"] = await initialLeftReader(trace.id);
+    let left: Node | Node["left"] = initialLeft;
 
     while (state.currentTokenKind === operatorTokenKind) {
         ParseStateUtils.startContextAsParent(state, nodeKind, left.id, trace.id);
 
-        const operatorConstant: Node["operatorConstant"] = Assert.asDefined(
-            operatorReader(operatorTokenKind, trace.id),
-        );
+        const operatorConstant: Ast.IConstant<Node["operatorConstant"]["constantKind"]> =
+            NaiveParseSteps.readTokenKindAsConstant(state, operatorTokenKind, operatorConstantKind, trace.id);
 
         // eslint-disable-next-line no-await-in-loop
-        const right: Node["right"] = await rightReader(trace.id);
+        const right: Ast.TNullablePrimitiveType = await parser.readNullablePrimitiveType(state, parser, trace.id);
 
         left = {
             ...ParseStateUtils.assertGetContextNodeMetadata(state),

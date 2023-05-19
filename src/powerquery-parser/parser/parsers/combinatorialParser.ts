@@ -229,19 +229,8 @@ async function readBinOpExpression(
     );
 
     while (operators.length) {
-        let minPrecedenceIndex: number = -1;
-        let minPrecedence: number = Number.MAX_SAFE_INTEGER;
-
-        for (let index: number = 0; index < operators.length; index += 1) {
-            const currentPrecedence: number = ConstantUtils.binOpExpressionOperatorPrecedence(operators[index]);
-
-            if (minPrecedence > currentPrecedence) {
-                minPrecedence = currentPrecedence;
-                minPrecedenceIndex = index;
-            }
-        }
-
         const newBinOpExpressionId: number = ParseContextUtils.nextId(state.contextState);
+        const minPrecedenceIndex: number = findMinOperatorPrecedenceIndex(operators);
 
         const left: TypeScriptUtils.StripReadonly<
             Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType
@@ -381,6 +370,25 @@ function binOpExpressionNodeKindFrom(operator: Constant.TBinOpExpressionOperator
         default:
             throw Assert.isNever(operator);
     }
+}
+
+function findMinOperatorPrecedenceIndex(operators: ReadonlyArray<Constant.TBinOpExpressionOperator>): number {
+    const numOperators: number = operators.length;
+    let minPrecedenceIndex: number = -1;
+    let minPrecedence: number = Number.MAX_SAFE_INTEGER;
+
+    for (let index: number = 0; index < numOperators; index += 1) {
+        const currentPrecedence: number = ConstantUtils.binOpExpressionOperatorPrecedence(operators[index]);
+
+        if (minPrecedence > currentPrecedence) {
+            minPrecedence = currentPrecedence;
+            minPrecedenceIndex = index;
+        }
+    }
+
+    Assert.isTrue(minPrecedenceIndex !== -1, `minPrecedenceIndex !== -1`);
+
+    return minPrecedenceIndex;
 }
 
 async function readUnaryExpression(
