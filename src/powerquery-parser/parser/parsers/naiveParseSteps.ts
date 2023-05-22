@@ -2961,7 +2961,7 @@ export async function readIdentifierPairedExpression(
 // ---------- Helper functions (generic read functions) ----------
 // ---------------------------------------------------------------
 
-interface AsIsTokenKindMap {
+interface AsIsOperatorTokenKindMap {
     [Ast.NodeKind.AsExpression]: TokenKind.KeywordAs;
     [Ast.NodeKind.IsExpression]: TokenKind.KeywordIs;
 }
@@ -2979,18 +2979,15 @@ interface AsIsTokenKindMap {
 // return left;
 //
 // One problem with the pseudo-code above is that we can't know what what we just parsed
-// belongs under another AsExpression/IsExpression until after it's parsed. This means each
+// belongs under an AsExpression/IsExpression until after it's parsed. This means each
 // iteration of the while-loop needs to create a new ParseContext as the parent of
 // the previously parsed node.
-export async function readRecursivelyEitherAsExpressionOrIsExpression<
-    Node extends Ast.AsExpression | Ast.IsExpression,
-    OperatorTokenKind extends AsIsTokenKindMap[Node["kind"]] = AsIsTokenKindMap[Node["kind"]],
->(
+export async function readRecursivelyEitherAsExpressionOrIsExpression<Node extends Ast.AsExpression | Ast.IsExpression>(
     state: ParseState,
     parser: Parser,
     nodeKind: Node["kind"],
     initialLeft: Node["left"],
-    operatorTokenKind: OperatorTokenKind,
+    operatorTokenKind: AsIsOperatorTokenKindMap[Node["kind"]],
     operatorConstantKind: Node["operatorConstant"]["constantKind"],
     correlationId: number | undefined,
 ): Promise<Node | Node["left"]> {
