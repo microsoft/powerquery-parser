@@ -12,8 +12,55 @@ export function assertIsLeaf(node: Ast.TNode): asserts node is Ast.TLeaf {
     Assert.isTrue(node.isLeaf, "Assert(node.isLeaf)", { nodeId: node.id, nodeKind: node.kind });
 }
 
+export function assertIsTUnaryExpression(node: Ast.TNode): asserts node is Ast.TUnaryExpression {
+    Assert.isTrue(isTUnaryExpression(node), "assertIsTUnaryExpression failed", {
+        nodeId: node.id,
+        nodeKind: node.kind,
+    });
+}
+
+export function assertIsTNullablePrimitiveType(node: Ast.TNode): asserts node is Ast.TNullablePrimitiveType {
+    Assert.isTrue(isTNullablePrimitiveType(node), "assertIsTNullablePrimitiveType failed", {
+        nodeId: node.id,
+        nodeKind: node.kind,
+    });
+}
+
 export function isLeaf(node: Ast.TNode): node is Ast.TLeaf {
     return node.isLeaf;
+}
+
+export function isTFieldAccessExpression(node: Ast.TNode): node is Ast.TFieldAccessExpression {
+    return node.kind === Ast.NodeKind.FieldSelector || node.kind === Ast.NodeKind.FieldProjection;
+}
+
+export function isTNullablePrimitiveType(node: Ast.TNode): node is Ast.TNullablePrimitiveType {
+    return node.kind === Ast.NodeKind.NullablePrimitiveType || node.kind === Ast.NodeKind.PrimitiveType;
+}
+
+export function isTPrimaryExpression(node: Ast.TNode): node is Ast.TPrimaryExpression {
+    switch (node.kind) {
+        case Ast.NodeKind.LiteralExpression:
+        case Ast.NodeKind.ListExpression:
+        case Ast.NodeKind.RecordExpression:
+        case Ast.NodeKind.IdentifierExpression:
+        case Ast.NodeKind.ParenthesizedExpression:
+        case Ast.NodeKind.InvokeExpression:
+        case Ast.NodeKind.RecursivePrimaryExpression:
+        case Ast.NodeKind.NotImplementedExpression:
+            return true;
+
+        default:
+            return isTFieldAccessExpression(node);
+    }
+}
+
+export function isTTypeExpression(node: Ast.TNode): node is Ast.TTypeExpression {
+    return node.kind === Ast.NodeKind.TypePrimaryType || isTPrimaryExpression(node);
+}
+
+export function isTUnaryExpression(node: Ast.TNode): node is Ast.TUnaryExpression {
+    return node.kind === Ast.NodeKind.UnaryExpression || isTTypeExpression(node);
 }
 
 export function literalKindFrom(

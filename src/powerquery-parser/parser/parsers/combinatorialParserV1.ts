@@ -150,8 +150,8 @@ export const CombinatorialParser: Parser = {
     readGeneralizedIdentifierPairedExpression: NaiveParseSteps.readGeneralizedIdentifierPairedExpression,
 };
 
-const enum CombinatorialTraceConstant {
-    CombinatorialParse = "CombinatorialParse",
+const enum CombinatorialParserV1TraceConstant {
+    CombinatorialParseV1 = "CombinatorialParseV1",
 }
 
 async function readBinOpExpression(
@@ -161,7 +161,7 @@ async function readBinOpExpression(
     correlationId: number | undefined,
 ): Promise<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType> {
     const trace: Trace = state.traceManager.entry(
-        CombinatorialTraceConstant.CombinatorialParse,
+        CombinatorialParserV1TraceConstant.CombinatorialParseV1,
         readBinOpExpression.name,
         correlationId,
     );
@@ -397,7 +397,7 @@ async function readUnaryExpression(
     correlationId: number | undefined,
 ): Promise<Ast.TUnaryExpression> {
     const trace: Trace = state.traceManager.entry(
-        CombinatorialTraceConstant.CombinatorialParse,
+        CombinatorialParserV1TraceConstant.CombinatorialParseV1,
         readUnaryExpression.name,
         correlationId,
     );

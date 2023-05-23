@@ -4,5 +4,5 @@
 import * as NaiveParseSteps from "./naiveParseSteps";
 
 export { NaiveParseSteps };
-export { CombinatorialParser } from "./combinatorialParser";
+export { CombinatorialParser } from "./combinatorialParserV1";
 export { RecursiveDescentParser } from "./recursiveDescentParser";
