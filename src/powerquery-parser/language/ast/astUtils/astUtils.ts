@@ -26,12 +26,36 @@ export function assertIsTNullablePrimitiveType(node: Ast.TNode): asserts node is
     });
 }
 
+export function isTArithmeticExpression(node: Ast.TNode): node is Ast.TArithmeticExpression {
+    return node.kind === Ast.NodeKind.ArithmeticExpression || isTMetadataExpression(node);
+}
+
+export function isTAsExpression(node: Ast.TNode): node is Ast.TAsExpression {
+    return node.kind === Ast.NodeKind.AsExpression || isTEqualityExpression(node);
+}
+
+export function isTEqualityExpression(node: Ast.TNode): node is Ast.TEqualityExpression {
+    return node.kind === Ast.NodeKind.EqualityExpression || isTRelationalExpression(node);
+}
+
+export function isTIsExpression(node: Ast.TNode): node is Ast.TIsExpression {
+    return node.kind === Ast.NodeKind.IsExpression || isTAsExpression(node);
+}
+
 export function isLeaf(node: Ast.TNode): node is Ast.TLeaf {
     return node.isLeaf;
 }
 
+export function isTLogicalOrExpression(node: Ast.TNode): node is Ast.TLogicalExpression {
+    return node.kind === Ast.NodeKind.LogicalExpression || isTIsExpression(node);
+}
+
 export function isTFieldAccessExpression(node: Ast.TNode): node is Ast.TFieldAccessExpression {
     return node.kind === Ast.NodeKind.FieldSelector || node.kind === Ast.NodeKind.FieldProjection;
+}
+
+export function isTMetadataExpression(node: Ast.TNode): node is Ast.TMetadataExpression {
+    return node.kind === Ast.NodeKind.MetadataExpression || isTUnaryExpression(node);
 }
 
 export function isTNullablePrimitiveType(node: Ast.TNode): node is Ast.TNullablePrimitiveType {
@@ -53,6 +77,10 @@ export function isTPrimaryExpression(node: Ast.TNode): node is Ast.TPrimaryExpre
         default:
             return isTFieldAccessExpression(node);
     }
+}
+
+export function isTRelationalExpression(node: Ast.TNode): node is Ast.TEqualityExpression {
+    return node.kind === Ast.NodeKind.EqualityExpression || isTArithmeticExpression(node);
 }
 
 export function isTTypeExpression(node: Ast.TNode): node is Ast.TTypeExpression {
