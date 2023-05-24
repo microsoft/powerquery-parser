@@ -19,10 +19,14 @@ export function combineOperatorsAndOperands(
     operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>,
     correlationId: number,
 ): Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType {
-    Assert.isTrue(operatorConstants.length === operands.length + 1, `operators.length !== operands.length + 1`, {
-        operandsLength: operands.length,
-        operatorsLength: operatorConstants.length,
-    });
+    Assert.isTrue(
+        operatorConstants.length === operands.length + 1,
+        `operators.length !== (operands.length + 1) failed`,
+        {
+            operandsLength: operands.length,
+            operatorsLength: operatorConstants.length,
+        },
+    );
 
     const trace: Trace = state.traceManager.entry(
         CombinatorialParserV2TraceConstant.CombinatorialParseV2,
@@ -31,11 +35,11 @@ export function combineOperatorsAndOperands(
     );
 
     while (operatorConstants.length) {
-        const index: number = findMinOperatorPrecedenceIndex(operatorConstants);
-        const minOperator: Ast.TBinOpExpressionConstant = ArrayUtils.assertGet(operatorConstants, index);
-        const minOperatorConstantKind: Constant.TBinOpExpressionOperator = minOperator.constantKind;
+        const index: number = findHighestPrecedenceIndex(operatorConstants);
+        const operator: Ast.TBinOpExpressionConstant = ArrayUtils.assertGet(operatorConstants, index);
+        const operatorConstantKind: Constant.TBinOpExpressionOperator = operator.constantKind;
 
-        switch (minOperatorConstantKind) {
+        switch (operatorConstantKind) {
             case Constant.ArithmeticOperator.Division:
             case Constant.ArithmeticOperator.Multiplication:
             case Constant.ArithmeticOperator.Addition:
@@ -187,11 +191,11 @@ export function combineOperatorsAndOperands(
                 break;
 
             default:
-                Assert.isNever(minOperatorConstantKind);
+                Assert.isNever(operatorConstantKind);
         }
     }
 
-    Assert.isTrue(operands.length === 1, `operands.length === 1`, {
+    Assert.isTrue(operands.length === 1, `operands.length === 1 failed`, {
         operandsLength: operands.length,
         operatorsLength: operatorConstants.length,
     });
@@ -205,7 +209,7 @@ export function combineOperatorsAndOperands(
 
     Assert.isTrue(
         AstUtils.isTBinOpExpression(result) || AstUtils.isTUnaryExpression(result),
-        `AstUtils.isTBinOpExpression(result) || AstUtils.isTUnaryExpression(result)`,
+        `AstUtils.isTBinOpExpression(result) || AstUtils.isTUnaryExpression(result) failed`,
         { resultNodeKind: result.kind },
     );
 
@@ -252,7 +256,7 @@ function combineEqualityExpressionAndBelow(
         operands,
         operatorConstants,
         Ast.NodeKind.EqualityExpression,
-        findMinOperatorPrecedenceIndex,
+        findHighestPrecedenceIndex,
         (
             remainingOperatorConstant: Ast.TBinOpExpressionConstant,
         ): remainingOperatorConstant is Ast.IConstant<
@@ -647,7 +651,7 @@ function combineWhile<
     };
 }
 
-function findMinOperatorPrecedenceIndex(operators: ReadonlyArray<Ast.TBinOpExpressionConstant>): number {
+function findHighestPrecedenceIndex(operators: ReadonlyArray<Ast.TBinOpExpressionConstant>): number {
     const numOperators: number = operators.length;
     let minPrecedenceIndex: number = -1;
     let minPrecedence: number = Number.MAX_SAFE_INTEGER;
@@ -663,7 +667,7 @@ function findMinOperatorPrecedenceIndex(operators: ReadonlyArray<Ast.TBinOpExpre
         }
     }
 
-    Assert.isTrue(minPrecedenceIndex !== -1, `minPrecedenceIndex !== -1`);
+    Assert.isTrue(minPrecedenceIndex !== -1, `minPrecedenceIndex !== -1 failed`);
 
     return minPrecedenceIndex;
 }
