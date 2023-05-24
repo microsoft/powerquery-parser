@@ -9,7 +9,6 @@ import { Parser, ParserUtils } from "../parser";
 import { ParseState, ParseStateUtils } from "../parseState";
 import { NaiveParseSteps } from ".";
 import { Trace } from "../../common/trace";
-import { TokenKind } from "../../language/token";
 
 // If the Naive parser were to parse the expression '1' it would need to recurse down a dozen or so constructs,
 // which at each step would create a new context node, parse LiteralExpression, then traverse back up while
@@ -175,12 +174,12 @@ type NextDuoReadNullablePrimitiveType = {
 } & (
     | {
           readonly nodeKind: Ast.NodeKind.AsExpression;
-          readonly operatorTokenKind: TokenKind.KeywordAs;
+          readonly operatorTokenKind: Token.TokenKind.KeywordAs;
           readonly operatorConstantKind: Constant.KeywordConstant.As;
       }
     | {
           readonly nodeKind: Ast.NodeKind.IsExpression;
-          readonly operatorTokenKind: TokenKind.KeywordIs;
+          readonly operatorTokenKind: Token.TokenKind.KeywordIs;
           readonly operatorConstantKind: Constant.KeywordConstant.Is;
       }
 );
@@ -190,77 +189,77 @@ type NextDuoReadUnaryExpression = {
 } & (
     | {
           readonly nodeKind: Ast.NodeKind.ArithmeticExpression;
-          readonly operatorTokenKind: TokenKind.Asterisk;
+          readonly operatorTokenKind: Token.TokenKind.Asterisk;
           readonly operatorConstantKind: Constant.ArithmeticOperator.Multiplication;
       }
     | {
           readonly nodeKind: Ast.NodeKind.ArithmeticExpression;
-          readonly operatorTokenKind: TokenKind.Division;
+          readonly operatorTokenKind: Token.TokenKind.Division;
           readonly operatorConstantKind: Constant.ArithmeticOperator.Division;
       }
     | {
           readonly nodeKind: Ast.NodeKind.ArithmeticExpression;
-          readonly operatorTokenKind: TokenKind.Plus;
+          readonly operatorTokenKind: Token.TokenKind.Plus;
           readonly operatorConstantKind: Constant.ArithmeticOperator.Addition;
       }
     | {
           readonly nodeKind: Ast.NodeKind.ArithmeticExpression;
-          readonly operatorTokenKind: TokenKind.Minus;
+          readonly operatorTokenKind: Token.TokenKind.Minus;
           readonly operatorConstantKind: Constant.ArithmeticOperator.Subtraction;
       }
     | {
           readonly nodeKind: Ast.NodeKind.ArithmeticExpression;
-          readonly operatorTokenKind: TokenKind.Ampersand;
+          readonly operatorTokenKind: Token.TokenKind.Ampersand;
           readonly operatorConstantKind: Constant.ArithmeticOperator.And;
       }
     | {
           readonly nodeKind: Ast.NodeKind.EqualityExpression;
-          readonly operatorTokenKind: TokenKind.Equal;
+          readonly operatorTokenKind: Token.TokenKind.Equal;
           readonly operatorConstantKind: Constant.EqualityOperator.EqualTo;
       }
     | {
           readonly nodeKind: Ast.NodeKind.EqualityExpression;
-          readonly operatorTokenKind: TokenKind.NotEqual;
+          readonly operatorTokenKind: Token.TokenKind.NotEqual;
           readonly operatorConstantKind: Constant.EqualityOperator.NotEqualTo;
       }
     | {
           readonly nodeKind: Ast.NodeKind.LogicalExpression;
-          readonly operatorTokenKind: TokenKind.KeywordAnd;
+          readonly operatorTokenKind: Token.TokenKind.KeywordAnd;
           readonly operatorConstantKind: Constant.LogicalOperator.And;
       }
     | {
           readonly nodeKind: Ast.NodeKind.LogicalExpression;
-          readonly operatorTokenKind: TokenKind.KeywordOr;
+          readonly operatorTokenKind: Token.TokenKind.KeywordOr;
           readonly operatorConstantKind: Constant.LogicalOperator.Or;
       }
     | {
           readonly nodeKind: Ast.NodeKind.RelationalExpression;
-          readonly operatorTokenKind: TokenKind.LessThan;
+          readonly operatorTokenKind: Token.TokenKind.LessThan;
           readonly operatorConstantKind: Constant.RelationalOperator.LessThan;
       }
     | {
           readonly nodeKind: Ast.NodeKind.RelationalExpression;
-          readonly operatorTokenKind: TokenKind.LessThanEqualTo;
+          readonly operatorTokenKind: Token.TokenKind.LessThanEqualTo;
           readonly operatorConstantKind: Constant.RelationalOperator.LessThanEqualTo;
       }
     | {
           readonly nodeKind: Ast.NodeKind.RelationalExpression;
-          readonly operatorTokenKind: TokenKind.GreaterThan;
+          readonly operatorTokenKind: Token.TokenKind.GreaterThan;
           readonly operatorConstantKind: Constant.RelationalOperator.GreaterThan;
       }
     | {
           readonly nodeKind: Ast.NodeKind.RelationalExpression;
-          readonly operatorTokenKind: TokenKind.GreaterThanEqualTo;
+          readonly operatorTokenKind: Token.TokenKind.GreaterThanEqualTo;
           readonly operatorConstantKind: Constant.RelationalOperator.GreaterThanEqualTo;
       }
     | {
           readonly nodeKind: Ast.NodeKind.MetadataExpression;
-          readonly operatorTokenKind: TokenKind.KeywordMeta;
+          readonly operatorTokenKind: Token.TokenKind.KeywordMeta;
           readonly operatorConstantKind: Constant.KeywordConstant.Meta;
       }
 );
 
-const EqualityExpressionAndBelowOperatorConstantKinds = new Set<string>([
+const EqualityExpressionAndBelowOperatorConstantKinds: Set<string> = new Set<string>([
     ...Constant.ArithmeticOperators,
     ...Constant.EqualityOperators,
     ...Constant.RelationalOperators,
@@ -271,155 +270,155 @@ const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TNextDuoR
     TNextDuoRead
 >([
     [
-        TokenKind.Asterisk,
+        Token.TokenKind.Asterisk,
         {
             duoReadKind: DuoReadKind.UnaryExpression,
             nodeKind: Ast.NodeKind.ArithmeticExpression,
-            operatorTokenKind: TokenKind.Asterisk,
+            operatorTokenKind: Token.TokenKind.Asterisk,
             operatorConstantKind: Constant.ArithmeticOperator.Multiplication,
         },
     ],
     [
-        TokenKind.Division,
+        Token.TokenKind.Division,
         {
             duoReadKind: DuoReadKind.UnaryExpression,
             nodeKind: Ast.NodeKind.ArithmeticExpression,
-            operatorTokenKind: TokenKind.Division,
+            operatorTokenKind: Token.TokenKind.Division,
             operatorConstantKind: Constant.ArithmeticOperator.Division,
         },
     ],
     [
-        TokenKind.Plus,
+        Token.TokenKind.Plus,
         {
             duoReadKind: DuoReadKind.UnaryExpression,
             nodeKind: Ast.NodeKind.ArithmeticExpression,
-            operatorTokenKind: TokenKind.Plus,
+            operatorTokenKind: Token.TokenKind.Plus,
             operatorConstantKind: Constant.ArithmeticOperator.Addition,
         },
     ],
     [
-        TokenKind.Minus,
+        Token.TokenKind.Minus,
         {
             duoReadKind: DuoReadKind.UnaryExpression,
             nodeKind: Ast.NodeKind.ArithmeticExpression,
-            operatorTokenKind: TokenKind.Minus,
+            operatorTokenKind: Token.TokenKind.Minus,
             operatorConstantKind: Constant.ArithmeticOperator.Subtraction,
         },
     ],
     [
-        TokenKind.Ampersand,
+        Token.TokenKind.Ampersand,
         {
             duoReadKind: DuoReadKind.UnaryExpression,
             nodeKind: Ast.NodeKind.ArithmeticExpression,
-            operatorTokenKind: TokenKind.Ampersand,
+            operatorTokenKind: Token.TokenKind.Ampersand,
             operatorConstantKind: Constant.ArithmeticOperator.And,
         },
     ],
     [
-        TokenKind.Equal,
+        Token.TokenKind.Equal,
         {
             duoReadKind: DuoReadKind.UnaryExpression,
             nodeKind: Ast.NodeKind.EqualityExpression,
-            operatorTokenKind: TokenKind.Equal,
+            operatorTokenKind: Token.TokenKind.Equal,
             operatorConstantKind: Constant.EqualityOperator.EqualTo,
         },
     ],
     [
-        TokenKind.NotEqual,
+        Token.TokenKind.NotEqual,
         {
             duoReadKind: DuoReadKind.UnaryExpression,
             nodeKind: Ast.NodeKind.EqualityExpression,
-            operatorTokenKind: TokenKind.NotEqual,
+            operatorTokenKind: Token.TokenKind.NotEqual,
             operatorConstantKind: Constant.EqualityOperator.NotEqualTo,
         },
     ],
     [
-        TokenKind.KeywordAnd,
+        Token.TokenKind.KeywordAnd,
         {
             duoReadKind: DuoReadKind.UnaryExpression,
             nodeKind: Ast.NodeKind.LogicalExpression,
-            operatorTokenKind: TokenKind.KeywordAnd,
+            operatorTokenKind: Token.TokenKind.KeywordAnd,
             operatorConstantKind: Constant.LogicalOperator.And,
         },
     ],
     [
-        TokenKind.KeywordOr,
+        Token.TokenKind.KeywordOr,
         {
             duoReadKind: DuoReadKind.UnaryExpression,
             nodeKind: Ast.NodeKind.LogicalExpression,
-            operatorTokenKind: TokenKind.KeywordOr,
+            operatorTokenKind: Token.TokenKind.KeywordOr,
             operatorConstantKind: Constant.LogicalOperator.Or,
         },
     ],
     [
-        TokenKind.LessThan,
+        Token.TokenKind.LessThan,
         {
             duoReadKind: DuoReadKind.UnaryExpression,
             nodeKind: Ast.NodeKind.RelationalExpression,
-            operatorTokenKind: TokenKind.LessThan,
+            operatorTokenKind: Token.TokenKind.LessThan,
             operatorConstantKind: Constant.RelationalOperator.LessThan,
         },
     ],
     [
-        TokenKind.LessThanEqualTo,
+        Token.TokenKind.LessThanEqualTo,
         {
             duoReadKind: DuoReadKind.UnaryExpression,
             nodeKind: Ast.NodeKind.RelationalExpression,
-            operatorTokenKind: TokenKind.LessThanEqualTo,
+            operatorTokenKind: Token.TokenKind.LessThanEqualTo,
             operatorConstantKind: Constant.RelationalOperator.LessThanEqualTo,
         },
     ],
     [
-        TokenKind.GreaterThan,
+        Token.TokenKind.GreaterThan,
         {
             duoReadKind: DuoReadKind.UnaryExpression,
             nodeKind: Ast.NodeKind.RelationalExpression,
-            operatorTokenKind: TokenKind.GreaterThan,
+            operatorTokenKind: Token.TokenKind.GreaterThan,
             operatorConstantKind: Constant.RelationalOperator.GreaterThan,
         },
     ],
     [
-        TokenKind.GreaterThanEqualTo,
+        Token.TokenKind.GreaterThanEqualTo,
         {
             duoReadKind: DuoReadKind.UnaryExpression,
             nodeKind: Ast.NodeKind.RelationalExpression,
-            operatorTokenKind: TokenKind.GreaterThanEqualTo,
+            operatorTokenKind: Token.TokenKind.GreaterThanEqualTo,
             operatorConstantKind: Constant.RelationalOperator.GreaterThanEqualTo,
         },
     ],
     [
-        TokenKind.KeywordAs,
+        Token.TokenKind.KeywordAs,
         {
             duoReadKind: DuoReadKind.NullablePrimitiveType,
             nodeKind: Ast.NodeKind.AsExpression,
-            operatorTokenKind: TokenKind.KeywordAs,
+            operatorTokenKind: Token.TokenKind.KeywordAs,
             operatorConstantKind: Constant.KeywordConstant.As,
         },
     ],
     [
-        TokenKind.KeywordIs,
+        Token.TokenKind.KeywordIs,
         {
             duoReadKind: DuoReadKind.NullablePrimitiveType,
             nodeKind: Ast.NodeKind.IsExpression,
-            operatorTokenKind: TokenKind.KeywordIs,
+            operatorTokenKind: Token.TokenKind.KeywordIs,
             operatorConstantKind: Constant.KeywordConstant.Is,
         },
     ],
     [
-        TokenKind.KeywordMeta,
+        Token.TokenKind.KeywordMeta,
         {
             duoReadKind: DuoReadKind.UnaryExpression,
             nodeKind: Ast.NodeKind.MetadataExpression,
-            operatorTokenKind: TokenKind.KeywordMeta,
+            operatorTokenKind: Token.TokenKind.KeywordMeta,
             operatorConstantKind: Constant.KeywordConstant.Meta,
         },
     ],
     [
-        TokenKind.NullCoalescingOperator,
+        Token.TokenKind.NullCoalescingOperator,
         {
             duoReadKind: DuoReadKind.LogicalExpression,
             nodeKind: Ast.NodeKind.NullCoalescingExpression,
-            operatorTokenKind: TokenKind.NullCoalescingOperator,
+            operatorTokenKind: Token.TokenKind.NullCoalescingOperator,
             operatorConstantKind: Constant.MiscConstant.NullCoalescingOperator,
         },
     ],
@@ -448,6 +447,7 @@ function addNodeKindToCollection(
     nodeId: number,
 ): void {
     const collection: Set<number> | undefined = idsByNodeKind.get(nodeKind);
+
     if (collection) {
         collection.add(nodeId);
     } else {
@@ -498,7 +498,7 @@ function combineAsExpression(
         operands,
         operatorConstants,
         Ast.NodeKind.AsExpression,
-        _ => index,
+        (_: ReadonlyArray<Ast.TBinOpExpressionConstant>) => index,
         (
             operatorConstant: Ast.TBinOpExpressionConstant,
         ): operatorConstant is Ast.IConstant<Constant.KeywordConstant.As> =>
@@ -526,7 +526,7 @@ function combineIsExpression(
         operands,
         operatorConstants,
         Ast.NodeKind.IsExpression,
-        _ => index,
+        (_: ReadonlyArray<Ast.TBinOpExpressionConstant>) => index,
         (
             operatorConstant: Ast.TBinOpExpressionConstant,
         ): operatorConstant is Ast.IConstant<Constant.KeywordConstant.Is> =>
@@ -554,7 +554,7 @@ function combineLogicalAndExpression(
         operands,
         operatorConstants,
         Ast.NodeKind.LogicalExpression,
-        _ => index,
+        (_: ReadonlyArray<Ast.TBinOpExpressionConstant>) => index,
         (
             operatorConstant: Ast.TBinOpExpressionConstant,
         ): operatorConstant is Ast.IConstant<Constant.LogicalOperator.And> =>
@@ -582,7 +582,7 @@ function combineLogicalOrExpression(
         operands,
         operatorConstants,
         Ast.NodeKind.LogicalExpression,
-        _ => index,
+        (_: ReadonlyArray<Ast.TBinOpExpressionConstant>) => index,
         (
             operatorConstant: Ast.TBinOpExpressionConstant,
         ): operatorConstant is Ast.IConstant<Constant.LogicalOperator.Or> =>
@@ -610,7 +610,7 @@ function combineMetadataExpression(
         operands,
         operatorConstants,
         Ast.NodeKind.MetadataExpression,
-        _ => index,
+        (_: ReadonlyArray<Ast.TBinOpExpressionConstant>) => index,
         (
             operatorConstant: Ast.TBinOpExpressionConstant,
         ): operatorConstant is Ast.IConstant<Constant.KeywordConstant.Meta> =>
@@ -638,7 +638,7 @@ function combineNullCoalescingExpression(
         operands,
         operatorConstants,
         Ast.NodeKind.NullCoalescingExpression,
-        _ => index,
+        (_: ReadonlyArray<Ast.TBinOpExpressionConstant>) => index,
         (
             operatorConstant: Ast.TBinOpExpressionConstant,
         ): operatorConstant is Ast.IConstant<Constant.MiscConstant.NullCoalescingOperator> =>
@@ -652,7 +652,7 @@ function combineNullCoalescingExpression(
 }
 
 // I know this a behemoth of a function, but I can't think of a better way to do this.
-// In short, it takes a collection of N operators and N+1 operands and merges as many as it can into new Ast nodes of type Node.
+// It takes a collection of N operators and N+1 operands and merges as many as it can into new Ast nodes of type Node.
 //
 // Different Nodes have different rules as to what can be merged. For example:
 // - The LogicalOperator.Or operator combines TIsExpression | (LogicalExpression with LogicalOperator.And operator),
@@ -725,6 +725,7 @@ function combineWhile<
         ArrayUtils.assertGet(state.lexerSnapshot.tokens, left.tokenRange.tokenIndexStart),
         undefined,
     );
+
     let binOpParseContextNodeId: number = binOpParseContext.id;
 
     placeParseContextUnderPlaceholderContext(state, binOpParseContext, placeholderContextNodeId);
@@ -819,6 +820,7 @@ function combineWhile<
             binOpParseContext.tokenStart,
             undefined,
         );
+
         const newBinOpParseContextNodeId: number = newBinOpParseContext.id;
         placeParseContextUnderPlaceholderContext(state, newBinOpParseContext, placeholderContextNodeId);
 
@@ -898,8 +900,9 @@ function combineOperatorsAndOperands(
             case Constant.RelationalOperator.GreaterThanEqualTo:
             case Constant.RelationalOperator.LessThan:
             case Constant.RelationalOperator.LessThanEqualTo:
+                // eslint-disable-next-line no-lone-blocks
                 {
-                    const readAttempt = combineEqualityExpressionAndBelow(
+                    const readAttempt: ReadAttempt = combineEqualityExpressionAndBelow(
                         state,
                         parser,
                         placeholderContextNodeId,
@@ -919,11 +922,13 @@ function combineOperatorsAndOperands(
                         operandsLength: operands.length,
                     });
                 }
+
                 break;
 
             case Constant.LogicalOperator.And:
+                // eslint-disable-next-line no-lone-blocks
                 {
-                    const readAttempt = combineLogicalAndExpression(
+                    const readAttempt: ReadAttempt = combineLogicalAndExpression(
                         state,
                         parser,
                         placeholderContextNodeId,
@@ -932,14 +937,17 @@ function combineOperatorsAndOperands(
                         index,
                         trace.id,
                     );
+
                     operatorConstants = readAttempt.operatorConstants;
                     operands = readAttempt.operands;
                 }
+
                 break;
 
             case Constant.LogicalOperator.Or:
+                // eslint-disable-next-line no-lone-blocks
                 {
-                    const readAttempt = combineLogicalOrExpression(
+                    const readAttempt: ReadAttempt = combineLogicalOrExpression(
                         state,
                         parser,
                         placeholderContextNodeId,
@@ -948,14 +956,17 @@ function combineOperatorsAndOperands(
                         index,
                         trace.id,
                     );
+
                     operatorConstants = readAttempt.operatorConstants;
                     operands = readAttempt.operands;
                 }
+
                 break;
 
             case Constant.KeywordConstant.As:
+                // eslint-disable-next-line no-lone-blocks
                 {
-                    const readAttempt = combineAsExpression(
+                    const readAttempt: ReadAttempt = combineAsExpression(
                         state,
                         parser,
                         placeholderContextNodeId,
@@ -964,14 +975,17 @@ function combineOperatorsAndOperands(
                         index,
                         trace.id,
                     );
+
                     operatorConstants = readAttempt.operatorConstants;
                     operands = readAttempt.operands;
                 }
+
                 break;
 
             case Constant.KeywordConstant.Is:
+                // eslint-disable-next-line no-lone-blocks
                 {
-                    const readAttempt = combineIsExpression(
+                    const readAttempt: ReadAttempt = combineIsExpression(
                         state,
                         parser,
                         placeholderContextNodeId,
@@ -980,14 +994,17 @@ function combineOperatorsAndOperands(
                         index,
                         trace.id,
                     );
+
                     operatorConstants = readAttempt.operatorConstants;
                     operands = readAttempt.operands;
                 }
+
                 break;
 
             case Constant.KeywordConstant.Meta:
+                // eslint-disable-next-line no-lone-blocks
                 {
-                    const readAttempt = combineMetadataExpression(
+                    const readAttempt: ReadAttempt = combineMetadataExpression(
                         state,
                         parser,
                         placeholderContextNodeId,
@@ -996,14 +1013,17 @@ function combineOperatorsAndOperands(
                         index,
                         trace.id,
                     );
+
                     operatorConstants = readAttempt.operatorConstants;
                     operands = readAttempt.operands;
                 }
+
                 break;
 
             case Constant.MiscConstant.NullCoalescingOperator:
+                // eslint-disable-next-line no-lone-blocks
                 {
-                    const readAttempt = combineNullCoalescingExpression(
+                    const readAttempt: ReadAttempt = combineNullCoalescingExpression(
                         state,
                         parser,
                         placeholderContextNodeId,
@@ -1012,9 +1032,11 @@ function combineOperatorsAndOperands(
                         index,
                         trace.id,
                     );
+
                     operatorConstants = readAttempt.operatorConstants;
                     operands = readAttempt.operands;
                 }
+
                 break;
 
             default:
