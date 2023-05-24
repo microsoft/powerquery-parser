@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, Assert, CommonError, MapUtils, SetUtils } from "../../../common";
+import { ArrayUtils, Assert, CommonError, MapUtils } from "../../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../../language";
 import { CombinatorialParserV2TraceConstant, ReadAttempt } from "./commonTypes";
 import { NodeIdMap, ParseContext, ParseContextUtils } from "../..";
@@ -9,6 +9,7 @@ import { EqualityExpressionAndBelowOperatorConstantKinds } from "./caches";
 import { NaiveParseSteps } from "..";
 import { Parser } from "../../parser";
 import { ParseState } from "../../parseState";
+import { removeIdFromIdsByNodeKind } from "./utils";
 import { Trace } from "../../../common/trace";
 
 export function combineOperatorsAndOperands(
@@ -20,7 +21,7 @@ export function combineOperatorsAndOperands(
     correlationId: number,
 ): Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType {
     Assert.isTrue(
-        operatorConstants.length === operands.length + 1,
+        operatorConstants.length + 1 === operands.length,
         `operators.length !== (operands.length + 1) failed`,
         {
             operandsLength: operands.length,
@@ -69,7 +70,7 @@ export function combineOperatorsAndOperands(
                         operatorConstantsLength: operatorConstants.length,
                     });
 
-                    Assert.isTrue(operands.length === 0, `operands.length === 0 failed`, {
+                    Assert.isTrue(operands.length === 1, `operands.length === 1 failed`, {
                         operandsLength: operands.length,
                     });
                 }
@@ -526,7 +527,7 @@ function combineWhile<
 
     addAstAsChild(nodeIdMapCollection, binOpParseContext, left);
     setParseStateToAfterNodeEnd(state, left);
-    let operatorConstant: Ast.TBinOpExpressionConstant = ArrayUtils.assertGet(operatorConstants, index);
+    let operatorConstant: Ast.TBinOpExpressionConstant | undefined = ArrayUtils.assertGet(operatorConstants, index);
 
     // This should never happen so long as the input parameters are valid.
     if (!operatorConstantValidator(operatorConstant)) {
@@ -534,7 +535,7 @@ function combineWhile<
     }
 
     // Continually combine `left <-> operator <-> right` until we encounter an operator we can't handle.
-    while (operatorConstantValidator(operatorConstant)) {
+    while (operatorConstant && operatorConstantValidator(operatorConstant)) {
         // It's assumed that the following state has been set:
         //  - astNodes: left
         //  - contextNodes: placeholderContextNode, binOpParseContextNode
@@ -614,7 +615,7 @@ function combineWhile<
         // Link the new `left` value to being under the new ParseContext
         nodeIdMapCollection.parentIdById.set(newLeft.id, newBinOpParseContextNodeId);
         nodeIdMapCollection.childIdsById.set(newBinOpParseContextNodeId, [newLeft.id]);
-        removeNodeKindFromCollection(state, binOpNodeKind, binOpParseContextNodeId);
+        removeIdFromIdsByNodeKind(nodeIdMapCollection.idsByNodeKind, binOpNodeKind, binOpParseContextNodeId);
 
         // It's assumed that the following state has been set:
         //  - astNodes: newLeft, left, operatorConstant, right
@@ -640,7 +641,7 @@ function combineWhile<
         binOpParseContextNodeId = newBinOpParseContextNodeId;
 
         index = nextOperatorIndex(operatorConstants);
-        operatorConstant = ArrayUtils.assertGet(operatorConstants, index);
+        operatorConstant = operatorConstants[index];
     }
 
     trace.exit();
@@ -652,6 +653,10 @@ function combineWhile<
 }
 
 function findHighestPrecedenceIndex(operators: ReadonlyArray<Ast.TBinOpExpressionConstant>): number {
+    if (!operators.length) {
+        return -1;
+    }
+
     const numOperators: number = operators.length;
     let minPrecedenceIndex: number = -1;
     let minPrecedence: number = Number.MAX_SAFE_INTEGER;
@@ -667,7 +672,7 @@ function findHighestPrecedenceIndex(operators: ReadonlyArray<Ast.TBinOpExpressio
         }
     }
 
-    Assert.isTrue(minPrecedenceIndex !== -1, `minPrecedenceIndex !== -1 failed`);
+    Assert.isTrue(minPrecedenceIndex !== -1, `operators is non-zero length and minPrecedenceIndex !== -1 failed`);
 
     return minPrecedenceIndex;
 }
@@ -701,20 +706,9 @@ function setParseStateToAfterNodeEnd(state: ParseState, node: Ast.TNode): void {
 }
 
 function setParseStateToTokenIndex(state: ParseState, tokenIndex: number): void {
-    const token: Token.Token = ArrayUtils.assertGet(state.lexerSnapshot.tokens, tokenIndex);
+    const token: Token.Token | undefined = state.lexerSnapshot.tokens[tokenIndex];
 
     state.currentToken = token;
-    state.currentTokenKind = token.kind;
+    state.currentTokenKind = token?.kind;
     state.tokenIndex = tokenIndex;
-}
-
-function removeNodeKindFromCollection(state: ParseState, nodeKind: Ast.NodeKind, nodeId: number): void {
-    const idsByNodeKind: Map<Ast.NodeKind, Set<number>> = state.contextState.nodeIdMapCollection.idsByNodeKind;
-
-    const collection: Set<number> = MapUtils.assertGet(idsByNodeKind, nodeKind);
-    SetUtils.assertDelete(collection, nodeId);
-
-    if (collection.size === 0) {
-        idsByNodeKind.delete(nodeKind);
-    }
 }

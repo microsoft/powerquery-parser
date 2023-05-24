@@ -1,16 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, MapUtils } from "../../../common";
 import { Ast, Constant, Token } from "../../../language";
 import { CombinatorialParserV2TraceConstant, TNextDuoRead } from "./commonTypes";
 import { Disambiguation, DisambiguationUtils } from "../../disambiguation";
 import { NodeIdMap, ParseContext } from "../..";
 import { Parser, ParserUtils } from "../../parser";
 import { ParseState, ParseStateUtils } from "../../parseState";
+import { Assert } from "../../../common";
 import { combineOperatorsAndOperands } from "./combiners";
 import { NaiveParseSteps } from "..";
 import { NextDuoReadByTokenKind } from "./caches";
+import { removeIdFromIdsByNodeKind } from "./utils";
 import { Trace } from "../../../common/trace";
 
 // TODO: write a summary for V2
@@ -156,7 +157,8 @@ async function readBinOpExpression(
         correlationId,
     );
 
-    const placeholderContextNodeId: number = ParseStateUtils.startContext(state, nodeKind).id;
+    const placeholderContextNode: ParseContext.TNode = ParseStateUtils.startContext(state, nodeKind);
+    const placeholderContextNodeId: number = placeholderContextNode.id;
     const initialUnaryExpression: Ast.TUnaryExpression = await parser.readUnaryExpression(state, parser, trace.id);
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
 
@@ -216,14 +218,19 @@ async function readBinOpExpression(
             nodeIdMapCollection.leafIds.delete(nodeId);
         }
 
-        MapUtils.assertGet(nodeIdMapCollection.idsByNodeKind, iterativeParseContext.kind).delete(
+        nodeIdMapCollection.contextNodeById.delete(iterativeParseContext.id);
+
+        removeIdFromIdsByNodeKind(
+            nodeIdMapCollection.idsByNodeKind,
+            iterativeParseContext.kind,
             iterativeParseContext.id,
         );
 
-        MapUtils.assertGet(nodeIdMapCollection.idsByNodeKind, operand.kind).delete(operand.id);
+        removeIdFromIdsByNodeKind(nodeIdMapCollection.idsByNodeKind, Ast.NodeKind.Constant, operatorConstant.id);
+        removeIdFromIdsByNodeKind(nodeIdMapCollection.idsByNodeKind, operand.kind, operand.id);
 
-        MapUtils.assertGet(nodeIdMapCollection.idsByNodeKind, Ast.NodeKind.Constant).delete(operatorConstant.id);
-
+        // eslint-disable-next-line require-atomic-updates
+        state.currentContextNode = placeholderContextNode;
         nextDuoRead = NextDuoReadByTokenKind.get(state.currentTokenKind);
     }
 
@@ -242,9 +249,9 @@ async function readBinOpExpression(
     });
 
     let result: Ast.TNode;
-    ParseStateUtils.deleteContext(state, placeholderContextNodeId);
 
     if (!operatorConstants.length) {
+        ParseStateUtils.deleteContext(state, placeholderContextNodeId);
         result = initialUnaryExpression;
     } else {
         result = combineOperatorsAndOperands(
@@ -255,6 +262,8 @@ async function readBinOpExpression(
             operatorConstants,
             trace.id,
         );
+
+        ParseStateUtils.deleteContext(state, placeholderContextNodeId);
     }
 
     trace.exit();
