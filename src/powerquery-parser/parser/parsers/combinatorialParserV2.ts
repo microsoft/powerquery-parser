@@ -155,13 +155,13 @@ const enum CombinatorialParserV2TraceConstant {
     CombinatorialParseV2 = "CombinatorialParseV2",
 }
 
-type TNextDuoRead = NextDuoReadLogicalExpression | NextDuoReadNullablePrimitiveType | NextDuoReadUnaryExpression;
-
 const enum DuoReadKind {
     LogicalExpression = Ast.NodeKind.LogicalExpression,
     NullablePrimitiveType = Ast.NodeKind.NullablePrimitiveType,
     UnaryExpression = Ast.NodeKind.UnaryExpression,
 }
+
+type TNextDuoRead = NextDuoReadLogicalExpression | NextDuoReadNullablePrimitiveType | NextDuoReadUnaryExpression;
 
 type NextDuoReadLogicalExpression = {
     readonly duoReadKind: DuoReadKind.LogicalExpression;
@@ -259,6 +259,12 @@ type NextDuoReadUnaryExpression = {
           readonly operatorConstantKind: Constant.KeywordConstant.Meta;
       }
 );
+
+const EqualityExpressionAndBelowOperatorConstantKinds = new Set<string>([
+    ...Constant.ArithmeticOperators,
+    ...Constant.EqualityOperators,
+    ...Constant.RelationalOperators,
+]);
 
 const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TNextDuoRead> = new Map<
     Token.TokenKind | undefined,
@@ -419,29 +425,6 @@ const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TNextDuoR
     ],
 ]);
 
-// const NodeKindByOperatorConstantKind: Map<Constant.TBinOpExpressionOperator, Ast.TBinOpExpressionNodeKind> = new Map<
-//     Constant.TBinOpExpressionOperator,
-//     Ast.TBinOpExpressionNodeKind
-// >([
-//     [Constant.ArithmeticOperator.Multiplication, Ast.NodeKind.ArithmeticExpression],
-//     [Constant.ArithmeticOperator.Division, Ast.NodeKind.ArithmeticExpression],
-//     [Constant.ArithmeticOperator.Addition, Ast.NodeKind.ArithmeticExpression],
-//     [Constant.ArithmeticOperator.Subtraction, Ast.NodeKind.ArithmeticExpression],
-//     [Constant.ArithmeticOperator.And, Ast.NodeKind.ArithmeticExpression],
-//     [Constant.EqualityOperator.EqualTo, Ast.NodeKind.EqualityExpression],
-//     [Constant.EqualityOperator.NotEqualTo, Ast.NodeKind.EqualityExpression],
-//     [Constant.LogicalOperator.And, Ast.NodeKind.LogicalExpression],
-//     [Constant.LogicalOperator.Or, Ast.NodeKind.LogicalExpression],
-//     [Constant.RelationalOperator.LessThan, Ast.NodeKind.RelationalExpression],
-//     [Constant.RelationalOperator.LessThanEqualTo, Ast.NodeKind.RelationalExpression],
-//     [Constant.RelationalOperator.GreaterThan, Ast.NodeKind.RelationalExpression],
-//     [Constant.RelationalOperator.GreaterThanEqualTo, Ast.NodeKind.RelationalExpression],
-//     [Constant.KeywordConstant.As, Ast.NodeKind.AsExpression],
-//     [Constant.KeywordConstant.Is, Ast.NodeKind.IsExpression],
-//     [Constant.KeywordConstant.Meta, Ast.NodeKind.MetadataExpression],
-//     [Constant.MiscConstant.NullCoalescingOperator, Ast.NodeKind.NullCoalescingExpression],
-// ]);
-
 interface ReadAttempt {
     readonly operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>;
     readonly operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>;
@@ -472,34 +455,32 @@ function addNodeKindToCollection(
     }
 }
 
-function combineArithmeticExpressionAndBelow(
+function combineEqualityExpressionAndBelow(
     state: ParseState,
     parser: Parser,
     placeholderContextNodeId: number,
     operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
     operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>,
-    index: number,
     correlationId: number,
 ): ReadAttempt {
-    const trace: Trace = state.traceManager.entry(
-        CombinatorialParserV2TraceConstant.CombinatorialParseV2,
-        combineArithmeticExpressionAndBelow.name,
+    return combineWhile<Ast.ArithmeticExpression | Ast.EqualityExpression | Ast.RelationalExpression>(
+        state,
+        placeholderContextNodeId,
+        operands,
+        operatorConstants,
+        Ast.NodeKind.EqualityExpression,
+        findMinOperatorPrecedenceIndex,
+        (
+            remainingOperatorConstant: Ast.TBinOpExpressionConstant,
+        ): remainingOperatorConstant is Ast.IConstant<
+            Constant.ArithmeticOperator | Constant.EqualityOperator | Constant.RelationalOperator
+        > => EqualityExpressionAndBelowOperatorConstantKinds.has(remainingOperatorConstant.constantKind),
+        AstUtils.isTMetadataExpression,
+        () => NaiveParseSteps.readMetadataExpression(state, parser, correlationId),
+        AstUtils.isTMetadataExpression,
+        () => NaiveParseSteps.readMetadataExpression(state, parser, correlationId),
         correlationId,
     );
-
-    Assert.isTrue(isTUnaryExpressionArray(operands), "not all operands are TUnaryExpression", {
-        operands: operands.map((operand: Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType) => ({
-            nodeKind: operand.kind,
-            nodeId: operand.id,
-        })),
-    });
-
-    trace.exit();
-
-    return {
-        operatorConstants,
-        operands,
-    };
 }
 
 function combineAsExpression(
@@ -516,8 +497,8 @@ function combineAsExpression(
         placeholderContextNodeId,
         operands,
         operatorConstants,
-        index,
         Ast.NodeKind.AsExpression,
+        _ => index,
         (
             operatorConstant: Ast.TBinOpExpressionConstant,
         ): operatorConstant is Ast.IConstant<Constant.KeywordConstant.As> =>
@@ -544,8 +525,8 @@ function combineIsExpression(
         placeholderContextNodeId,
         operands,
         operatorConstants,
-        index,
         Ast.NodeKind.IsExpression,
+        _ => index,
         (
             operatorConstant: Ast.TBinOpExpressionConstant,
         ): operatorConstant is Ast.IConstant<Constant.KeywordConstant.Is> =>
@@ -572,8 +553,8 @@ function combineLogicalAndExpression(
         placeholderContextNodeId,
         operands,
         operatorConstants,
-        index,
         Ast.NodeKind.LogicalExpression,
+        _ => index,
         (
             operatorConstant: Ast.TBinOpExpressionConstant,
         ): operatorConstant is Ast.IConstant<Constant.LogicalOperator.And> =>
@@ -600,8 +581,8 @@ function combineLogicalOrExpression(
         placeholderContextNodeId,
         operands,
         operatorConstants,
-        index,
         Ast.NodeKind.LogicalExpression,
+        _ => index,
         (
             operatorConstant: Ast.TBinOpExpressionConstant,
         ): operatorConstant is Ast.IConstant<Constant.LogicalOperator.Or> =>
@@ -628,8 +609,8 @@ function combineMetadataExpression(
         placeholderContextNodeId,
         operands,
         operatorConstants,
-        index,
         Ast.NodeKind.MetadataExpression,
+        _ => index,
         (
             operatorConstant: Ast.TBinOpExpressionConstant,
         ): operatorConstant is Ast.IConstant<Constant.KeywordConstant.Meta> =>
@@ -656,8 +637,8 @@ function combineNullCoalescingExpression(
         placeholderContextNodeId,
         operands,
         operatorConstants,
-        index,
         Ast.NodeKind.NullCoalescingExpression,
+        _ => index,
         (
             operatorConstant: Ast.TBinOpExpressionConstant,
         ): operatorConstant is Ast.IConstant<Constant.MiscConstant.NullCoalescingOperator> =>
@@ -670,20 +651,48 @@ function combineNullCoalescingExpression(
     );
 }
 
+// I know this a behemoth of a function, but I can't think of a better way to do this.
+// In short, it takes a collection of N operators and N+1 operands and merges as many as it can into new Ast nodes of type Node.
+//
+// Different Nodes have different rules as to what can be merged. For example:
+// - The LogicalOperator.Or operator combines TIsExpression | (LogicalExpression with LogicalOperator.And operator),
+//   meanwhile the LogicalOperator.And combines TIsExpression.
+//
+// Many invocations assume it will keep reading w/o the index being altered each iteration.
+// Eg. for AsExpression is read with the following pseudo code
+// ```
+//  while (operatorConstants[index] is AsConstant)) {
+//      right = readNullablePrimitiveType(operands[index])
+//  }
+// ```
+// However, the Arithmetic, Relational, and Equality operators do not follow this pattern.
+// Instead they find the highest precedence operator and then reads from there.
+// ```
+//  index = highestPrecedence(remainingOperators)
+//  while (operatorConstants[index] is ArithmeticConstant)) {
+//      right = readSomething(operands[index])
+//      index = highestPrecedence(remainingOperators)
+//  }
+// ```
 function combineWhile<
     Node extends
         | Ast.AsExpression
         | Ast.IsExpression
         | Ast.LogicalExpression
         | Ast.MetadataExpression
-        | Ast.NullCoalescingExpression,
+        | Ast.NullCoalescingExpression
+        | Ast.ArithmeticExpression
+        | Ast.EqualityExpression
+        | Ast.RelationalExpression,
 >(
     state: ParseState,
     placeholderContextNodeId: number,
     operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
     operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>,
-    index: number,
     binOpNodeKind: Node["kind"],
+    // For most contexts this returns a static number.
+    // However, for Arithmetic | Equality | Relational operators this will return the highest precedence operator.
+    nextOperatorIndex: (operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>) => number,
     operatorConstantValidator: (
         operatorConstant: Ast.TBinOpExpressionConstant,
     ) => operatorConstant is Node["operatorConstant"],
@@ -701,6 +710,7 @@ function combineWhile<
         correlationId,
     );
 
+    let index: number = nextOperatorIndex(operatorConstants);
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
 
     let left: Ast.TBinOpExpression["left"] | Node = ArrayUtils.assertGet(operands, index) as
@@ -840,6 +850,7 @@ function combineWhile<
         binOpParseContext = newBinOpParseContext;
         binOpParseContextNodeId = newBinOpParseContextNodeId;
 
+        index = nextOperatorIndex(operatorConstants);
         operatorConstant = ArrayUtils.assertGet(operatorConstants, index);
     }
 
@@ -888,13 +899,12 @@ function combineOperatorsAndOperands(
             case Constant.RelationalOperator.LessThan:
             case Constant.RelationalOperator.LessThanEqualTo:
                 {
-                    const readAttempt = combineArithmeticExpressionAndBelow(
+                    const readAttempt = combineEqualityExpressionAndBelow(
                         state,
                         parser,
                         placeholderContextNodeId,
                         operands,
                         operatorConstants,
-                        index,
                         trace.id,
                     );
 
@@ -1044,10 +1054,6 @@ function isTIsExpressionOrLogicalAndExpression(node: Ast.TNode): node is Ast.TLo
         (AstUtils.isNodeKind<Ast.LogicalExpression>(node, Ast.NodeKind.LogicalExpression) &&
             node.operatorConstant.constantKind === Constant.LogicalOperator.And)
     );
-}
-
-function isTUnaryExpressionArray(operands: ReadonlyArray<Ast.TNode>): operands is ReadonlyArray<Ast.TUnaryExpression> {
-    return operands.every((node: Ast.TNode) => AstUtils.isTUnaryExpression(node));
 }
 
 function placeParseContextUnderPlaceholderContext(
