@@ -46,7 +46,7 @@ export function isLeaf(node: Ast.TNode): node is Ast.TLeaf {
     return node.isLeaf;
 }
 
-export function isTLogicalOrExpression(node: Ast.TNode): node is Ast.TLogicalExpression {
+export function isTLogicalExpression(node: Ast.TNode): node is Ast.TLogicalExpression {
     return node.kind === Ast.NodeKind.LogicalExpression || isTIsExpression(node);
 }
 
