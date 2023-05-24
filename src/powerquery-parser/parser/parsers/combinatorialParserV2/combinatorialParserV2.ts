@@ -3,7 +3,7 @@
 
 import { Assert, MapUtils } from "../../../common";
 import { Ast, Constant, Token } from "../../../language";
-import { CombinatorialParserV2TraceConstant, DuoReadKind, TNextDuoRead } from "./commonTypes";
+import { CombinatorialParserV2TraceConstant, TNextDuoRead } from "./commonTypes";
 import { Disambiguation, DisambiguationUtils } from "../../disambiguation";
 import { NodeIdMap, ParseContext } from "../..";
 import { Parser, ParserUtils } from "../../parser";
@@ -183,20 +183,20 @@ async function readBinOpExpression(
         let operand: Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType;
 
         switch (nextDuoRead.duoReadKind) {
-            case DuoReadKind.UnaryExpression: {
+            case Ast.NodeKind.UnaryExpression: {
                 // eslint-disable-next-line no-await-in-loop
                 operand = await parser.readUnaryExpression(state, parser, trace.id);
 
                 break;
             }
 
-            case DuoReadKind.NullablePrimitiveType:
+            case Ast.NodeKind.NullablePrimitiveType:
                 // eslint-disable-next-line no-await-in-loop
                 operand = await parser.readNullablePrimitiveType(state, parser, trace.id);
 
                 break;
 
-            case DuoReadKind.LogicalExpression:
+            case Ast.NodeKind.LogicalExpression:
                 // eslint-disable-next-line no-await-in-loop
                 operand = await parser.readLogicalExpression(state, parser, trace.id);
 

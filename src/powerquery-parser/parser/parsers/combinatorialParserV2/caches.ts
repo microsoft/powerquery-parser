@@ -2,12 +2,22 @@
 // Licensed under the MIT license.
 
 import { Ast, Constant, Token } from "../../../language";
-import { DuoReadKind, TNextDuoRead } from "./commonTypes";
+import { TNextDuoRead } from "./commonTypes";
 
-export const EqualityExpressionAndBelowOperatorConstantKinds: Set<string> = new Set<string>([
-    ...Constant.ArithmeticOperators,
-    ...Constant.EqualityOperators,
-    ...Constant.RelationalOperators,
+export const EqualityExpressionAndBelowOperatorConstantKinds: Set<string> = new Set<
+    Constant.ArithmeticOperator | Constant.EqualityOperator | Constant.RelationalOperator
+>([
+    Constant.ArithmeticOperator.Multiplication,
+    Constant.ArithmeticOperator.Division,
+    Constant.ArithmeticOperator.Addition,
+    Constant.ArithmeticOperator.Subtraction,
+    Constant.ArithmeticOperator.And,
+    Constant.EqualityOperator.EqualTo,
+    Constant.EqualityOperator.NotEqualTo,
+    Constant.RelationalOperator.LessThan,
+    Constant.RelationalOperator.LessThanEqualTo,
+    Constant.RelationalOperator.GreaterThan,
+    Constant.RelationalOperator.GreaterThanEqualTo,
 ]);
 
 export const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TNextDuoRead> = new Map<
@@ -17,7 +27,7 @@ export const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TN
     [
         Token.TokenKind.Asterisk,
         {
-            duoReadKind: DuoReadKind.UnaryExpression,
+            duoReadKind: Ast.NodeKind.UnaryExpression,
             nodeKind: Ast.NodeKind.ArithmeticExpression,
             operatorTokenKind: Token.TokenKind.Asterisk,
             operatorConstantKind: Constant.ArithmeticOperator.Multiplication,
@@ -26,7 +36,7 @@ export const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TN
     [
         Token.TokenKind.Division,
         {
-            duoReadKind: DuoReadKind.UnaryExpression,
+            duoReadKind: Ast.NodeKind.UnaryExpression,
             nodeKind: Ast.NodeKind.ArithmeticExpression,
             operatorTokenKind: Token.TokenKind.Division,
             operatorConstantKind: Constant.ArithmeticOperator.Division,
@@ -35,7 +45,7 @@ export const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TN
     [
         Token.TokenKind.Plus,
         {
-            duoReadKind: DuoReadKind.UnaryExpression,
+            duoReadKind: Ast.NodeKind.UnaryExpression,
             nodeKind: Ast.NodeKind.ArithmeticExpression,
             operatorTokenKind: Token.TokenKind.Plus,
             operatorConstantKind: Constant.ArithmeticOperator.Addition,
@@ -44,7 +54,7 @@ export const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TN
     [
         Token.TokenKind.Minus,
         {
-            duoReadKind: DuoReadKind.UnaryExpression,
+            duoReadKind: Ast.NodeKind.UnaryExpression,
             nodeKind: Ast.NodeKind.ArithmeticExpression,
             operatorTokenKind: Token.TokenKind.Minus,
             operatorConstantKind: Constant.ArithmeticOperator.Subtraction,
@@ -53,7 +63,7 @@ export const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TN
     [
         Token.TokenKind.Ampersand,
         {
-            duoReadKind: DuoReadKind.UnaryExpression,
+            duoReadKind: Ast.NodeKind.UnaryExpression,
             nodeKind: Ast.NodeKind.ArithmeticExpression,
             operatorTokenKind: Token.TokenKind.Ampersand,
             operatorConstantKind: Constant.ArithmeticOperator.And,
@@ -62,7 +72,7 @@ export const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TN
     [
         Token.TokenKind.Equal,
         {
-            duoReadKind: DuoReadKind.UnaryExpression,
+            duoReadKind: Ast.NodeKind.UnaryExpression,
             nodeKind: Ast.NodeKind.EqualityExpression,
             operatorTokenKind: Token.TokenKind.Equal,
             operatorConstantKind: Constant.EqualityOperator.EqualTo,
@@ -71,7 +81,7 @@ export const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TN
     [
         Token.TokenKind.NotEqual,
         {
-            duoReadKind: DuoReadKind.UnaryExpression,
+            duoReadKind: Ast.NodeKind.UnaryExpression,
             nodeKind: Ast.NodeKind.EqualityExpression,
             operatorTokenKind: Token.TokenKind.NotEqual,
             operatorConstantKind: Constant.EqualityOperator.NotEqualTo,
@@ -80,7 +90,7 @@ export const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TN
     [
         Token.TokenKind.KeywordAnd,
         {
-            duoReadKind: DuoReadKind.UnaryExpression,
+            duoReadKind: Ast.NodeKind.UnaryExpression,
             nodeKind: Ast.NodeKind.LogicalExpression,
             operatorTokenKind: Token.TokenKind.KeywordAnd,
             operatorConstantKind: Constant.LogicalOperator.And,
@@ -89,7 +99,7 @@ export const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TN
     [
         Token.TokenKind.KeywordOr,
         {
-            duoReadKind: DuoReadKind.UnaryExpression,
+            duoReadKind: Ast.NodeKind.UnaryExpression,
             nodeKind: Ast.NodeKind.LogicalExpression,
             operatorTokenKind: Token.TokenKind.KeywordOr,
             operatorConstantKind: Constant.LogicalOperator.Or,
@@ -98,7 +108,7 @@ export const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TN
     [
         Token.TokenKind.LessThan,
         {
-            duoReadKind: DuoReadKind.UnaryExpression,
+            duoReadKind: Ast.NodeKind.UnaryExpression,
             nodeKind: Ast.NodeKind.RelationalExpression,
             operatorTokenKind: Token.TokenKind.LessThan,
             operatorConstantKind: Constant.RelationalOperator.LessThan,
@@ -107,7 +117,7 @@ export const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TN
     [
         Token.TokenKind.LessThanEqualTo,
         {
-            duoReadKind: DuoReadKind.UnaryExpression,
+            duoReadKind: Ast.NodeKind.UnaryExpression,
             nodeKind: Ast.NodeKind.RelationalExpression,
             operatorTokenKind: Token.TokenKind.LessThanEqualTo,
             operatorConstantKind: Constant.RelationalOperator.LessThanEqualTo,
@@ -116,7 +126,7 @@ export const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TN
     [
         Token.TokenKind.GreaterThan,
         {
-            duoReadKind: DuoReadKind.UnaryExpression,
+            duoReadKind: Ast.NodeKind.UnaryExpression,
             nodeKind: Ast.NodeKind.RelationalExpression,
             operatorTokenKind: Token.TokenKind.GreaterThan,
             operatorConstantKind: Constant.RelationalOperator.GreaterThan,
@@ -125,7 +135,7 @@ export const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TN
     [
         Token.TokenKind.GreaterThanEqualTo,
         {
-            duoReadKind: DuoReadKind.UnaryExpression,
+            duoReadKind: Ast.NodeKind.UnaryExpression,
             nodeKind: Ast.NodeKind.RelationalExpression,
             operatorTokenKind: Token.TokenKind.GreaterThanEqualTo,
             operatorConstantKind: Constant.RelationalOperator.GreaterThanEqualTo,
@@ -134,7 +144,7 @@ export const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TN
     [
         Token.TokenKind.KeywordAs,
         {
-            duoReadKind: DuoReadKind.NullablePrimitiveType,
+            duoReadKind: Ast.NodeKind.NullablePrimitiveType,
             nodeKind: Ast.NodeKind.AsExpression,
             operatorTokenKind: Token.TokenKind.KeywordAs,
             operatorConstantKind: Constant.KeywordConstant.As,
@@ -143,7 +153,7 @@ export const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TN
     [
         Token.TokenKind.KeywordIs,
         {
-            duoReadKind: DuoReadKind.NullablePrimitiveType,
+            duoReadKind: Ast.NodeKind.NullablePrimitiveType,
             nodeKind: Ast.NodeKind.IsExpression,
             operatorTokenKind: Token.TokenKind.KeywordIs,
             operatorConstantKind: Constant.KeywordConstant.Is,
@@ -152,7 +162,7 @@ export const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TN
     [
         Token.TokenKind.KeywordMeta,
         {
-            duoReadKind: DuoReadKind.UnaryExpression,
+            duoReadKind: Ast.NodeKind.UnaryExpression,
             nodeKind: Ast.NodeKind.MetadataExpression,
             operatorTokenKind: Token.TokenKind.KeywordMeta,
             operatorConstantKind: Constant.KeywordConstant.Meta,
@@ -161,7 +171,7 @@ export const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TN
     [
         Token.TokenKind.NullCoalescingOperator,
         {
-            duoReadKind: DuoReadKind.LogicalExpression,
+            duoReadKind: Ast.NodeKind.LogicalExpression,
             nodeKind: Ast.NodeKind.NullCoalescingExpression,
             operatorTokenKind: Token.TokenKind.NullCoalescingOperator,
             operatorConstantKind: Constant.MiscConstant.NullCoalescingOperator,

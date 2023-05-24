@@ -7,23 +7,22 @@ export const enum CombinatorialParserV2TraceConstant {
     CombinatorialParseV2 = "CombinatorialParseV2",
 }
 
-export const enum DuoReadKind {
-    LogicalExpression = Ast.NodeKind.LogicalExpression,
-    NullablePrimitiveType = Ast.NodeKind.NullablePrimitiveType,
-    UnaryExpression = Ast.NodeKind.UnaryExpression,
-}
+export type TDuoReadKind =
+    | Ast.NodeKind.LogicalExpression
+    | Ast.NodeKind.NullablePrimitiveType
+    | Ast.NodeKind.UnaryExpression;
 
 export type TNextDuoRead = NextDuoReadLogicalExpression | NextDuoReadNullablePrimitiveType | NextDuoReadUnaryExpression;
 
 export type NextDuoReadLogicalExpression = {
-    readonly duoReadKind: DuoReadKind.LogicalExpression;
+    readonly duoReadKind: Ast.NodeKind.LogicalExpression;
     readonly nodeKind: Ast.NodeKind.NullCoalescingExpression;
     readonly operatorTokenKind: Token.TokenKind.NullCoalescingOperator;
     readonly operatorConstantKind: Constant.MiscConstant.NullCoalescingOperator;
 };
 
 export type NextDuoReadNullablePrimitiveType = {
-    readonly duoReadKind: DuoReadKind.NullablePrimitiveType;
+    readonly duoReadKind: Ast.NodeKind.NullablePrimitiveType;
 } & (
     | {
           readonly nodeKind: Ast.NodeKind.AsExpression;
@@ -38,7 +37,7 @@ export type NextDuoReadNullablePrimitiveType = {
 );
 
 type NextDuoReadUnaryExpression = {
-    readonly duoReadKind: DuoReadKind.UnaryExpression;
+    readonly duoReadKind: Ast.NodeKind.UnaryExpression;
 } & (
     | {
           readonly nodeKind: Ast.NodeKind.ArithmeticExpression;
