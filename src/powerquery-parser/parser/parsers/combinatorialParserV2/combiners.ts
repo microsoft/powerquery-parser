@@ -3,8 +3,8 @@
 
 import { ArrayUtils, Assert, CommonError, MapUtils } from "../../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../../language";
-import { CombinatorialParserV2TraceConstant, TEqualityExpressionAndBelow } from "./commonTypes";
 import { NodeIdMap, ParseContext, ParseContextUtils, ParseStateUtils } from "../..";
+import { CombinatorialParserV2TraceConstant } from "./commonTypes";
 import { NaiveParseSteps } from "..";
 import { Parser } from "../../parser";
 import { ParseState } from "../../parseState";
@@ -233,6 +233,8 @@ export interface CombineRemainders {
     readonly operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>;
 }
 
+type TEqualityExpressionAndBelow = Ast.ArithmeticExpression | Ast.EqualityExpression | Ast.RelationalExpression;
+
 interface NextCombine {
     readonly operatorConstant: Ast.TBinOpExpressionConstant;
     readonly operand: Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType | undefined;
@@ -297,14 +299,14 @@ const NodeKindByTEqualityExpressionAndBelowOperatorKind: ReadonlyMap<string, TEq
 
 const AsExpressionCombiner: Combiner<Ast.AsExpression> = {
     getNextCombine: getSameNextCombineIfSameConstantKind,
-    leftValidator: AstUtils.isTEqualityExpression,
+    leftValidator: (node: Ast.TNode): node is Ast.TEqualityExpression => AstUtils.isTEqualityExpression(node),
     leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
         NaiveParseSteps.readEqualityExpression(state, parser, correlationId),
     operatorConstantValidator: (
         operatorConstant: Ast.TBinOpExpressionConstant,
     ): operatorConstant is Ast.AsExpression["operatorConstant"] =>
         operatorConstant.constantKind === Constant.KeywordConstant.As,
-    rightValidator: AstUtils.isTNullablePrimitiveType,
+    rightValidator: (node: Ast.TNode): node is Ast.TNullablePrimitiveType => AstUtils.isTNullablePrimitiveType(node),
     rightFallback: (state: ParseState, parser: Parser, correlationId: number) =>
         NaiveParseSteps.readNullablePrimitiveType(state, parser, correlationId),
 };
@@ -332,42 +334,42 @@ const EqualityExpressionAndBelowCombiner: Combiner<TEqualityExpressionAndBelow> 
             index,
         };
     },
-    leftValidator: AstUtils.isTMetadataExpression,
+    leftValidator: (node: Ast.TNode): node is Ast.TMetadataExpression => AstUtils.isTMetadataExpression(node),
     leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
         NaiveParseSteps.readMetadataExpression(state, parser, correlationId),
     operatorConstantValidator: (
         operatorConstant: Ast.TBinOpExpressionConstant,
     ): operatorConstant is TEqualityExpressionAndBelow["operatorConstant"] =>
         NodeKindByTEqualityExpressionAndBelowOperatorKind.has(operatorConstant.constantKind),
-    rightValidator: AstUtils.isTMetadataExpression,
+    rightValidator: (node: Ast.TNode): node is Ast.TMetadataExpression => AstUtils.isTMetadataExpression(node),
     rightFallback: (state: ParseState, parser: Parser, correlationId: number) =>
         NaiveParseSteps.readMetadataExpression(state, parser, correlationId),
 };
 
 const IsExpressionCombiner: Combiner<Ast.IsExpression> = {
     getNextCombine: getSameNextCombineIfSameConstantKind,
-    leftValidator: AstUtils.isTAsExpression,
+    leftValidator: (node: Ast.TNode): node is Ast.TIsExpression => AstUtils.isTAsExpression(node),
     leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
         NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
     operatorConstantValidator: (
         operatorConstant: Ast.TBinOpExpressionConstant,
     ): operatorConstant is Ast.IsExpression["operatorConstant"] =>
         operatorConstant.constantKind === Constant.KeywordConstant.Is,
-    rightValidator: AstUtils.isTNullablePrimitiveType,
+    rightValidator: (node: Ast.TNode): node is Ast.TNullablePrimitiveType => AstUtils.isTNullablePrimitiveType(node),
     rightFallback: (state: ParseState, parser: Parser, correlationId: number) =>
         NaiveParseSteps.readNullablePrimitiveType(state, parser, correlationId),
 };
 
 const LogicalAndExpressionCombiner: Combiner<Ast.LogicalExpression> = {
     getNextCombine: getSameNextCombineIfSameConstantKind,
-    leftValidator: AstUtils.isTLogicalExpression,
+    leftValidator: (node: Ast.TNode): node is Ast.TLogicalExpression => AstUtils.isTLogicalExpression(node),
     leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
         NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
     operatorConstantValidator: (
         operatorConstant: Ast.TBinOpExpressionConstant,
     ): operatorConstant is Ast.LogicalExpression["operatorConstant"] =>
         operatorConstant.constantKind === Constant.LogicalOperator.And,
-    rightValidator: AstUtils.isTIsExpression,
+    rightValidator: (node: Ast.TNode): node is Ast.TIsExpression => AstUtils.isTIsExpression(node),
     rightFallback: (state: ParseState, parser: Parser, correlationId: number) =>
         NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
 };
@@ -388,28 +390,28 @@ const LogicalOrExpressionCombiner: Combiner<Ast.LogicalExpression> = {
 
 const NullCoalescingExpressionCombiner: Combiner<Ast.NullCoalescingExpression> = {
     getNextCombine: getSameNextCombineIfSameConstantKind,
-    leftValidator: AstUtils.isTLogicalExpression,
+    leftValidator: (node: Ast.TNode): node is Ast.TLogicalExpression => AstUtils.isTLogicalExpression(node),
     leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
         NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
     operatorConstantValidator: (
         operatorConstant: Ast.TBinOpExpressionConstant,
     ): operatorConstant is Ast.NullCoalescingExpression["operatorConstant"] =>
         operatorConstant.constantKind === Constant.MiscConstant.NullCoalescingOperator,
-    rightValidator: AstUtils.isTLogicalExpression,
+    rightValidator: (node: Ast.TNode): node is Ast.TLogicalExpression => AstUtils.isTLogicalExpression(node),
     rightFallback: (state: ParseState, parser: Parser, correlationId: number) =>
         NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
 };
 
 const MetadataExpressionCombiner: Combiner<Ast.MetadataExpression> = {
     getNextCombine: getSameNextCombineIfSameConstantKind,
-    leftValidator: AstUtils.isTUnaryExpression,
+    leftValidator: (node: Ast.TNode): node is Ast.TUnaryExpression => AstUtils.isTUnaryExpression(node),
     leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
         NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
     operatorConstantValidator: (
         operatorConstant: Ast.TBinOpExpressionConstant,
     ): operatorConstant is Ast.MetadataExpression["operatorConstant"] =>
         operatorConstant.constantKind === Constant.KeywordConstant.Meta,
-    rightValidator: AstUtils.isTUnaryExpression,
+    rightValidator: (node: Ast.TNode): node is Ast.TUnaryExpression => AstUtils.isTUnaryExpression(node),
     rightFallback: (state: ParseState, parser: Parser, correlationId: number) =>
         NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
 };

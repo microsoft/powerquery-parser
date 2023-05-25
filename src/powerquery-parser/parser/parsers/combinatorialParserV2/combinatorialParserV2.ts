@@ -2,15 +2,16 @@
 // Licensed under the MIT license.
 
 import { Ast, Constant, Token } from "../../../language";
-import { CombinatorialParserV2TraceConstant, TNextDuoRead } from "./commonTypes";
 import { Disambiguation, DisambiguationUtils } from "../../disambiguation";
 import { NodeIdMap, ParseContext } from "../..";
 import { Parser, ParserUtils } from "../../parser";
 import { ParseState, ParseStateUtils } from "../../parseState";
 import { Assert } from "../../../common";
+import { CombinatorialParserV2TraceConstant } from "./commonTypes";
 import { combineOperatorsAndOperands } from "./combiners";
 import { NaiveParseSteps } from "..";
 import { removeIdFromIdsByNodeKind } from "./utils";
+import { TNextDuoRead } from "./nextDuoRead";
 import { Trace } from "../../../common/trace";
 
 // TODO: write a summary for V2
