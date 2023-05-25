@@ -13,17 +13,21 @@ export function assertIsLeaf(node: Ast.TNode): asserts node is Ast.TLeaf {
 }
 
 export function assertIsTUnaryExpression(node: Ast.TNode): asserts node is Ast.TUnaryExpression {
-    Assert.isTrue(isTUnaryExpression(node), "assertIsTUnaryExpression failed", {
-        nodeId: node.id,
-        nodeKind: node.kind,
-    });
+    if (!isTUnaryExpression(node)) {
+        throw new CommonError.InvariantError("assertIsTUnaryExpression failed", {
+            nodeId: node.id,
+            nodeKind: node.kind,
+        });
+    }
 }
 
 export function assertIsTNullablePrimitiveType(node: Ast.TNode): asserts node is Ast.TNullablePrimitiveType {
-    Assert.isTrue(isTNullablePrimitiveType(node), "assertIsTNullablePrimitiveType failed", {
-        nodeId: node.id,
-        nodeKind: node.kind,
-    });
+    if (!isTNullablePrimitiveType(node)) {
+        throw new CommonError.InvariantError("assertIsTNullablePrimitiveType failed", {
+            nodeId: node.id,
+            nodeKind: node.kind,
+        });
+    }
 }
 
 export function isTArithmeticExpression(node: Ast.TNode): node is Ast.TArithmeticExpression {

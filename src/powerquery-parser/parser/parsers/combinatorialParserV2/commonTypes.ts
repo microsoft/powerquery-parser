@@ -9,6 +9,8 @@ export const enum CombinatorialParserV2TraceConstant {
 
 export type TNextDuoRead = NextDuoReadLogicalExpression | NextDuoReadNullablePrimitiveType | NextDuoReadUnaryExpression;
 
+export type TEqualityExpressionAndBelow = Ast.ArithmeticExpression | Ast.EqualityExpression | Ast.RelationalExpression;
+
 type TSupportedTokenKinds =
     | Token.TokenKind.Asterisk
     | Token.TokenKind.Division
@@ -114,8 +116,3 @@ type NextDuoReadUnaryExpression = {
     | NextDuoTrio<Token.TokenKind.KeywordIs>
     | NextDuoTrio<Token.TokenKind.KeywordMeta>
 );
-
-export interface ReadAttempt {
-    readonly operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>;
-    readonly operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>;
-}

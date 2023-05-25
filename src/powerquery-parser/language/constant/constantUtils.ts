@@ -180,7 +180,7 @@ export function isBinOpExpressionOperator(text: string): text is Constant.TBinOp
     );
 }
 
-export function isConstant(text: string): text is Constant.TConstant {
+export function isTConstant(text: string): text is Constant.TConstant {
     return (
         isArithmeticOperator(text) ||
         isEqualityOperator(text) ||

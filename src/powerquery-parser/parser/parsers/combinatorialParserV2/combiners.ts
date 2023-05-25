@@ -3,13 +3,11 @@
 
 import { ArrayUtils, Assert, CommonError, MapUtils } from "../../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../../language";
-import { CombinatorialParserV2TraceConstant, ReadAttempt } from "./commonTypes";
-import { NodeIdMap, ParseContext, ParseContextUtils } from "../..";
-import { EqualityExpressionAndBelowOperatorConstantKinds } from "./caches";
+import { CombinatorialParserV2TraceConstant, TEqualityExpressionAndBelow } from "./commonTypes";
+import { NodeIdMap, ParseContext, ParseContextUtils, ParseStateUtils } from "../..";
 import { NaiveParseSteps } from "..";
 import { Parser } from "../../parser";
 import { ParseState } from "../../parseState";
-import { removeIdFromIdsByNodeKind } from "./utils";
 import { Trace } from "../../../common/trace";
 
 export function combineOperatorsAndOperands(
@@ -37,8 +35,13 @@ export function combineOperatorsAndOperands(
 
     while (operatorConstants.length) {
         const index: number = findHighestPrecedenceIndex(operatorConstants);
-        const operator: Ast.TBinOpExpressionConstant = ArrayUtils.assertGet(operatorConstants, index);
-        const operatorConstantKind: Constant.TBinOpExpressionOperator = operator.constantKind;
+        const operatorConstant: Ast.TBinOpExpressionConstant = ArrayUtils.assertGet(operatorConstants, index);
+        const operatorConstantKind: Constant.TBinOpExpressionOperator = operatorConstant.constantKind;
+
+        const operand: Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType | undefined =
+            operands[index + 1];
+
+        let combineRemainders: CombineRemainders;
 
         switch (operatorConstantKind) {
             case Constant.ArithmeticOperator.Division:
@@ -54,146 +57,154 @@ export function combineOperatorsAndOperands(
             case Constant.RelationalOperator.LessThanEqualTo:
                 // eslint-disable-next-line no-lone-blocks
                 {
-                    const readAttempt: ReadAttempt = combineEqualityExpressionAndBelow(
+                    combineRemainders = combineWhile<TEqualityExpressionAndBelow>(
                         state,
                         parser,
                         placeholderContextNodeId,
-                        operands,
                         operatorConstants,
+                        operands,
+                        EqualityExpressionAndBelowCombiner,
+                        {
+                            index,
+                            nodeKind: MapUtils.assertGet(
+                                NodeKindByTEqualityExpressionAndBelowOperatorKind,
+                                operatorConstantKind,
+                            ),
+                            operatorConstant,
+                            operand,
+                        },
                         trace.id,
                     );
-
-                    operatorConstants = readAttempt.operatorConstants;
-                    operands = readAttempt.operands;
-
-                    Assert.isTrue(operatorConstants.length === 0, `operatorConstants.length === 0 failed`, {
-                        operatorConstantsLength: operatorConstants.length,
-                    });
-
-                    Assert.isTrue(operands.length === 1, `operands.length === 1 failed`, {
-                        operandsLength: operands.length,
-                    });
                 }
 
                 break;
 
-            case Constant.LogicalOperator.And:
-                // eslint-disable-next-line no-lone-blocks
-                {
-                    const readAttempt: ReadAttempt = combineLogicalAndExpression(
-                        state,
-                        parser,
-                        placeholderContextNodeId,
-                        operands,
-                        operatorConstants,
+            case Constant.LogicalOperator.And: {
+                combineRemainders = combineWhile<Ast.LogicalExpression>(
+                    state,
+                    parser,
+                    placeholderContextNodeId,
+                    operatorConstants,
+                    operands,
+                    LogicalAndExpressionCombiner,
+                    {
                         index,
-                        trace.id,
-                    );
-
-                    operatorConstants = readAttempt.operatorConstants;
-                    operands = readAttempt.operands;
-                }
+                        nodeKind: Ast.NodeKind.LogicalExpression,
+                        operatorConstant,
+                        operand,
+                    },
+                    trace.id,
+                );
 
                 break;
+            }
 
-            case Constant.LogicalOperator.Or:
-                // eslint-disable-next-line no-lone-blocks
-                {
-                    const readAttempt: ReadAttempt = combineLogicalOrExpression(
-                        state,
-                        parser,
-                        placeholderContextNodeId,
-                        operands,
-                        operatorConstants,
+            case Constant.LogicalOperator.Or: {
+                combineRemainders = combineWhile<Ast.LogicalExpression>(
+                    state,
+                    parser,
+                    placeholderContextNodeId,
+                    operatorConstants,
+                    operands,
+                    LogicalOrExpressionCombiner,
+                    {
                         index,
-                        trace.id,
-                    );
-
-                    operatorConstants = readAttempt.operatorConstants;
-                    operands = readAttempt.operands;
-                }
+                        nodeKind: Ast.NodeKind.LogicalExpression,
+                        operatorConstant,
+                        operand,
+                    },
+                    trace.id,
+                );
 
                 break;
+            }
 
-            case Constant.KeywordConstant.As:
-                // eslint-disable-next-line no-lone-blocks
-                {
-                    const readAttempt: ReadAttempt = combineAsExpression(
-                        state,
-                        parser,
-                        placeholderContextNodeId,
-                        operands,
-                        operatorConstants,
+            case Constant.KeywordConstant.As: {
+                combineRemainders = combineWhile<Ast.AsExpression>(
+                    state,
+                    parser,
+                    placeholderContextNodeId,
+                    operatorConstants,
+                    operands,
+                    AsExpressionCombiner,
+                    {
                         index,
-                        trace.id,
-                    );
-
-                    operatorConstants = readAttempt.operatorConstants;
-                    operands = readAttempt.operands;
-                }
+                        nodeKind: Ast.NodeKind.AsExpression,
+                        operatorConstant,
+                        operand,
+                    },
+                    trace.id,
+                );
 
                 break;
+            }
 
-            case Constant.KeywordConstant.Is:
-                // eslint-disable-next-line no-lone-blocks
-                {
-                    const readAttempt: ReadAttempt = combineIsExpression(
-                        state,
-                        parser,
-                        placeholderContextNodeId,
-                        operands,
-                        operatorConstants,
+            case Constant.KeywordConstant.Is: {
+                combineRemainders = combineWhile<Ast.IsExpression>(
+                    state,
+                    parser,
+                    placeholderContextNodeId,
+                    operatorConstants,
+                    operands,
+                    IsExpressionCombiner,
+                    {
                         index,
-                        trace.id,
-                    );
-
-                    operatorConstants = readAttempt.operatorConstants;
-                    operands = readAttempt.operands;
-                }
+                        nodeKind: Ast.NodeKind.IsExpression,
+                        operatorConstant,
+                        operand,
+                    },
+                    trace.id,
+                );
 
                 break;
+            }
 
-            case Constant.KeywordConstant.Meta:
-                // eslint-disable-next-line no-lone-blocks
-                {
-                    const readAttempt: ReadAttempt = combineMetadataExpression(
-                        state,
-                        parser,
-                        placeholderContextNodeId,
-                        operands,
-                        operatorConstants,
+            case Constant.KeywordConstant.Meta: {
+                combineRemainders = combineWhile<Ast.MetadataExpression>(
+                    state,
+                    parser,
+                    placeholderContextNodeId,
+                    operatorConstants,
+                    operands,
+                    MetadataExpressionCombiner,
+                    {
                         index,
-                        trace.id,
-                    );
-
-                    operatorConstants = readAttempt.operatorConstants;
-                    operands = readAttempt.operands;
-                }
+                        nodeKind: Ast.NodeKind.MetadataExpression,
+                        operatorConstant,
+                        operand,
+                    },
+                    trace.id,
+                );
 
                 break;
+            }
 
-            case Constant.MiscConstant.NullCoalescingOperator:
-                // eslint-disable-next-line no-lone-blocks
-                {
-                    const readAttempt: ReadAttempt = combineNullCoalescingExpression(
-                        state,
-                        parser,
-                        placeholderContextNodeId,
-                        operands,
-                        operatorConstants,
+            case Constant.MiscConstant.NullCoalescingOperator: {
+                combineRemainders = combineWhile<Ast.NullCoalescingExpression>(
+                    state,
+                    parser,
+                    placeholderContextNodeId,
+                    operatorConstants,
+                    operands,
+                    NullCoalescingExpressionCombiner,
+                    {
                         index,
-                        trace.id,
-                    );
-
-                    operatorConstants = readAttempt.operatorConstants;
-                    operands = readAttempt.operands;
-                }
+                        nodeKind: Ast.NodeKind.NullCoalescingExpression,
+                        operatorConstant,
+                        operand,
+                    },
+                    trace.id,
+                );
 
                 break;
+            }
 
             default:
                 Assert.isNever(operatorConstantKind);
         }
+
+        operatorConstants = combineRemainders.operatorConstants;
+        operands = combineRemainders.operands;
     }
 
     Assert.isTrue(operands.length === 1, `operands.length === 1 failed`, {
@@ -216,6 +227,192 @@ export function combineOperatorsAndOperands(
 
     return result;
 }
+
+export interface CombineRemainders {
+    readonly operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>;
+    readonly operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>;
+}
+
+interface NextCombine {
+    readonly operatorConstant: Ast.TBinOpExpressionConstant;
+    readonly operand: Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType | undefined;
+    readonly index: number;
+    readonly nodeKind: Ast.TBinOpExpressionNodeKind;
+}
+
+interface Combiner<Node extends Ast.TBinOpExpression> {
+    getNextCombine: (
+        operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>,
+        operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
+        previousNextCombine: NextCombine,
+    ) => NextCombine | undefined;
+    leftValidator: (node: Ast.TNode) => node is Node["left"];
+    // Expecting this to be a read function from NaiveParseSteps which will throw a ParseError
+    leftFallback: (state: ParseState, parser: Parser, correlationId: number) => void;
+    operatorConstantValidator: (
+        operatorConstant: Ast.TBinOpExpressionConstant,
+    ) => operatorConstant is Node["operatorConstant"];
+    rightValidator: (node: Ast.TNode) => node is Node["right"];
+    // Expecting this to be a read function from NaiveParseSteps which will throw a ParseError
+    rightFallback: (state: ParseState, parser: Parser, correlationId: number) => void;
+}
+
+function getSameNextCombineIfSameConstantKind(
+    operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>,
+    operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
+    previousNextCombine: NextCombine,
+): NextCombine | undefined {
+    const index: number = previousNextCombine.index;
+
+    const nextOperatorKind: Constant.TBinOpExpressionOperator | undefined = operatorConstants[index]?.constantKind;
+
+    return nextOperatorKind === previousNextCombine.operatorConstant.constantKind
+        ? {
+              operatorConstant: operatorConstants[index],
+              operand: operands[index + 1],
+              index,
+              nodeKind: Ast.NodeKind.NullCoalescingExpression,
+          }
+        : undefined;
+}
+
+// Cache
+
+const NodeKindByTEqualityExpressionAndBelowOperatorKind: ReadonlyMap<string, TEqualityExpressionAndBelow["kind"]> =
+    new Map<string, TEqualityExpressionAndBelow["kind"]>([
+        [Constant.ArithmeticOperator.Multiplication, Ast.NodeKind.ArithmeticExpression],
+        [Constant.ArithmeticOperator.Division, Ast.NodeKind.ArithmeticExpression],
+        [Constant.ArithmeticOperator.Addition, Ast.NodeKind.ArithmeticExpression],
+        [Constant.ArithmeticOperator.Subtraction, Ast.NodeKind.ArithmeticExpression],
+        [Constant.ArithmeticOperator.And, Ast.NodeKind.ArithmeticExpression],
+        [Constant.EqualityOperator.EqualTo, Ast.NodeKind.EqualityExpression],
+        [Constant.EqualityOperator.NotEqualTo, Ast.NodeKind.EqualityExpression],
+        [Constant.RelationalOperator.LessThan, Ast.NodeKind.RelationalExpression],
+        [Constant.RelationalOperator.LessThanEqualTo, Ast.NodeKind.RelationalExpression],
+        [Constant.RelationalOperator.GreaterThan, Ast.NodeKind.RelationalExpression],
+        [Constant.RelationalOperator.GreaterThanEqualTo, Ast.NodeKind.RelationalExpression],
+    ]);
+
+// Combiners
+
+const AsExpressionCombiner: Combiner<Ast.AsExpression> = {
+    getNextCombine: getSameNextCombineIfSameConstantKind,
+    leftValidator: AstUtils.isTEqualityExpression,
+    leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
+        NaiveParseSteps.readEqualityExpression(state, parser, correlationId),
+    operatorConstantValidator: (
+        operatorConstant: Ast.TBinOpExpressionConstant,
+    ): operatorConstant is Ast.AsExpression["operatorConstant"] =>
+        operatorConstant.constantKind === Constant.KeywordConstant.As,
+    rightValidator: AstUtils.isTNullablePrimitiveType,
+    rightFallback: (state: ParseState, parser: Parser, correlationId: number) =>
+        NaiveParseSteps.readNullablePrimitiveType(state, parser, correlationId),
+};
+
+const EqualityExpressionAndBelowCombiner: Combiner<TEqualityExpressionAndBelow> = {
+    getNextCombine: (
+        operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>,
+        operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
+        _previousNextCombine: NextCombine,
+    ): NextCombine | undefined => {
+        const index: number = findHighestPrecedenceIndex(operatorConstants);
+        const operatorConstant: Ast.TBinOpExpressionConstant = ArrayUtils.assertGet(operatorConstants, index);
+
+        const nodeKind: TEqualityExpressionAndBelow["kind"] | undefined =
+            NodeKindByTEqualityExpressionAndBelowOperatorKind.get(operatorConstant.constantKind);
+
+        if (!nodeKind) {
+            return undefined;
+        }
+
+        return {
+            operatorConstant,
+            operand: ArrayUtils.assertGet(operands, index),
+            nodeKind,
+            index,
+        };
+    },
+    leftValidator: AstUtils.isTMetadataExpression,
+    leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
+        NaiveParseSteps.readMetadataExpression(state, parser, correlationId),
+    operatorConstantValidator: (
+        operatorConstant: Ast.TBinOpExpressionConstant,
+    ): operatorConstant is TEqualityExpressionAndBelow["operatorConstant"] =>
+        NodeKindByTEqualityExpressionAndBelowOperatorKind.has(operatorConstant.constantKind),
+    rightValidator: AstUtils.isTMetadataExpression,
+    rightFallback: (state: ParseState, parser: Parser, correlationId: number) =>
+        NaiveParseSteps.readMetadataExpression(state, parser, correlationId),
+};
+
+const IsExpressionCombiner: Combiner<Ast.IsExpression> = {
+    getNextCombine: getSameNextCombineIfSameConstantKind,
+    leftValidator: AstUtils.isTAsExpression,
+    leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
+        NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
+    operatorConstantValidator: (
+        operatorConstant: Ast.TBinOpExpressionConstant,
+    ): operatorConstant is Ast.IsExpression["operatorConstant"] =>
+        operatorConstant.constantKind === Constant.KeywordConstant.Is,
+    rightValidator: AstUtils.isTNullablePrimitiveType,
+    rightFallback: (state: ParseState, parser: Parser, correlationId: number) =>
+        NaiveParseSteps.readNullablePrimitiveType(state, parser, correlationId),
+};
+
+const LogicalAndExpressionCombiner: Combiner<Ast.LogicalExpression> = {
+    getNextCombine: getSameNextCombineIfSameConstantKind,
+    leftValidator: AstUtils.isTLogicalExpression,
+    leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
+        NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
+    operatorConstantValidator: (
+        operatorConstant: Ast.TBinOpExpressionConstant,
+    ): operatorConstant is Ast.LogicalExpression["operatorConstant"] =>
+        operatorConstant.constantKind === Constant.LogicalOperator.And,
+    rightValidator: AstUtils.isTIsExpression,
+    rightFallback: (state: ParseState, parser: Parser, correlationId: number) =>
+        NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
+};
+
+const LogicalOrExpressionCombiner: Combiner<Ast.LogicalExpression> = {
+    getNextCombine: getSameNextCombineIfSameConstantKind,
+    leftValidator: isTIsExpressionOrLogicalAndExpression,
+    leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
+        NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
+    operatorConstantValidator: (
+        operatorConstant: Ast.TBinOpExpressionConstant,
+    ): operatorConstant is Ast.LogicalExpression["operatorConstant"] =>
+        operatorConstant.constantKind === Constant.LogicalOperator.Or,
+    rightValidator: isTIsExpressionOrLogicalAndExpression,
+    rightFallback: (state: ParseState, parser: Parser, correlationId: number) =>
+        NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
+};
+
+const NullCoalescingExpressionCombiner: Combiner<Ast.NullCoalescingExpression> = {
+    getNextCombine: getSameNextCombineIfSameConstantKind,
+    leftValidator: AstUtils.isTLogicalExpression,
+    leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
+        NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
+    operatorConstantValidator: (
+        operatorConstant: Ast.TBinOpExpressionConstant,
+    ): operatorConstant is Ast.NullCoalescingExpression["operatorConstant"] =>
+        operatorConstant.constantKind === Constant.MiscConstant.NullCoalescingOperator,
+    rightValidator: AstUtils.isTLogicalExpression,
+    rightFallback: (state: ParseState, parser: Parser, correlationId: number) =>
+        NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
+};
+
+const MetadataExpressionCombiner: Combiner<Ast.MetadataExpression> = {
+    getNextCombine: getSameNextCombineIfSameConstantKind,
+    leftValidator: AstUtils.isTUnaryExpression,
+    leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
+        NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
+    operatorConstantValidator: (
+        operatorConstant: Ast.TBinOpExpressionConstant,
+    ): operatorConstant is Ast.MetadataExpression["operatorConstant"] =>
+        operatorConstant.constantKind === Constant.KeywordConstant.Meta,
+    rightValidator: AstUtils.isTUnaryExpression,
+    rightFallback: (state: ParseState, parser: Parser, correlationId: number) =>
+        NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
+};
 
 function addAstAsChild(nodeIdMapCollection: NodeIdMap.Collection, parent: ParseContext.TNode, child: Ast.TNode): void {
     parent.attributeCounter += 1;
@@ -243,299 +440,68 @@ function addNodeKindToCollection(
     }
 }
 
-function combineEqualityExpressionAndBelow(
-    state: ParseState,
-    parser: Parser,
-    placeholderContextNodeId: number,
-    operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
-    operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>,
-    correlationId: number,
-): ReadAttempt {
-    return combineWhile<Ast.ArithmeticExpression | Ast.EqualityExpression | Ast.RelationalExpression>(
-        state,
-        placeholderContextNodeId,
-        operands,
-        operatorConstants,
-        Ast.NodeKind.EqualityExpression,
-        findHighestPrecedenceIndex,
-        (
-            remainingOperatorConstant: Ast.TBinOpExpressionConstant,
-        ): remainingOperatorConstant is Ast.IConstant<
-            Constant.ArithmeticOperator | Constant.EqualityOperator | Constant.RelationalOperator
-        > => EqualityExpressionAndBelowOperatorConstantKinds.has(remainingOperatorConstant.constantKind),
-        AstUtils.isTMetadataExpression,
-        () => NaiveParseSteps.readMetadataExpression(state, parser, correlationId),
-        AstUtils.isTMetadataExpression,
-        () => NaiveParseSteps.readMetadataExpression(state, parser, correlationId),
-        correlationId,
-    );
-}
-
-function combineAsExpression(
-    state: ParseState,
-    parser: Parser,
-    placeholderContextNodeId: number,
-    operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
-    operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>,
-    index: number,
-    correlationId: number,
-): ReadAttempt {
-    return combineWhile<Ast.AsExpression>(
-        state,
-        placeholderContextNodeId,
-        operands,
-        operatorConstants,
-        Ast.NodeKind.AsExpression,
-        (_: ReadonlyArray<Ast.TBinOpExpressionConstant>) => index,
-        (
-            operatorConstant: Ast.TBinOpExpressionConstant,
-        ): operatorConstant is Ast.IConstant<Constant.KeywordConstant.As> =>
-            operatorConstant.constantKind === Constant.KeywordConstant.As,
-        AstUtils.isTEqualityExpression,
-        () => NaiveParseSteps.readEqualityExpression(state, parser, correlationId),
-        AstUtils.isTNullablePrimitiveType,
-        () => NaiveParseSteps.readNullablePrimitiveType(state, parser, correlationId),
-        correlationId,
-    );
-}
-
-function combineIsExpression(
-    state: ParseState,
-    parser: Parser,
-    placeholderContextNodeId: number,
-    operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
-    operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>,
-    index: number,
-    correlationId: number,
-): ReadAttempt {
-    return combineWhile<Ast.IsExpression>(
-        state,
-        placeholderContextNodeId,
-        operands,
-        operatorConstants,
-        Ast.NodeKind.IsExpression,
-        (_: ReadonlyArray<Ast.TBinOpExpressionConstant>) => index,
-        (
-            operatorConstant: Ast.TBinOpExpressionConstant,
-        ): operatorConstant is Ast.IConstant<Constant.KeywordConstant.Is> =>
-            operatorConstant.constantKind === Constant.KeywordConstant.Is,
-        AstUtils.isTAsExpression,
-        () => NaiveParseSteps.readAsExpression(state, parser, correlationId),
-        AstUtils.isTNullablePrimitiveType,
-        () => NaiveParseSteps.readNullablePrimitiveType(state, parser, correlationId),
-        correlationId,
-    );
-}
-
-function combineLogicalAndExpression(
-    state: ParseState,
-    parser: Parser,
-    placeholderContextNodeId: number,
-    operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
-    operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>,
-    index: number,
-    correlationId: number,
-): ReadAttempt {
-    return combineWhile<Ast.LogicalExpression>(
-        state,
-        placeholderContextNodeId,
-        operands,
-        operatorConstants,
-        Ast.NodeKind.LogicalExpression,
-        (_: ReadonlyArray<Ast.TBinOpExpressionConstant>) => index,
-        (
-            operatorConstant: Ast.TBinOpExpressionConstant,
-        ): operatorConstant is Ast.IConstant<Constant.LogicalOperator.And> =>
-            operatorConstant.constantKind === Constant.LogicalOperator.And,
-        AstUtils.isTIsExpression,
-        () => NaiveParseSteps.readIsExpression(state, parser, correlationId),
-        AstUtils.isTIsExpression,
-        () => NaiveParseSteps.readIsExpression(state, parser, correlationId),
-        correlationId,
-    );
-}
-
-function combineLogicalOrExpression(
-    state: ParseState,
-    parser: Parser,
-    placeholderContextNodeId: number,
-    operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
-    operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>,
-    index: number,
-    correlationId: number,
-): ReadAttempt {
-    return combineWhile<Ast.LogicalExpression>(
-        state,
-        placeholderContextNodeId,
-        operands,
-        operatorConstants,
-        Ast.NodeKind.LogicalExpression,
-        (_: ReadonlyArray<Ast.TBinOpExpressionConstant>) => index,
-        (
-            operatorConstant: Ast.TBinOpExpressionConstant,
-        ): operatorConstant is Ast.IConstant<Constant.LogicalOperator.Or> =>
-            operatorConstant.constantKind === Constant.LogicalOperator.Or,
-        isTIsExpressionOrLogicalAndExpression,
-        () => NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
-        isTIsExpressionOrLogicalAndExpression,
-        () => NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
-        correlationId,
-    );
-}
-
-function combineMetadataExpression(
-    state: ParseState,
-    parser: Parser,
-    placeholderContextNodeId: number,
-    operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
-    operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>,
-    index: number,
-    correlationId: number,
-): ReadAttempt {
-    return combineWhile<Ast.MetadataExpression>(
-        state,
-        placeholderContextNodeId,
-        operands,
-        operatorConstants,
-        Ast.NodeKind.MetadataExpression,
-        (_: ReadonlyArray<Ast.TBinOpExpressionConstant>) => index,
-        (
-            operatorConstant: Ast.TBinOpExpressionConstant,
-        ): operatorConstant is Ast.IConstant<Constant.KeywordConstant.Meta> =>
-            operatorConstant.constantKind === Constant.KeywordConstant.Meta,
-        AstUtils.isTUnaryExpression,
-        () => NaiveParseSteps.readUnaryExpression(state, parser, correlationId),
-        AstUtils.isTUnaryExpression,
-        () => NaiveParseSteps.readUnaryExpression(state, parser, correlationId),
-        correlationId,
-    );
-}
-
-function combineNullCoalescingExpression(
-    state: ParseState,
-    parser: Parser,
-    placeholderContextNodeId: number,
-    operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
-    operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>,
-    index: number,
-    correlationId: number,
-): ReadAttempt {
-    return combineWhile<Ast.NullCoalescingExpression>(
-        state,
-        placeholderContextNodeId,
-        operands,
-        operatorConstants,
-        Ast.NodeKind.NullCoalescingExpression,
-        (_: ReadonlyArray<Ast.TBinOpExpressionConstant>) => index,
-        (
-            operatorConstant: Ast.TBinOpExpressionConstant,
-        ): operatorConstant is Ast.IConstant<Constant.MiscConstant.NullCoalescingOperator> =>
-            operatorConstant.constantKind === Constant.MiscConstant.NullCoalescingOperator,
-        AstUtils.isTLogicalExpression,
-        () => NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
-        AstUtils.isTLogicalExpression,
-        () => NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
-        correlationId,
-    );
-}
-
 // I know this a behemoth of a function, but I can't think of a better way to do this.
 // It takes a collection of N operators and N+1 operands and merges as many as it can into new Ast nodes of type Node.
-//
-// Different Nodes have different rules as to what can be merged. For example:
-// - The LogicalOperator.Or operator combines TIsExpression | (LogicalExpression with LogicalOperator.And operator),
-//   meanwhile the LogicalOperator.And combines TIsExpression.
-//
-// Many invocations assume it will keep reading w/o the index being altered each iteration.
-// Eg. for AsExpression is read with the following pseudo code
-// ```
-//  while (operatorConstants[index] is AsConstant)) {
-//      right = readNullablePrimitiveType(operands[index])
-//  }
-// ```
-// However, the Arithmetic, Relational, and Equality operators do not follow this pattern.
-// Instead they find the highest precedence operator and then reads from there.
-// ```
-//  index = highestPrecedence(remainingOperators)
-//  while (operatorConstants[index] is ArithmeticConstant)) {
-//      right = readSomething(operands[index])
-//      index = highestPrecedence(remainingOperators)
-//  }
-// ```
-function combineWhile<
-    Node extends
-        | Ast.AsExpression
-        | Ast.IsExpression
-        | Ast.LogicalExpression
-        | Ast.MetadataExpression
-        | Ast.NullCoalescingExpression
-        | Ast.ArithmeticExpression
-        | Ast.EqualityExpression
-        | Ast.RelationalExpression,
->(
+// The merging rules/validation is driver by the combiner argument.
+function combineWhile<Node extends Ast.TBinOpExpression>(
     state: ParseState,
+    parser: Parser,
     placeholderContextNodeId: number,
-    operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
     operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>,
-    binOpNodeKind: Node["kind"],
-    // For most contexts this returns a static number.
-    // However, for Arithmetic | Equality | Relational operators this will return the highest precedence operator.
-    nextOperatorIndex: (operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>) => number,
-    operatorConstantValidator: (
-        operatorConstant: Ast.TBinOpExpressionConstant,
-    ) => operatorConstant is Node["operatorConstant"],
-    leftValidator: (node: Ast.TNode) => node is Node["left"],
-    // Expecting this to be a read function from NaiveParseSteps which will throw a ParseError
-    leftFallback: () => void,
-    rightValidator: (node: Ast.TNode) => node is Node["right"],
-    // Expecting this to be a read function from NaiveParseSteps which will throw a ParseError
-    rightFallback: () => void,
+    operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
+    combiner: Combiner<Node>,
+    initialNextCombine: NextCombine,
     correlationId: number,
-): ReadAttempt {
+): CombineRemainders {
     const trace: Trace = state.traceManager.entry(
         CombinatorialParserV2TraceConstant.CombinatorialParseV2,
         combineWhile.name,
         correlationId,
     );
 
-    let index: number = nextOperatorIndex(operatorConstants);
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
-
-    let left: Ast.TBinOpExpression["left"] | Node = ArrayUtils.assertGet(operands, index) as
-        | Ast.TBinOpExpression["left"]
-        | Node;
-
-    // Start a new ParseContext which will be combining `left <-> operator <-> right` together.
-    let binOpParseContext: ParseContext.Node<Node> = ParseContextUtils.startContext(
-        state.contextState,
-        binOpNodeKind,
-        left.tokenRange.tokenIndexStart,
-        ArrayUtils.assertGet(state.lexerSnapshot.tokens, left.tokenRange.tokenIndexStart),
-        undefined,
-    );
-
-    let binOpParseContextNodeId: number = binOpParseContext.id;
-
-    placeParseContextUnderPlaceholderContext(state, binOpParseContext, placeholderContextNodeId);
+    const initialLeft: Ast.TNode = ArrayUtils.assertGet(operands, initialNextCombine.index);
+    const initialOperatorConstant: Ast.TBinOpExpressionConstant = initialNextCombine.operatorConstant;
 
     // If leftValidator fails we should run the fallback which should throw.
-    if (!leftValidator(left)) {
-        setParseStateToNodeStart(state, left);
-        leftFallback();
+    if (!combiner.leftValidator(initialLeft)) {
+        ParseStateUtils.startContext(state, initialNextCombine.nodeKind);
+        setParseStateToNodeStart(state, initialLeft);
+        combiner.leftFallback(state, parser, trace.id);
         throw new CommonError.InvariantError(`leftValidator failed and then leftFallback did not throw.`);
     }
 
-    addAstAsChild(nodeIdMapCollection, binOpParseContext, left);
-    setParseStateToAfterNodeEnd(state, left);
-    let operatorConstant: Ast.TBinOpExpressionConstant | undefined = ArrayUtils.assertGet(operatorConstants, index);
+    // This should never happen, but handle it just in case.
+    if (!combiner.operatorConstantValidator(initialOperatorConstant)) {
+        const parseContextForError: ParseContext.TNode = ParseStateUtils.startContext(
+            state,
+            initialNextCombine.nodeKind,
+        );
 
-    // This should never happen so long as the input parameters are valid.
-    if (!operatorConstantValidator(operatorConstant)) {
+        addAstAsChild(nodeIdMapCollection, parseContextForError, initialLeft);
+        setParseStateToNodeStart(state, initialOperatorConstant);
         throw new CommonError.InvariantError(`operatorConstantValidator failed.`);
     }
 
+    let left: Node["left"] | Node = initialLeft;
+    let nextCombine: NextCombine | undefined = initialNextCombine;
+
     // Continually combine `left <-> operator <-> right` until we encounter an operator we can't handle.
-    while (operatorConstant && operatorConstantValidator(operatorConstant)) {
+    while (nextCombine) {
+        const operatorConstant: Ast.TBinOpExpressionConstant = nextCombine.operatorConstant;
+
+        const binOpParseContext: ParseContext.TNode = ParseContextUtils.startContext(
+            state.contextState,
+            nextCombine.nodeKind,
+            operatorConstant.tokenRange.tokenIndexStart,
+            state.lexerSnapshot.tokens[operatorConstant.tokenRange.tokenIndexEnd + 1],
+            undefined,
+        );
+
+        placeParseContextUnderPlaceholderContext(state, binOpParseContext, placeholderContextNodeId);
+        addAstAsChild(nodeIdMapCollection, binOpParseContext, left);
+        addAstAsChild(nodeIdMapCollection, binOpParseContext, operatorConstant);
+
         // It's assumed that the following state has been set:
         //  - astNodes: left
         //  - contextNodes: placeholderContextNode, binOpParseContextNode
@@ -548,14 +514,11 @@ function combineWhile<
         //
         //  - idsByNodeKind has: placeholderContextNode, binOpParseContextNode, left
 
-        addAstAsChild(nodeIdMapCollection, binOpParseContext, operatorConstant);
-        setParseStateToAfterNodeEnd(state, operatorConstant);
+        const right: Ast.TNode | undefined = nextCombine.operand;
 
-        const right: Ast.TNode = ArrayUtils.assertGet(operands, index + 1);
-
-        if (!rightValidator(right)) {
-            setParseStateToNodeStart(state, right);
-            rightFallback();
+        if (!right || !combiner.rightValidator(right)) {
+            setParseStateToAfterNodeEnd(state, operatorConstant);
+            combiner.rightFallback(state, parser, trace.id);
             throw new CommonError.InvariantError(`rightValidator failed and then rightFallback did not throw.`);
         }
 
@@ -580,9 +543,9 @@ function combineWhile<
         const leftTokenRange: Token.TokenRange = left.tokenRange;
         const rightTokenRange: Token.TokenRange = right.tokenRange;
 
-        const newLeft: Node = (left = {
-            kind: binOpNodeKind,
-            id: binOpParseContextNodeId,
+        const newLeft: Node = {
+            kind: binOpParseContext.kind,
+            id: binOpParseContext.id,
             attributeIndex: 0,
             tokenRange: {
                 tokenIndexStart: leftTokenRange.tokenIndexStart,
@@ -594,54 +557,20 @@ function combineWhile<
             left,
             operatorConstant,
             right,
-        } as Node);
+        } as Node;
 
         // Convert from ParseContext to Ast
         nodeIdMapCollection.astNodeById.set(newLeft.id, newLeft);
         MapUtils.assertDelete(nodeIdMapCollection.contextNodeById, newLeft.id);
 
-        // Start a new ParseContext with the new `left` Ast as its own `left` value
-        const newBinOpParseContext: ParseContext.Node<Node> = ParseContextUtils.startContext(
-            state.contextState,
-            binOpNodeKind,
-            binOpParseContext.tokenIndexStart,
-            binOpParseContext.tokenStart,
-            undefined,
-        );
+        // Modify the operands and operatorConstants for the next iteration by:
+        //  - replacing the `left` and `right` operands with the new `left` value
+        //  - removing the operator
+        operands = [...operands.slice(0, nextCombine.index), newLeft, ...operands.slice(nextCombine.index + 2)];
+        operatorConstants = ArrayUtils.assertRemoveAtIndex(operatorConstants, nextCombine.index);
 
-        const newBinOpParseContextNodeId: number = newBinOpParseContext.id;
-        placeParseContextUnderPlaceholderContext(state, newBinOpParseContext, placeholderContextNodeId);
-
-        // Link the new `left` value to being under the new ParseContext
-        nodeIdMapCollection.parentIdById.set(newLeft.id, newBinOpParseContextNodeId);
-        nodeIdMapCollection.childIdsById.set(newBinOpParseContextNodeId, [newLeft.id]);
-        removeIdFromIdsByNodeKind(nodeIdMapCollection.idsByNodeKind, binOpNodeKind, binOpParseContextNodeId);
-
-        // It's assumed that the following state has been set:
-        //  - astNodes: newLeft, left, operatorConstant, right
-        //  - contextNodes: placeholderContextNode, newBinOpParseContextNode
-        //  - deletedNodes: binOpParseContextNode
-        //
-        //  - placeholderContextNode.children -> [newBinOpParseContext]
-        //  - newBinOpParseContext.parent -> placeholderContextNode
-        //  - newBinOpParseContext.children -> [newLeft]
-        //  - newLeft.parent -> newBinOpParseContext
-        //  - newLeft.children -> [left, operatorConstant, right]
-        //  - left.parent -> newLeft
-        //  - operatorConstant.parent -> newLeft
-        //  - right.parent -> newLeft
-        //
-        //  - idsByNodeKind has: placeholderContextNode, newBinOpParseContextNode, left, operatorConstant, right
-
-        operands = [...operands.slice(0, index), left, ...operands.slice(index + 2)];
-        operatorConstants = ArrayUtils.assertRemoveAtIndex(operatorConstants, index);
-
+        nextCombine = combiner.getNextCombine(operatorConstants, operands, nextCombine);
         left = newLeft;
-        binOpParseContext = newBinOpParseContext;
-        binOpParseContextNodeId = newBinOpParseContextNodeId;
-
-        index = nextOperatorIndex(operatorConstants);
-        operatorConstant = operatorConstants[index];
     }
 
     trace.exit();
@@ -658,23 +587,23 @@ function findHighestPrecedenceIndex(operators: ReadonlyArray<Ast.TBinOpExpressio
     }
 
     const numOperators: number = operators.length;
-    let minPrecedenceIndex: number = -1;
-    let minPrecedence: number = Number.MAX_SAFE_INTEGER;
+    let bestPrecedenceIndex: number = -1;
+    let bestPrecedence: number = Number.MAX_SAFE_INTEGER;
 
     for (let index: number = 0; index < numOperators; index += 1) {
         const currentPrecedence: number = ConstantUtils.binOpExpressionOperatorPrecedence(
             operators[index].constantKind,
         );
 
-        if (minPrecedence > currentPrecedence) {
-            minPrecedence = currentPrecedence;
-            minPrecedenceIndex = index;
+        if (bestPrecedence > currentPrecedence) {
+            bestPrecedence = currentPrecedence;
+            bestPrecedenceIndex = index;
         }
     }
 
-    Assert.isTrue(minPrecedenceIndex !== -1, `operators is non-zero length and minPrecedenceIndex !== -1 failed`);
+    Assert.isTrue(bestPrecedenceIndex !== -1, `operators is non-zero length and minPrecedenceIndex !== -1 failed`);
 
-    return minPrecedenceIndex;
+    return bestPrecedenceIndex;
 }
 
 function isTIsExpressionOrLogicalAndExpression(node: Ast.TNode): node is Ast.TLogicalExpression {
