@@ -243,20 +243,38 @@ interface NextCombine {
 }
 
 interface Combiner<Node extends Ast.TBinOpExpression> {
-    getNextCombine: (
+    // The tag has zero functional use.
+    // It's only exists because I'm lazy while debugging.
+    readonly tag: Node["kind"];
+    // The function combineWhile is driven by instances of this interface.
+    // So long as there exists an operatorConstant it'll call getNextCombine to determine if/where to combine next.
+    // Assume that operatorConstants and operands are of equal length and are non-empty.
+    // A value of undefined indicates that there's no more combining to do as-is.
+    // There are currently two ways to generate a new NextCombine:
+    //  - Keep combining at the same operator index so long as a valid operator is next.
+    //    For example, take `1 is number is number`:
+    //      - there are 3 operands (`1`, `number`, `number`) and 2 operators (`is`, `is`)
+    //      - start combining at the index of the first `is` operator
+    //      - create a new IsExpression with `1` and `number` as operands and `is` as the operator
+    //      - there are now 2 operands (`1 is number`, `number`) and 1 operator (`is`)
+    //      - conditionally return the same operator index if the next operator is the same as the previous
+    //  - Find the operator index with the highest precedence
+    readonly getNextCombine: (
         operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>,
         operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
         previousNextCombine: NextCombine,
     ) => NextCombine | undefined;
-    leftValidator: (node: Ast.TNode) => node is Node["left"];
-    // Expecting this to be a read function from NaiveParseSteps which will throw a ParseError
-    leftFallback: (state: ParseState, parser: Parser, correlationId: number) => void;
-    operatorConstantValidator: (
+    // Checks if the left operand is of the correct type
+    readonly leftValidator: (node: Ast.TNode) => node is Node["left"];
+    // If leftValidator fails, then this is the fallback function called.
+    // It's expected to be a read function from NaiveParseSteps which will throw a ParseError
+    readonly leftFallback: (state: ParseState, parser: Parser, correlationId: number) => void;
+    readonly operatorConstantValidator: (
         operatorConstant: Ast.TBinOpExpressionConstant,
     ) => operatorConstant is Node["operatorConstant"];
-    rightValidator: (node: Ast.TNode) => node is Node["right"];
-    // Expecting this to be a read function from NaiveParseSteps which will throw a ParseError
-    rightFallback: (state: ParseState, parser: Parser, correlationId: number) => void;
+    // Same behavior and expectations as leftValidator/leftFallback
+    readonly rightValidator: (node: Ast.TNode) => node is Node["right"];
+    readonly rightFallback: (state: ParseState, parser: Parser, correlationId: number) => void;
 }
 
 function getSameNextCombineIfSameConstantKind(
@@ -298,6 +316,7 @@ const NodeKindByTEqualityExpressionAndBelowOperatorKind: ReadonlyMap<string, TEq
 // Combiners
 
 const AsExpressionCombiner: Combiner<Ast.AsExpression> = {
+    tag: Ast.NodeKind.AsExpression,
     getNextCombine: getSameNextCombineIfSameConstantKind,
     leftValidator: (node: Ast.TNode): node is Ast.TEqualityExpression => AstUtils.isTEqualityExpression(node),
     leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
@@ -312,15 +331,12 @@ const AsExpressionCombiner: Combiner<Ast.AsExpression> = {
 };
 
 const EqualityExpressionAndBelowCombiner: Combiner<TEqualityExpressionAndBelow> = {
+    tag: Ast.NodeKind.EqualityExpression,
     getNextCombine: (
         operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>,
         operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
         _previousNextCombine: NextCombine,
     ): NextCombine | undefined => {
-        if (operatorConstants.length === 0) {
-            return undefined;
-        }
-
         const index: number = findHighestPrecedenceIndex(operatorConstants);
         const operatorConstant: Ast.TBinOpExpressionConstant = ArrayUtils.assertGet(operatorConstants, index);
 
@@ -338,19 +354,20 @@ const EqualityExpressionAndBelowCombiner: Combiner<TEqualityExpressionAndBelow> 
             index,
         };
     },
-    leftValidator: (node: Ast.TNode): node is Ast.TMetadataExpression => AstUtils.isTMetadataExpression(node),
+    leftValidator: (node: Ast.TNode): node is Ast.TMetadataExpression => AstUtils.isTEqualityExpression(node),
     leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
         NaiveParseSteps.readMetadataExpression(state, parser, correlationId),
     operatorConstantValidator: (
         operatorConstant: Ast.TBinOpExpressionConstant,
     ): operatorConstant is TEqualityExpressionAndBelow["operatorConstant"] =>
         NodeKindByTEqualityExpressionAndBelowOperatorKind.has(operatorConstant.constantKind),
-    rightValidator: (node: Ast.TNode): node is Ast.TMetadataExpression => AstUtils.isTMetadataExpression(node),
+    rightValidator: (node: Ast.TNode): node is Ast.TMetadataExpression => AstUtils.isTEqualityExpression(node),
     rightFallback: (state: ParseState, parser: Parser, correlationId: number) =>
         NaiveParseSteps.readMetadataExpression(state, parser, correlationId),
 };
 
 const IsExpressionCombiner: Combiner<Ast.IsExpression> = {
+    tag: Ast.NodeKind.IsExpression,
     getNextCombine: getSameNextCombineIfSameConstantKind,
     leftValidator: (node: Ast.TNode): node is Ast.TIsExpression => AstUtils.isTAsExpression(node),
     leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
@@ -365,6 +382,7 @@ const IsExpressionCombiner: Combiner<Ast.IsExpression> = {
 };
 
 const LogicalAndExpressionCombiner: Combiner<Ast.LogicalExpression> = {
+    tag: Ast.NodeKind.LogicalExpression,
     getNextCombine: getSameNextCombineIfSameConstantKind,
     leftValidator: (node: Ast.TNode): node is Ast.TLogicalExpression => AstUtils.isTLogicalExpression(node),
     leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
@@ -379,6 +397,7 @@ const LogicalAndExpressionCombiner: Combiner<Ast.LogicalExpression> = {
 };
 
 const LogicalOrExpressionCombiner: Combiner<Ast.LogicalExpression> = {
+    tag: Ast.NodeKind.LogicalExpression,
     getNextCombine: getSameNextCombineIfSameConstantKind,
     leftValidator: isTIsExpressionOrLogicalAndExpression,
     leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
@@ -393,6 +412,7 @@ const LogicalOrExpressionCombiner: Combiner<Ast.LogicalExpression> = {
 };
 
 const NullCoalescingExpressionCombiner: Combiner<Ast.NullCoalescingExpression> = {
+    tag: Ast.NodeKind.NullCoalescingExpression,
     getNextCombine: getSameNextCombineIfSameConstantKind,
     leftValidator: (node: Ast.TNode): node is Ast.TLogicalExpression => AstUtils.isTLogicalExpression(node),
     leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
@@ -408,6 +428,7 @@ const NullCoalescingExpressionCombiner: Combiner<Ast.NullCoalescingExpression> =
 };
 
 const MetadataExpressionCombiner: Combiner<Ast.MetadataExpression> = {
+    tag: Ast.NodeKind.MetadataExpression,
     getNextCombine: getSameNextCombineIfSameConstantKind,
     leftValidator: (node: Ast.TNode): node is Ast.TUnaryExpression => AstUtils.isTUnaryExpression(node),
     leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
@@ -447,9 +468,8 @@ function addNodeKindToCollection(
     }
 }
 
-// I know this a behemoth of a function, but I can't think of a better way to do this.
-// It takes a collection of N operators and N+1 operands and merges as many as it can into new Ast nodes of type Node.
-// The merging rules/validation is driver by the combiner argument.
+// It's assumed that operatorConstants and operands are the same length.
+// Most of the internal logic of if/how to combine is driven by the combiner argument.
 function combineWhile<Node extends Ast.TBinOpExpression>(
     state: ParseState,
     parser: Parser,
@@ -478,14 +498,9 @@ function combineWhile<Node extends Ast.TBinOpExpression>(
         throw new CommonError.InvariantError(`leftValidator failed and then leftFallback did not throw.`);
     }
 
-    // This should never happen, but handle it just in case.
+    // This should never happen, but setup the parse state to handle it just in case.
     if (!combiner.operatorConstantValidator(initialOperatorConstant)) {
-        const parseContextForError: ParseContext.TNode = ParseStateUtils.startContext(
-            state,
-            initialNextCombine.nodeKind,
-        );
-
-        addAstAsChild(nodeIdMapCollection, parseContextForError, initialLeft);
+        ParseStateUtils.startContext(state, initialNextCombine.nodeKind);
         setParseStateToNodeStart(state, initialOperatorConstant);
         throw new CommonError.InvariantError(`operatorConstantValidator failed.`);
     }
@@ -493,7 +508,7 @@ function combineWhile<Node extends Ast.TBinOpExpression>(
     let left: Node["left"] | Node = initialLeft;
     let nextCombine: NextCombine | undefined = initialNextCombine;
 
-    // Continually combine `left <-> operator <-> right` until we encounter an operator we can't handle.
+    // Continually combine `left <-> operator <-> right` as a new left until we encounter an operator we can't handle.
     while (nextCombine) {
         const operatorConstant: Ast.TBinOpExpressionConstant = nextCombine.operatorConstant;
 
@@ -509,18 +524,6 @@ function combineWhile<Node extends Ast.TBinOpExpression>(
         addAstAsChild(nodeIdMapCollection, binOpParseContext, left);
         addAstAsChild(nodeIdMapCollection, binOpParseContext, operatorConstant);
 
-        // It's assumed that the following state has been set:
-        //  - astNodes: left
-        //  - contextNodes: placeholderContextNode, binOpParseContextNode
-        //  - deletedNodes: nil
-        //
-        //  - placeholderContextNode.children -> [binOpParseContext]
-        //  - binOpParseContext.parent -> placeholderContextNode
-        //  - binOpParseContext.children -> [left]
-        //  - left.parent -> binOpParseContext
-        //
-        //  - idsByNodeKind has: placeholderContextNode, binOpParseContextNode, left
-
         const right: Ast.TNode | undefined = nextCombine.operand;
 
         if (!right || !combiner.rightValidator(right)) {
@@ -531,20 +534,6 @@ function combineWhile<Node extends Ast.TBinOpExpression>(
 
         addAstAsChild(nodeIdMapCollection, binOpParseContext, right);
         setParseStateToAfterNodeEnd(state, right);
-
-        // It's assumed that the following state has been set:
-        //  - astNodes: left, operatorConstant, right
-        //  - contextNodes: placeholderContextNode, binOpParseContextNode
-        //  - deletedNodes: nil
-        //
-        //  - placeholderContextNode.children -> [binOpParseContext]
-        //  - binOpParseContext.parent -> placeholderContextNode
-        //  - binOpParseContext.children -> [left, operatorConstant, right]
-        //  - left.parent -> binOpParseContext
-        //  - operatorConstant.parent -> binOpParseContext
-        //  - right.parent -> binOpParseContext
-        //
-        //  - idsByNodeKind has: placeholderContextNode, binOpParseContextNode, left, operatorConstant, right
 
         // Now we create a new Ast node which will be the new `left` value.
         const leftTokenRange: Token.TokenRange = left.tokenRange;
@@ -576,7 +565,10 @@ function combineWhile<Node extends Ast.TBinOpExpression>(
         operands = [...operands.slice(0, nextCombine.index), newLeft, ...operands.slice(nextCombine.index + 2)];
         operatorConstants = ArrayUtils.assertRemoveAtIndex(operatorConstants, nextCombine.index);
 
-        nextCombine = combiner.getNextCombine(operatorConstants, operands, nextCombine);
+        nextCombine = operatorConstants.length
+            ? combiner.getNextCombine(operatorConstants, operands, nextCombine)
+            : undefined;
+
         left = newLeft;
     }
 
