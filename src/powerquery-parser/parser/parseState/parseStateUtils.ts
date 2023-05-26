@@ -106,14 +106,7 @@ export function startContextAsParent<T extends Ast.TNode>(
         tokenStart,
     );
 
-    const newNodeIdByOldNodeId: ReadonlyMap<number, number> = NodeIdMapUtils.recalculateIds(
-        nodeIdMapCollection,
-        insertedContext.id,
-        state.traceManager,
-        trace.id,
-    );
-
-    NodeIdMapUtils.updateNodeIds(nodeIdMapCollection, newNodeIdByOldNodeId, state.traceManager, trace.id);
+    NodeIdMapUtils.recalculateAndUpdateIds(nodeIdMapCollection, insertedContext.id, state.traceManager, trace.id);
 
     trace.exit();
 

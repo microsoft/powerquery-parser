@@ -273,7 +273,7 @@ function getSameNextCombineIfSameConstantKind(
               operatorConstant: operatorConstants[index],
               operand: operands[index + 1],
               index,
-              nodeKind: Ast.NodeKind.NullCoalescingExpression,
+              nodeKind: previousNextCombine.nodeKind,
           }
         : undefined;
 }
@@ -317,6 +317,10 @@ const EqualityExpressionAndBelowCombiner: Combiner<TEqualityExpressionAndBelow> 
         operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
         _previousNextCombine: NextCombine,
     ): NextCombine | undefined => {
+        if (operatorConstants.length === 0) {
+            return undefined;
+        }
+
         const index: number = findHighestPrecedenceIndex(operatorConstants);
         const operatorConstant: Ast.TBinOpExpressionConstant = ArrayUtils.assertGet(operatorConstants, index);
 
@@ -397,7 +401,8 @@ const NullCoalescingExpressionCombiner: Combiner<Ast.NullCoalescingExpression> =
         operatorConstant: Ast.TBinOpExpressionConstant,
     ): operatorConstant is Ast.NullCoalescingExpression["operatorConstant"] =>
         operatorConstant.constantKind === Constant.MiscConstant.NullCoalescingOperator,
-    rightValidator: (node: Ast.TNode): node is Ast.TLogicalExpression => AstUtils.isTLogicalExpression(node),
+    rightValidator: (node: Ast.TNode): node is Ast.TNullCoalescingExpression =>
+        AstUtils.isTNullCoalescingExpression(node),
     rightFallback: (state: ParseState, parser: Parser, correlationId: number) =>
         NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
 };
@@ -574,6 +579,8 @@ function combineWhile<Node extends Ast.TBinOpExpression>(
         nextCombine = combiner.getNextCombine(operatorConstants, operands, nextCombine);
         left = newLeft;
     }
+
+    state.currentContextNode = nodeIdMapCollection.contextNodeById.get(placeholderContextNodeId);
 
     trace.exit();
 

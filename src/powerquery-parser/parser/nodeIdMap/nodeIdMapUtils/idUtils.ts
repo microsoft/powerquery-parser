@@ -11,6 +11,26 @@ import { TXorNode } from "../xorNode";
 
 // Helper functions which are related to updating / remapping nodeIds for NodeIdMap.Collection
 
+export function recalculateAndUpdateIds(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    nodeId: number,
+    traceManager: TraceManager,
+    correlationId: number | undefined,
+): void {
+    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, recalculateAndUpdateIds.name, correlationId);
+
+    const newIdByOldId: ReadonlyMap<number, number> = recalculateIds(
+        nodeIdMapCollection,
+        nodeId,
+        traceManager,
+        trace.id,
+    );
+
+    updateNodeIds(nodeIdMapCollection, newIdByOldId, traceManager, trace.id);
+
+    trace.exit();
+}
+
 // Builds up a list of all nodeIds under the given nodeId (including itself),
 // then creates a Map<oldId, newId> such that the Ids are in a BFS ordering.
 // Does not include nodeIds which remain unchanged.

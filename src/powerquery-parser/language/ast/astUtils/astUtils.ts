@@ -58,6 +58,10 @@ export function isTFieldAccessExpression(node: Ast.TNode): node is Ast.TFieldAcc
     return node.kind === Ast.NodeKind.FieldSelector || node.kind === Ast.NodeKind.FieldProjection;
 }
 
+export function isTNullCoalescingExpression(node: Ast.TNode): node is Ast.TNullCoalescingExpression {
+    return node.kind === Ast.NodeKind.NullCoalescingExpression || isTLogicalExpression(node);
+}
+
 export function isTMetadataExpression(node: Ast.TNode): node is Ast.TMetadataExpression {
     return node.kind === Ast.NodeKind.MetadataExpression || isTUnaryExpression(node);
 }

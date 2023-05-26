@@ -223,7 +223,7 @@ describe("Parser.AbridgedNode", () => {
             ]);
         });
 
-        it(`1 + 2 + 3 + 4`, async () => {
+        it(`WIP 1 + 2 + 3 + 4`, async () => {
             await runAbridgedNodeTest(`1 + 2 + 3 + 4`, [
                 [Ast.NodeKind.ArithmeticExpression, undefined],
                 [Ast.NodeKind.ArithmeticExpression, 0],
@@ -1369,13 +1369,13 @@ describe("Parser.AbridgedNode", () => {
             ]);
         });
 
-        it(`1 ?? 1 ?? 1`, async () => {
-            await runAbridgedNodeTest(`1 ?? 1 ?? 1`, [
+        it(`1 ?? 2 ?? 3`, async () => {
+            await runAbridgedNodeTest(`1 ?? 2 ?? 3`, [
                 [Ast.NodeKind.NullCoalescingExpression, undefined],
-                [Ast.NodeKind.NullCoalescingExpression, 0],
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.NullCoalescingExpression, 2],
+                [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
             ]);

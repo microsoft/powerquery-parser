@@ -3,7 +3,7 @@
 
 import { Ast, Constant, Token } from "../../../language";
 import { Disambiguation, DisambiguationUtils } from "../../disambiguation";
-import { NodeIdMap, ParseContext } from "../..";
+import { NodeIdMap, NodeIdMapUtils, ParseContext } from "../..";
 import { Parser, ParserUtils } from "../../parser";
 import { ParseState, ParseStateUtils } from "../../parseState";
 import { Assert } from "../../../common";
@@ -31,7 +31,13 @@ export const CombinatorialParserV2: Parser = {
     readSectionMembers: NaiveParseSteps.readSectionMembers,
     readSectionMember: NaiveParseSteps.readSectionMember,
 
-    readNullCoalescingExpression: NaiveParseSteps.readNullCoalescingExpression,
+    readNullCoalescingExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
+        readBinOpExpression(
+            state,
+            parser,
+            Ast.NodeKind.NullCoalescingExpression,
+            correlationId,
+        ) as Promise<Ast.TNullCoalescingExpression>,
     readExpression: NaiveParseSteps.readExpression,
 
     readLogicalExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
@@ -214,11 +220,10 @@ async function readBinOpExpression(
         for (const nodeId of [operand.id, operatorConstant.id, iterativeParseContext.id]) {
             nodeIdMapCollection.astNodeById.delete(nodeId);
             nodeIdMapCollection.parentIdById.delete(nodeId);
-            nodeIdMapCollection.childIdsById.delete(nodeId);
-            nodeIdMapCollection.leafIds.delete(nodeId);
         }
 
         nodeIdMapCollection.contextNodeById.delete(iterativeParseContext.id);
+        nodeIdMapCollection.childIdsById.delete(iterativeParseContext.id);
 
         removeIdFromIdsByNodeKind(
             nodeIdMapCollection.idsByNodeKind,
@@ -251,7 +256,6 @@ async function readBinOpExpression(
     let result: Ast.TNode;
 
     if (!operatorConstants.length) {
-        ParseStateUtils.deleteContext(state, placeholderContextNodeId);
         result = initialUnaryExpression;
     } else {
         result = combineOperatorsAndOperands(
@@ -262,9 +266,16 @@ async function readBinOpExpression(
             operatorConstants,
             trace.id,
         );
-
-        ParseStateUtils.deleteContext(state, placeholderContextNodeId);
     }
+
+    ParseStateUtils.deleteContext(state, placeholderContextNode.id);
+
+    NodeIdMapUtils.recalculateAndUpdateIds(
+        state.contextState.nodeIdMapCollection,
+        result.id,
+        state.traceManager,
+        trace.id,
+    );
 
     trace.exit();
 
