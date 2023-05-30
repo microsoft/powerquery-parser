@@ -249,7 +249,7 @@ interface NextCombine {
 interface Combiner<Node extends Ast.TBinOpExpression> {
     // The tag has zero functional use.
     // It's only exists because I'm lazy while debugging.
-    readonly tag: Node["kind"];
+    readonly tag: string;
     // The function combineWhile is driven by instances of this interface.
     // So long as there exists an operatorConstant it'll call getNextCombine to determine if/where to combine next.
     // Assume that operatorConstants and operands are of equal length and are non-empty.
@@ -286,20 +286,21 @@ function getSameNextCombineIfSameConstantKind(
     operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
     previousCombine: NextCombine,
 ): NextCombine | undefined {
-    const index: number = previousCombine.index;
+    const previousIndex: number = previousCombine.index;
+    const previousOperatorConstant: Ast.TBinOpExpressionConstant = previousCombine.operatorConstant;
 
-    const operatorConstant: Ast.TBinOpExpressionConstant | undefined = operatorConstants[index];
+    const newOperatorConstant: Ast.TBinOpExpressionConstant | undefined = operatorConstants[previousIndex];
 
-    if (operatorConstant?.constantKind !== previousCombine.operatorConstant.constantKind) {
+    if (newOperatorConstant?.constantKind !== previousOperatorConstant.constantKind) {
         return undefined;
     }
 
     return {
         nodeKind: previousCombine.nodeKind,
-        left: ArrayUtils.assertGet(operands, index),
-        operatorConstant,
-        right: operands[index + 1],
-        index,
+        left: ArrayUtils.assertGet(operands, previousIndex),
+        operatorConstant: newOperatorConstant,
+        right: operands[previousIndex + 1],
+        index: previousIndex,
     };
 }
 
@@ -388,7 +389,7 @@ const IsExpressionCombiner: Combiner<Ast.IsExpression> = {
 };
 
 const LogicalAndExpressionCombiner: Combiner<Ast.LogicalExpression> = {
-    tag: Ast.NodeKind.LogicalExpression,
+    tag: `${Ast.NodeKind.LogicalExpression}:${Constant.LogicalOperator.And}`,
     getNextCombine: getSameNextCombineIfSameConstantKind,
     leftValidator: (node: Ast.TNode): node is Ast.TLogicalExpression => AstUtils.isTLogicalExpression(node),
     leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
@@ -403,9 +404,9 @@ const LogicalAndExpressionCombiner: Combiner<Ast.LogicalExpression> = {
 };
 
 const LogicalOrExpressionCombiner: Combiner<Ast.LogicalExpression> = {
-    tag: Ast.NodeKind.LogicalExpression,
+    tag: `${Ast.NodeKind.LogicalExpression}:${Constant.LogicalOperator.Or}`,
     getNextCombine: getSameNextCombineIfSameConstantKind,
-    leftValidator: isTIsExpressionOrLogicalAndExpression,
+    leftValidator: (node: Ast.TNode): node is Ast.TLogicalExpression => AstUtils.isTLogicalExpression(node),
     leftFallback: (state: ParseState, parser: Parser, correlationId: number) =>
         NaiveParseSteps.readLogicalExpression(state, parser, correlationId),
     operatorConstantValidator: (
@@ -497,7 +498,7 @@ function combineWhile<Node extends Ast.TBinOpExpression>(
 
     // Continually combine `left <-> operator <-> right` as a new left until we encounter an operator we can't handle.
     while (nextCombine) {
-        const { nodeKind, left, operatorConstant, right }: NextCombine = nextCombine;
+        const { nodeKind, left, operatorConstant, right, index }: NextCombine = nextCombine;
 
         const binOpParseContext: ParseContext.TNode = ParseContextUtils.startContext(
             state.contextState,
@@ -509,8 +510,8 @@ function combineWhile<Node extends Ast.TBinOpExpression>(
 
         placeParseContextUnderPlaceholderContext(state, binOpParseContext, placeholderContextNodeId);
 
-        if (!combiner.leftValidator(nextCombine.left)) {
-            setParseStateToNodeStart(state, nextCombine.left);
+        if (!combiner.leftValidator(left)) {
+            setParseStateToNodeStart(state, left);
             combiner.leftFallback(state, parser, trace.id);
             throw new CommonError.InvariantError(`leftValidator failed and then leftFallback did not throw.`);
         }
@@ -560,8 +561,8 @@ function combineWhile<Node extends Ast.TBinOpExpression>(
         // Modify the operands and operatorConstants for the next iteration by:
         //  - replacing the `left` and `right` operands with the new `binOp` node
         //  - removing the operator
-        operands = [...operands.slice(0, nextCombine.index), binOp, ...operands.slice(nextCombine.index + 2)];
-        operatorConstants = ArrayUtils.assertRemoveAtIndex(operatorConstants, nextCombine.index);
+        operands = [...operands.slice(0, index), binOp, ...operands.slice(index + 2)];
+        operatorConstants = ArrayUtils.assertRemoveAtIndex(operatorConstants, index);
 
         nextCombine = operatorConstants.length
             ? combiner.getNextCombine(operatorConstants, operands, nextCombine)
