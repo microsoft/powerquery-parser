@@ -315,22 +315,20 @@ function getSameNextCombineIfSameConstantKind(
 
 // Cache
 
-const NodeKindByTEqualityExpressionAndBelowOperatorKind: ReadonlyMap<
-    TEqualityExpressionAndBelow["operatorConstant"]["constantKind"],
-    TEqualityExpressionAndBelow["kind"]
-> = new Map<TEqualityExpressionAndBelow["operatorConstant"]["constantKind"], TEqualityExpressionAndBelow["kind"]>([
-    [Constant.ArithmeticOperator.Multiplication, Ast.NodeKind.ArithmeticExpression],
-    [Constant.ArithmeticOperator.Division, Ast.NodeKind.ArithmeticExpression],
-    [Constant.ArithmeticOperator.Addition, Ast.NodeKind.ArithmeticExpression],
-    [Constant.ArithmeticOperator.Subtraction, Ast.NodeKind.ArithmeticExpression],
-    [Constant.ArithmeticOperator.And, Ast.NodeKind.ArithmeticExpression],
-    [Constant.EqualityOperator.EqualTo, Ast.NodeKind.EqualityExpression],
-    [Constant.EqualityOperator.NotEqualTo, Ast.NodeKind.EqualityExpression],
-    [Constant.RelationalOperator.LessThan, Ast.NodeKind.RelationalExpression],
-    [Constant.RelationalOperator.LessThanEqualTo, Ast.NodeKind.RelationalExpression],
-    [Constant.RelationalOperator.GreaterThan, Ast.NodeKind.RelationalExpression],
-    [Constant.RelationalOperator.GreaterThanEqualTo, Ast.NodeKind.RelationalExpression],
-]);
+const NodeKindByTEqualityExpressionAndBelowOperatorKind: ReadonlyMap<string, TEqualityExpressionAndBelow["kind"]> =
+    new Map<string, TEqualityExpressionAndBelow["kind"]>([
+        [Constant.ArithmeticOperator.Multiplication, Ast.NodeKind.ArithmeticExpression],
+        [Constant.ArithmeticOperator.Division, Ast.NodeKind.ArithmeticExpression],
+        [Constant.ArithmeticOperator.Addition, Ast.NodeKind.ArithmeticExpression],
+        [Constant.ArithmeticOperator.Subtraction, Ast.NodeKind.ArithmeticExpression],
+        [Constant.ArithmeticOperator.And, Ast.NodeKind.ArithmeticExpression],
+        [Constant.EqualityOperator.EqualTo, Ast.NodeKind.EqualityExpression],
+        [Constant.EqualityOperator.NotEqualTo, Ast.NodeKind.EqualityExpression],
+        [Constant.RelationalOperator.LessThan, Ast.NodeKind.RelationalExpression],
+        [Constant.RelationalOperator.LessThanEqualTo, Ast.NodeKind.RelationalExpression],
+        [Constant.RelationalOperator.GreaterThan, Ast.NodeKind.RelationalExpression],
+        [Constant.RelationalOperator.GreaterThanEqualTo, Ast.NodeKind.RelationalExpression],
+    ]);
 
 // Combiners
 
