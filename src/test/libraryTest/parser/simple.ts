@@ -223,7 +223,7 @@ describe("Parser.AbridgedNode", () => {
             ]);
         });
 
-        it(`WIP 1 + 2 + 3 + 4`, async () => {
+        it(`1 + 2 + 3 + 4`, async () => {
             await runAbridgedNodeTest(`1 + 2 + 3 + 4`, [
                 [Ast.NodeKind.ArithmeticExpression, undefined],
                 [Ast.NodeKind.ArithmeticExpression, 0],
