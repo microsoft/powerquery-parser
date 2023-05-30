@@ -33,6 +33,8 @@ export function combineOperatorsAndOperands(
         correlationId,
     );
 
+    const previouslyValidatedIds: Set<number> = new Set();
+
     while (operatorConstants.length) {
         const index: number = findHighestPrecedenceIndex(operatorConstants);
         const operatorConstant: Ast.TBinOpExpressionConstant = ArrayUtils.assertGet(operatorConstants, index);
@@ -67,6 +69,7 @@ export function combineOperatorsAndOperands(
                     operatorConstants,
                     operands,
                     EqualityExpressionAndBelowCombiner,
+                    previouslyValidatedIds,
                     {
                         nodeKind: MapUtils.assertGet(
                             NodeKindByTEqualityExpressionAndBelowOperatorKind,
@@ -90,6 +93,7 @@ export function combineOperatorsAndOperands(
                     operatorConstants,
                     operands,
                     LogicalAndExpressionCombiner,
+                    previouslyValidatedIds,
                     {
                         nodeKind: Ast.NodeKind.LogicalExpression,
                         left,
@@ -110,6 +114,7 @@ export function combineOperatorsAndOperands(
                     operatorConstants,
                     operands,
                     LogicalOrExpressionCombiner,
+                    previouslyValidatedIds,
                     {
                         nodeKind: Ast.NodeKind.LogicalExpression,
                         left,
@@ -130,6 +135,7 @@ export function combineOperatorsAndOperands(
                     operatorConstants,
                     operands,
                     AsExpressionCombiner,
+                    previouslyValidatedIds,
                     {
                         nodeKind: Ast.NodeKind.AsExpression,
                         left,
@@ -150,6 +156,7 @@ export function combineOperatorsAndOperands(
                     operatorConstants,
                     operands,
                     IsExpressionCombiner,
+                    previouslyValidatedIds,
                     {
                         nodeKind: Ast.NodeKind.IsExpression,
                         left,
@@ -170,6 +177,7 @@ export function combineOperatorsAndOperands(
                     operatorConstants,
                     operands,
                     MetadataExpressionCombiner,
+                    previouslyValidatedIds,
                     {
                         nodeKind: Ast.NodeKind.MetadataExpression,
                         left,
@@ -190,6 +198,7 @@ export function combineOperatorsAndOperands(
                     operatorConstants,
                     operands,
                     NullCoalescingExpressionCombiner,
+                    previouslyValidatedIds,
                     {
                         nodeKind: Ast.NodeKind.NullCoalescingExpression,
                         left,
@@ -484,6 +493,7 @@ function combineWhile<Node extends Ast.TBinOpExpression>(
     operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>,
     operands: ReadonlyArray<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType>,
     combiner: Combiner<Node>,
+    previouslyValidatedIds: Set<number>,
     initialNextCombine: NextCombine,
     correlationId: number,
 ): CombineRemainders {
@@ -510,10 +520,14 @@ function combineWhile<Node extends Ast.TBinOpExpression>(
 
         placeParseContextUnderPlaceholderContext(state, binOpParseContext, placeholderContextNodeId);
 
-        if (!combiner.leftValidator(left)) {
-            setParseStateToNodeStart(state, left);
-            combiner.leftFallback(state, parser, trace.id);
-            throw new CommonError.InvariantError(`leftValidator failed and then leftFallback did not throw.`);
+        if (!previouslyValidatedIds.has(left.id)) {
+            previouslyValidatedIds.add(left.id);
+
+            if (!combiner.leftValidator(left)) {
+                setParseStateToNodeStart(state, left);
+                combiner.leftFallback(state, parser, trace.id);
+                throw new CommonError.InvariantError(`leftValidator failed and then leftFallback did not throw.`);
+            }
         }
 
         addAstAsChild(nodeIdMapCollection, binOpParseContext, left);
@@ -525,7 +539,17 @@ function combineWhile<Node extends Ast.TBinOpExpression>(
 
         addAstAsChild(nodeIdMapCollection, binOpParseContext, operatorConstant);
 
-        if (!right || !combiner.rightValidator(right)) {
+        if (right) {
+            if (!previouslyValidatedIds.has(right.id)) {
+                previouslyValidatedIds.add(right.id);
+
+                if (!combiner.rightValidator(right)) {
+                    setParseStateToAfterNodeEnd(state, operatorConstant);
+                    combiner.rightFallback(state, parser, trace.id);
+                    throw new CommonError.InvariantError(`rightValidator failed and then rightFallback did not throw.`);
+                }
+            }
+        } else {
             setParseStateToAfterNodeEnd(state, operatorConstant);
             combiner.rightFallback(state, parser, trace.id);
             throw new CommonError.InvariantError(`rightValidator failed and then rightFallback did not throw.`);
@@ -557,6 +581,7 @@ function combineWhile<Node extends Ast.TBinOpExpression>(
         // Promote from ParseContext into Ast
         nodeIdMapCollection.astNodeById.set(binOp.id, binOp);
         MapUtils.assertDelete(nodeIdMapCollection.contextNodeById, binOp.id);
+        previouslyValidatedIds.add(binOp.id);
 
         // Modify the operands and operatorConstants for the next iteration by:
         //  - replacing the `left` and `right` operands with the new `binOp` node
