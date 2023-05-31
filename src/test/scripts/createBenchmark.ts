@@ -53,6 +53,8 @@ function createParserSummaryDurations(
     resourceSummaries: ReadonlyArray<ResourceSummary>,
     filterOutOutliers: boolean,
 ): Durations {
+    console.log(`\tCreating ParseSummaryDurations with filterOutOutliers: ${filterOutOutliers}`);
+
     const durations: ReadonlyArray<number> = [...resourceSummaries].map((resourceSummary: ResourceSummary) =>
         filterOutOutliers ? resourceSummary.durationsFiltered.average : resourceSummary.durations.average,
     );
@@ -168,7 +170,11 @@ async function main(): Promise<void> {
         }
     }
 
+    console.log(`Finished all resources/iterations.`);
+
     for (const [parserName, resourceSummaries] of resourceSummariesByParserName.entries()) {
+        console.log(`Writing summary for ${parserName}.`);
+
         const failedToParseResourcePaths: ReadonlyArray<string> = resourceSummaries
             .filter((resourceSummary: ResourceSummary) => resourceSummary.failedToParse)
             .map((resourceSummary: ResourceSummary) => resourceSummary.filePath)
@@ -181,11 +187,12 @@ async function main(): Promise<void> {
             parserName,
         };
 
-        TestFileUtils.writeContents(
-            path.join(BenchmarkDirectory, "summary", "byParser", `${parserName}.log`),
-            jsonStringify(parserSummary),
-        );
+        const outputFilepath: string = path.join(BenchmarkDirectory, "summary", "byParser", `${parserName}.log`);
+        TestFileUtils.writeContents(outputFilepath, jsonStringify(parserSummary));
+        console.log(`Wrote contents to ${outputFilepath}`);
     }
+
+    console.log("All done");
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
