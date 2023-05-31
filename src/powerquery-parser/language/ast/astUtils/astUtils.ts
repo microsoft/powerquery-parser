@@ -88,7 +88,7 @@ export function isTPrimaryExpression(node: Ast.TNode): node is Ast.TPrimaryExpre
 }
 
 export function isTRelationalExpression(node: Ast.TNode): node is Ast.TEqualityExpression {
-    return node.kind === Ast.NodeKind.EqualityExpression || isTArithmeticExpression(node);
+    return node.kind === Ast.NodeKind.RelationalExpression || isTArithmeticExpression(node);
 }
 
 export function isTTypeExpression(node: Ast.TNode): node is Ast.TTypeExpression {
