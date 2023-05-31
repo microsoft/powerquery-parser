@@ -5,12 +5,7 @@ import "mocha";
 
 import { ArrayUtils, TaskUtils } from "../../powerquery-parser";
 import { DefaultSettings, Parser, Settings } from "../..";
-import { TestResourceUtils } from "../testUtils";
-
-const parsers: ReadonlyArray<[Settings, string]> = [
-    [createSettings(Parser.CombinatorialParser), "CombinatorialParser"],
-    [createSettings(Parser.RecursiveDescentParser), "RecursiveDescentParser"],
-];
+import { TestConstants, TestResourceUtils } from "../testUtils";
 
 function createSettings(parser: Parser.Parser): Settings {
     return {
@@ -19,7 +14,9 @@ function createSettings(parser: Parser.Parser): Settings {
     };
 }
 
-for (const [settings, parserName] of parsers) {
+for (const [parserName, parser] of TestConstants.ParserByParserName.entries()) {
+    const settings: Settings = createSettings(parser);
+
     TestResourceUtils.runResourceTestSuite(
         settings,
         `Attempt lex and parse resources (${parserName})`,
