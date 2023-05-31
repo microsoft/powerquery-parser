@@ -39,39 +39,43 @@ export function combineOperatorsAndOperands(
     );
 
     const sortedOperatorConstants: PrecedenceSortableOperatorConstant[] = sortByPrecedence(operatorConstants);
-
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
-    let nextOperator: PrecedenceSortableOperatorConstant | undefined = sortedOperatorConstants.pop();
+    const numOperators: number = sortedOperatorConstants.length;
 
-    while (nextOperator) {
-        const { index, operatorConstant }: PrecedenceSortableOperatorConstant = nextOperator;
+    for (let index: number = 0; index < numOperators; index += 1) {
+        const { leftOperandIndex, operatorConstant }: PrecedenceSortableOperatorConstant = ArrayUtils.assertGet(
+            sortedOperatorConstants,
+            index,
+        );
 
-        const nodeKind: Ast.TBinOpExpressionNodeKind = AstUtils.nodeKindForTBinOpExpressionOperator(
+        const nodeKind: Ast.TBinOpExpressionNodeKind = AstUtils.nodeKindFromTBinOpExpressionOperator(
             operatorConstant.constantKind,
         );
 
-        const left: TOperand = ArrayUtils.assertGet(operands, index);
-        const right: TOperand = ArrayUtils.assertGet(operands, index + 1);
+        const left: TOperand = ArrayUtils.assertGet(operands, leftOperandIndex);
+        const right: TOperand = ArrayUtils.assertGet(operands, leftOperandIndex + 1);
 
         const binOpParseContext: ParseContext.TNode = ParseContextUtils.startContext(
             state.contextState,
             nodeKind,
-            operatorConstant.tokenRange.tokenIndexStart,
+            left.tokenRange.tokenIndexStart,
             state.lexerSnapshot.tokens[left.tokenRange.tokenIndexStart],
             undefined,
         );
 
+        placeParseContextUnderPlaceholderContext(state, binOpParseContext, placeholderContextNodeId);
+
         const validator: TValidator = MapUtils.assertGet(
-            ValidatorsByBinOperatorExpressionOperator,
+            ValidatorsByTBinOpExpressionOperator,
             operatorConstant.constantKind,
         );
-
-        placeParseContextUnderPlaceholderContext(state, binOpParseContext, placeholderContextNodeId);
 
         if (!validator.validateLeftOperand(left)) {
             setParseStateToNodeStart(state, left);
             validator.fallbackLeftOperand(state, parser, trace.id);
-            throw new CommonError.InvariantError(`leftValidator failed and then leftFallback did not throw.`);
+            throw new CommonError.InvariantError(
+                `validateLeftOperand failed and then fallbackLeftOperand did not throw.`,
+            );
         }
 
         addAstAsChild(nodeIdMapCollection, binOpParseContext, left);
@@ -80,7 +84,9 @@ export function combineOperatorsAndOperands(
         if (!validator.validateRightOperand(right)) {
             setParseStateToAfterNodeEnd(state, operatorConstant);
             validator.fallbackRightOperand(state, parser, trace.id);
-            throw new CommonError.InvariantError(`rightValidator failed and then rightFallback did not throw.`);
+            throw new CommonError.InvariantError(
+                `validateRightOperand failed and then fallbackRightOperand did not throw.`,
+            );
         }
 
         addAstAsChild(nodeIdMapCollection, binOpParseContext, right);
@@ -89,7 +95,10 @@ export function combineOperatorsAndOperands(
         const leftTokenRange: Token.TokenRange = left.tokenRange;
         const rightTokenRange: Token.TokenRange = right.tokenRange;
 
-        // The validators have confirmed both left and right operands.
+        // We started with an operatorConstant belonging under TBinOpExpression["operatorConstant"].
+        // Working backwards, we derived teh nodeKind for some TBinOpExpression `T` and validators
+        // which should validate left is `T["left"]` and right is `T["right"]`.
+        // Therefore, we should be able to cast it as a TBinOpExpression.
         const binOp: Ast.TBinOpExpression = {
             kind: nodeKind,
             id: binOpParseContext.id,
@@ -113,21 +122,22 @@ export function combineOperatorsAndOperands(
         // Modify the operands and operatorConstants for the next iteration by:
         //  - replacing the `left` and `right` operands with the new `binOp` node
         //  - removing the operator
-        operands = [...operands.slice(0, index), binOp, ...operands.slice(index + 2)];
-        operatorConstants = ArrayUtils.assertRemoveAtIndex(operatorConstants, index);
+        operands = [...operands.slice(0, leftOperandIndex), binOp, ...operands.slice(leftOperandIndex + 2)];
+        operatorConstants = ArrayUtils.assertRemoveAtIndex(operatorConstants, leftOperandIndex);
 
-        const numLeftoverOperators: number = sortedOperatorConstants.length;
-
-        for (let leftoverIndex: number = index; index < numLeftoverOperators; leftoverIndex += 1) {
-            const leftoverOperator: PrecedenceSortableOperatorConstant = ArrayUtils.assertGet(
+        // Since we've mutated the list of operands we need to update the leftOperandIndex.
+        // Specifically we need to decrement the leftOperandIndex
+        // for all operators to the right of the one we just processed.
+        for (let unvisitedIndex: number = index + 1; unvisitedIndex < numOperators; unvisitedIndex += 1) {
+            const unvisitedOperator: PrecedenceSortableOperatorConstant = ArrayUtils.assertGet(
                 sortedOperatorConstants,
-                leftoverIndex,
+                unvisitedIndex,
             );
 
-            leftoverOperator.index -= 1;
+            if (unvisitedOperator.leftOperandIndex > leftOperandIndex) {
+                unvisitedOperator.leftOperandIndex -= 1;
+            }
         }
-
-        nextOperator = sortedOperatorConstants.shift();
     }
 
     trace.exit();
@@ -156,7 +166,7 @@ type TValidator =
     | Validator<TEqualityExpressionAndBelow>;
 
 interface PrecedenceSortableOperatorConstant {
-    index: number;
+    leftOperandIndex: number;
     readonly precedence: number;
     readonly operatorConstant: Ast.TBinOpExpressionConstant;
 }
@@ -247,7 +257,7 @@ const ValidatorForMetadataExpression: Validator<Ast.MetadataExpression> = {
         NaiveParseSteps.readUnaryExpression(state, parser, correlationId),
 };
 
-const ValidatorsByBinOperatorExpressionOperator: Map<Constant.TBinOpExpressionOperator, TValidator> = new Map<
+const ValidatorsByTBinOpExpressionOperator: Map<Constant.TBinOpExpressionOperator, TValidator> = new Map<
     Constant.TBinOpExpressionOperator,
     TValidator
 >([
@@ -334,14 +344,15 @@ function setParseStateToTokenIndex(state: ParseState, tokenIndex: number): void 
     state.tokenIndex = tokenIndex;
 }
 
-// Assumes operators are given in the order they appear in the source.
-// Sorts them by precedence, then by their original index (ie. their order in the source).
+// Assumes the operators are given in the order they appear in the source.
+// Returns an array that iterates over the operators in order of precedence,
+// with tie breakers being the order they appear in the source.
 function sortByPrecedence(
     operators: ReadonlyArray<Ast.TBinOpExpressionConstant>,
 ): PrecedenceSortableOperatorConstant[] {
     const sortableOperatorConstant: PrecedenceSortableOperatorConstant[] = operators.map(
         (operatorConstant: Ast.TBinOpExpressionConstant, index: number) => ({
-            index,
+            leftOperandIndex: index,
             operatorConstant,
             precedence: ConstantUtils.binOpExpressionOperatorPrecedence(operatorConstant.constantKind),
         }),
@@ -349,9 +360,9 @@ function sortByPrecedence(
 
     return sortableOperatorConstant.sort(
         (left: PrecedenceSortableOperatorConstant, right: PrecedenceSortableOperatorConstant) => {
-            const precedenceDiff: number = right.precedence - left.precedence;
+            const precedenceDelta: number = right.precedence - left.precedence;
 
-            return precedenceDiff === 0 ? right.index - left.index : precedenceDiff;
+            return precedenceDelta === 0 ? left.leftOperandIndex - right.leftOperandIndex : precedenceDelta;
         },
     );
 }
