@@ -172,6 +172,48 @@ export function simplifyType(type: Ast.TType): SimplifiedType {
     };
 }
 
+export function nodeKindForTBinOpExpressionOperator(
+    constantKind: Constant.TBinOpExpressionOperator,
+): Ast.TBinOpExpressionNodeKind {
+    switch (constantKind) {
+        case Constant.ArithmeticOperator.Multiplication:
+        case Constant.ArithmeticOperator.Division:
+        case Constant.ArithmeticOperator.Addition:
+        case Constant.ArithmeticOperator.Subtraction:
+        case Constant.ArithmeticOperator.And:
+            return Ast.NodeKind.ArithmeticExpression;
+
+        case Constant.EqualityOperator.EqualTo:
+        case Constant.EqualityOperator.NotEqualTo:
+            return Ast.NodeKind.EqualityExpression;
+
+        case Constant.LogicalOperator.And:
+        case Constant.LogicalOperator.Or:
+            return Ast.NodeKind.LogicalExpression;
+
+        case Constant.RelationalOperator.LessThan:
+        case Constant.RelationalOperator.LessThanEqualTo:
+        case Constant.RelationalOperator.GreaterThan:
+        case Constant.RelationalOperator.GreaterThanEqualTo:
+            return Ast.NodeKind.RelationalExpression;
+
+        case Constant.KeywordConstant.As:
+            return Ast.NodeKind.AsExpression;
+
+        case Constant.KeywordConstant.Is:
+            return Ast.NodeKind.IsExpression;
+
+        case Constant.KeywordConstant.Meta:
+            return Ast.NodeKind.MetadataExpression;
+
+        case Constant.MiscConstant.NullCoalescingOperator:
+            return Ast.NodeKind.NullCoalescingExpression;
+
+        default:
+            throw Assert.isNever(constantKind);
+    }
+}
+
 export function simplifyAsNullablePrimitiveType(node: Ast.AsNullablePrimitiveType): SimplifiedType {
     let isNullable: boolean;
     let primitiveTypeConstantKind: Constant.PrimitiveTypeConstant;
