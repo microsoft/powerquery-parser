@@ -3,18 +3,17 @@
 
 import { ArrayUtils, Assert, CommonError, MapUtils } from "../../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../../language";
+import { CombinatorialParserV2TraceConstant, TOperand } from "./commonTypes";
 import { NodeIdMap, ParseContext, ParseContextUtils } from "../..";
-import { CombinatorialParserV2TraceConstant } from "./commonTypes";
 import { NaiveParseSteps } from "..";
 import { Parser } from "../../parser";
 import { ParseState } from "../../parseState";
 import { Trace } from "../../../common/trace";
 
 // Takes N operators and N+1 operands.
-// Continually combines the highest precedence operators with its operands,
+// Continually combines the highest precedence operators the operands they're adjacent to,
 // thus reducing both the number of operators and operands by 1 per iteration.
 // Ends with 0 operator and 1 operand.
-
 export function combineOperatorsAndOperands(
     state: ParseState,
     parser: Parser,
@@ -154,8 +153,6 @@ export function combineOperatorsAndOperands(
 }
 
 type TEqualityExpressionAndBelow = Ast.ArithmeticExpression | Ast.EqualityExpression | Ast.RelationalExpression;
-
-type TOperand = Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType;
 
 type TValidator =
     | Validator<Ast.AsExpression>

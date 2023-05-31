@@ -1,20 +1,26 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Constant, Token } from "../../../language";
+import { Ast, Token } from "../../../language";
+import { CombinatorialParserV2TraceConstant, OperatorsAndOperands } from "./commonTypes";
 import { Disambiguation, DisambiguationUtils } from "../../disambiguation";
-import { NodeIdMap, NodeIdMapUtils, ParseContext } from "../..";
+import { NodeIdMapUtils, ParseContext } from "../..";
 import { Parser, ParserUtils } from "../../parser";
 import { ParseState, ParseStateUtils } from "../../parseState";
-import { Assert } from "../../../common";
-import { CombinatorialParserV2TraceConstant } from "./commonTypes";
-import { combineOperatorsAndOperands } from "./combiners";
+import { ArrayUtils } from "../../../common";
+import { combineOperatorsAndOperands } from "./combineOperatorsAndOperands";
 import { NaiveParseSteps } from "..";
-import { removeIdFromIdsByNodeKind } from "./utils";
-import { TNextDuoRead } from "./nextDuoRead";
+import { readOperatorsAndOperands } from "./readOperatorsAndOperands";
 import { Trace } from "../../../common/trace";
 
-// TODO: write a summary for V2
+// Similar to the V1 combinatorial parser, as it primarily optimizes reading unary expressions and binary expressions.
+//
+// readUnaryExpression looks at the current token and dispatches to the appropriate read function.
+// Binary expressions are read using a 2 phase process:
+//  1. read all operators and operands
+//      - this should leave us with N operators and N+1 operands
+//      -
+//  2. continually combine operators and operands until there is only 1 operand left
 export const CombinatorialParserV2: Parser = {
     applyState: ParseStateUtils.applyState,
     copyState: ParseStateUtils.copyState,
@@ -165,104 +171,23 @@ async function readBinOpExpression(
 
     const placeholderContextNode: ParseContext.TNode = ParseStateUtils.startContext(state, nodeKind);
     const placeholderContextNodeId: number = placeholderContextNode.id;
-    const initialUnaryExpression: Ast.TUnaryExpression = await parser.readUnaryExpression(state, parser, trace.id);
-    const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
 
-    const operatorConstants: Ast.TBinOpExpressionConstant[] = [];
-    const operands: (Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType)[] = [];
-    let nextDuoRead: TNextDuoRead | undefined = NextDuoReadByTokenKind.get(state.currentTokenKind);
-
-    while (nextDuoRead) {
-        const iterativeParseContext: ParseContext.Node<Ast.TNode> = ParseStateUtils.startContext(
-            state,
-            nextDuoRead.nodeKind,
-        );
-
-        iterativeParseContext.attributeCounter = 1;
-
-        const operatorConstant: Ast.TBinOpExpressionConstant =
-            NaiveParseSteps.readTokenKindAsConstant<Constant.TBinOpExpressionOperator>(
-                state,
-                nextDuoRead.operatorTokenKind,
-                nextDuoRead.operatorConstantKind,
-                trace.id,
-            );
-
-        let operand: Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType;
-
-        switch (nextDuoRead.duoReadKind) {
-            case Ast.NodeKind.UnaryExpression: {
-                // eslint-disable-next-line no-await-in-loop
-                operand = await parser.readUnaryExpression(state, parser, trace.id);
-
-                break;
-            }
-
-            case Ast.NodeKind.NullablePrimitiveType:
-                // eslint-disable-next-line no-await-in-loop
-                operand = await parser.readNullablePrimitiveType(state, parser, trace.id);
-
-                break;
-
-            case Ast.NodeKind.LogicalExpression:
-                // eslint-disable-next-line no-await-in-loop
-                operand = await parser.readLogicalExpression(state, parser, trace.id);
-
-                break;
-
-            default:
-                throw Assert.isNever(nextDuoRead);
-        }
-
-        operatorConstants.push(operatorConstant);
-        operands.push(operand);
-
-        for (const nodeId of [operand.id, operatorConstant.id, iterativeParseContext.id]) {
-            nodeIdMapCollection.astNodeById.delete(nodeId);
-            nodeIdMapCollection.parentIdById.delete(nodeId);
-        }
-
-        nodeIdMapCollection.contextNodeById.delete(iterativeParseContext.id);
-        nodeIdMapCollection.childIdsById.delete(iterativeParseContext.id);
-
-        removeIdFromIdsByNodeKind(
-            nodeIdMapCollection.idsByNodeKind,
-            iterativeParseContext.kind,
-            iterativeParseContext.id,
-        );
-
-        removeIdFromIdsByNodeKind(nodeIdMapCollection.idsByNodeKind, Ast.NodeKind.Constant, operatorConstant.id);
-        removeIdFromIdsByNodeKind(nodeIdMapCollection.idsByNodeKind, operand.kind, operand.id);
-
-        // eslint-disable-next-line require-atomic-updates
-        state.currentContextNode = placeholderContextNode;
-        nextDuoRead = NextDuoReadByTokenKind.get(state.currentTokenKind);
-    }
-
-    Assert.isTrue(
-        state.currentContextNode?.id === placeholderContextNodeId,
-        `state.currentContextNode.id === placeholderContextNodeId failed`,
-        {
-            currentContextNodeId: state.currentContextNode?.id,
-            placeholderContextId: placeholderContextNodeId,
-        },
+    const { operatorConstants, operands }: OperatorsAndOperands = await readOperatorsAndOperands(
+        state,
+        parser,
+        trace.id,
     );
-
-    Assert.isTrue(operatorConstants.length === operands.length, `operators.length === operands.length failed`, {
-        operatorsLength: operatorConstants.length,
-        operandsLength: operands.length,
-    });
 
     let result: Ast.TNode;
 
-    if (!operatorConstants.length) {
-        result = initialUnaryExpression;
+    if (operatorConstants.length === 1) {
+        result = ArrayUtils.assertGet(operands, 0);
     } else {
         result = combineOperatorsAndOperands(
             state,
             parser,
             placeholderContextNodeId,
-            [initialUnaryExpression, ...operands],
+            operands,
             operatorConstants,
             trace.id,
         );
@@ -377,162 +302,3 @@ async function readUnaryExpression(
         return primaryExpression;
     }
 }
-
-const NextDuoReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, TNextDuoRead> = new Map<
-    Token.TokenKind | undefined,
-    TNextDuoRead
->([
-    [
-        Token.TokenKind.Asterisk,
-        {
-            duoReadKind: Ast.NodeKind.UnaryExpression,
-            nodeKind: Ast.NodeKind.ArithmeticExpression,
-            operatorTokenKind: Token.TokenKind.Asterisk,
-            operatorConstantKind: Constant.ArithmeticOperator.Multiplication,
-        },
-    ],
-    [
-        Token.TokenKind.Division,
-        {
-            duoReadKind: Ast.NodeKind.UnaryExpression,
-            nodeKind: Ast.NodeKind.ArithmeticExpression,
-            operatorTokenKind: Token.TokenKind.Division,
-            operatorConstantKind: Constant.ArithmeticOperator.Division,
-        },
-    ],
-    [
-        Token.TokenKind.Plus,
-        {
-            duoReadKind: Ast.NodeKind.UnaryExpression,
-            nodeKind: Ast.NodeKind.ArithmeticExpression,
-            operatorTokenKind: Token.TokenKind.Plus,
-            operatorConstantKind: Constant.ArithmeticOperator.Addition,
-        },
-    ],
-    [
-        Token.TokenKind.Minus,
-        {
-            duoReadKind: Ast.NodeKind.UnaryExpression,
-            nodeKind: Ast.NodeKind.ArithmeticExpression,
-            operatorTokenKind: Token.TokenKind.Minus,
-            operatorConstantKind: Constant.ArithmeticOperator.Subtraction,
-        },
-    ],
-    [
-        Token.TokenKind.Ampersand,
-        {
-            duoReadKind: Ast.NodeKind.UnaryExpression,
-            nodeKind: Ast.NodeKind.ArithmeticExpression,
-            operatorTokenKind: Token.TokenKind.Ampersand,
-            operatorConstantKind: Constant.ArithmeticOperator.And,
-        },
-    ],
-    [
-        Token.TokenKind.Equal,
-        {
-            duoReadKind: Ast.NodeKind.UnaryExpression,
-            nodeKind: Ast.NodeKind.EqualityExpression,
-            operatorTokenKind: Token.TokenKind.Equal,
-            operatorConstantKind: Constant.EqualityOperator.EqualTo,
-        },
-    ],
-    [
-        Token.TokenKind.NotEqual,
-        {
-            duoReadKind: Ast.NodeKind.UnaryExpression,
-            nodeKind: Ast.NodeKind.EqualityExpression,
-            operatorTokenKind: Token.TokenKind.NotEqual,
-            operatorConstantKind: Constant.EqualityOperator.NotEqualTo,
-        },
-    ],
-    [
-        Token.TokenKind.KeywordAnd,
-        {
-            duoReadKind: Ast.NodeKind.UnaryExpression,
-            nodeKind: Ast.NodeKind.LogicalExpression,
-            operatorTokenKind: Token.TokenKind.KeywordAnd,
-            operatorConstantKind: Constant.LogicalOperator.And,
-        },
-    ],
-    [
-        Token.TokenKind.KeywordOr,
-        {
-            duoReadKind: Ast.NodeKind.UnaryExpression,
-            nodeKind: Ast.NodeKind.LogicalExpression,
-            operatorTokenKind: Token.TokenKind.KeywordOr,
-            operatorConstantKind: Constant.LogicalOperator.Or,
-        },
-    ],
-    [
-        Token.TokenKind.LessThan,
-        {
-            duoReadKind: Ast.NodeKind.UnaryExpression,
-            nodeKind: Ast.NodeKind.RelationalExpression,
-            operatorTokenKind: Token.TokenKind.LessThan,
-            operatorConstantKind: Constant.RelationalOperator.LessThan,
-        },
-    ],
-    [
-        Token.TokenKind.LessThanEqualTo,
-        {
-            duoReadKind: Ast.NodeKind.UnaryExpression,
-            nodeKind: Ast.NodeKind.RelationalExpression,
-            operatorTokenKind: Token.TokenKind.LessThanEqualTo,
-            operatorConstantKind: Constant.RelationalOperator.LessThanEqualTo,
-        },
-    ],
-    [
-        Token.TokenKind.GreaterThan,
-        {
-            duoReadKind: Ast.NodeKind.UnaryExpression,
-            nodeKind: Ast.NodeKind.RelationalExpression,
-            operatorTokenKind: Token.TokenKind.GreaterThan,
-            operatorConstantKind: Constant.RelationalOperator.GreaterThan,
-        },
-    ],
-    [
-        Token.TokenKind.GreaterThanEqualTo,
-        {
-            duoReadKind: Ast.NodeKind.UnaryExpression,
-            nodeKind: Ast.NodeKind.RelationalExpression,
-            operatorTokenKind: Token.TokenKind.GreaterThanEqualTo,
-            operatorConstantKind: Constant.RelationalOperator.GreaterThanEqualTo,
-        },
-    ],
-    [
-        Token.TokenKind.KeywordAs,
-        {
-            duoReadKind: Ast.NodeKind.NullablePrimitiveType,
-            nodeKind: Ast.NodeKind.AsExpression,
-            operatorTokenKind: Token.TokenKind.KeywordAs,
-            operatorConstantKind: Constant.KeywordConstant.As,
-        },
-    ],
-    [
-        Token.TokenKind.KeywordIs,
-        {
-            duoReadKind: Ast.NodeKind.NullablePrimitiveType,
-            nodeKind: Ast.NodeKind.IsExpression,
-            operatorTokenKind: Token.TokenKind.KeywordIs,
-            operatorConstantKind: Constant.KeywordConstant.Is,
-        },
-    ],
-    [
-        Token.TokenKind.KeywordMeta,
-        {
-            duoReadKind: Ast.NodeKind.UnaryExpression,
-            nodeKind: Ast.NodeKind.MetadataExpression,
-            operatorTokenKind: Token.TokenKind.KeywordMeta,
-            operatorConstantKind: Constant.KeywordConstant.Meta,
-        },
-    ],
-    [
-        Token.TokenKind.NullCoalescingOperator,
-        {
-            duoReadKind: Ast.NodeKind.LogicalExpression,
-            nodeKind: Ast.NodeKind.NullCoalescingExpression,
-            operatorTokenKind: Token.TokenKind.NullCoalescingOperator,
-            operatorConstantKind: Constant.MiscConstant.NullCoalescingOperator,
-        },
-    ],
-]);
