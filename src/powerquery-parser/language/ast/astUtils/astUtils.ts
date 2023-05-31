@@ -172,7 +172,7 @@ export function simplifyType(type: Ast.TType): SimplifiedType {
     };
 }
 
-export function nodeKindForTBinOpExpressionOperator(
+export function nodeKindFromTBinOpExpressionOperator(
     constantKind: Constant.TBinOpExpressionOperator,
 ): Ast.TBinOpExpressionNodeKind {
     switch (constantKind) {
