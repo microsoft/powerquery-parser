@@ -9,6 +9,13 @@ import { ParseContext } from "../../context";
 import { rightMostLeaf } from "./leafSelectors";
 
 export function copy(nodeIdMapCollection: Collection): Collection {
+    const astNodeById: Map<number, Ast.TNode> = new Map(
+        [...nodeIdMapCollection.astNodeById.entries()].map(([id, astNode]: [number, Ast.TNode]) => [
+            id,
+            { ...astNode },
+        ]),
+    );
+
     const contextNodeById: Map<number, ParseContext.TNode> = new Map(
         [...nodeIdMapCollection.contextNodeById.entries()].map(([id, contextNode]: [number, ParseContext.TNode]) => [
             id,
@@ -16,19 +23,28 @@ export function copy(nodeIdMapCollection: Collection): Collection {
         ]),
     );
 
-    const idsByNodeKind: IdsByNodeKind = new Map();
+    const rightMostLeaf: Ast.TNode | undefined = nodeIdMapCollection.rightMostLeaf
+        ? { ...nodeIdMapCollection.rightMostLeaf }
+        : undefined;
+
+    const idsByNodeKind: IdsByNodeKind = new Map<Ast.NodeKind, Set<number>>(
+        [...nodeIdMapCollection.idsByNodeKind.entries()].map(([nodeKind, nodeIds]: [Ast.NodeKind, Set<number>]) => [
+            nodeKind,
+            new Set(nodeIds),
+        ]),
+    );
 
     for (const [nodeKind, nodeIds] of nodeIdMapCollection.idsByNodeKind.entries()) {
         idsByNodeKind.set(nodeKind, new Set(nodeIds));
     }
 
     return {
-        astNodeById: new Map(nodeIdMapCollection.astNodeById),
+        astNodeById,
         childIdsById: new Map(nodeIdMapCollection.childIdsById),
         contextNodeById,
         leafIds: new Set(nodeIdMapCollection.leafIds),
         idsByNodeKind,
-        rightMostLeaf: nodeIdMapCollection.rightMostLeaf,
+        rightMostLeaf,
         parentIdById: new Map(nodeIdMapCollection.parentIdById),
     };
 }

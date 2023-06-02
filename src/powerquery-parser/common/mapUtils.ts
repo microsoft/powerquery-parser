@@ -11,7 +11,7 @@ export function assertGet<K, V>(map: Map<K, V> | ReadonlyMap<K, V>, key: K, mess
     return Assert.asDefined(map.get(key), message ?? `key not found in given map`, details ?? { key });
 }
 
-export function assertIn<K, V>(map: Map<K, V> | ReadonlyMap<K, V>, key: K, message?: string): void {
+export function assertHas<K, V>(map: Map<K, V> | ReadonlyMap<K, V>, key: K, message?: string): void {
     Assert.isTrue(map.has(key), message ?? `key is absent`, { key });
 }
 

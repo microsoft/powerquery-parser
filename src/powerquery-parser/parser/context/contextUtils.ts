@@ -127,9 +127,7 @@ export function startContext<T extends Ast.TNode>(
 
 // Note:
 // This doesn't hold the Id invariant where a parent's Id is always less than its children's Ids.
-// To maintain that invariant the caller needs to also call:
-//  - NodeIdMapUtils.recalculateIds
-//  - NodeIdMapUtils.updateNodeIds
+// To maintain that invariant the caller needs to also call `IdUtils.recalculateAndUpdateIds`
 export function startContextAsParent<T extends Ast.TNode>(
     state: ParseContext.State,
     nodeKind: T["kind"],

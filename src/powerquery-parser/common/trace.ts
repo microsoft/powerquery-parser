@@ -49,6 +49,7 @@ export const enum TraceConstant {
     IsThrowing = "IsThrowing",
     Length = "Length",
     Result = "Result",
+    Size = "Size",
 }
 
 export class Trace {
