@@ -3001,7 +3001,7 @@ export async function readRecursivelyEitherAsExpressionOrIsExpression<Node exten
     let left: Node | Node["left"] = initialLeft;
 
     while (state.currentTokenKind === operatorTokenKind) {
-        ParseStateUtils.startContextAsParent(state, nodeKind, left.id, trace.id);
+        state.currentContextNode = ParseStateUtils.startContextAsParent(state, nodeKind, left.id, trace.id);
 
         const operatorConstant: Ast.IConstant<Node["operatorConstant"]["constantKind"]> =
             NaiveParseSteps.readTokenKindAsConstant(state, operatorTokenKind, operatorConstantKind, trace.id);
@@ -3017,6 +3017,8 @@ export async function readRecursivelyEitherAsExpressionOrIsExpression<Node exten
             operatorConstant,
             right,
         } as Node;
+
+        ParseStateUtils.endContext(state, left);
     }
 
     trace.exit();
