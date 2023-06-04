@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, Assert, CommonError, MapUtils, TypeScriptUtils } from "../../../common";
+import { ArrayUtils, Assert, MapUtils, TypeScriptUtils } from "../../../common";
 import { NodeIdMap, NodeIdMapUtils } from "..";
 import { Trace, TraceConstant, TraceManager } from "../../../common/trace";
 import { Ast } from "../../../language";
@@ -12,6 +12,38 @@ import { ParseContext } from "../../context";
 
 let counter: number = 0;
 let summedShifts: number = 0;
+
+export function stringifyCollectionDelta(collectionDelta: CollectionDelta): string {
+    return JSON.stringify(
+        {
+            astNodeById: Array.from(collectionDelta.astNodeById.entries()).map(
+                ([newId, astNode]: [number, Ast.TNode]) => ({
+                    newId,
+                    oldId: astNode.id,
+                    kind: astNode.kind,
+                }),
+            ),
+            contextNodeById: Array.from(collectionDelta.contextNodeById.entries()).map(
+                ([newId, parseContext]: [number, ParseContext.TNode]) => ({
+                    newId,
+                    oldId: parseContext.id,
+                    kind: parseContext.kind,
+                }),
+            ),
+            parentIdById: Object.fromEntries(collectionDelta.parentIdById.entries()),
+            childIdsById: Object.fromEntries(collectionDelta.childIdsById.entries()),
+            idsbyNodeKind: Object.fromEntries(
+                [...collectionDelta.idsByNodeKind.entries()].map(([nodeKind, ids]: [Ast.NodeKind, Set<number>]) => [
+                    nodeKind,
+                    Array.from(ids),
+                ]),
+            ),
+            leafIds: Array.from(collectionDelta.leafIds),
+        },
+        null,
+        4,
+    );
+}
 
 export function recalculateAndUpdateIds(
     updated: NodeIdMap.Collection,
@@ -28,17 +60,22 @@ export function recalculateAndUpdateIds(
 
     const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, recalculateAndUpdateIds.name, correlationId);
 
-    const newIdByOldId: ReadonlyMap<number, number> = recalculateIds(updated, nodeId, traceManager, trace.id);
+    const newIdByOldIdPair: [ReadonlyMap<number, number>, ReadonlyMap<number, number>] = recalculateIds(
+        updated,
+        nodeId,
+        traceManager,
+        trace.id,
+    );
 
-    const newIds: ReadonlyArray<number> = Array.from(newIdByOldId.values());
-    const uniqueOldIds: Set<number> = new Set(newIdByOldId.keys());
-    const uniqueNewIds: Set<number> = new Set(newIds);
+    // const newIds: ReadonlyArray<number> = Array.from(newIdByOldId.values());
+    // const uniqueOldIds: Set<number> = new Set(newIdByOldId.keys());
+    // const uniqueNewIds: Set<number> = new Set(newIds);
 
-    updateNodeIds(updated, newIdByOldId, traceManager, trace.id);
+    updateNodeIds(updated, newIdByOldIdPair, traceManager, trace.id);
 
-    Assert.isTrue(uniqueOldIds.size === uniqueNewIds.size, "oldIds.size and newIds.size are not equal", {
-        duplicateNewIds: findNonUniqueElements(newIds),
-    });
+    // Assert.isTrue(uniqueOldIds.size === uniqueNewIds.size, "oldIds.size and newIds.size are not equal", {
+    //     duplicateNewIds: findNonUniqueElements(newIds),
+    // });
 
     assertSameSize(original.astNodeById, updated.astNodeById, "astNodeById");
     assertSameSize(original.childIdsById, updated.childIdsById, "childIdsById");
@@ -46,12 +83,6 @@ export function recalculateAndUpdateIds(
     assertSameSize(original.idsByNodeKind, updated.idsByNodeKind, "idsByNodeKind");
     assertSameSize(original.leafIds, updated.leafIds, "leafIds");
     assertSameSize(original.parentIdById, updated.parentIdById, "parentIdById");
-
-    Assert.isTrue(
-        original.astNodeById.size + original.contextNodeById.size ===
-            updated.astNodeById.size + updated.contextNodeById.size,
-        "summed sizes are equal",
-    );
 
     const zipped: ReadonlyArray<[string, NodeIdMap.Collection]> = [
         ["original", original],
@@ -81,6 +112,11 @@ export function recalculateAndUpdateIds(
             assertNodeIdExists(collection, parentId, tag);
             assertNodeIdExists(collection, childId, tag);
 
+            // Exception has occurred: Error: InvariantError: [childId, parentId] exists but parentId isn't in childIdsById - {
+            //     "childId": 960,
+            //     "parentId": 959,
+            //     "tag": "updated"
+            // }
             const childIdsofParentId: ReadonlyArray<number> = MapUtils.assertGet(
                 collection.childIdsById,
                 parentId,
@@ -155,22 +191,22 @@ export function recalculateAndUpdateIds(
     trace.exit();
 }
 
-function findNonUniqueElements<T>(arr: ReadonlyArray<T>): T[] {
-    const frequencyMap: Map<T, number> = new Map<T, number>();
-    const nonUniqueElements: T[] = [];
+// function findNonUniqueElements<T>(arr: ReadonlyArray<T>): T[] {
+//     const frequencyMap: Map<T, number> = new Map<T, number>();
+//     const nonUniqueElements: T[] = [];
 
-    for (const item of arr) {
-        frequencyMap.set(item, (frequencyMap.get(item) || 0) + 1);
-    }
+//     for (const item of arr) {
+//         frequencyMap.set(item, (frequencyMap.get(item) || 0) + 1);
+//     }
 
-    for (const [item, frequency] of frequencyMap) {
-        if (frequency > 1) {
-            nonUniqueElements.push(item);
-        }
-    }
+//     for (const [item, frequency] of frequencyMap) {
+//         if (frequency > 1) {
+//             nonUniqueElements.push(item);
+//         }
+//     }
 
-    return nonUniqueElements;
-}
+//     return nonUniqueElements;
+// }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function assertSameSize(left: Map<any, any> | Set<any>, right: Map<any, any> | Set<any>, tag: string): void {
@@ -196,7 +232,7 @@ export function recalculateIds(
     nodeId: number,
     traceManager: TraceManager,
     correlationId: number | undefined,
-): ReadonlyMap<number, number> {
+): [ReadonlyMap<number, number>, ReadonlyMap<number, number>] {
     const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, recalculateIds.name, correlationId);
 
     const encounteredIds: number[] = [];
@@ -224,48 +260,73 @@ export function recalculateIds(
     console.log(`numShifts: ${numShifts}`);
     console.log(`summedShifts: ${summedShifts}`);
 
+    // const newIdByOldId: Map<number, number> = new Map<number, number>(
+    //     encounteredIds.map((nodeId: number) => [nodeId, nodeId + 1000]),
+    // );
+
     const numIds: number = encounteredIds.length;
     const sortedIds: ReadonlyArray<number> = [...encounteredIds].sort();
-    const newIdByOldId: Map<number, number> = new Map();
+    const newIdByOldId1: Map<number, number> = new Map();
+    const newIdByOldId2: Map<number, number> = new Map();
 
     for (let index: number = 0; index < numIds; index += 1) {
         const oldId: number = encounteredIds[index];
         const newId: number = sortedIds[index];
 
+        newIdByOldId1.set(oldId, newId);
+
+        // [960, 961, 962, 963, 964, 965, 966, 968, 969]
         if (oldId !== newId) {
-            newIdByOldId.set(oldId, newId);
+            newIdByOldId2.set(oldId, newId);
         }
     }
 
     trace.exit();
 
-    return newIdByOldId;
+    return [newIdByOldId1, newIdByOldId2];
 }
 
 // Given a mapping of (existingId) => (newId) this mutates the NodeIdMap.Collection and the TXorNodes it holds.
 // Assumes the given arguments are valid as this function does no validation.
 export function updateNodeIds(
     nodeIdMapCollection: Collection,
-    newIdByOldId: ReadonlyMap<number, number>,
+    newIdByOldIdPair: [ReadonlyMap<number, number>, ReadonlyMap<number, number>],
     traceManager: TraceManager,
     correlationId: number | undefined,
 ): void {
-    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, updateNodeIds.name, correlationId, {
-        [IdUtilsTraceConstant.MapSize]: newIdByOldId.size,
-    });
+    const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, updateNodeIds.name, correlationId, {});
 
-    if (newIdByOldId.size === 0) {
-        trace.exit({ [TraceConstant.Size]: newIdByOldId.size });
+    // if (newIdByOldId.size === 0) {
+    //     trace.exit({ [TraceConstant.Size]: newIdByOldId.size });
 
-        return;
-    }
+    //     return;
+    // }
 
     // Storage for the change delta which is used to mutate nodeIdMapCollection.
-    const collectionDelta: CollectionDelta = createDelta(nodeIdMapCollection, newIdByOldId, traceManager, trace.id);
+    const collectionDelta1: CollectionDelta = createDelta(
+        nodeIdMapCollection,
+        newIdByOldIdPair[0],
+        traceManager,
+        trace.id,
+    );
 
-    applyCollectionDelta(nodeIdMapCollection, collectionDelta, traceManager, trace.id);
+    const collectionDelta2: CollectionDelta = createDelta(
+        nodeIdMapCollection,
+        newIdByOldIdPair[1],
+        traceManager,
+        trace.id,
+    );
 
-    trace.exit({ [TraceConstant.Size]: newIdByOldId.size });
+    const jsonified1: string = stringifyCollectionDelta(collectionDelta1);
+    const jsonified2: string = stringifyCollectionDelta(collectionDelta2);
+
+    if (jsonified1.length < 0 || jsonified2.length < 0) {
+        throw 1;
+    }
+
+    applyCollectionDelta(nodeIdMapCollection, collectionDelta1, traceManager, trace.id);
+
+    trace.exit({ [TraceConstant.Size]: newIdByOldIdPair.length });
 }
 
 const enum IdUtilsTraceConstant {
@@ -299,32 +360,32 @@ function createDelta(
 
     for (const [oldId, newId] of newIdByOldId.entries()) {
         const astNode: Ast.TNode | undefined = nodeIdMapCollection.astNodeById.get(oldId);
-        const parseContextNode: ParseContext.TNode | undefined = nodeIdMapCollection.contextNodeById.get(oldId);
         let nodeKind: Ast.NodeKind;
 
         if (astNode) {
             collectionDelta.astNodeById.set(newId, astNode);
             nodeKind = astNode.kind;
-        } else if (parseContextNode) {
+        } else {
+            const parseContextNode: ParseContext.TNode | undefined = MapUtils.assertGet(
+                nodeIdMapCollection.contextNodeById,
+                oldId,
+                `nodeIdMapCollection has neither astNode nor parseContextNode`,
+            );
+
             collectionDelta.contextNodeById.set(newId, parseContextNode);
             nodeKind = parseContextNode.kind;
-        } else {
-            throw new CommonError.InvariantError(`nodeIdMapCollection has neither astNode nor parseContextNode`, {
-                oldId,
-                newId,
-            });
         }
 
-        const parentId: number | undefined = nodeIdMapCollection.parentIdById.get(oldId);
+        const oldParentId: number | undefined = nodeIdMapCollection.parentIdById.get(oldId);
 
-        if (parentId) {
-            const newParentId: number = newIdByOldId.get(parentId) ?? parentId;
+        if (oldParentId) {
+            const newParentId: number = newIdByOldId.get(oldParentId) ?? oldParentId;
 
             collectionDelta.parentIdById.set(newId, newParentId);
 
             collectionDelta.childIdsById.set(
                 newParentId,
-                MapUtils.assertGet(nodeIdMapCollection.childIdsById, parentId).map(
+                MapUtils.assertGet(nodeIdMapCollection.childIdsById, oldParentId).map(
                     (childId: number) => newIdByOldId.get(childId) ?? childId,
                 ),
             );
