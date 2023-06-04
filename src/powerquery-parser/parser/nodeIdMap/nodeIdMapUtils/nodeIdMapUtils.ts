@@ -8,19 +8,134 @@ import { Assert } from "../../../common";
 import { ParseContext } from "../../context";
 import { rightMostLeaf } from "./leafSelectors";
 
+export interface NodeSummary {
+    readonly nodeId: number;
+    readonly nodeKind: Ast.NodeKind;
+    readonly childIds: ReadonlyArray<number> | undefined;
+    readonly parentId: number | undefined;
+    readonly isAstNode: boolean;
+}
+
+export interface NodeIdMapSummary {
+    readonly nodes: ReadonlyArray<NodeSummary>;
+    readonly leafIds: ReadonlyArray<number>;
+    readonly nodeIdsByNodeKind: { [key: string]: ReadonlyArray<number> };
+    readonly unknownLeafIds: ReadonlyArray<number>;
+    readonly unknownParentIdKeys: ReadonlyArray<number>;
+    readonly unknownParentIdValues: ReadonlyArray<number>;
+    readonly unknownChildIdsKeys: ReadonlyArray<number>;
+    readonly unknownChildIdsValues: ReadonlyArray<number>;
+    readonly unknownByNodeKindNodeKinds: ReadonlyArray<Ast.NodeKind>;
+    readonly unknownByNodeKindNodeIds: ReadonlyArray<number>;
+}
+
+export function summary(nodeIdMapCollection: Collection): NodeIdMapSummary {
+    const encounteredNodeKinds: Set<Ast.NodeKind> = new Set([
+        ...Array.from(nodeIdMapCollection.astNodeById.values()).map((astNode: Ast.TNode) => astNode.kind),
+        ...Array.from(nodeIdMapCollection.contextNodeById.values()).map(
+            (parseContext: ParseContext.TNode) => parseContext.kind,
+        ),
+    ]);
+
+    const encounteredIds: Set<number> = new Set([
+        ...nodeIdMapCollection.astNodeById.keys(),
+        ...nodeIdMapCollection.contextNodeById.keys(),
+    ]);
+
+    const nodes: NodeSummary[] = [];
+
+    for (const [nodeId, astNode] of nodeIdMapCollection.astNodeById.entries()) {
+        nodes.push({
+            nodeId,
+            nodeKind: astNode.kind,
+            childIds: nodeIdMapCollection.childIdsById.get(nodeId),
+            parentId: nodeIdMapCollection.parentIdById.get(nodeId),
+            isAstNode: true,
+        });
+    }
+
+    for (const [nodeId, contextNode] of nodeIdMapCollection.contextNodeById.entries()) {
+        nodes.push({
+            nodeId,
+            nodeKind: contextNode.kind,
+            childIds: nodeIdMapCollection.childIdsById.get(nodeId),
+            parentId: nodeIdMapCollection.parentIdById.get(nodeId),
+            isAstNode: false,
+        });
+    }
+
+    const nodeIdsByNodeKind: { [key: string]: number[] } = {};
+
+    for (const [nodeKind, nodeIds] of nodeIdMapCollection.idsByNodeKind.entries()) {
+        nodeIdsByNodeKind[nodeKind] = [...nodeIds];
+    }
+
+    const unknownParentIdKeys: number[] = [];
+    const unknownParentIdValues: number[] = [];
+
+    for (const [key, value] of nodeIdMapCollection.parentIdById.entries()) {
+        if (!encounteredIds.has(key)) {
+            unknownParentIdKeys.push(key);
+        }
+
+        if (!encounteredIds.has(value)) {
+            unknownParentIdValues.push(value);
+        }
+    }
+
+    const unknownChildIdsKeys: number[] = [];
+    const unknownChildIdsValues: number[] = [];
+
+    for (const [key, values] of nodeIdMapCollection.childIdsById.entries()) {
+        if (!encounteredIds.has(key)) {
+            unknownChildIdsKeys.push(key);
+        }
+
+        for (const value of values) {
+            if (!encounteredIds.has(value)) {
+                unknownChildIdsValues.push(value);
+            }
+        }
+    }
+
+    const unknownByNodeKindNodeIds: number[] = [];
+
+    for (const nodeIds of nodeIdMapCollection.idsByNodeKind.values()) {
+        for (const nodeId of nodeIds) {
+            if (!encounteredIds.has(nodeId)) {
+                unknownByNodeKindNodeIds.push(nodeId);
+            }
+        }
+    }
+
+    return {
+        nodes,
+        leafIds: [...nodeIdMapCollection.leafIds],
+        nodeIdsByNodeKind,
+        unknownLeafIds: [...nodeIdMapCollection.leafIds].filter((id: number) => !encounteredIds.has(id)),
+        unknownParentIdKeys,
+        unknownParentIdValues,
+        unknownChildIdsKeys,
+        unknownChildIdsValues,
+        unknownByNodeKindNodeKinds: Array.from(nodeIdMapCollection.idsByNodeKind.keys()).filter(
+            (nodeKind: Ast.NodeKind) => !encounteredNodeKinds.has(nodeKind),
+        ),
+        unknownByNodeKindNodeIds,
+    };
+}
+
 export function copy(nodeIdMapCollection: Collection): Collection {
     const astNodeById: Map<number, Ast.TNode> = new Map(
-        [...nodeIdMapCollection.astNodeById.entries()].map(([id, astNode]: [number, Ast.TNode]) => [
+        Array.from(nodeIdMapCollection.astNodeById.entries()).map(([id, astNode]: [number, Ast.TNode]) => [
             id,
             { ...astNode },
         ]),
     );
 
     const contextNodeById: Map<number, ParseContext.TNode> = new Map(
-        [...nodeIdMapCollection.contextNodeById.entries()].map(([id, contextNode]: [number, ParseContext.TNode]) => [
-            id,
-            { ...contextNode },
-        ]),
+        Array.from(nodeIdMapCollection.contextNodeById.entries()).map(
+            ([id, contextNode]: [number, ParseContext.TNode]) => [id, { ...contextNode }],
+        ),
     );
 
     const rightMostLeaf: Ast.TNode | undefined = nodeIdMapCollection.rightMostLeaf
@@ -28,15 +143,10 @@ export function copy(nodeIdMapCollection: Collection): Collection {
         : undefined;
 
     const idsByNodeKind: IdsByNodeKind = new Map<Ast.NodeKind, Set<number>>(
-        [...nodeIdMapCollection.idsByNodeKind.entries()].map(([nodeKind, nodeIds]: [Ast.NodeKind, Set<number>]) => [
-            nodeKind,
-            new Set(nodeIds),
-        ]),
+        Array.from(nodeIdMapCollection.idsByNodeKind.entries()).map(
+            ([nodeKind, nodeIds]: [Ast.NodeKind, Set<number>]) => [nodeKind, new Set(nodeIds)],
+        ),
     );
-
-    for (const [nodeKind, nodeIds] of nodeIdMapCollection.idsByNodeKind.entries()) {
-        idsByNodeKind.set(nodeKind, new Set(nodeIds));
-    }
 
     return {
         astNodeById,

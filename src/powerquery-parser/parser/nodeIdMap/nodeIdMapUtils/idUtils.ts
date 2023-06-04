@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
@@ -13,7 +14,10 @@ import { ParseContext } from "../../context";
 let counter: number = 0;
 let summedShifts: number = 0;
 
-export function stringifyCollectionDelta(collectionDelta: CollectionDelta): string {
+export function stringifyCollectionDelta(
+    collectionDelta: CollectionDelta,
+    newIdByOldId: ReadonlyMap<number, number>,
+): string {
     return JSON.stringify(
         {
             astNodeById: Array.from(collectionDelta.astNodeById.entries()).map(
@@ -39,6 +43,10 @@ export function stringifyCollectionDelta(collectionDelta: CollectionDelta): stri
                 ]),
             ),
             leafIds: Array.from(collectionDelta.leafIds),
+            newIdByOldId: Array.from(newIdByOldId.entries()).map(([oldId, newId]: [number, number]) => ({
+                oldId,
+                newId,
+            })),
         },
         null,
         4,
@@ -55,6 +63,12 @@ export function recalculateAndUpdateIds(
 
     console.log(`nodeId: ${nodeId}`);
     console.log(`counter: ${counter}`);
+
+    const summaryBefore: string = JSON.stringify(NodeIdMapUtils.summary(updated), null, 4);
+
+    if (summaryBefore.length < 0) {
+        throw 1;
+    }
 
     const original: NodeIdMap.Collection = NodeIdMapUtils.copy(updated);
 
@@ -112,11 +126,6 @@ export function recalculateAndUpdateIds(
             assertNodeIdExists(collection, parentId, tag);
             assertNodeIdExists(collection, childId, tag);
 
-            // Exception has occurred: Error: InvariantError: [childId, parentId] exists but parentId isn't in childIdsById - {
-            //     "childId": 960,
-            //     "parentId": 959,
-            //     "tag": "updated"
-            // }
             const childIdsofParentId: ReadonlyArray<number> = MapUtils.assertGet(
                 collection.childIdsById,
                 parentId,
@@ -317,14 +326,31 @@ export function updateNodeIds(
         trace.id,
     );
 
-    const jsonified1: string = stringifyCollectionDelta(collectionDelta1);
-    const jsonified2: string = stringifyCollectionDelta(collectionDelta2);
+    const jsonifiedDelta1: string = stringifyCollectionDelta(collectionDelta1, newIdByOldIdPair[0]);
+    const jsonifiedDelta2: string = stringifyCollectionDelta(collectionDelta2, newIdByOldIdPair[1]);
 
-    if (jsonified1.length < 0 || jsonified2.length < 0) {
+    if (jsonifiedDelta1.length < 0 || jsonifiedDelta2.length < 0) {
         throw 1;
     }
 
-    applyCollectionDelta(nodeIdMapCollection, collectionDelta1, traceManager, trace.id);
+    const copied1: NodeIdMap.Collection = NodeIdMapUtils.copy(nodeIdMapCollection);
+    const copied2: NodeIdMap.Collection = NodeIdMapUtils.copy(nodeIdMapCollection);
+
+    if (copied1 === copied2) {
+        throw 1;
+    }
+
+    applyCollectionDelta(copied1, collectionDelta1, traceManager, trace.id);
+    applyCollectionDelta(copied2, collectionDelta2, traceManager, trace.id);
+
+    const summaryAfter1: string = JSON.stringify(NodeIdMapUtils.summary(copied1), null, 4);
+    const summaryAfter2: string = JSON.stringify(NodeIdMapUtils.summary(copied2), null, 4);
+
+    if (summaryAfter1.length < 0 || summaryAfter2.length < 0) {
+        throw 1;
+    }
+
+    applyCollectionDelta(nodeIdMapCollection, collectionDelta2, traceManager, trace.id);
 
     trace.exit({ [TraceConstant.Size]: newIdByOldIdPair.length });
 }
