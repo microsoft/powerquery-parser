@@ -4,12 +4,12 @@
 import { Ast, Token } from "../../../language";
 import { CombinatorialParserV2TraceConstant, OperatorsAndOperands } from "./commonTypes";
 import { Disambiguation, DisambiguationUtils } from "../../disambiguation";
-import { NodeIdMapUtils, ParseContext } from "../..";
 import { Parser, ParserUtils } from "../../parser";
 import { ParseState, ParseStateUtils } from "../../parseState";
 import { ArrayUtils } from "../../../common";
 import { combineOperatorsAndOperands } from "./combineOperatorsAndOperands";
 import { NaiveParseSteps } from "..";
+import { ParseContext } from "../..";
 import { readOperatorsAndOperands } from "./readOperatorsAndOperands";
 import { Trace } from "../../../common/trace";
 
@@ -194,13 +194,6 @@ async function readBinOpExpression(
     }
 
     ParseStateUtils.deleteContext(state, placeholderContextNode.id);
-
-    NodeIdMapUtils.recalculateAndUpdateIds(
-        state.contextState.nodeIdMapCollection,
-        result.id,
-        state.traceManager,
-        trace.id,
-    );
 
     trace.exit();
 

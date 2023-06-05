@@ -106,8 +106,6 @@ export function startContextAsParent<T extends Ast.TNode>(
         tokenStart,
     );
 
-    NodeIdMapUtils.recalculateAndUpdateIds(nodeIdMapCollection, insertedContext.id, state.traceManager, trace.id);
-
     trace.exit();
 
     return insertedContext;
