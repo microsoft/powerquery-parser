@@ -240,6 +240,16 @@ describe("Parser.AbridgedNode", () => {
     });
 
     describe(`${Ast.NodeKind.AsExpression}`, () => {
+        it(`1 as`, async () => {
+            await runAbridgedNodeTest(`1 as`, [
+                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.AsExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.PrimitiveType, 2],
+            ]);
+        });
+
         it(`1 as number`, async () => {
             await runAbridgedNodeTest(`1 as number`, [
                 [Ast.NodeKind.AsExpression, undefined],
@@ -938,6 +948,16 @@ describe("Parser.AbridgedNode", () => {
     });
 
     describe(`${Ast.NodeKind.IsExpression}`, () => {
+        it(`1 is`, async () => {
+            await runAbridgedNodeTest(`1 is`, [
+                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.IsExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.PrimitiveType, 2],
+            ]);
+        });
+
         it(`1 is number`, async () => {
             await runAbridgedNodeTest(`1 is number`, [
                 [Ast.NodeKind.IsExpression, undefined],
