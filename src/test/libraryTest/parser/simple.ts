@@ -178,6 +178,56 @@ describe("Parser.AbridgedNode", () => {
     }
 
     describe(`${Ast.NodeKind.ArithmeticExpression}`, () => {
+        it(`1 &`, async () => {
+            await runAbridgedNodeTest(`1 &`, [
+                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.ArithmeticExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+            ]);
+        });
+
+        it(`1 *`, async () => {
+            await runAbridgedNodeTest(`1 *`, [
+                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.ArithmeticExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+            ]);
+        });
+
+        it(`1 /`, async () => {
+            await runAbridgedNodeTest(`1 /`, [
+                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.ArithmeticExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+            ]);
+        });
+
+        it(`1 +`, async () => {
+            await runAbridgedNodeTest(`1 +`, [
+                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.ArithmeticExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+            ]);
+        });
+
+        it(`WIP 1 -`, async () => {
+            await runAbridgedNodeTest(`1 -`, [
+                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.ArithmeticExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+            ]);
+        });
+
         it(`1 & 2`, async () => {
             await runAbridgedNodeAndOperatorTest(`1 & 2`, Constant.ArithmeticOperator.And, [
                 [Ast.NodeKind.ArithmeticExpression, undefined],
