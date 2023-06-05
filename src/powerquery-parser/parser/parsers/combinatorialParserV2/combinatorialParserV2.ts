@@ -13,14 +13,14 @@ import { ParseContext } from "../..";
 import { readOperatorsAndOperands } from "./readOperatorsAndOperands";
 import { Trace } from "../../../common/trace";
 
-// Similar to the V1 combinatorial parser, as it primarily optimizes reading unary expressions and binary expressions.
+// Similar to the previous V1 combinatorial parser,
+// in that it primarily optimizes reading unary expressions and binary expressions.
 //
 // readUnaryExpression looks at the current token and dispatches to the appropriate read function.
 // Binary expressions are read using a 2 phase process:
 //  1. read all operators and operands
 //      - this should leave us with N operators and N+1 operands
-//      -
-//  2. continually combine operators and operands until there is only 1 operand left
+//  2. continually combine operators and operands by precedence until there is only 1 operand left
 export const CombinatorialParserV2: Parser = {
     applyState: ParseStateUtils.applyState,
     copyState: ParseStateUtils.copyState,
