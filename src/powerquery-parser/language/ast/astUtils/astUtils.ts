@@ -31,19 +31,23 @@ export function assertIsTNullablePrimitiveType(node: Ast.TNode): asserts node is
 }
 
 export function isTArithmeticExpression(node: Ast.TNode): node is Ast.TArithmeticExpression {
-    return node.kind === Ast.NodeKind.ArithmeticExpression || isTMetadataExpression(node);
+    return nodeKindsForTArithmeticExpression.has(node.kind);
 }
 
 export function isTAsExpression(node: Ast.TNode): node is Ast.TAsExpression {
-    return node.kind === Ast.NodeKind.AsExpression || isTEqualityExpression(node);
+    return nodeKindsForTAsExpression.has(node.kind);
 }
 
 export function isTEqualityExpression(node: Ast.TNode): node is Ast.TEqualityExpression {
-    return node.kind === Ast.NodeKind.EqualityExpression || isTRelationalExpression(node);
+    return nodeKindsForTEqualityExpression.has(node.kind);
+}
+
+export function isTFieldAccessExpression(node: Ast.TNode): node is Ast.TFieldAccessExpression {
+    return nodeKindsForTFieldAccessExpression.has(node.kind);
 }
 
 export function isTIsExpression(node: Ast.TNode): node is Ast.TIsExpression {
-    return node.kind === Ast.NodeKind.IsExpression || isTAsExpression(node);
+    return nodeKindsForTIsExpression.has(node.kind);
 }
 
 export function isLeaf(node: Ast.TNode): node is Ast.TLeaf {
@@ -51,19 +55,15 @@ export function isLeaf(node: Ast.TNode): node is Ast.TLeaf {
 }
 
 export function isTLogicalExpression(node: Ast.TNode): node is Ast.TLogicalExpression {
-    return node.kind === Ast.NodeKind.LogicalExpression || isTIsExpression(node);
-}
-
-export function isTFieldAccessExpression(node: Ast.TNode): node is Ast.TFieldAccessExpression {
-    return node.kind === Ast.NodeKind.FieldSelector || node.kind === Ast.NodeKind.FieldProjection;
+    return nodeKindsForTLogicalExpression.has(node.kind);
 }
 
 export function isTNullCoalescingExpression(node: Ast.TNode): node is Ast.TNullCoalescingExpression {
-    return node.kind === Ast.NodeKind.NullCoalescingExpression || isTLogicalExpression(node);
+    return nodeKindsForTNullCoalescingExpression.has(node.kind);
 }
 
 export function isTMetadataExpression(node: Ast.TNode): node is Ast.TMetadataExpression {
-    return node.kind === Ast.NodeKind.MetadataExpression || isTUnaryExpression(node);
+    return nodeKindsForTMetadataExpression.has(node.kind);
 }
 
 export function isTNullablePrimitiveType(node: Ast.TNode): node is Ast.TNullablePrimitiveType {
@@ -71,32 +71,19 @@ export function isTNullablePrimitiveType(node: Ast.TNode): node is Ast.TNullable
 }
 
 export function isTPrimaryExpression(node: Ast.TNode): node is Ast.TPrimaryExpression {
-    switch (node.kind) {
-        case Ast.NodeKind.LiteralExpression:
-        case Ast.NodeKind.ListExpression:
-        case Ast.NodeKind.RecordExpression:
-        case Ast.NodeKind.IdentifierExpression:
-        case Ast.NodeKind.ParenthesizedExpression:
-        case Ast.NodeKind.InvokeExpression:
-        case Ast.NodeKind.RecursivePrimaryExpression:
-        case Ast.NodeKind.NotImplementedExpression:
-            return true;
-
-        default:
-            return isTFieldAccessExpression(node);
-    }
+    return nodeKindsForTPrimaryExpression.has(node.kind);
 }
 
 export function isTRelationalExpression(node: Ast.TNode): node is Ast.TEqualityExpression {
-    return node.kind === Ast.NodeKind.RelationalExpression || isTArithmeticExpression(node);
+    return nodeKindsForTRelationalExpression.has(node.kind);
 }
 
 export function isTTypeExpression(node: Ast.TNode): node is Ast.TTypeExpression {
-    return node.kind === Ast.NodeKind.TypePrimaryType || isTPrimaryExpression(node);
+    return nodeKindsForisTTypeExpression.has(node.kind);
 }
 
 export function isTUnaryExpression(node: Ast.TNode): node is Ast.TUnaryExpression {
-    return node.kind === Ast.NodeKind.UnaryExpression || isTTypeExpression(node);
+    return nodeKindsForTUnaryExpression.has(node.kind);
 }
 
 export function literalKindFrom(
@@ -258,3 +245,67 @@ export function primitiveTypeConstantKindFrom(
             throw Assert.isNever(node);
     }
 }
+
+const nodeKindsForTFieldAccessExpression: Set<Ast.NodeKind> = new Set([
+    Ast.NodeKind.FieldProjection,
+    Ast.NodeKind.FieldSelector,
+]);
+
+const nodeKindsForTPrimaryExpression: Set<Ast.NodeKind> = new Set([
+    ...Array.from(nodeKindsForTFieldAccessExpression),
+    Ast.NodeKind.LiteralExpression,
+    Ast.NodeKind.ListExpression,
+    Ast.NodeKind.RecordExpression,
+    Ast.NodeKind.IdentifierExpression,
+    Ast.NodeKind.ParenthesizedExpression,
+    Ast.NodeKind.InvokeExpression,
+    Ast.NodeKind.RecursivePrimaryExpression,
+    Ast.NodeKind.NotImplementedExpression,
+]);
+
+const nodeKindsForisTTypeExpression: Set<Ast.NodeKind> = new Set([
+    ...nodeKindsForTPrimaryExpression,
+    Ast.NodeKind.TypePrimaryType,
+]);
+
+const nodeKindsForTUnaryExpression: Set<Ast.NodeKind> = new Set([
+    ...nodeKindsForisTTypeExpression,
+    Ast.NodeKind.UnaryExpression,
+]);
+
+const nodeKindsForTMetadataExpression: Set<Ast.NodeKind> = new Set([
+    ...nodeKindsForTUnaryExpression,
+    Ast.NodeKind.MetadataExpression,
+]);
+
+const nodeKindsForTArithmeticExpression: Set<Ast.NodeKind> = new Set([
+    ...nodeKindsForTMetadataExpression,
+    Ast.NodeKind.ArithmeticExpression,
+]);
+
+const nodeKindsForTRelationalExpression: Set<Ast.NodeKind> = new Set([
+    ...nodeKindsForTArithmeticExpression,
+    Ast.NodeKind.RelationalExpression,
+]);
+
+const nodeKindsForTEqualityExpression: Set<Ast.NodeKind> = new Set([
+    ...nodeKindsForTRelationalExpression,
+    Ast.NodeKind.EqualityExpression,
+]);
+
+const nodeKindsForTAsExpression: Set<Ast.NodeKind> = new Set([
+    ...nodeKindsForTEqualityExpression,
+    Ast.NodeKind.AsExpression,
+]);
+
+const nodeKindsForTIsExpression: Set<Ast.NodeKind> = new Set([...nodeKindsForTAsExpression, Ast.NodeKind.IsExpression]);
+
+const nodeKindsForTLogicalExpression: Set<Ast.NodeKind> = new Set([
+    ...nodeKindsForTIsExpression,
+    Ast.NodeKind.LogicalExpression,
+]);
+
+const nodeKindsForTNullCoalescingExpression: Set<Ast.NodeKind> = new Set([
+    ...nodeKindsForTLogicalExpression,
+    Ast.NodeKind.NullCoalescingExpression,
+]);
