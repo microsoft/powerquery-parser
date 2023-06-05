@@ -444,26 +444,19 @@ export async function readNullCoalescingExpression(
 
     state.cancellationToken?.throwIfCancelled();
 
-    const expression: Ast.TExpression = await recursiveReadBinOpExpression<
-        Ast.NodeKind.NullCoalescingExpression,
-        Ast.TLogicalExpression,
-        Constant.MiscConstant.NullCoalescingOperator,
-        Ast.TLogicalExpression
-    >(
+    const nullCoalescingExpression: Ast.TExpression = await readLeftBasedBinOpExpression<Ast.NullCoalescingExpression>(
         state,
         Ast.NodeKind.NullCoalescingExpression,
-        () => parser.readLogicalExpression(state, parser, trace.id),
-        (currentTokenKind: TokenKind | undefined) =>
-            currentTokenKind === TokenKind.NullCoalescingOperator
-                ? Constant.MiscConstant.NullCoalescingOperator
-                : undefined,
-        () => parser.readLogicalExpression(state, parser, trace.id),
+        await parser.readLogicalExpression(state, parser, correlationId),
+        TokenKind.NullCoalescingOperator,
+        Constant.MiscConstant.NullCoalescingOperator,
+        (correlationId: number) => parser.readLogicalExpression(state, parser, correlationId),
         trace.id,
     );
 
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
-    return expression;
+    return nullCoalescingExpression;
 }
 
 export async function readExpression(
@@ -563,13 +556,13 @@ export async function readIsExpression(
 
     state.cancellationToken?.throwIfCancelled();
 
-    const isExpression: Ast.TIsExpression = await readRecursivelyEitherAsExpressionOrIsExpression<Ast.IsExpression>(
+    const isExpression: Ast.TIsExpression = await readLeftBasedBinOpExpression<Ast.IsExpression>(
         state,
-        parser,
         Ast.NodeKind.IsExpression,
         await parser.readAsExpression(state, parser, correlationId),
         TokenKind.KeywordIs,
         Constant.KeywordConstant.Is,
+        (correlationId: number) => parser.readNullablePrimitiveType(state, parser, correlationId),
         trace.id,
     );
 
@@ -627,13 +620,13 @@ export async function readAsExpression(
 
     state.cancellationToken?.throwIfCancelled();
 
-    const asExpression: Ast.TAsExpression = await readRecursivelyEitherAsExpressionOrIsExpression<Ast.AsExpression>(
+    const asExpression: Ast.TAsExpression = await readLeftBasedBinOpExpression<Ast.AsExpression>(
         state,
-        parser,
         Ast.NodeKind.AsExpression,
         await parser.readEqualityExpression(state, parser, correlationId),
         TokenKind.KeywordAs,
         Constant.KeywordConstant.As,
+        (correlationId: number) => parser.readNullablePrimitiveType(state, parser, correlationId),
         trace.id,
     );
 
@@ -2961,39 +2954,34 @@ export async function readIdentifierPairedExpression(
 // ---------- Helper functions (generic read functions) ----------
 // ---------------------------------------------------------------
 
-interface AsIsOperatorTokenKindMap {
+interface OperatorTokenKindByLeftBaseBinOpExpressionKind {
     [Ast.NodeKind.AsExpression]: TokenKind.KeywordAs;
     [Ast.NodeKind.IsExpression]: TokenKind.KeywordIs;
+    [Ast.NodeKind.NullCoalescingExpression]: TokenKind.NullCoalescingOperator;
 }
 
-// We need to be able to parse nested AsExpressions/IsExpressions, such as `1 as number as logical`.
-// If we didn't have to worry about types or keeping our state in order we could use something like:
+// Some binary expressions can be parsed in any order,
+// eg. `1 + 2 + 3` could be as either `[[1 + 2] + 3]` or `[1 + [2 + 3]]`.
 //
-// let left = readEqualityExpression();
-// while (currentTokenKind == TokenKind.As)
-// {
-//     const operator Read(TokenKind.As);
-//     const right = ReadNullablePrimitiveType();
-//     left = new BinOp(left, operator, right);
-// }
-// return left;
+// However, some expressions need to be parsed iteratively, left-to-right,
+// eg. `true is logical is logical` must be parsed `[[true is logical] is logical]`.
 //
-// One problem with the pseudo-code above is that we can't know what what we just parsed
-// belongs under an AsExpression/IsExpression until after it's parsed. This means each
-// iteration of the while-loop needs to create a new ParseContext as the parent of
-// the previously parsed node.
-export async function readRecursivelyEitherAsExpressionOrIsExpression<Node extends Ast.AsExpression | Ast.IsExpression>(
+// This function takes the initial left value and will continually build it up the binary expression,
+// so long as the curent token matches the operator token kind.
+export async function readLeftBasedBinOpExpression<
+    Node extends Ast.AsExpression | Ast.IsExpression | Ast.NullCoalescingExpression,
+>(
     state: ParseState,
-    parser: Parser,
     nodeKind: Node["kind"],
     initialLeft: Node["left"],
-    operatorTokenKind: AsIsOperatorTokenKindMap[Node["kind"]],
+    operatorTokenKind: OperatorTokenKindByLeftBaseBinOpExpressionKind[Node["kind"]],
     operatorConstantKind: Node["operatorConstant"]["constantKind"],
+    readRight: (correlationId: number) => Promise<Node["right"]>,
     correlationId: number | undefined,
 ): Promise<Node | Node["left"]> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
-        readRecursivelyEitherAsExpressionOrIsExpression.name,
+        readLeftBasedBinOpExpression.name,
         correlationId,
         { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
@@ -3007,7 +2995,7 @@ export async function readRecursivelyEitherAsExpressionOrIsExpression<Node exten
             NaiveParseSteps.readTokenKindAsConstant(state, operatorTokenKind, operatorConstantKind, trace.id);
 
         // eslint-disable-next-line no-await-in-loop
-        const right: Ast.TNullablePrimitiveType = await parser.readNullablePrimitiveType(state, parser, trace.id);
+        const right: Node["right"] = await readRight(trace.id);
 
         left = {
             ...ParseStateUtils.assertGetContextNodeMetadata(state),

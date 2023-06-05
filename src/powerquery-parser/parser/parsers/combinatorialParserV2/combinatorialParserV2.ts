@@ -37,13 +37,7 @@ export const CombinatorialParserV2: Parser = {
     readSectionMembers: NaiveParseSteps.readSectionMembers,
     readSectionMember: NaiveParseSteps.readSectionMember,
 
-    readNullCoalescingExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>
-        readBinOpExpression(
-            state,
-            parser,
-            Ast.NodeKind.NullCoalescingExpression,
-            correlationId,
-        ) as Promise<Ast.TNullCoalescingExpression>,
+    readNullCoalescingExpression: NaiveParseSteps.readNullCoalescingExpression,
     readExpression: NaiveParseSteps.readExpression,
 
     readLogicalExpression: (state: ParseState, parser: Parser, correlationId: number | undefined) =>

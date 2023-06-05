@@ -180,7 +180,7 @@ describe("Parser.AbridgedNode", () => {
     describe(`${Ast.NodeKind.ArithmeticExpression}`, () => {
         it(`1 &`, async () => {
             await runAbridgedNodeTest(`1 &`, [
-                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.LogicalExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.ArithmeticExpression, 1],
                 [Ast.NodeKind.Constant, 1],
@@ -190,7 +190,7 @@ describe("Parser.AbridgedNode", () => {
 
         it(`1 *`, async () => {
             await runAbridgedNodeTest(`1 *`, [
-                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.LogicalExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.ArithmeticExpression, 1],
                 [Ast.NodeKind.Constant, 1],
@@ -200,7 +200,7 @@ describe("Parser.AbridgedNode", () => {
 
         it(`1 /`, async () => {
             await runAbridgedNodeTest(`1 /`, [
-                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.LogicalExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.ArithmeticExpression, 1],
                 [Ast.NodeKind.Constant, 1],
@@ -210,7 +210,7 @@ describe("Parser.AbridgedNode", () => {
 
         it(`1 +`, async () => {
             await runAbridgedNodeTest(`1 +`, [
-                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.LogicalExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.ArithmeticExpression, 1],
                 [Ast.NodeKind.Constant, 1],
@@ -218,9 +218,9 @@ describe("Parser.AbridgedNode", () => {
             ]);
         });
 
-        it(`WIP 1 -`, async () => {
+        it(`1 -`, async () => {
             await runAbridgedNodeTest(`1 -`, [
-                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.LogicalExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.ArithmeticExpression, 1],
                 [Ast.NodeKind.Constant, 1],
@@ -292,7 +292,7 @@ describe("Parser.AbridgedNode", () => {
     describe(`${Ast.NodeKind.AsExpression}`, () => {
         it(`1 as`, async () => {
             await runAbridgedNodeTest(`1 as`, [
-                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.LogicalExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.AsExpression, 1],
                 [Ast.NodeKind.Constant, 1],

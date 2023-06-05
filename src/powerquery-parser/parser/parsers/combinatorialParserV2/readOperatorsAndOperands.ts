@@ -53,6 +53,11 @@ export async function readOperatorsAndOperands(
 
         let operand: Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType;
 
+        // It's possible that the reading of the operand to fail. In that case you'll see the following:
+        //  - a binary expression context under the initial context node
+        //  - it will have 2 children
+        //      - an Ast node for the operatorConstant
+        //      - a parse context node for the operand
         switch (nextDuoRead.duoReadKind) {
             case Ast.NodeKind.UnaryExpression: {
                 // eslint-disable-next-line no-await-in-loop
@@ -77,9 +82,12 @@ export async function readOperatorsAndOperands(
                 throw Assert.isNever(nextDuoRead);
         }
 
+        // Store the read operator and operands into our collection so we can later combine them.
         operatorConstants.push(operatorConstant);
         operands.push(operand);
 
+        // If left the collection as-is then every operator/operand would be a child of the initial context node.
+        // For now we're deleting those links and will re-create them later as we combine operators/operands.
         for (const nodeId of [operand.id, operatorConstant.id, iterativeParseContext.id]) {
             nodeIdMapCollection.astNodeById.delete(nodeId);
             nodeIdMapCollection.parentIdById.delete(nodeId);
