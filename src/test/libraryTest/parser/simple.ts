@@ -1000,7 +1000,7 @@ describe("Parser.AbridgedNode", () => {
     describe(`${Ast.NodeKind.IsExpression}`, () => {
         it(`1 is`, async () => {
             await runAbridgedNodeTest(`1 is`, [
-                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.LogicalExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.IsExpression, 1],
                 [Ast.NodeKind.Constant, 1],
