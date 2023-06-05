@@ -34,7 +34,7 @@ describe("Parser.Children", () => {
 
         const expected: ReadonlyArray<ChildIdsByIdEntry> = [
             {
-                childNodeIds: [2, 6, 9, 12],
+                childNodeIds: [2, 6, 9, 11],
                 id: 1,
                 kind: Language.Ast.NodeKind.FunctionExpression,
             },
@@ -62,13 +62,13 @@ describe("Parser.Children", () => {
 
         const expected: ReadonlyArray<ChildIdsByIdEntry> = [
             {
-                childNodeIds: [3, 4, 5],
-                id: 8,
+                childNodeIds: [6, 8, 10],
+                id: 11,
                 kind: Language.Ast.NodeKind.NullCoalescingExpression,
             },
             {
-                childNodeIds: [8, 6, 7],
-                id: 9,
+                childNodeIds: [2, 4, 11],
+                id: 12,
                 kind: Language.Ast.NodeKind.NullCoalescingExpression,
             },
         ];

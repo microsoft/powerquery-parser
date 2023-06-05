@@ -218,11 +218,11 @@ describe("idUtils", () => {
         const text: string = `1`;
 
         const expected: AbridgedNodeIdMapCollection = {
-            astIds: [3],
+            astIds: [2],
             childIdsById: [],
             contextIds: [],
-            idsByNodeKind: [[Language.Ast.NodeKind.LiteralExpression, [3]]],
-            leafIds: [3],
+            idsByNodeKind: [[Language.Ast.NodeKind.LiteralExpression, [2]]],
+            leafIds: [2],
             parentIdById: [],
         };
 
@@ -234,23 +234,23 @@ describe("idUtils", () => {
         const text: string = `-1`;
 
         const expected: AbridgedNodeIdMapCollection = {
-            astIds: [3, 4, 5, 6],
+            astIds: [2, 3, 4, 5],
             childIdsById: [
-                [3, [4, 6]],
-                [4, [5]],
+                [2, [3, 5]],
+                [3, [4]],
             ],
             contextIds: [],
             idsByNodeKind: [
-                [Language.Ast.NodeKind.ArrayWrapper, [4]],
-                [Language.Ast.NodeKind.Constant, [5]],
-                [Language.Ast.NodeKind.LiteralExpression, [6]],
-                [Language.Ast.NodeKind.UnaryExpression, [3]],
+                [Language.Ast.NodeKind.ArrayWrapper, [3]],
+                [Language.Ast.NodeKind.Constant, [4]],
+                [Language.Ast.NodeKind.LiteralExpression, [5]],
+                [Language.Ast.NodeKind.UnaryExpression, [2]],
             ],
-            leafIds: [5, 6],
+            leafIds: [4, 5],
             parentIdById: [
+                [3, 2],
                 [4, 3],
-                [5, 4],
-                [6, 3],
+                [5, 2],
             ],
         };
 
@@ -262,17 +262,17 @@ describe("idUtils", () => {
         const text: string = `1 + 2`;
 
         const expected: AbridgedNodeIdMapCollection = {
-            astIds: [3, 4, 5, 6],
-            childIdsById: [[6, [3, 4, 5]]],
+            astIds: [2, 4, 5, 6],
+            childIdsById: [[6, [2, 4, 5]]],
             contextIds: [],
             idsByNodeKind: [
                 [Language.Ast.NodeKind.ArithmeticExpression, [6]],
                 [Language.Ast.NodeKind.Constant, [4]],
-                [Language.Ast.NodeKind.LiteralExpression, [3, 5]],
+                [Language.Ast.NodeKind.LiteralExpression, [2, 5]],
             ],
-            leafIds: [3, 4, 5],
+            leafIds: [2, 4, 5],
             parentIdById: [
-                [3, 6],
+                [2, 6],
                 [4, 6],
                 [5, 6],
             ],
@@ -286,31 +286,31 @@ describe("idUtils", () => {
         const text: string = `foo()`;
 
         const expected: AbridgedNodeIdMapCollection = {
-            astIds: [3, 4, 5, 6, 7, 8, 9, 10],
+            astIds: [2, 3, 4, 5, 6, 7, 8, 9],
             childIdsById: [
-                [3, [4, 6]],
-                [4, [5]],
-                [6, [7]],
-                [7, [8, 9, 10]],
+                [2, [3]],
+                [4, [2, 5]],
+                [5, [6]],
+                [6, [7, 8, 9]],
             ],
             contextIds: [],
             idsByNodeKind: [
-                [Language.Ast.NodeKind.ArrayWrapper, [6, 9]],
-                [Language.Ast.NodeKind.Constant, [8, 10]],
-                [Language.Ast.NodeKind.Identifier, [5]],
-                [Language.Ast.NodeKind.IdentifierExpression, [4]],
-                [Language.Ast.NodeKind.InvokeExpression, [7]],
-                [Language.Ast.NodeKind.RecursivePrimaryExpression, [3]],
+                [Language.Ast.NodeKind.ArrayWrapper, [5, 8]],
+                [Language.Ast.NodeKind.Constant, [7, 9]],
+                [Language.Ast.NodeKind.Identifier, [3]],
+                [Language.Ast.NodeKind.IdentifierExpression, [2]],
+                [Language.Ast.NodeKind.InvokeExpression, [6]],
+                [Language.Ast.NodeKind.RecursivePrimaryExpression, [4]],
             ],
-            leafIds: [5, 8, 10],
+            leafIds: [3, 7, 9],
             parentIdById: [
-                [4, 3],
+                [3, 2],
                 [5, 4],
-                [6, 3],
+                [6, 5],
                 [7, 6],
-                [8, 7],
-                [9, 7],
-                [10, 7],
+                [8, 6],
+                [9, 6],
+                [2, 4],
             ],
         };
 

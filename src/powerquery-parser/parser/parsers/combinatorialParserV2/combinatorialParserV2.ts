@@ -180,7 +180,7 @@ async function readBinOpExpression(
 
     let result: Ast.TNode;
 
-    if (operatorConstants.length === 1) {
+    if (operands.length === 1) {
         result = ArrayUtils.assertGet(operands, 0);
     } else {
         result = combineOperatorsAndOperands(
