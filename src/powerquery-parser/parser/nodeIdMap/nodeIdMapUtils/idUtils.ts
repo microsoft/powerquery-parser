@@ -107,7 +107,6 @@ export function updateNodeIds(
 
 const enum IdUtilsTraceConstant {
     IdUtils = "IdUtils",
-    MapSize = "MapSize",
 }
 
 type CollectionDelta = Pick<Collection, "astNodeById" | "contextNodeById" | "leafIds" | "idsByNodeKind"> & {
@@ -134,7 +133,7 @@ function createDelta(
     correlationId: number,
 ): CollectionDelta {
     const trace: Trace = traceManager.entry(IdUtilsTraceConstant.IdUtils, createDelta.name, correlationId, {
-        [IdUtilsTraceConstant.MapSize]: newIdByOldId.size,
+        [TraceConstant.Size]: newIdByOldId.size,
     });
 
     const collectionDelta: CollectionDelta = {
