@@ -171,7 +171,14 @@ interface PrecedenceSortableOperatorConstant {
 interface Validator<Node extends Ast.TBinOpExpression> {
     // The tag has zero functional use.
     // It's only exists because I'm lazy while debugging.
-    readonly tag: string;
+    readonly tag:
+        | "AsExpression"
+        | "EqualityExpression"
+        | "IsExpression"
+        | "LogicalAndExpression"
+        | "LogicalOrExpression"
+        | "MetadataExpression"
+        | "NullCoalescingExpression";
     // Checks if the left/right operand is of the correct type
     readonly validateLeftOperand: (node: Ast.TNode) => node is Node["left"];
     readonly validateRightOperand: (node: Ast.TNode) => node is Node["right"];
@@ -182,7 +189,7 @@ interface Validator<Node extends Ast.TBinOpExpression> {
 }
 
 const ValidatorForAsExpression: Validator<Ast.AsExpression> = {
-    tag: Ast.NodeKind.AsExpression,
+    tag: "AsExpression",
     validateLeftOperand: (node: Ast.TNode): node is Ast.TEqualityExpression => AstUtils.isTAsExpression(node),
     validateRightOperand: (node: Ast.TNode): node is Ast.TNullablePrimitiveType =>
         AstUtils.isTNullablePrimitiveType(node),
@@ -193,7 +200,7 @@ const ValidatorForAsExpression: Validator<Ast.AsExpression> = {
 };
 
 const ValidatorForEqualityExpressionAndBelow: Validator<TEqualityExpressionAndBelow> = {
-    tag: Ast.NodeKind.EqualityExpression,
+    tag: "EqualityExpression",
     validateLeftOperand: (node: Ast.TNode): node is Ast.TMetadataExpression => AstUtils.isTEqualityExpression(node),
     validateRightOperand: (node: Ast.TNode): node is Ast.TMetadataExpression => AstUtils.isTEqualityExpression(node),
     fallbackLeftOperand: (state: ParseState, parser: Parser, correlationId: number) =>
@@ -203,7 +210,7 @@ const ValidatorForEqualityExpressionAndBelow: Validator<TEqualityExpressionAndBe
 };
 
 const ValidatorForIsExpression: Validator<Ast.IsExpression> = {
-    tag: Ast.NodeKind.IsExpression,
+    tag: "IsExpression",
     validateLeftOperand: (node: Ast.TNode): node is Ast.TIsExpression => AstUtils.isTIsExpression(node),
     validateRightOperand: (node: Ast.TNode): node is Ast.TNullablePrimitiveType =>
         AstUtils.isTNullablePrimitiveType(node),
@@ -214,7 +221,7 @@ const ValidatorForIsExpression: Validator<Ast.IsExpression> = {
 };
 
 const ValidatorForLogicalAndExpression: Validator<Ast.LogicalExpression> = {
-    tag: `${Ast.NodeKind.LogicalExpression}:${Constant.LogicalOperator.And}`,
+    tag: "LogicalAndExpression",
     validateLeftOperand: (node: Ast.TNode): node is Ast.TLogicalExpression => AstUtils.isTLogicalExpression(node),
     validateRightOperand: (node: Ast.TNode): node is Ast.TIsExpression => AstUtils.isTIsExpression(node),
     fallbackLeftOperand: (state: ParseState, parser: Parser, correlationId: number) =>
@@ -224,7 +231,7 @@ const ValidatorForLogicalAndExpression: Validator<Ast.LogicalExpression> = {
 };
 
 const ValidatorForLogicalOrExpression: Validator<Ast.LogicalExpression> = {
-    tag: `${Ast.NodeKind.LogicalExpression}:${Constant.LogicalOperator.Or}`,
+    tag: "LogicalOrExpression",
     validateLeftOperand: (node: Ast.TNode): node is Ast.TLogicalExpression => AstUtils.isTLogicalExpression(node),
     validateRightOperand: isTIsExpressionOrLogicalAndExpression,
     fallbackLeftOperand: (state: ParseState, parser: Parser, correlationId: number) =>
@@ -234,7 +241,7 @@ const ValidatorForLogicalOrExpression: Validator<Ast.LogicalExpression> = {
 };
 
 const ValidatorForNullCoalescingExpression: Validator<Ast.NullCoalescingExpression> = {
-    tag: Ast.NodeKind.NullCoalescingExpression,
+    tag: "NullCoalescingExpression",
     validateLeftOperand: (node: Ast.TNode): node is Ast.TLogicalExpression => AstUtils.isTLogicalExpression(node),
     validateRightOperand: (node: Ast.TNode): node is Ast.TNullCoalescingExpression =>
         AstUtils.isTNullCoalescingExpression(node),
@@ -245,7 +252,7 @@ const ValidatorForNullCoalescingExpression: Validator<Ast.NullCoalescingExpressi
 };
 
 const ValidatorForMetadataExpression: Validator<Ast.MetadataExpression> = {
-    tag: Ast.NodeKind.MetadataExpression,
+    tag: "MetadataExpression",
     validateLeftOperand: (node: Ast.TNode): node is Ast.TUnaryExpression => AstUtils.isTUnaryExpression(node),
     validateRightOperand: (node: Ast.TNode): node is Ast.TUnaryExpression => AstUtils.isTUnaryExpression(node),
     fallbackLeftOperand: (state: ParseState, parser: Parser, correlationId: number) =>
