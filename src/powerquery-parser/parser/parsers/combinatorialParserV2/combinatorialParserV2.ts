@@ -209,7 +209,13 @@ async function readUnaryExpression(
 
     let primaryExpression: Ast.TPrimaryExpression | undefined;
 
-    // LL(1)
+    // If we look at the current token we might deterministically know what we'll end up trying to parse downstream.
+    // Eg. if we encounter a left brace, `{`, the only valid construct from this point is a list expression.
+    // In comparison to the naive parser we would require the following steps to reach the same outcome:
+    //  - readUnaryExpression
+    //  - readTypeExpression
+    //  - readPrimaryExpression
+    //  - readListExpression
     switch (state.currentTokenKind) {
         // PrimaryExpression
         case Token.TokenKind.AtSign:

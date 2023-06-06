@@ -82,11 +82,14 @@ export async function readOperatorsAndOperands(
                 throw Assert.isNever(nextDuoRead);
         }
 
-        // Store the read operator and operands into our collection so we can later combine them.
+        // Append the operator/operator for the result.
         operatorConstants.push(operatorConstant);
         operands.push(operand);
 
-        // If left the collection as-is then every operator/operand would be a child of the initial context node.
+        // If we don't do any nodeIdMapCollection modifications it would be in a weird state.
+        // Specifically, every operator/operand would be a child of the initial context node,
+        // which doesn't make much sense if you had to examine the parse state downstream.
+        //
         // For now we're deleting those links and will re-create them later as we combine operators/operands.
         for (const nodeId of [operand.id, operatorConstant.id, iterativeParseContext.id]) {
             nodeIdMapCollection.astNodeById.delete(nodeId);

@@ -12,8 +12,8 @@ import { Trace } from "../../../common/trace";
 
 // Takes N operators and N+1 operands.
 // Continually combines the highest precedence operators the operands they're adjacent to,
-// thus reducing both the number of operators and operands by 1 per iteration.
-// Ends with 0 operator and 1 operand.
+// thus reducing the number of operators and operands by 1 per iteration.
+// Ends with 0 operators and 1 operand.
 export function combineOperatorsAndOperands(
     state: ParseState,
     parser: Parser,
@@ -37,7 +37,9 @@ export function combineOperatorsAndOperands(
         correlationId,
     );
 
-    const sortedOperatorConstants: PrecedenceSortableOperatorConstant[] = sortByPrecedence(operatorConstants);
+    const sortedOperatorConstants: ReadonlyArray<PrecedenceSortableOperatorConstant> =
+        sortByPrecedence(operatorConstants);
+
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
     const numOperators: number = sortedOperatorConstants.length;
 
@@ -95,7 +97,7 @@ export function combineOperatorsAndOperands(
         const rightTokenRange: Token.TokenRange = right.tokenRange;
 
         // We started with an operatorConstant belonging under TBinOpExpression["operatorConstant"].
-        // Working backwards, we derived teh nodeKind for some TBinOpExpression `T` and validators
+        // Working backwards, we derived the nodeKind for some TBinOpExpression `T` and validators
         // which should validate left is `T["left"]` and right is `T["right"]`.
         // Therefore, we should be able to cast it as a TBinOpExpression.
         const binOp: Ast.TBinOpExpression = {
@@ -125,7 +127,6 @@ export function combineOperatorsAndOperands(
         operatorConstants = ArrayUtils.assertRemoveAtIndex(operatorConstants, leftOperandIndex);
 
         // Since we've mutated the list of operands we need to update the leftOperandIndex.
-        // Specifically we need to decrement the leftOperandIndex
         // for all operators to the right of the one we just processed.
         for (let unvisitedIndex: number = index + 1; unvisitedIndex < numOperators; unvisitedIndex += 1) {
             const unvisitedOperator: PrecedenceSortableOperatorConstant = ArrayUtils.assertGet(
@@ -350,10 +351,10 @@ function setParseStateToTokenIndex(state: ParseState, tokenIndex: number): void 
 
 // Assumes the operators are given in the order they appear in the source.
 // Returns an array that iterates over the operators in order of precedence,
-// with tie breakers being the order they appear in the source.
+// with tie breakers being the order they were given (which should also be the order they appear in the source)
 function sortByPrecedence(
     operators: ReadonlyArray<Ast.TBinOpExpressionConstant>,
-): PrecedenceSortableOperatorConstant[] {
+): ReadonlyArray<PrecedenceSortableOperatorConstant> {
     const sortableOperatorConstant: PrecedenceSortableOperatorConstant[] = operators.map(
         (operatorConstant: Ast.TBinOpExpressionConstant, index: number) => ({
             leftOperandIndex: index,
