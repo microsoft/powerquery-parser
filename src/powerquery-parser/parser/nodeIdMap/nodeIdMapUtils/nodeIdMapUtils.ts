@@ -2,32 +2,11 @@
 // Licensed under the MIT license.
 
 import { Ast, Token } from "../../../language";
-import { Collection, IdsByNodeKind } from "../nodeIdMap";
+import { Collection, CollectionValidation, IdsByNodeKind, NodeSummary } from "../nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "../xorNode";
 import { Assert } from "../../../common";
 import { ParseContext } from "../../context";
 import { rightMostLeaf } from "./leafSelectors";
-
-export interface NodeSummary {
-    readonly nodeKind: Ast.NodeKind;
-    readonly childIds: ReadonlyArray<number> | undefined;
-    readonly parentId: number | undefined;
-    readonly isAstNode: boolean;
-}
-
-export interface NodeIdMapCollectionValidation {
-    readonly nodes: { [key: number]: NodeSummary };
-    readonly leafIds: ReadonlyArray<number>;
-    readonly nodeIdsByNodeKind: { [key: string]: ReadonlyArray<number> };
-    readonly unknownLeafIds: ReadonlyArray<number>;
-    readonly unknownParentIdKeys: ReadonlyArray<number>;
-    readonly unknownParentIdValues: ReadonlyArray<number>;
-    readonly unknownChildIdsKeys: ReadonlyArray<number>;
-    readonly unknownChildIdsValues: ReadonlyArray<number>;
-    readonly unknownByNodeKindNodeKinds: ReadonlyArray<Ast.NodeKind>;
-    readonly unknownByNodeKindNodeIds: ReadonlyArray<number>;
-    readonly badParentChildLink: ReadonlyArray<[number, number]>;
-}
 
 export function copy(nodeIdMapCollection: Collection): Collection {
     const astNodeById: Map<number, Ast.TNode> = new Map(
@@ -137,7 +116,7 @@ export async function xorNodeTokenRange(
     }
 }
 
-export function validate(nodeIdMapCollection: Collection): NodeIdMapCollectionValidation {
+export function validate(nodeIdMapCollection: Collection): CollectionValidation {
     const encounteredNodeKinds: Set<Ast.NodeKind> = new Set([
         ...Array.from(nodeIdMapCollection.astNodeById.values()).map((astNode: Ast.TNode) => astNode.kind),
         ...Array.from(nodeIdMapCollection.contextNodeById.values()).map(
