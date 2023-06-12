@@ -140,8 +140,6 @@ export function combineOperatorsAndOperands(
         }
     }
 
-    trace.exit();
-
     const result: TOperand = ArrayUtils.assertGet(operands, 0);
 
     Assert.isTrue(
@@ -149,6 +147,8 @@ export function combineOperatorsAndOperands(
         `AstUtils.isTBinOpExpression(result) || AstUtils.isTUnaryExpression(result) failed`,
         { resultNodeKind: result.kind },
     );
+
+    trace.exit();
 
     return result;
 }
@@ -349,7 +349,6 @@ function setParseStateToTokenIndex(state: ParseState, tokenIndex: number): void 
     state.tokenIndex = tokenIndex;
 }
 
-// Assumes the operators are given in the order they appear in the source.
 // Returns an array that iterates over the operators in order of precedence,
 // with tie breakers being the order they were given (which should also be the order they appear in the source)
 function sortByPrecedence(

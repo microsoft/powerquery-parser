@@ -13,8 +13,8 @@ import { ParseContext } from "../..";
 import { readOperatorsAndOperands } from "./readOperatorsAndOperands";
 import { Trace } from "../../../common/trace";
 
-// Similar to the previous V1 combinatorial parser,
-// in that it primarily optimizes reading unary expressions and binary expressions.
+// Similar to the previous V1 combinatorial parser.
+// It primarily optimizes reading unary expressions and binary expressions.
 //
 // readUnaryExpression looks at the current token and dispatches to the appropriate read function.
 // Binary expressions are read using a 2 phase process:
