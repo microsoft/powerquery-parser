@@ -53,7 +53,7 @@ function createParserSummaryDurations(
     resourceSummaries: ReadonlyArray<ResourceSummary>,
     filterOutOutliers: boolean,
 ): Durations {
-    console.log(`\tCreating ParseSummaryDurations with filterOutOutliers: ${filterOutOutliers}`);
+    process.stdout.write(`\tCreating ParseSummaryDurations with filterOutOutliers: ${filterOutOutliers}`);
 
     const durations: ReadonlyArray<number> = [...resourceSummaries].map((resourceSummary: ResourceSummary) =>
         filterOutOutliers ? resourceSummary.durationsFiltered.average : resourceSummary.durations.average,
@@ -97,8 +97,11 @@ async function main(): Promise<void> {
     for (let resourceIndex: number = 0; resourceIndex < numResources; resourceIndex += 1) {
         const { fileContents, filePath, resourceName }: TestResource = ArrayUtils.assertGet(resources, resourceIndex);
 
-        console.log(
-            `Starting resource ${TestUtils.zFill(resourceIndex + 1, numResources)} out of ${numResources}: ${filePath}`,
+        process.stdout.write(
+            `Starting resource ${TestUtils.zFill(
+                resourceIndex + 1,
+                numResources,
+            )} out of ${numResources}: ${filePath}\n`,
         );
 
         for (const [parserName, parser] of TestConstants.ParserByParserName.entries()) {
@@ -106,7 +109,10 @@ async function main(): Promise<void> {
             const durations: number[] = [];
 
             for (let iteration: number = 0; iteration < IterationsPerFile; iteration += 1) {
-                console.log(
+                process.stdout.clearLine(0);
+                process.stdout.cursorTo(0);
+
+                process.stdout.write(
                     `\tIteration ${TestUtils.zFill(
                         iteration + 1,
                         IterationsPerFile,
@@ -167,13 +173,15 @@ async function main(): Promise<void> {
                 path.join(BenchmarkDirectory, "summary", "byResource", parserName, `${resourceName}.log`),
                 jsonStringify(resourceSummary),
             );
+
+            process.stdout.write(`\n`);
         }
     }
 
-    console.log(`Finished all resources/iterations.`);
+    process.stdout.write(`Finished all resources/iterations.\n`);
 
     for (const [parserName, resourceSummaries] of resourceSummariesByParserName.entries()) {
-        console.log(`Writing summary for ${parserName}.`);
+        process.stdout.write(`Writing summary for ${parserName}.\n`);
 
         const failedToParseResourcePaths: ReadonlyArray<string> = resourceSummaries
             .filter((resourceSummary: ResourceSummary) => resourceSummary.failedToParse)
@@ -189,10 +197,10 @@ async function main(): Promise<void> {
 
         const outputFilepath: string = path.join(BenchmarkDirectory, "summary", "byParser", `${parserName}.log`);
         TestFileUtils.writeContents(outputFilepath, jsonStringify(parserSummary));
-        console.log(`Wrote contents to ${outputFilepath}`);
+        process.stdout.write(`Wrote contents to ${outputFilepath}\n`);
     }
 
-    console.log("All done");
+    process.stdout.write("All done\n");
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
