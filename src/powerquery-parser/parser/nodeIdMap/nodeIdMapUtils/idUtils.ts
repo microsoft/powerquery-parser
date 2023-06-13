@@ -61,24 +61,21 @@ export function recalculateIds(
 
     const numIds: number = encounteredIds.length;
     const sortedIds: ReadonlyArray<number> = [...encounteredIds].sort();
-    const newIdByOldId1: Map<number, number> = new Map();
-    const newIdByOldId2: Map<number, number> = new Map();
+    const newIdByOldId: Map<number, number> = new Map();
 
     for (let index: number = 0; index < numIds; index += 1) {
         const oldId: number = encounteredIds[index];
         const newId: number = sortedIds[index];
 
-        newIdByOldId1.set(oldId, newId);
-
         // [960, 961, 962, 963, 964, 965, 966, 968, 969]
         if (oldId !== newId) {
-            newIdByOldId2.set(oldId, newId);
+            newIdByOldId.set(oldId, newId);
         }
     }
 
     trace.exit();
 
-    return newIdByOldId1;
+    return newIdByOldId;
 }
 
 // Given a mapping of (existingId) => (newId) this mutates the NodeIdMap.Collection and the TXorNodes it holds.
