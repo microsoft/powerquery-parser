@@ -285,8 +285,6 @@ const ValidatorsByTBinOpExpressionOperator: Map<Constant.TBinOpExpressionOperato
     [Constant.MiscConstant.NullCoalescingOperator, ValidatorForNullCoalescingExpression],
 ]);
 
-// Combiners
-
 function addAstAsChild(nodeIdMapCollection: NodeIdMap.Collection, parent: ParseContext.TNode, child: Ast.TNode): void {
     parent.attributeCounter += 1;
 
