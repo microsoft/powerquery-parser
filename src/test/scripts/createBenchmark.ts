@@ -53,7 +53,7 @@ function createParserSummaryDurations(
     resourceSummaries: ReadonlyArray<ResourceSummary>,
     filterOutOutliers: boolean,
 ): Durations {
-    process.stdout.write(`\tCreating ParseSummaryDurations with filterOutOutliers: ${filterOutOutliers}`);
+    process.stdout.write(`\tCreating ParseSummaryDurations with filterOutOutliers: ${filterOutOutliers}\n`);
 
     const durations: ReadonlyArray<number> = [...resourceSummaries].map((resourceSummary: ResourceSummary) =>
         filterOutOutliers ? resourceSummary.durationsFiltered.average : resourceSummary.durations.average,

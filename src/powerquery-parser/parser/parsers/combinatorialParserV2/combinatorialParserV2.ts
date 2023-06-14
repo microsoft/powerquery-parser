@@ -13,14 +13,14 @@ import { ParseContext } from "../..";
 import { readOperatorsAndOperands } from "./readOperatorsAndOperands";
 import { Trace } from "../../../common/trace";
 
-// Similar to the previous V1 combinatorial parser.
-// It primarily optimizes reading unary expressions and binary expressions.
-//
-// readUnaryExpression looks at the current token and dispatches to the appropriate read function.
-// Binary expressions are read using a 2 phase process:
-//  1. read all operators and operands
-//      - this should leave us with N operators and N+1 operands
-//  2. continually combine operators and operands by precedence until there is only 1 operand left
+// An optimized parser, with two key changes:
+//  1. readUnaryExpression looks at the current token and dispatches to the appropriate read function.
+//  2. Binary expressions are read using a 2 phase process:
+//      a. read all operators and operands first
+//          - this should leave us with N operators and N+1 operands
+//      b. create binary operation expressions by combining operators and operands by their precedence
+//          - this reduces the list of operators and operands by 1 each time
+//          - we should end up with 1 operand and 0 operators
 export const CombinatorialParserV2: Parser = {
     applyState: ParseStateUtils.applyState,
     copyState: ParseStateUtils.copyState,
@@ -165,26 +165,14 @@ async function readBinOpExpression(
 
     const placeholderContextNode: ParseContext.TNode = ParseStateUtils.startContext(state, nodeKind);
     const placeholderContextNodeId: number = placeholderContextNode.id;
-
-    const { operatorConstants, operands }: OperatorsAndOperands = await readOperatorsAndOperands(
-        state,
-        parser,
-        trace.id,
-    );
+    const operatorsAndOperands: OperatorsAndOperands = await readOperatorsAndOperands(state, parser, trace.id);
 
     let result: Ast.TNode;
 
-    if (operands.length === 1) {
-        result = ArrayUtils.assertGet(operands, 0);
+    if (operatorsAndOperands.operands.length === 1) {
+        result = ArrayUtils.assertGet(operatorsAndOperands.operands, 0);
     } else {
-        result = combineOperatorsAndOperands(
-            state,
-            parser,
-            placeholderContextNodeId,
-            operands,
-            operatorConstants,
-            trace.id,
-        );
+        result = combineOperatorsAndOperands(state, parser, placeholderContextNodeId, operatorsAndOperands, trace.id);
     }
 
     ParseStateUtils.deleteContext(state, placeholderContextNode.id);
@@ -194,6 +182,13 @@ async function readBinOpExpression(
     return result;
 }
 
+// If we look at the current token we might deterministically know what we'll end up trying to parse downstream.
+// Eg. if we encounter a left brace, `{`, the only valid construct from this point is a list expression.
+// In comparison to the naive parser we would travel down the following steps to reach the same outcome:
+//  - readUnaryExpression
+//  - readTypeExpression
+//  - readPrimaryExpression
+//  - readListExpression
 async function readUnaryExpression(
     state: ParseState,
     parser: Parser,
@@ -209,13 +204,6 @@ async function readUnaryExpression(
 
     let primaryExpression: Ast.TPrimaryExpression | undefined;
 
-    // If we look at the current token we might deterministically know what we'll end up trying to parse downstream.
-    // Eg. if we encounter a left brace, `{`, the only valid construct from this point is a list expression.
-    // In comparison to the naive parser we would require the following steps to reach the same outcome:
-    //  - readUnaryExpression
-    //  - readTypeExpression
-    //  - readPrimaryExpression
-    //  - readListExpression
     switch (state.currentTokenKind) {
         // PrimaryExpression
         case Token.TokenKind.AtSign:
@@ -278,20 +266,22 @@ async function readUnaryExpression(
             primaryExpression = parser.readKeyword(state, parser, trace.id);
             break;
 
-        // Let Naive throw an error.
+        // Let NaiveParseSteps throw an error.
         default:
             trace.exit();
 
             return NaiveParseSteps.readUnaryExpression(state, parser, trace.id);
     }
 
+    let result: Ast.TUnaryExpression;
+
     if (ParseStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex)) {
-        trace.exit();
-
-        return parser.readRecursivePrimaryExpression(state, parser, primaryExpression, trace.id);
+        result = await parser.readRecursivePrimaryExpression(state, parser, primaryExpression, trace.id);
     } else {
-        trace.exit();
-
-        return primaryExpression;
+        result = primaryExpression;
     }
+
+    trace.exit();
+
+    return result;
 }

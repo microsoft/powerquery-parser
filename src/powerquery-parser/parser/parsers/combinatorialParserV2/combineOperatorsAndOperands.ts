@@ -3,7 +3,7 @@
 
 import { ArrayUtils, Assert, CommonError, MapUtils } from "../../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../../language";
-import { CombinatorialParserV2TraceConstant, TOperand } from "./commonTypes";
+import { CombinatorialParserV2TraceConstant, OperatorsAndOperands, TOperand } from "./commonTypes";
 import { NodeIdMap, ParseContext, ParseContextUtils } from "../..";
 import { NaiveParseSteps } from "..";
 import { Parser } from "../../parser";
@@ -18,10 +18,11 @@ export function combineOperatorsAndOperands(
     state: ParseState,
     parser: Parser,
     placeholderContextNodeId: number,
-    operands: ReadonlyArray<TOperand>,
-    operatorConstants: ReadonlyArray<Ast.TBinOpExpressionConstant>,
+    operatorsAndOperands: OperatorsAndOperands,
     correlationId: number,
 ): TOperand {
+    let { operatorConstants, operands }: OperatorsAndOperands = operatorsAndOperands;
+
     Assert.isTrue(
         operatorConstants.length + 1 === operands.length,
         `operators.length !== (operands.length + 1) failed`,
@@ -37,6 +38,7 @@ export function combineOperatorsAndOperands(
         correlationId,
     );
 
+    // Sorts operator by precedence where the highest precedence operators are first.
     const sortedOperatorConstants: ReadonlyArray<PrecedenceSortableOperatorConstant> =
         sortByPrecedence(operatorConstants);
 
@@ -348,7 +350,7 @@ function setParseStateToTokenIndex(state: ParseState, tokenIndex: number): void 
 }
 
 // Returns an array that iterates over the operators in order of precedence,
-// with tie breakers being the order they were given (which should also be the order they appear in the source)
+// with tie breakers being the order they were given (which should also be the order they appear in the document)
 function sortByPrecedence(
     operators: ReadonlyArray<Ast.TBinOpExpressionConstant>,
 ): ReadonlyArray<PrecedenceSortableOperatorConstant> {
