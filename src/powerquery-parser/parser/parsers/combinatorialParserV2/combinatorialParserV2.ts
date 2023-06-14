@@ -16,8 +16,8 @@ import { Trace } from "../../../common/trace";
 // An optimized parser, with two key changes:
 //  1. readUnaryExpression looks at the current token and dispatches to the appropriate read function.
 //  2. Binary expressions are read using a 2 phase process:
-//      a. read all operators and operands first
-//          - this should leave us with N operators and N+1 operands
+//      a. read all operators and operands before creating any binary expressions
+//          - this should leave us with N operators and N+1 operands (where N >= 0)
 //      b. create binary operation expressions by combining operators and operands by their precedence
 //          - this reduces the list of operators and operands by 1 each time
 //          - we should end up with 1 operand and 0 operators
@@ -149,8 +149,7 @@ export const CombinatorialParserV2: Parser = {
 };
 
 // First, read all of the operators and operands.
-// Second, build up the tree from the read operators and operands.
-// We expect N operators and N+1 operands (where N >= 0).
+// Second, continually combine them until we have a single Ast node.
 async function readBinOpExpression(
     state: ParseState,
     parser: Parser,

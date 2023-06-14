@@ -91,8 +91,8 @@ export async function readOperatorsAndOperands(
         operatorConstants.push(operatorConstant);
         operands.push(operand);
 
-        // If we don't do any nodeIdMapCollection modifications it would be in a weird state.
-        // Specifically, every operator/operand would be a child of the initial context node,
+        // If we don't do any nodeIdMapCollection modifications it leave a weird state where
+        // every operator/operand would be a child of the initial context node,
         // which doesn't make much sense if you had to examine the parse state downstream.
         //
         // For now we're deleting those links and will re-create them later as we combine operators/operands.
