@@ -3,6 +3,7 @@
 
 import * as NaiveParseSteps from "./naiveParseSteps";
 
+export * from "./combinatorialParserV2";
 export { NaiveParseSteps };
-export { CombinatorialParser } from "./combinatorialParser";
+export { CombinatorialParserV2 } from "./combinatorialParserV2";
 export { RecursiveDescentParser } from "./recursiveDescentParser";

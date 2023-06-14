@@ -62,7 +62,7 @@ export async function copyState(state: ParseState): Promise<ParseState> {
     };
 }
 
-export function startContext<T extends Ast.TNode>(state: ParseState, nodeKind: T["kind"]): void {
+export function startContext<T extends Ast.TNode>(state: ParseState, nodeKind: T["kind"]): ParseContext.Node<T> {
     const newContextNode: ParseContext.Node<T> = ParseContextUtils.startContext(
         state.contextState,
         nodeKind,
@@ -72,6 +72,8 @@ export function startContext<T extends Ast.TNode>(state: ParseState, nodeKind: T
     );
 
     state.currentContextNode = newContextNode;
+
+    return newContextNode;
 }
 
 // Inserts a new context as the parent of an existing node.
@@ -103,15 +105,6 @@ export function startContextAsParent<T extends Ast.TNode>(
         existingNodeId,
         tokenStart,
     );
-
-    const newNodeIdByOldNodeId: ReadonlyMap<number, number> = NodeIdMapUtils.recalculateIds(
-        nodeIdMapCollection,
-        insertedContext.id,
-        state.traceManager,
-        trace.id,
-    );
-
-    NodeIdMapUtils.updateNodeIds(nodeIdMapCollection, newNodeIdByOldNodeId, state.traceManager, trace.id);
 
     trace.exit();
 

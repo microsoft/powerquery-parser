@@ -79,7 +79,7 @@ export function isNodeKind<T extends Ast.TNode>(
     );
 }
 
-export function isTUnaryType(xorNode: TXorNode): xorNode is XorNode<Ast.TUnaryExpression> {
+export function isTUnaryExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TUnaryExpression> {
     return xorNode.node.kind === Ast.NodeKind.UnaryExpression || isTTypeExpression(xorNode);
 }
 

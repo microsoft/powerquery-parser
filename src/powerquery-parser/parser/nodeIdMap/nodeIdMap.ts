@@ -28,3 +28,24 @@ export interface Collection {
     // The right most Ast in the parse context, which can be treated as the most recently parsed node.
     readonly rightMostLeaf: Ast.TNode | undefined;
 }
+
+export interface CollectionValidation {
+    readonly nodes: { [key: number]: NodeSummary };
+    readonly leafIds: ReadonlyArray<number>;
+    readonly nodeIdsByNodeKind: { [key: string]: ReadonlyArray<number> };
+    readonly unknownLeafIds: ReadonlyArray<number>;
+    readonly unknownParentIdKeys: ReadonlyArray<number>;
+    readonly unknownParentIdValues: ReadonlyArray<number>;
+    readonly unknownChildIdsKeys: ReadonlyArray<number>;
+    readonly unknownChildIdsValues: ReadonlyArray<number>;
+    readonly unknownByNodeKindNodeKinds: ReadonlyArray<Ast.NodeKind>;
+    readonly unknownByNodeKindNodeIds: ReadonlyArray<number>;
+    readonly badParentChildLink: ReadonlyArray<[number, number]>;
+}
+
+export interface NodeSummary {
+    readonly nodeKind: Ast.NodeKind;
+    readonly childIds: ReadonlyArray<number> | undefined;
+    readonly parentId: number | undefined;
+    readonly isAstNode: boolean;
+}

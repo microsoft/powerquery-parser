@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CombinatorialParser, ParseSettings, ParseState, ParseStateUtils } from "./parser";
+import { CombinatorialParserV2, ParseSettings, ParseState, ParseStateUtils } from "./parser";
 import { LexerSnapshot, LexSettings } from "./lexer";
 import { DefaultLocale } from "./localization";
 import { NoOpTraceManagerInstance } from "./common/trace";
@@ -15,6 +15,6 @@ export const DefaultSettings: Settings = {
     cancellationToken: undefined,
     initialCorrelationId: undefined,
     parserEntryPoint: undefined,
-    parser: CombinatorialParser,
+    parser: CombinatorialParserV2,
     traceManager: NoOpTraceManagerInstance,
 };

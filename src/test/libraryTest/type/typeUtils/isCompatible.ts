@@ -18,7 +18,7 @@ const noopIsCompatible: (left: Type.TPowerQueryType, right: Type.TPowerQueryType
     right: Type.TPowerQueryType,
 ) => TypeUtils.isCompatible(left, right, NoOpTraceManagerInstance, undefined);
 
-describe(`localIsCompatible`, () => {
+describe(`TypeUtils.isCompatible`, () => {
     describe(`${Type.TypeKind.AnyNonNull}`, () => {
         it(`null is not compatible`, () => {
             expect(noopIsCompatible(Type.NullInstance, Type.AnyNonNullInstance)).to.equal(false, undefined);

@@ -829,6 +829,7 @@ export interface IConstant<ConstantKind extends Constant.TConstant> extends INod
 }
 
 export type TConstant = IConstant<Constant.TConstant>;
+export type TBinOpExpressionConstant = IConstant<Constant.TBinOpExpressionOperator>;
 
 // ----------------------------------------------
 // ---------- NullCoalescingExpression ----------
