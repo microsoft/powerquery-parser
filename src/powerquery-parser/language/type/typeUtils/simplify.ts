@@ -14,8 +14,8 @@ import {
     TextCategory,
     TypeCategory,
 } from "./categorize";
-import { ArrayUtils, ImmutableSet } from "../../../common";
 import { Trace, TraceManager } from "../../../common/trace";
+import { ImmutableSet } from "../../../common";
 import { isEqualType } from "./isEqualType";
 import { Type } from "..";
 import { TypeUtilsTraceConstant } from "./typeTraceConstant";
@@ -61,7 +61,7 @@ export function simplify(
     ];
 
     for (const flattenedValue of simplifyAnyCategory(categorized.anys)) {
-        if (!ArrayUtils.includesUnique(partial, flattenedValue, isEqualType)) {
+        if (!partial.find((item: Type.TPowerQueryType) => isEqualType(item, flattenedValue))) {
             partial.push(flattenedValue);
         }
     }

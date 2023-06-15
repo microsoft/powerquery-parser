@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, ICancellationToken, Result, ResultUtils, StringUtils } from "../common";
+import { ArrayUtils, Assert, CommonError, ICancellationToken, Result, ResultUtils, StringUtils } from "../common";
 import { Comment, Token } from "../language";
 import { Lexer } from "..";
 import { LexError } from ".";
@@ -360,9 +360,7 @@ function flattenLineTokens(state: Lexer.State): FlattenedLines {
     let lineTextOffset: number = 0;
     let flatIndex: number = 0;
 
-    for (let lineNumber: number = 0; lineNumber < numLines; lineNumber += 1) {
-        const line: Lexer.TLine = lines[lineNumber];
-
+    for (const [line, lineNumber] of ArrayUtils.enumerate(lines)) {
         text += line.text;
 
         if (lineNumber !== numLines - 1) {

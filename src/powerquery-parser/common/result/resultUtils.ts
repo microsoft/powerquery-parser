@@ -18,13 +18,13 @@ export function assertIsError<T, E>(result: Result<T, E>): asserts result is Err
     }
 }
 
-export function assertUnboxOk<T, E>(result: Result<T, E>): T {
+export function assertOk<T, E>(result: Result<T, E>): T {
     assertIsOk(result);
 
     return result.value;
 }
 
-export function assertUnboxError<T, E>(result: Result<T, E>): E {
+export function assertError<T, E>(result: Result<T, E>): E {
     assertIsError(result);
 
     return result.error;
@@ -75,10 +75,6 @@ export function isError<T, E>(result: Result<T, E>): result is ErrorResult<E> {
     return result.kind === ResultKind.Error;
 }
 
-export function unboxOrDefault<T, E>(result: Result<T, E>, defaultValue: T): T {
-    if (isOk(result)) {
-        return result.value;
-    } else {
-        return defaultValue;
-    }
+export function okOrDefault<T, E>(result: Result<T, E>, defaultValue: T): T {
+    return isOk(result) ? result.value : defaultValue;
 }

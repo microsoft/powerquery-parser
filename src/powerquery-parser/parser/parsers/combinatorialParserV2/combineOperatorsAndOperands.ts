@@ -45,11 +45,9 @@ export function combineOperatorsAndOperands(
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
     const numOperators: number = sortedOperatorConstants.length;
 
-    for (let index: number = 0; index < numOperators; index += 1) {
-        const { leftOperandIndex, operatorConstant }: PrecedenceSortableOperatorConstant = ArrayUtils.assertGet(
-            sortedOperatorConstants,
-            index,
-        );
+    for (const [precedenceSortableOperatorConstant, index] of ArrayUtils.enumerate(sortedOperatorConstants)) {
+        const { leftOperandIndex, operatorConstant }: PrecedenceSortableOperatorConstant =
+            precedenceSortableOperatorConstant;
 
         const nodeKind: Ast.TBinOpExpressionNodeKind = AstUtils.nodeKindFromTBinOpExpressionOperator(
             operatorConstant.constantKind,
