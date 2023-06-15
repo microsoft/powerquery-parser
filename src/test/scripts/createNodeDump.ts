@@ -47,9 +47,7 @@ async function main(): Promise<void> {
 
         const numResources: number = resources.length;
 
-        for (let index: number = 0; index < numResources; index += 1) {
-            const resource: TestResource = ArrayUtils.assertGet(resources, index);
-
+        for (const [resource, index] of ArrayUtils.enumerate(resources)) {
             console.log(
                 `Starting ${resource.filePath} using ${parserName} (${TestUtils.zFill(
                     index + 1,

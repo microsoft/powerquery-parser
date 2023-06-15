@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils } from ".";
-
 // TODO: this needs to be benchmarked
 export class ImmutableSet<T> {
     public readonly size: number;
@@ -52,7 +50,13 @@ export class ImmutableSet<T> {
     }
 
     public has(value: T): boolean {
-        return ArrayUtils.includesUnique(this.internalCollection, value, this.comparer);
+        for (const element of this.internalCollection) {
+            if (this.comparer(element, value)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public values(): IterableIterator<T> {

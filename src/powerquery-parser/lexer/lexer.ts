@@ -457,13 +457,11 @@ function tokenizedLinesFrom(
     locale: string,
     cancellationToken: ICancellationToken | undefined,
 ): ReadonlyArray<TLine> {
-    const numLines: number = splitLines.length;
     const tokenizedLines: TLine[] = [];
 
-    for (let lineNumber: number = 0; lineNumber < numLines; lineNumber += 1) {
-        const splitLine: SplitLine = splitLines[lineNumber];
+    for (const [splitLine, index] of ArrayUtils.enumerate(splitLines)) {
         const untokenizedLine: UntouchedLine = lineFrom(splitLine.text, splitLine.lineTerminator, previousLineModeEnd);
-        const tokenizedLine: TLine = tokenize(untokenizedLine, lineNumber, locale, cancellationToken);
+        const tokenizedLine: TLine = tokenize(untokenizedLine, index, locale, cancellationToken);
         tokenizedLines.push(tokenizedLine);
         previousLineModeEnd = tokenizedLine.lineModeEnd;
     }

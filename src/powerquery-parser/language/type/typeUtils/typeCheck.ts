@@ -168,13 +168,9 @@ export function typeCheckListWithListType(
     const validArgs: number[] = [];
     const invalidArgs: Map<number, DefinedListMismatch> = new Map();
     const schemaItemType: Type.TPowerQueryType = schemaType.itemType;
-
     const valueElements: ReadonlyArray<Type.TPowerQueryType> = valueType.elements;
-    const numElements: number = valueElements.length;
 
-    for (let index: number = 0; index < numElements; index += 1) {
-        const element: Type.TPowerQueryType = valueElements[index];
-
+    for (const [element, index] of ArrayUtils.enumerate(valueElements)) {
         if (isCompatible(element, schemaItemType, traceManager, trace.id)) {
             validArgs.push(index);
         } else {

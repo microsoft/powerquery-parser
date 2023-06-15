@@ -183,11 +183,16 @@ export function assertIsNodeKind<T extends Ast.TNode>(
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): asserts xorNode is XorNode<T> {
     if (Array.isArray(expectedNodeKinds)) {
-        ArrayUtils.assertIn(expectedNodeKinds, xorNode.node.kind, `incorrect Ast.NodeKind`, {
-            actualNodeKind: xorNode.node.kind,
-            actualNodeId: xorNode.node.id,
+        ArrayUtils.assertIncludes(
             expectedNodeKinds,
-        });
+            xorNode.node.kind,
+            `ArrayUtils.assertIncludes(expectedNodeKinds, xorNodeKind)`,
+            {
+                actualNodeKind: xorNode.node.kind,
+                actualNodeId: xorNode.node.id,
+                expectedNodeKinds,
+            },
+        );
     } else {
         Assert.isTrue(xorNode.node.kind === expectedNodeKinds, "xorNode.node.kind === expectedNodeKinds", {
             nodeId: xorNode.node.id,

@@ -67,7 +67,6 @@ export function recalculateIds(
         const oldId: number = encounteredIds[index];
         const newId: number = sortedIds[index];
 
-        // [960, 961, 962, 963, 964, 965, 966, 968, 969]
         if (oldId !== newId) {
             newIdByOldId.set(oldId, newId);
         }
