@@ -65,7 +65,7 @@ export function assertNthChecked<T extends Ast.TNode>(
     return xorNode;
 }
 
-export function findOfNodeKind<T extends Ast.TNode>(
+export function findNodeKind<T extends Ast.TNode>(
     ancestry: ReadonlyArray<TXorNode>,
     nodeKind: T["kind"],
 ): XorNode<T> | undefined {
@@ -76,17 +76,6 @@ export function findOfNodeKind<T extends Ast.TNode>(
     }
 
     return node;
-}
-
-export function findOfNodeKindWithIndex<T extends Ast.TNode>(
-    ancestry: ReadonlyArray<TXorNode>,
-    nodeKind: T["kind"],
-): [XorNode<T>, number] | undefined {
-    const index: number | undefined = indexOfNodeKind(ancestry, nodeKind);
-
-    return index !== undefined
-        ? [XorNodeUtils.assertAsNodeKind(Assert.asDefined(ancestry[index]), nodeKind), index]
-        : undefined;
 }
 
 export function indexOfNodeKind<T extends Ast.TNode>(

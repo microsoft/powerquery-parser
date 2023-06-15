@@ -21,7 +21,7 @@ export function assertGet<T>(collection: ReadonlyArray<T>, index: number, messag
 }
 
 export function assertIncludes<T>(collection: ReadonlyArray<T>, element: T, message?: string, details?: object): void {
-    Assert.asDefined(
+    Assert.isTrue(
         collection.includes(element),
         message ?? "collection.includes(element) failed",
         details ?? { collection, element },
@@ -62,15 +62,6 @@ export function assertRemoveAtIndex<T>(collection: ReadonlyArray<T>, index: numb
     });
 
     return [...collection.slice(0, index), ...collection.slice(index + 1)];
-}
-
-export async function mapAsync<T, U>(
-    collection: ReadonlyArray<T>,
-    map: (value: T) => Promise<U>,
-): Promise<ReadonlyArray<U>> {
-    const tasks: ReadonlyArray<Promise<U>> = collection.map(map);
-
-    return await Promise.all(tasks);
 }
 
 export function concatUnique<T>(left: ReadonlyArray<T>, right: ReadonlyArray<T>): ReadonlyArray<T> {
@@ -114,6 +105,15 @@ export function isSubset<T>(
     }
 
     return true;
+}
+
+export async function mapAsync<T, U>(
+    collection: ReadonlyArray<T>,
+    map: (value: T) => Promise<U>,
+): Promise<ReadonlyArray<U>> {
+    const tasks: ReadonlyArray<Promise<U>> = collection.map(map);
+
+    return await Promise.all(tasks);
 }
 
 export function range(size: number, startAt: number = 0): ReadonlyArray<number> {

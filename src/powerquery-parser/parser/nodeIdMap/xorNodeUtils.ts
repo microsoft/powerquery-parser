@@ -186,7 +186,7 @@ export function assertIsNodeKind<T extends Ast.TNode>(
         ArrayUtils.assertIncludes(
             expectedNodeKinds,
             xorNode.node.kind,
-            `ArrayUtils.assertIn(expectedNodeKinds, xorNodeKind)`,
+            `ArrayUtils.assertIncludes(expectedNodeKinds, xorNodeKind)`,
             {
                 actualNodeKind: xorNode.node.kind,
                 actualNodeId: xorNode.node.id,
