@@ -134,7 +134,7 @@ function createContextNodeDump(
 }
 
 function getLeafContent(astNode: Ast.TNode): string | undefined {
-    if (!AstUtils.isLeaf(astNode)) {
+    if (!AstUtils.isTLeaf(astNode)) {
         return undefined;
     }
 
