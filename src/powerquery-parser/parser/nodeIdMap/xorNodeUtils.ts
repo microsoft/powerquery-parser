@@ -79,33 +79,80 @@ export function isNodeKind<T extends Ast.TNode>(
     );
 }
 
-export function isTUnaryExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TUnaryExpression> {
-    return xorNode.node.kind === Ast.NodeKind.UnaryExpression || isTTypeExpression(xorNode);
+export function isTAnyLiteral(xorNode: TXorNode): xorNode is XorNode<Ast.TAnyLiteral> {
+    return Ast.NodeKindsForTAnyLiteral.has(xorNode.node.kind);
 }
 
-export function isTTypeExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TTypeExpression> {
-    return xorNode.node.kind === Ast.NodeKind.TypePrimaryType || isTPrimaryExpression(xorNode);
+export function isTArithmeticExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TArithmeticExpression> {
+    return Ast.NodeKindsForTArithmeticExpression.has(xorNode.node.kind);
 }
 
-export function isTPrimaryExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TPrimaryExpression> {
-    switch (xorNode.node.kind) {
-        case Ast.NodeKind.LiteralExpression:
-        case Ast.NodeKind.ListExpression:
-        case Ast.NodeKind.RecordExpression:
-        case Ast.NodeKind.IdentifierExpression:
-        case Ast.NodeKind.ParenthesizedExpression:
-        case Ast.NodeKind.InvokeExpression:
-        case Ast.NodeKind.RecursivePrimaryExpression:
-        case Ast.NodeKind.NotImplementedExpression:
-            return true;
+export function isTAsExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TAsExpression> {
+    return Ast.NodeKindsForTAsExpression.has(xorNode.node.kind);
+}
 
-        default:
-            return isTFieldAccessExpression(xorNode);
-    }
+export function isTEqualityExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TEqualityExpression> {
+    return Ast.NodeKindsForTEqualityExpression.has(xorNode.node.kind);
+}
+
+export function isTExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TExpression> {
+    return Ast.NodeKindsForTExpression.has(xorNode.node.kind);
 }
 
 export function isTFieldAccessExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TFieldAccessExpression> {
-    return xorNode.node.kind === Ast.NodeKind.FieldSelector || xorNode.node.kind === Ast.NodeKind.FieldProjection;
+    return Ast.NodeKindsForTFieldAccessExpression.has(xorNode.node.kind);
+}
+
+export function isTIsExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TIsExpression> {
+    return Ast.NodeKindsForTIsExpression.has(xorNode.node.kind);
+}
+
+export function isLeaf(xorNode: TXorNode): xorNode is XorNode<Ast.TLeaf> {
+    return Ast.NodeKindsForTLeaf.has(xorNode.node.kind);
+}
+
+export function isTListItem(xorNode: TXorNode): xorNode is XorNode<Ast.TListItem> {
+    return Ast.NodeKindsForTListItem.has(xorNode.node.kind);
+}
+
+export function isTLogicalExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TLogicalExpression> {
+    return Ast.NodeKindsForTLogicalExpression.has(xorNode.node.kind);
+}
+
+export function isTMetadataExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TMetadataExpression> {
+    return Ast.NodeKindsForTMetadataExpression.has(xorNode.node.kind);
+}
+
+export function isTNullCoalescingExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TNullCoalescingExpression> {
+    return Ast.NodeKindsForTNullCoalescingExpression.has(xorNode.node.kind);
+}
+
+export function isTNullablePrimitiveType(xorNode: TXorNode): xorNode is XorNode<Ast.TNullablePrimitiveType> {
+    return Ast.NodeKindsForTNullablePrimitiveType.has(xorNode.node.kind);
+}
+
+export function isTPrimaryExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TPrimaryExpression> {
+    return Ast.NodeKindsForTPrimaryExpression.has(xorNode.node.kind);
+}
+
+export function isTPrimaryType(xorNode: TXorNode): xorNode is XorNode<Ast.TPrimaryType> {
+    return Ast.NodeKindsForTPrimaryType.has(xorNode.node.kind);
+}
+
+export function isTRecursivePrimaryExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TRecursivePrimaryExpression> {
+    return Ast.NodeKindsForTRecursivePrimaryExpression.has(xorNode.node.kind);
+}
+
+export function isTRelationalExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TEqualityExpression> {
+    return Ast.NodeKindsForTRelationalExpression.has(xorNode.node.kind);
+}
+
+export function isTType(xorNode: TXorNode): xorNode is XorNode<Ast.TType> {
+    return Ast.NodeKindsForTType.has(xorNode.node.kind);
+}
+
+export function isTUnaryExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TUnaryExpression> {
+    return Ast.NodeKindsForTUnaryExpression.has(xorNode.node.kind);
 }
 
 export function assertAst(xorNode: TXorNode): Ast.TNode {
