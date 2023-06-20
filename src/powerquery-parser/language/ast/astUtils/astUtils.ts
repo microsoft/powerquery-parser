@@ -30,60 +30,84 @@ export function assertIsTNullablePrimitiveType(node: Ast.TNode): asserts node is
     }
 }
 
+export function isTAnyLiteral(node: Ast.TNode): node is Ast.TAnyLiteral {
+    return Ast.NodeKindsForTAnyLiteral.has(node.kind);
+}
+
 export function isTArithmeticExpression(node: Ast.TNode): node is Ast.TArithmeticExpression {
-    return nodeKindsForTArithmeticExpression.has(node.kind);
+    return Ast.NodeKindsForTArithmeticExpression.has(node.kind);
 }
 
 export function isTAsExpression(node: Ast.TNode): node is Ast.TAsExpression {
-    return nodeKindsForTAsExpression.has(node.kind);
+    return Ast.NodeKindsForTAsExpression.has(node.kind);
 }
 
 export function isTEqualityExpression(node: Ast.TNode): node is Ast.TEqualityExpression {
-    return nodeKindsForTEqualityExpression.has(node.kind);
+    return Ast.NodeKindsForTEqualityExpression.has(node.kind);
+}
+
+export function isTExpression(node: Ast.TNode): node is Ast.TExpression {
+    return Ast.NodeKindsForTExpression.has(node.kind);
 }
 
 export function isTFieldAccessExpression(node: Ast.TNode): node is Ast.TFieldAccessExpression {
-    return nodeKindsForTFieldAccessExpression.has(node.kind);
+    return Ast.NodeKindsForTFieldAccessExpression.has(node.kind);
 }
 
 export function isTIsExpression(node: Ast.TNode): node is Ast.TIsExpression {
-    return nodeKindsForTIsExpression.has(node.kind);
+    return Ast.NodeKindsForTIsExpression.has(node.kind);
 }
 
-export function isLeaf(node: Ast.TNode): node is Ast.TLeaf {
+export function isTLeaf(node: Ast.TNode): node is Ast.TLeaf {
     return node.isLeaf;
 }
 
-export function isTLogicalExpression(node: Ast.TNode): node is Ast.TLogicalExpression {
-    return nodeKindsForTLogicalExpression.has(node.kind);
+export function isTListItem(node: Ast.TNode): node is Ast.TListItem {
+    return Ast.NodeKindsForTListItem.has(node.kind);
 }
 
-export function isTNullCoalescingExpression(node: Ast.TNode): node is Ast.TNullCoalescingExpression {
-    return nodeKindsForTNullCoalescingExpression.has(node.kind);
+export function isTLogicalExpression(node: Ast.TNode): node is Ast.TLogicalExpression {
+    return Ast.NodeKindsForTLogicalExpression.has(node.kind);
 }
 
 export function isTMetadataExpression(node: Ast.TNode): node is Ast.TMetadataExpression {
-    return nodeKindsForTMetadataExpression.has(node.kind);
+    return Ast.NodeKindsForTMetadataExpression.has(node.kind);
 }
 
 export function isTNullablePrimitiveType(node: Ast.TNode): node is Ast.TNullablePrimitiveType {
-    return node.kind === Ast.NodeKind.NullablePrimitiveType || node.kind === Ast.NodeKind.PrimitiveType;
+    return Ast.NodeKindsForTNullablePrimitiveType.has(node.kind);
+}
+
+export function isTNullCoalescingExpression(node: Ast.TNode): node is Ast.TNullCoalescingExpression {
+    return Ast.NodeKindsForTNullCoalescingExpression.has(node.kind);
 }
 
 export function isTPrimaryExpression(node: Ast.TNode): node is Ast.TPrimaryExpression {
-    return nodeKindsForTPrimaryExpression.has(node.kind);
+    return Ast.NodeKindsForTPrimaryExpression.has(node.kind);
+}
+
+export function isTPrimaryType(node: Ast.TNode): node is Ast.TPrimaryType {
+    return Ast.NodeKindsForTPrimaryType.has(node.kind);
+}
+
+export function isTRecursivePrimaryExpression(node: Ast.TNode): node is Ast.TRecursivePrimaryExpression {
+    return Ast.NodeKindsForTRecursivePrimaryExpression.has(node.kind);
 }
 
 export function isTRelationalExpression(node: Ast.TNode): node is Ast.TEqualityExpression {
-    return nodeKindsForTRelationalExpression.has(node.kind);
+    return Ast.NodeKindsForTRelationalExpression.has(node.kind);
+}
+
+export function isTType(node: Ast.TNode): node is Ast.TType {
+    return Ast.NodeKindsForTType.has(node.kind);
 }
 
 export function isTTypeExpression(node: Ast.TNode): node is Ast.TTypeExpression {
-    return nodeKindsForisTTypeExpression.has(node.kind);
+    return Ast.NodeKindsForTTypeExpression.has(node.kind);
 }
 
 export function isTUnaryExpression(node: Ast.TNode): node is Ast.TUnaryExpression {
-    return nodeKindsForTUnaryExpression.has(node.kind);
+    return Ast.NodeKindsForTUnaryExpression.has(node.kind);
 }
 
 export function literalKindFrom(
@@ -245,67 +269,3 @@ export function primitiveTypeConstantKindFrom(
             throw Assert.isNever(node);
     }
 }
-
-const nodeKindsForTFieldAccessExpression: Set<Ast.NodeKind> = new Set([
-    Ast.NodeKind.FieldProjection,
-    Ast.NodeKind.FieldSelector,
-]);
-
-const nodeKindsForTPrimaryExpression: Set<Ast.NodeKind> = new Set([
-    ...Array.from(nodeKindsForTFieldAccessExpression),
-    Ast.NodeKind.LiteralExpression,
-    Ast.NodeKind.ListExpression,
-    Ast.NodeKind.RecordExpression,
-    Ast.NodeKind.IdentifierExpression,
-    Ast.NodeKind.ParenthesizedExpression,
-    Ast.NodeKind.InvokeExpression,
-    Ast.NodeKind.RecursivePrimaryExpression,
-    Ast.NodeKind.NotImplementedExpression,
-]);
-
-const nodeKindsForisTTypeExpression: Set<Ast.NodeKind> = new Set([
-    ...nodeKindsForTPrimaryExpression,
-    Ast.NodeKind.TypePrimaryType,
-]);
-
-const nodeKindsForTUnaryExpression: Set<Ast.NodeKind> = new Set([
-    ...nodeKindsForisTTypeExpression,
-    Ast.NodeKind.UnaryExpression,
-]);
-
-const nodeKindsForTMetadataExpression: Set<Ast.NodeKind> = new Set([
-    ...nodeKindsForTUnaryExpression,
-    Ast.NodeKind.MetadataExpression,
-]);
-
-const nodeKindsForTArithmeticExpression: Set<Ast.NodeKind> = new Set([
-    ...nodeKindsForTMetadataExpression,
-    Ast.NodeKind.ArithmeticExpression,
-]);
-
-const nodeKindsForTRelationalExpression: Set<Ast.NodeKind> = new Set([
-    ...nodeKindsForTArithmeticExpression,
-    Ast.NodeKind.RelationalExpression,
-]);
-
-const nodeKindsForTEqualityExpression: Set<Ast.NodeKind> = new Set([
-    ...nodeKindsForTRelationalExpression,
-    Ast.NodeKind.EqualityExpression,
-]);
-
-const nodeKindsForTAsExpression: Set<Ast.NodeKind> = new Set([
-    ...nodeKindsForTEqualityExpression,
-    Ast.NodeKind.AsExpression,
-]);
-
-const nodeKindsForTIsExpression: Set<Ast.NodeKind> = new Set([...nodeKindsForTAsExpression, Ast.NodeKind.IsExpression]);
-
-const nodeKindsForTLogicalExpression: Set<Ast.NodeKind> = new Set([
-    ...nodeKindsForTIsExpression,
-    Ast.NodeKind.LogicalExpression,
-]);
-
-const nodeKindsForTNullCoalescingExpression: Set<Ast.NodeKind> = new Set([
-    ...nodeKindsForTLogicalExpression,
-    Ast.NodeKind.NullCoalescingExpression,
-]);

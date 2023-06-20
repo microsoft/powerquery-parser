@@ -72,7 +72,7 @@ export interface INode {
     readonly kind: NodeKind;
     readonly id: number;
     readonly attributeIndex: number | undefined;
-    // The [start, end) range of a Ast.TNode.
+    // The [start, end) range of a TNode.
     readonly tokenRange: TokenRange;
     readonly isLeaf: boolean;
 }
@@ -512,7 +512,6 @@ export interface IfExpression extends INode {
 
 export type TTypeExpression = TPrimaryExpression | TypePrimaryType;
 
-// Technically TExpression should be ParenthesizedExpression, but I'm matching Microsoft's C# parser.
 export type TType = TExpression | TPrimaryType;
 
 export type TPrimaryType = PrimitiveType | FunctionType | ListType | NullableType | RecordType | TableType;
@@ -890,3 +889,120 @@ export const enum IdentifierContextKind {
     Parameter = "Parameter",
     Value = "Value",
 }
+
+// --------------------------------------------------
+// ---------- Collections for helper utils ----------
+// --------------------------------------------------
+
+export const NodeKindsForTFieldAccessExpression: Set<NodeKind> = new Set([
+    NodeKind.FieldProjection,
+    NodeKind.FieldSelector,
+]);
+
+export const NodeKindsForTRecursivePrimaryExpression: Set<NodeKind> = new Set([
+    ...NodeKindsForTFieldAccessExpression,
+    NodeKind.RecursivePrimaryExpression,
+    NodeKind.InvokeExpression,
+    NodeKind.ItemAccessExpression,
+]);
+
+export const NodeKindsForTPrimaryExpression: Set<NodeKind> = new Set([
+    ...Array.from(NodeKindsForTFieldAccessExpression),
+    NodeKind.LiteralExpression,
+    NodeKind.ListExpression,
+    NodeKind.RecordExpression,
+    NodeKind.IdentifierExpression,
+    NodeKind.ParenthesizedExpression,
+    NodeKind.InvokeExpression,
+    NodeKind.RecursivePrimaryExpression,
+    NodeKind.NotImplementedExpression,
+]);
+
+export const NodeKindsForTTypeExpression: Set<NodeKind> = new Set([
+    ...NodeKindsForTPrimaryExpression,
+    NodeKind.TypePrimaryType,
+]);
+
+export const NodeKindsForTUnaryExpression: Set<NodeKind> = new Set([
+    ...NodeKindsForTTypeExpression,
+    NodeKind.UnaryExpression,
+]);
+
+export const NodeKindsForTMetadataExpression: Set<NodeKind> = new Set([
+    ...NodeKindsForTUnaryExpression,
+    NodeKind.MetadataExpression,
+]);
+
+export const NodeKindsForTArithmeticExpression: Set<NodeKind> = new Set([
+    ...NodeKindsForTMetadataExpression,
+    NodeKind.ArithmeticExpression,
+]);
+
+export const NodeKindsForTRelationalExpression: Set<NodeKind> = new Set([
+    ...NodeKindsForTArithmeticExpression,
+    NodeKind.RelationalExpression,
+]);
+
+export const NodeKindsForTEqualityExpression: Set<NodeKind> = new Set([
+    ...NodeKindsForTRelationalExpression,
+    NodeKind.EqualityExpression,
+]);
+
+export const NodeKindsForTAsExpression: Set<NodeKind> = new Set([
+    ...NodeKindsForTEqualityExpression,
+    NodeKind.AsExpression,
+]);
+
+export const NodeKindsForTIsExpression: Set<NodeKind> = new Set([...NodeKindsForTAsExpression, NodeKind.IsExpression]);
+
+export const NodeKindsForTLogicalExpression: Set<NodeKind> = new Set([
+    ...NodeKindsForTIsExpression,
+    NodeKind.LogicalExpression,
+]);
+
+export const NodeKindsForTNullablePrimitiveType: Set<NodeKind> = new Set([
+    NodeKind.NullablePrimitiveType,
+    NodeKind.PrimitiveType,
+]);
+
+export const NodeKindsForTNullCoalescingExpression: Set<NodeKind> = new Set([
+    ...NodeKindsForTLogicalExpression,
+    NodeKind.NullCoalescingExpression,
+]);
+
+export const NodeKindsForTExpression: Set<NodeKind> = new Set([
+    ...NodeKindsForTNullCoalescingExpression,
+    NodeKind.EachExpression,
+    NodeKind.FunctionExpression,
+    NodeKind.LetExpression,
+    NodeKind.IfExpression,
+    NodeKind.ErrorHandlingExpression,
+    NodeKind.ErrorRaisingExpression,
+]);
+
+export const NodeKindsForTListItem: Set<NodeKind> = new Set([...NodeKindsForTExpression, NodeKind.RangeExpression]);
+
+export const NodeKindsForTPrimaryType: Set<NodeKind> = new Set([
+    NodeKind.PrimitiveType,
+    NodeKind.FunctionType,
+    NodeKind.ListType,
+    NodeKind.NullableType,
+    NodeKind.RecordType,
+    NodeKind.TableType,
+]);
+
+export const NodeKindsForTType: Set<NodeKind> = new Set([...NodeKindsForTExpression, ...NodeKindsForTPrimaryType]);
+
+export const NodeKindsForTAnyLiteral: Set<NodeKind> = new Set([
+    NodeKind.ListLiteral,
+    NodeKind.LiteralExpression,
+    NodeKind.RecordLiteral,
+]);
+
+export const NodeKindsForTLeaf: Set<NodeKind> = new Set([
+    NodeKind.Constant,
+    NodeKind.GeneralizedIdentifier,
+    NodeKind.Identifier,
+    NodeKind.LiteralExpression,
+    NodeKind.PrimitiveType,
+]);
