@@ -151,6 +151,10 @@ export function isTType(xorNode: TXorNode): xorNode is XorNode<Ast.TType> {
     return Ast.NodeKindsForTType.has(xorNode.node.kind);
 }
 
+export function isTUnaryExpression(xorNode: TXorNode): xorNode is XorNode<Ast.TUnaryExpression> {
+    return Ast.NodeKindsForTUnaryExpression.has(xorNode.node.kind);
+}
+
 export function assertAst(xorNode: TXorNode): Ast.TNode {
     assertIsAst(xorNode);
 
