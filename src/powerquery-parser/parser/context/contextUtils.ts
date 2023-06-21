@@ -41,7 +41,6 @@ export function newState(): ParseContext.State {
         },
         root: undefined,
         idCounter: 0,
-        leafIds: new Set(),
     };
 }
 
