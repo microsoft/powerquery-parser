@@ -117,7 +117,7 @@ export function invokeExpressionIdentifier(
 }
 
 // Unboxes the node if it's a identifier
-export function unboxIdentifier(
+export function parameterIdentifier(
     nodeIdMapCollection: NodeIdMap.Collection,
     functionParameter: TXorNode,
 ): Ast.Identifier | undefined {
@@ -130,11 +130,11 @@ export function unboxIdentifier(
 }
 
 // Unboxes the identifier literal if it exists.
-export function unboxIdentifierLiteral(
+export function parameterIdentifierLiteral(
     nodeIdMapCollection: NodeIdMap.Collection,
     functionParameter: TXorNode,
 ): string | undefined {
-    const identifier: Ast.Identifier | undefined = unboxIdentifier(nodeIdMapCollection, functionParameter);
+    const identifier: Ast.Identifier | undefined = parameterIdentifier(nodeIdMapCollection, functionParameter);
 
     return identifier ? identifier.literal : undefined;
 }

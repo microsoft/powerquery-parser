@@ -5,7 +5,7 @@ import { Ast, Constant, TextUtils } from "../../language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
 import { Assert } from "../../common";
 import { IConstant } from "../../language/ast/ast";
-import { unboxIdentifier } from "./nodeIdMapUtils";
+import { parameterIdentifier } from "./nodeIdMapUtils";
 import { XorNode } from "./xorNode";
 
 export type TKeyValuePair = FieldSpecificationKeyValuePair | LetKeyValuePair | RecordKeyValuePair | SectionKeyValuePair;
@@ -252,7 +252,7 @@ export function iterFunctionExpressionParameterNames(
     const result: Ast.Identifier[] = [];
 
     for (const parameter of iterFunctionExpressionParameters(nodeIdMapCollection, functionExpression)) {
-        const name: Ast.Identifier | undefined = unboxIdentifier(nodeIdMapCollection, parameter);
+        const name: Ast.Identifier | undefined = parameterIdentifier(nodeIdMapCollection, parameter);
 
         if (name === undefined) {
             break;
