@@ -353,15 +353,27 @@ describe(`nodeIdMapUtils`, () => {
 
             const validation: NodeIdMap.CollectionValidation = NodeIdMapUtils.validate(nodeIdMapCollection);
 
-            expect(validation.badParentChildLink).that.is.empty;
-            expect(validation.duplicateIds).that.is.empty;
-            expect(validation.unknownByNodeKindNodeIds).that.is.empty;
-            expect(validation.unknownByNodeKindNodeKinds).that.is.empty;
-            expect(validation.unknownChildIdsKeys).that.is.empty;
-            expect(validation.unknownChildIdsValues).that.is.empty;
-            expect(validation.unknownLeafIds).that.is.empty;
-            expect(validation.unknownParentIdKeys).that.is.empty;
-            expect(validation.unknownParentIdValues).that.is.empty;
+            expect({
+                badParentChildLink: validation.badParentChildLink,
+                duplicateIds: validation.duplicateIds,
+                unknownByNodeKindNodeIds: validation.unknownByNodeKindNodeIds,
+                unknownByNodeKindNodeKinds: validation.unknownByNodeKindNodeKinds,
+                unknownChildIdsKeys: validation.unknownChildIdsKeys,
+                unknownChildIdsValues: validation.unknownChildIdsValues,
+                unknownLeafIds: validation.unknownLeafIds,
+                unknownParentIdKeys: validation.unknownParentIdKeys,
+                unknownParentIdValues: validation.unknownParentIdValues,
+            }).to.deep.equal({
+                badParentChildLink: [],
+                duplicateIds: [],
+                unknownByNodeKindNodeIds: [],
+                unknownByNodeKindNodeKinds: [],
+                unknownChildIdsKeys: [],
+                unknownChildIdsValues: [],
+                unknownLeafIds: [],
+                unknownParentIdKeys: [],
+                unknownParentIdValues: [],
+            });
         }
 
         it("1 as number as", () => runValidateTest("1 as number as"));
