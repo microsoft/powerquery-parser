@@ -116,29 +116,6 @@ export function invokeExpressionIdentifier(
     return headXorNode;
 }
 
-// Unboxes the node if it's a identifier
-export function parameterIdentifier(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    functionParameter: TXorNode,
-): Ast.Identifier | undefined {
-    return nthChildAstChecked<Ast.Identifier>(
-        nodeIdMapCollection,
-        functionParameter.node.id,
-        1,
-        Ast.NodeKind.Identifier,
-    );
-}
-
-// Unboxes the identifier literal if it exists.
-export function parameterIdentifierLiteral(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    functionParameter: TXorNode,
-): string | undefined {
-    const identifier: Ast.Identifier | undefined = parameterIdentifier(nodeIdMapCollection, functionParameter);
-
-    return identifier ? identifier.literal : undefined;
-}
-
 // Unboxes the identifier literal for function name if it exists.
 export function invokeExpressionIdentifierLiteral(
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -160,4 +137,27 @@ export function invokeExpressionIdentifierLiteral(
     return identifierExpression.inclusiveConstant === undefined
         ? identifierExpression.identifier.literal
         : identifierExpression.inclusiveConstant.constantKind + identifierExpression.identifier.literal;
+}
+
+// Unboxes the node if it's a identifier
+export function parameterIdentifier(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    functionParameter: TXorNode,
+): Ast.Identifier | undefined {
+    return nthChildAstChecked<Ast.Identifier>(
+        nodeIdMapCollection,
+        functionParameter.node.id,
+        1,
+        Ast.NodeKind.Identifier,
+    );
+}
+
+// Unboxes the identifier literal if it exists.
+export function parameterIdentifierLiteral(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    functionParameter: TXorNode,
+): string | undefined {
+    const identifier: Ast.Identifier | undefined = parameterIdentifier(nodeIdMapCollection, functionParameter);
+
+    return identifier ? identifier.literal : undefined;
 }
