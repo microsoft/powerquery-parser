@@ -4,7 +4,7 @@
 import "mocha";
 import { expect } from "chai";
 
-import { Assert, Language, MapUtils, Parser } from "../../../powerquery-parser";
+import { Assert, Language, MapUtils, Parser, TaskUtils } from "../../../powerquery-parser";
 import { DefaultSettings, Task } from "../../..";
 import {
     FieldSpecificationKeyValuePair,
@@ -334,5 +334,36 @@ describe(`nodeIdMapUtils`, () => {
                 Ast.NodeKind.ArrayWrapper,
             );
         });
+    });
+
+    describe("WIP validate", () => {
+        async function runValidateTest(text: string): Promise<void> {
+            const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
+            TaskUtils.assertIsParseStage(triedLexParse);
+
+            let nodeIdMapCollection: NodeIdMap.Collection;
+
+            if (TaskUtils.isParseStageOk(triedLexParse)) {
+                nodeIdMapCollection = triedLexParse.nodeIdMapCollection;
+            } else if (TaskUtils.isParseStageParseError(triedLexParse)) {
+                nodeIdMapCollection = triedLexParse.error.state.contextState.nodeIdMapCollection;
+            } else {
+                throw new Error(`Unknown TriedLexParseTask state.`);
+            }
+
+            const validation: NodeIdMap.CollectionValidation = NodeIdMapUtils.validate(nodeIdMapCollection);
+
+            expect(validation.badParentChildLink).that.is.empty;
+            expect(validation.duplicateIds).that.is.empty;
+            expect(validation.unknownByNodeKindNodeIds).that.is.empty;
+            expect(validation.unknownByNodeKindNodeKinds).that.is.empty;
+            expect(validation.unknownChildIdsKeys).that.is.empty;
+            expect(validation.unknownChildIdsValues).that.is.empty;
+            expect(validation.unknownLeafIds).that.is.empty;
+            expect(validation.unknownParentIdKeys).that.is.empty;
+            expect(validation.unknownParentIdValues).that.is.empty;
+        }
+
+        it("1 as number as", () => runValidateTest("1 as number as"));
     });
 });

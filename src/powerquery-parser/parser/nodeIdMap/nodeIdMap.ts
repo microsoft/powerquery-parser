@@ -30,17 +30,20 @@ export interface Collection {
 }
 
 export interface CollectionValidation {
-    readonly nodes: { [key: number]: NodeSummary };
+    readonly astNodes: Map<number, NodeSummary>;
+    readonly contextNodes: ReadonlyMap<number, NodeSummary>;
     readonly leafIds: ReadonlyArray<number>;
-    readonly nodeIdsByNodeKind: { [key: string]: ReadonlyArray<number> };
+    readonly nodeIdsByNodeKind: Map<Ast.NodeKind, ReadonlyArray<number>>;
+
+    readonly badParentChildLink: ReadonlyArray<[number, number]>;
+    readonly duplicateIds: ReadonlyArray<number>;
+    readonly unknownByNodeKindNodeIds: ReadonlyArray<number>;
+    readonly unknownByNodeKindNodeKinds: ReadonlyArray<Ast.NodeKind>;
+    readonly unknownChildIdsKeys: ReadonlyArray<number>;
+    readonly unknownChildIdsValues: ReadonlyArray<number>;
     readonly unknownLeafIds: ReadonlyArray<number>;
     readonly unknownParentIdKeys: ReadonlyArray<number>;
     readonly unknownParentIdValues: ReadonlyArray<number>;
-    readonly unknownChildIdsKeys: ReadonlyArray<number>;
-    readonly unknownChildIdsValues: ReadonlyArray<number>;
-    readonly unknownByNodeKindNodeKinds: ReadonlyArray<Ast.NodeKind>;
-    readonly unknownByNodeKindNodeIds: ReadonlyArray<number>;
-    readonly badParentChildLink: ReadonlyArray<[number, number]>;
 }
 
 export interface NodeSummary {
