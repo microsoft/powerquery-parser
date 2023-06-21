@@ -186,7 +186,7 @@ export function iterFieldProjection(
 ): ReadonlyArray<TXorNode> {
     XorNodeUtils.assertIsNodeKind(fieldProjection, Ast.NodeKind.FieldProjection);
 
-    const arrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.unboxArrayWrapper(
+    const arrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.arrayWrapperContentXor(
         nodeIdMapCollection,
         fieldProjection.node.id,
     );
@@ -203,7 +203,7 @@ export function iterFieldProjectionNames(
 
     for (const selector of iterFieldProjection(nodeIdMapCollection, fieldProjection)) {
         const identifier: XorNode<Ast.GeneralizedIdentifier> | undefined =
-            NodeIdMapUtils.unboxWrappedContentChecked<Ast.GeneralizedIdentifier>(
+            NodeIdMapUtils.wrappedContentXorChecked<Ast.GeneralizedIdentifier>(
                 nodeIdMapCollection,
                 selector.node.id,
                 Ast.NodeKind.GeneralizedIdentifier,
@@ -345,7 +345,7 @@ export function iterLetExpression(
 ): ReadonlyArray<LetKeyValuePair> {
     XorNodeUtils.assertIsNodeKind<Ast.LetExpression>(letExpression, Ast.NodeKind.LetExpression);
 
-    const arrayWrapper: TXorNode | undefined = NodeIdMapUtils.unboxArrayWrapper(
+    const arrayWrapper: TXorNode | undefined = NodeIdMapUtils.arrayWrapperContentXor(
         nodeIdMapCollection,
         letExpression.node.id,
     );
@@ -375,7 +375,7 @@ export function iterRecord(
 ): ReadonlyArray<RecordKeyValuePair> {
     XorNodeUtils.assertIsRecord(record);
 
-    const arrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.unboxArrayWrapper(
+    const arrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.arrayWrapperContentXor(
         nodeIdMapCollection,
         record.node.id,
     );
@@ -530,7 +530,7 @@ function iterArrayWrapperInWrappedContent(
     nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: TXorNode,
 ): ReadonlyArray<TXorNode> {
-    const arrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.unboxArrayWrapper(
+    const arrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.arrayWrapperContentXor(
         nodeIdMapCollection,
         xorNode.node.id,
     );
