@@ -343,7 +343,7 @@ function sortByPrecedence(
     );
 }
 
-function validatorForOperator(operator: Constant.TBinOpExpressionOperator): Validator {
+function validatorForOperator(operator: Constant.TBinOpExpressionOperator): TValidator {
     switch (operator) {
         case Constant.KeywordConstant.Meta:
             return ValidatorForMetadataExpression;
