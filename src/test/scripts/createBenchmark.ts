@@ -53,6 +53,7 @@ function printText(text: string): void {
     if (process.stdout.isTTY) {
         process.stdout.write(text);
     } else {
+        // Remove trailing newline as console.log already adds one.
         console.log(text.replace(/\n$/, ""));
     }
 }
