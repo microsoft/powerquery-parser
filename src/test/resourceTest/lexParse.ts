@@ -6,6 +6,7 @@ import "mocha";
 import { ArrayUtils, TaskUtils } from "../../powerquery-parser";
 import { DefaultSettings, Parser, Settings } from "../..";
 import { TestConstants, TestResourceUtils } from "../testUtils";
+import { NodeIdMap, NodeIdMapUtils } from "../../powerquery-parser/parser";
 
 function createSettings(parser: Parser.Parser): Settings {
     return {
@@ -27,6 +28,14 @@ for (const [parserName, parser] of TestConstants.ParserByParserName.entries()) {
         },
         (testRun: TestResourceUtils.ResourceTestRun) => {
             TaskUtils.assertIsParseStageOk(testRun.triedLexParse);
+
+            const nodeIdMapCollectionValidation: NodeIdMap.CollectionValidation = NodeIdMapUtils.validate(
+                testRun.triedLexParse.nodeIdMapCollection,
+            );
+
+            expect({
+                
+            })
         },
     );
 }

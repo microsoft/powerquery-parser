@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, MapUtils, SetUtils } from "../../../common";
+import { ArrayUtils, Assert, MapUtils, SetUtils } from "../../../common";
 import { Ast, Constant, Token } from "../../../language";
 import { CombinatorialParserV2TraceConstant, OperatorsAndOperands } from "./commonTypes";
 import { NodeIdMap, ParseContext } from "../..";
@@ -101,8 +101,19 @@ export async function readOperatorsAndOperands(
             nodeIdMapCollection.parentIdById.delete(nodeId);
         }
 
+        nodeIdMapCollection.childIdsById.set(
+            initialCurrentContextNode.id,
+            ArrayUtils.assertRemoveFirstInstance(
+                MapUtils.assertGet(nodeIdMapCollection.childIdsById, initialCurrentContextNode.id),
+                iterativeParseContext.id,
+            ),
+        );
+
         nodeIdMapCollection.contextNodeById.delete(iterativeParseContext.id);
         nodeIdMapCollection.childIdsById.delete(iterativeParseContext.id);
+
+        nodeIdMapCollection.leafIds.delete(operatorConstant.id);
+        nodeIdMapCollection.leafIds.delete(operand.id);
 
         removeIdFromIdsByNodeKind(
             nodeIdMapCollection.idsByNodeKind,
