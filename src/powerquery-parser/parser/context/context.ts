@@ -29,7 +29,6 @@ export interface State {
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     root: Node<Ast.TNode> | undefined;
     idCounter: number;
-    leafIds: Set<number>;
 }
 
 export interface Node<T extends Ast.TNode> {
