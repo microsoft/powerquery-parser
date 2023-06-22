@@ -293,7 +293,7 @@ describe(`nodeIdMapUtils`, () => {
         });
     });
 
-    describe("unboxWrappedContent", () => {
+    describe("wrappedContentXor", () => {
         it("Ast", async () => {
             const text: string = `[a = 1]`;
             const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
