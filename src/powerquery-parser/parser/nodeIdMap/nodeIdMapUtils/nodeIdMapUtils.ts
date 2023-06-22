@@ -117,42 +117,52 @@ export async function xorNodeTokenRange(
 }
 
 export function validate(nodeIdMapCollection: Collection): CollectionValidation {
+    const astNodeById: Map<number, Ast.TNode> = nodeIdMapCollection.astNodeById;
+    const contextNodeById: Map<number, ParseContext.TNode> = nodeIdMapCollection.contextNodeById;
+
     const encounteredNodeKinds: Set<Ast.NodeKind> = new Set([
-        ...Array.from(nodeIdMapCollection.astNodeById.values()).map((astNode: Ast.TNode) => astNode.kind),
-        ...Array.from(nodeIdMapCollection.contextNodeById.values()).map(
-            (parseContext: ParseContext.TNode) => parseContext.kind,
-        ),
+        ...Array.from(astNodeById.values()).map((astNode: Ast.TNode) => astNode.kind),
+        ...Array.from(contextNodeById.values()).map((parseContext: ParseContext.TNode) => parseContext.kind),
     ]);
 
-    const encounteredIds: Set<number> = new Set([
-        ...nodeIdMapCollection.astNodeById.keys(),
-        ...nodeIdMapCollection.contextNodeById.keys(),
-    ]);
+    const encounteredIds: Set<number> = new Set([...astNodeById.keys(), ...contextNodeById.keys()]);
 
-    const nodes: { [key: string]: NodeSummary } = {};
+    const duplicateIds: number[] = [];
 
-    for (const [nodeId, astNode] of nodeIdMapCollection.astNodeById.entries()) {
-        nodes[nodeId] = {
+    // There's exists some duplicate
+    if (encounteredIds.size !== astNodeById.size + contextNodeById.size) {
+        for (const nodeId of astNodeById.keys()) {
+            if (contextNodeById.has(nodeId)) {
+                duplicateIds.push(nodeId);
+            }
+        }
+    }
+
+    const astNodesSummaries: Map<number, NodeSummary> = new Map();
+    const contextNodesSummaries: Map<number, NodeSummary> = new Map();
+
+    for (const [nodeId, astNode] of astNodeById.entries()) {
+        astNodesSummaries.set(nodeId, {
             nodeKind: astNode.kind,
             childIds: nodeIdMapCollection.childIdsById.get(nodeId),
             parentId: nodeIdMapCollection.parentIdById.get(nodeId),
             isAstNode: true,
-        };
+        });
     }
 
-    for (const [nodeId, contextNode] of nodeIdMapCollection.contextNodeById.entries()) {
-        nodes[nodeId] = {
+    for (const [nodeId, contextNode] of contextNodeById.entries()) {
+        contextNodesSummaries.set(nodeId, {
             nodeKind: contextNode.kind,
             childIds: nodeIdMapCollection.childIdsById.get(nodeId),
             parentId: nodeIdMapCollection.parentIdById.get(nodeId),
             isAstNode: false,
-        };
+        });
     }
 
-    const nodeIdsByNodeKind: { [key: string]: number[] } = {};
+    const nodeIdsByNodeKind: Map<Ast.NodeKind, number[]> = new Map();
 
     for (const [nodeKind, nodeIds] of nodeIdMapCollection.idsByNodeKind.entries()) {
-        nodeIdsByNodeKind[nodeKind] = [...nodeIds];
+        nodeIdsByNodeKind.set(nodeKind, Array.from(nodeIds));
     }
 
     const badParentChildLink: [number, number][] = [];
@@ -206,10 +216,11 @@ export function validate(nodeIdMapCollection: Collection): CollectionValidation 
     }
 
     return {
-        nodes,
-        leafIds: [...nodeIdMapCollection.leafIds],
+        astNodes: astNodesSummaries,
+        contextNodes: contextNodesSummaries,
+        leafIds: Array.from(nodeIdMapCollection.leafIds),
         nodeIdsByNodeKind,
-        unknownLeafIds: [...nodeIdMapCollection.leafIds].filter((id: number) => !encounteredIds.has(id)),
+        unknownLeafIds: Array.from(nodeIdMapCollection.leafIds).filter((id: number) => !encounteredIds.has(id)),
         unknownParentIdKeys,
         unknownParentIdValues,
         unknownChildIdsKeys,
@@ -219,5 +230,6 @@ export function validate(nodeIdMapCollection: Collection): CollectionValidation 
         ),
         unknownByNodeKindNodeIds,
         badParentChildLink,
+        duplicateIds,
     };
 }
