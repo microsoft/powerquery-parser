@@ -66,10 +66,7 @@ export function combineOperatorsAndOperands(
 
         placeParseContextUnderPlaceholderContext(state, binOpParseContext, placeholderContextNodeId);
 
-        const validator: TValidator = MapUtils.assertGet(
-            ValidatorsByTBinOpExpressionOperator,
-            operatorConstant.constantKind,
-        );
+        const validator: TValidator = validatorForOperator(operatorConstant.constantKind);
 
         if (!validator.validateLeftOperand(left)) {
             setParseStateToNodeStart(state, left);
@@ -262,29 +259,6 @@ const ValidatorForMetadataExpression: Validator<Ast.MetadataExpression> = {
         NaiveParseSteps.readUnaryExpression(state, parser, correlationId),
 };
 
-const ValidatorsByTBinOpExpressionOperator: Map<Constant.TBinOpExpressionOperator, TValidator> = new Map<
-    Constant.TBinOpExpressionOperator,
-    TValidator
->([
-    [Constant.KeywordConstant.Meta, ValidatorForMetadataExpression],
-    [Constant.ArithmeticOperator.Multiplication, ValidatorForEqualityExpressionAndBelow],
-    [Constant.ArithmeticOperator.Division, ValidatorForEqualityExpressionAndBelow],
-    [Constant.ArithmeticOperator.Addition, ValidatorForEqualityExpressionAndBelow],
-    [Constant.ArithmeticOperator.Subtraction, ValidatorForEqualityExpressionAndBelow],
-    [Constant.ArithmeticOperator.And, ValidatorForEqualityExpressionAndBelow],
-    [Constant.RelationalOperator.LessThan, ValidatorForEqualityExpressionAndBelow],
-    [Constant.RelationalOperator.LessThanEqualTo, ValidatorForEqualityExpressionAndBelow],
-    [Constant.RelationalOperator.GreaterThan, ValidatorForEqualityExpressionAndBelow],
-    [Constant.RelationalOperator.GreaterThanEqualTo, ValidatorForEqualityExpressionAndBelow],
-    [Constant.EqualityOperator.EqualTo, ValidatorForEqualityExpressionAndBelow],
-    [Constant.EqualityOperator.NotEqualTo, ValidatorForEqualityExpressionAndBelow],
-    [Constant.KeywordConstant.As, ValidatorForAsExpression],
-    [Constant.KeywordConstant.Is, ValidatorForIsExpression],
-    [Constant.LogicalOperator.And, ValidatorForLogicalAndExpression],
-    [Constant.LogicalOperator.Or, ValidatorForLogicalOrExpression],
-    [Constant.MiscConstant.NullCoalescingOperator, ValidatorForNullCoalescingExpression],
-]);
-
 function addAstAsChild(nodeIdMapCollection: NodeIdMap.Collection, parent: ParseContext.TNode, child: Ast.TNode): void {
     parent.attributeCounter += 1;
 
@@ -372,4 +346,62 @@ function sortByPrecedence(
             return precedenceDelta === 0 ? left.leftOperandIndex - right.leftOperandIndex : precedenceDelta;
         },
     );
+}
+
+function validatorForOperator(operator: Constant.TBinOpExpressionOperator): TValidator {
+    switch (operator) {
+        case Constant.KeywordConstant.Meta:
+            return ValidatorForMetadataExpression;
+
+        case Constant.ArithmeticOperator.Multiplication:
+            return ValidatorForEqualityExpressionAndBelow;
+
+        case Constant.ArithmeticOperator.Division:
+            return ValidatorForEqualityExpressionAndBelow;
+
+        case Constant.ArithmeticOperator.Addition:
+            return ValidatorForEqualityExpressionAndBelow;
+
+        case Constant.ArithmeticOperator.Subtraction:
+            return ValidatorForEqualityExpressionAndBelow;
+
+        case Constant.ArithmeticOperator.And:
+            return ValidatorForEqualityExpressionAndBelow;
+
+        case Constant.RelationalOperator.LessThan:
+            return ValidatorForEqualityExpressionAndBelow;
+
+        case Constant.RelationalOperator.LessThanEqualTo:
+            return ValidatorForEqualityExpressionAndBelow;
+
+        case Constant.RelationalOperator.GreaterThan:
+            return ValidatorForEqualityExpressionAndBelow;
+
+        case Constant.RelationalOperator.GreaterThanEqualTo:
+            return ValidatorForEqualityExpressionAndBelow;
+
+        case Constant.EqualityOperator.EqualTo:
+            return ValidatorForEqualityExpressionAndBelow;
+
+        case Constant.EqualityOperator.NotEqualTo:
+            return ValidatorForEqualityExpressionAndBelow;
+
+        case Constant.KeywordConstant.As:
+            return ValidatorForAsExpression;
+
+        case Constant.KeywordConstant.Is:
+            return ValidatorForIsExpression;
+
+        case Constant.LogicalOperator.And:
+            return ValidatorForLogicalAndExpression;
+
+        case Constant.LogicalOperator.Or:
+            return ValidatorForLogicalOrExpression;
+
+        case Constant.MiscConstant.NullCoalescingOperator:
+            return ValidatorForNullCoalescingExpression;
+
+        default:
+            throw Assert.isNever(operator);
+    }
 }

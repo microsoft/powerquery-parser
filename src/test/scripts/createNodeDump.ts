@@ -49,10 +49,9 @@ async function main(): Promise<void> {
 
         for (const [resource, index] of ArrayUtils.enumerate(resources)) {
             console.log(
-                `Starting ${resource.filePath} using ${parserName} (${TestUtils.zFill(
-                    index + 1,
-                    numResources,
-                )} out of ${numResources})`,
+                `Starting ${TestUtils.zFill(index + 1, numResources)} out of ${numResources} for ${parserName}: ${
+                    resource.filePath
+                }`,
             );
 
             // eslint-disable-next-line no-await-in-loop

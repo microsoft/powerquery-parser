@@ -293,7 +293,7 @@ describe(`nodeIdMapUtils`, () => {
         });
     });
 
-    describe("unboxWrappedContent", () => {
+    describe("wrappedContentXor", () => {
         it("Ast", async () => {
             const text: string = `[a = 1]`;
             const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
@@ -307,7 +307,7 @@ describe(`nodeIdMapUtils`, () => {
             const recordExpressionNodeId: number = recordExpressionNodeIds.values().next().value;
 
             XorNodeUtils.assertAstChecked(
-                Assert.asDefined(NodeIdMapUtils.unboxWrappedContent(nodeIdMapCollection, recordExpressionNodeId)),
+                Assert.asDefined(NodeIdMapUtils.wrappedContentXor(nodeIdMapCollection, recordExpressionNodeId)),
                 Ast.NodeKind.ArrayWrapper,
             );
         });
@@ -330,7 +330,7 @@ describe(`nodeIdMapUtils`, () => {
             const recordExpressionNodeId: number = recordExpressionNodeIds.values().next().value;
 
             XorNodeUtils.assertAstChecked(
-                Assert.asDefined(NodeIdMapUtils.unboxWrappedContent(nodeIdMapCollection, recordExpressionNodeId)),
+                Assert.asDefined(NodeIdMapUtils.wrappedContentXor(nodeIdMapCollection, recordExpressionNodeId)),
                 Ast.NodeKind.ArrayWrapper,
             );
         });

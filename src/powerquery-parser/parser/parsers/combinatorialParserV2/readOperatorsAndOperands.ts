@@ -41,9 +41,9 @@ export async function readOperatorsAndOperands(
         await parser.readUnaryExpression(state, parser, trace.id),
     ];
 
-    let nextRead: NextOperatorAndOperandRead | undefined = NextOperatorAndOperandReadByTokenKind.get(
-        state.currentTokenKind,
-    );
+    let nextRead: NextOperatorAndOperandRead | undefined = state.currentTokenKind
+        ? nextOperatorAndOperandRead(state.currentTokenKind)
+        : undefined;
 
     while (nextRead) {
         const iterativeParseContext: ParseContext.Node<Ast.TNode> = ParseStateUtils.startContext(
@@ -126,7 +126,7 @@ export async function readOperatorsAndOperands(
 
         // eslint-disable-next-line require-atomic-updates
         state.currentContextNode = initialCurrentContextNode;
-        nextRead = NextOperatorAndOperandReadByTokenKind.get(state.currentTokenKind);
+        nextRead = state.currentTokenKind ? nextOperatorAndOperandRead(state.currentTokenKind) : undefined;
     }
 
     Assert.isTrue(
@@ -165,162 +165,149 @@ interface NextOperatorAndOperandRead {
     readonly operatorConstantKind: Constant.TBinOpExpressionOperator;
 }
 
-const NextOperatorAndOperandReadByTokenKind: ReadonlyMap<Token.TokenKind | undefined, NextOperatorAndOperandRead> =
-    new Map<Token.TokenKind | undefined, NextOperatorAndOperandRead>([
-        [
-            Token.TokenKind.Asterisk,
-            {
+function nextOperatorAndOperandRead(tokenKind: Token.TokenKind): NextOperatorAndOperandRead | undefined {
+    switch (tokenKind) {
+        case Token.TokenKind.Asterisk:
+            return {
                 binOpExpressionNodeKind: Ast.NodeKind.ArithmeticExpression,
                 operandNodeKind: Ast.NodeKind.UnaryExpression,
                 operatorConstantKind: Constant.ArithmeticOperator.Multiplication,
                 operatorTokenKind: Token.TokenKind.Asterisk,
-            },
-        ],
-        [
-            Token.TokenKind.Division,
-            {
+            };
+
+        case Token.TokenKind.Division:
+            return {
                 binOpExpressionNodeKind: Ast.NodeKind.ArithmeticExpression,
                 operandNodeKind: Ast.NodeKind.UnaryExpression,
                 operatorConstantKind: Constant.ArithmeticOperator.Division,
                 operatorTokenKind: Token.TokenKind.Division,
-            },
-        ],
-        [
-            Token.TokenKind.Plus,
-            {
+            };
+
+        case Token.TokenKind.Plus:
+            return {
                 binOpExpressionNodeKind: Ast.NodeKind.ArithmeticExpression,
                 operandNodeKind: Ast.NodeKind.UnaryExpression,
                 operatorConstantKind: Constant.ArithmeticOperator.Addition,
                 operatorTokenKind: Token.TokenKind.Plus,
-            },
-        ],
-        [
-            Token.TokenKind.Minus,
-            {
+            };
+
+        case Token.TokenKind.Minus:
+            return {
                 binOpExpressionNodeKind: Ast.NodeKind.ArithmeticExpression,
                 operandNodeKind: Ast.NodeKind.UnaryExpression,
                 operatorConstantKind: Constant.ArithmeticOperator.Subtraction,
                 operatorTokenKind: Token.TokenKind.Minus,
-            },
-        ],
-        [
-            Token.TokenKind.Ampersand,
-            {
+            };
+
+        case Token.TokenKind.Ampersand:
+            return {
                 binOpExpressionNodeKind: Ast.NodeKind.ArithmeticExpression,
                 operandNodeKind: Ast.NodeKind.UnaryExpression,
                 operatorConstantKind: Constant.ArithmeticOperator.And,
                 operatorTokenKind: Token.TokenKind.Ampersand,
-            },
-        ],
-        [
-            Token.TokenKind.Equal,
-            {
+            };
+
+        case Token.TokenKind.Equal:
+            return {
                 binOpExpressionNodeKind: Ast.NodeKind.EqualityExpression,
                 operandNodeKind: Ast.NodeKind.UnaryExpression,
                 operatorConstantKind: Constant.EqualityOperator.EqualTo,
                 operatorTokenKind: Token.TokenKind.Equal,
-            },
-        ],
-        [
-            Token.TokenKind.NotEqual,
-            {
+            };
+
+        case Token.TokenKind.NotEqual:
+            return {
                 binOpExpressionNodeKind: Ast.NodeKind.EqualityExpression,
                 operandNodeKind: Ast.NodeKind.UnaryExpression,
                 operatorConstantKind: Constant.EqualityOperator.NotEqualTo,
                 operatorTokenKind: Token.TokenKind.NotEqual,
-            },
-        ],
-        [
-            Token.TokenKind.KeywordAnd,
-            {
+            };
+
+        case Token.TokenKind.KeywordAnd:
+            return {
                 binOpExpressionNodeKind: Ast.NodeKind.LogicalExpression,
                 operandNodeKind: Ast.NodeKind.UnaryExpression,
                 operatorConstantKind: Constant.LogicalOperator.And,
                 operatorTokenKind: Token.TokenKind.KeywordAnd,
-            },
-        ],
-        [
-            Token.TokenKind.KeywordOr,
-            {
+            };
+
+        case Token.TokenKind.KeywordOr:
+            return {
                 binOpExpressionNodeKind: Ast.NodeKind.LogicalExpression,
                 operandNodeKind: Ast.NodeKind.UnaryExpression,
                 operatorConstantKind: Constant.LogicalOperator.Or,
                 operatorTokenKind: Token.TokenKind.KeywordOr,
-            },
-        ],
-        [
-            Token.TokenKind.LessThan,
-            {
+            };
+
+        case Token.TokenKind.LessThan:
+            return {
                 binOpExpressionNodeKind: Ast.NodeKind.RelationalExpression,
                 operandNodeKind: Ast.NodeKind.UnaryExpression,
                 operatorConstantKind: Constant.RelationalOperator.LessThan,
                 operatorTokenKind: Token.TokenKind.LessThan,
-            },
-        ],
-        [
-            Token.TokenKind.LessThanEqualTo,
-            {
+            };
+
+        case Token.TokenKind.LessThanEqualTo:
+            return {
                 binOpExpressionNodeKind: Ast.NodeKind.RelationalExpression,
                 operandNodeKind: Ast.NodeKind.UnaryExpression,
                 operatorConstantKind: Constant.RelationalOperator.LessThanEqualTo,
                 operatorTokenKind: Token.TokenKind.LessThanEqualTo,
-            },
-        ],
-        [
-            Token.TokenKind.GreaterThan,
-            {
+            };
+
+        case Token.TokenKind.GreaterThan:
+            return {
                 binOpExpressionNodeKind: Ast.NodeKind.RelationalExpression,
                 operandNodeKind: Ast.NodeKind.UnaryExpression,
                 operatorConstantKind: Constant.RelationalOperator.GreaterThan,
                 operatorTokenKind: Token.TokenKind.GreaterThan,
-            },
-        ],
-        [
-            Token.TokenKind.GreaterThanEqualTo,
-            {
+            };
+
+        case Token.TokenKind.GreaterThanEqualTo:
+            return {
                 binOpExpressionNodeKind: Ast.NodeKind.RelationalExpression,
                 operandNodeKind: Ast.NodeKind.UnaryExpression,
                 operatorConstantKind: Constant.RelationalOperator.GreaterThanEqualTo,
                 operatorTokenKind: Token.TokenKind.GreaterThanEqualTo,
-            },
-        ],
-        [
-            Token.TokenKind.KeywordAs,
-            {
+            };
+
+        case Token.TokenKind.KeywordAs:
+            return {
                 binOpExpressionNodeKind: Ast.NodeKind.AsExpression,
                 operandNodeKind: Ast.NodeKind.NullablePrimitiveType,
                 operatorConstantKind: Constant.KeywordConstant.As,
                 operatorTokenKind: Token.TokenKind.KeywordAs,
-            },
-        ],
-        [
-            Token.TokenKind.KeywordIs,
-            {
+            };
+
+        case Token.TokenKind.KeywordIs:
+            return {
                 binOpExpressionNodeKind: Ast.NodeKind.IsExpression,
                 operandNodeKind: Ast.NodeKind.NullablePrimitiveType,
                 operatorConstantKind: Constant.KeywordConstant.Is,
                 operatorTokenKind: Token.TokenKind.KeywordIs,
-            },
-        ],
-        [
-            Token.TokenKind.KeywordMeta,
-            {
+            };
+
+        case Token.TokenKind.KeywordMeta:
+            return {
                 binOpExpressionNodeKind: Ast.NodeKind.MetadataExpression,
                 operandNodeKind: Ast.NodeKind.UnaryExpression,
                 operatorConstantKind: Constant.KeywordConstant.Meta,
                 operatorTokenKind: Token.TokenKind.KeywordMeta,
-            },
-        ],
-        [
-            Token.TokenKind.NullCoalescingOperator,
-            {
+            };
+
+        case Token.TokenKind.NullCoalescingOperator:
+            return {
                 binOpExpressionNodeKind: Ast.NodeKind.NullCoalescingExpression,
                 operandNodeKind: Ast.NodeKind.LogicalExpression,
                 operatorConstantKind: Constant.MiscConstant.NullCoalescingOperator,
+
                 operatorTokenKind: Token.TokenKind.NullCoalescingOperator,
-            },
-        ],
-    ]);
+            };
+
+        default:
+            return undefined;
+    }
+}
 
 function removeIdFromIdsByNodeKind(idsByNodeKind: IdsByNodeKind, nodeKind: Ast.NodeKind, nodeId: number): void {
     const collection: Set<number> = MapUtils.assertGet(idsByNodeKind, nodeKind);
