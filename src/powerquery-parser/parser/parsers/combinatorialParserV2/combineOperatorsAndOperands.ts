@@ -268,6 +268,11 @@ function addAstAsChild(nodeIdMapCollection: NodeIdMap.Collection, parent: ParseC
     nodeIdMapCollection.astNodeById.set(child.id, child);
     nodeIdMapCollection.parentIdById.set(child.id, parentId);
     nodeIdMapCollection.childIdsById.set(parentId, [...(oldChildren ?? []), child.id]);
+
+    if (child.isLeaf) {
+        nodeIdMapCollection.leafIds.add(child.id);
+    }
+
     addNodeKindToCollection(nodeIdMapCollection.idsByNodeKind, child.kind, child.id);
 }
 
