@@ -14,7 +14,7 @@ import { TestResource } from "../testUtils/resourceUtils";
 const BenchmarkDirectory: string = path.join(__dirname, "benchmark");
 
 // We want to run each file ${IterationsPerFile} times to get a more accurate average duration.
-const IterationsPerFile: number = 100;
+const IterationsPerFile: number = 10;
 // Additionally, we drop the top and bottom ${IterationPercentageDropped}% of
 // durations from iterations to reduce the impact of outliers.
 const IterationPercentageDropped: number = 0.05;
@@ -112,7 +112,10 @@ async function main(): Promise<void> {
         const { fileContents, filePath, resourceName }: TestResource = ArrayUtils.assertGet(resources, resourceIndex);
 
         printText(
-            `Starting resource ${TestUtils.zFill(resourceIndex + 1, numResources)} out of ${numResources}: ${filePath}`,
+            `Starting resource ${TestUtils.zFill(
+                resourceIndex + 1,
+                numResources,
+            )} out of ${numResources}: ${filePath}\n`,
         );
 
         for (const [parserName, parser] of TestConstants.ParserByParserName.entries()) {
@@ -174,6 +177,8 @@ async function main(): Promise<void> {
                 parserName,
                 filePath,
             };
+
+            printText("\n");
 
             const resourceSummaries: ResourceSummary[] = [...(resourceSummariesByParserName.get(parserName) ?? [])];
             resourceSummaries.push(resourceSummary);
