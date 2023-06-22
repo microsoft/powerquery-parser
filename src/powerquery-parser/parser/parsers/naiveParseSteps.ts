@@ -1731,7 +1731,7 @@ export async function readLetExpression(
         await parser.readIdentifierPairedExpressions(
             state,
             parser,
-            !ParseStateUtils.isNextTokenKind(state, TokenKind.KeywordIn),
+            !ParseStateUtils.isOnTokenKind(state, TokenKind.KeywordIn),
             ParseStateUtils.testCsvContinuationLetExpression,
             trace.id,
         );
