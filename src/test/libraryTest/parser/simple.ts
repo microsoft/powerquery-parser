@@ -1074,6 +1074,16 @@ describe("Parser.AbridgedNode", () => {
     });
 
     describe(`${Ast.NodeKind.LetExpression}`, () => {
+        it(`let in 1`, async () => {
+            await runAbridgedNodeTest(`let in 1`, [
+                [Ast.NodeKind.LetExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.LiteralExpression, 3],
+            ]);
+        });
+
         it(`let x = 1 in x`, async () => {
             await runAbridgedNodeTest(`let x = 1 in x`, [
                 [Ast.NodeKind.LetExpression, undefined],
