@@ -138,11 +138,11 @@ export function validate(nodeIdMapCollection: Collection): CollectionValidation 
         }
     }
 
-    const astNodesSummaries: Map<number, NodeSummary> = new Map();
-    const contextNodesSummaries: Map<number, NodeSummary> = new Map();
+    const astNodeSummaries: Map<number, NodeSummary> = new Map();
+    const contextNodeSummaries: Map<number, NodeSummary> = new Map();
 
     for (const [nodeId, astNode] of astNodeById.entries()) {
-        astNodesSummaries.set(nodeId, {
+        astNodeSummaries.set(nodeId, {
             nodeKind: astNode.kind,
             childIds: nodeIdMapCollection.childIdsById.get(nodeId),
             parentId: nodeIdMapCollection.parentIdById.get(nodeId),
@@ -151,7 +151,7 @@ export function validate(nodeIdMapCollection: Collection): CollectionValidation 
     }
 
     for (const [nodeId, contextNode] of contextNodeById.entries()) {
-        contextNodesSummaries.set(nodeId, {
+        contextNodeSummaries.set(nodeId, {
             nodeKind: contextNode.kind,
             childIds: nodeIdMapCollection.childIdsById.get(nodeId),
             parentId: nodeIdMapCollection.parentIdById.get(nodeId),
@@ -216,8 +216,8 @@ export function validate(nodeIdMapCollection: Collection): CollectionValidation 
     }
 
     return {
-        astNodes: astNodesSummaries,
-        contextNodes: contextNodesSummaries,
+        astNodes: astNodeSummaries,
+        contextNodes: contextNodeSummaries,
         leafIds: Array.from(nodeIdMapCollection.leafIds),
         nodeIdsByNodeKind,
         unknownLeafIds: Array.from(nodeIdMapCollection.leafIds).filter((id: number) => !encounteredIds.has(id)),
