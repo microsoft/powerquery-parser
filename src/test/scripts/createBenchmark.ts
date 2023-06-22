@@ -14,7 +14,7 @@ import { TestResource } from "../testUtils/resourceUtils";
 const BenchmarkDirectory: string = path.join(__dirname, "benchmark");
 
 // We want to run each file ${IterationsPerFile} times to get a more accurate average duration.
-const IterationsPerFile: number = 100;
+const IterationsPerFile: number = 10;
 // Additionally, we drop the top and bottom ${IterationPercentageDropped}% of
 // durations from iterations to reduce the impact of outliers.
 const IterationPercentageDropped: number = 0.05;
@@ -49,12 +49,26 @@ function jsonStringify(value: unknown): string {
     return JSON.stringify(value, undefined, 4);
 }
 
+function printText(text: string): void {
+    if (process.stdout.isTTY) {
+        process.stdout.write(text);
+    } else {
+        // Remove trailing newline as console.log already adds one.
+        console.log(text.replace(/\n$/, ""));
+    }
+}
+
+function clearLineIfPossible(): void {
+    if (process.stdout.isTTY) {
+        process.stdout.clearLine(0);
+        process.stdout.cursorTo(0);
+    }
+}
+
 function createParserSummaryDurations(
     resourceSummaries: ReadonlyArray<ResourceSummary>,
     filterOutOutliers: boolean,
 ): Durations {
-    process.stdout.write(`\tCreating ParseSummaryDurations with filterOutOutliers: ${filterOutOutliers}\n`);
-
     const durations: ReadonlyArray<number> = [...resourceSummaries].map((resourceSummary: ResourceSummary) =>
         filterOutOutliers ? resourceSummary.durationsFiltered.average : resourceSummary.durations.average,
     );
@@ -97,7 +111,7 @@ async function main(): Promise<void> {
     for (let resourceIndex: number = 0; resourceIndex < numResources; resourceIndex += 1) {
         const { fileContents, filePath, resourceName }: TestResource = ArrayUtils.assertGet(resources, resourceIndex);
 
-        process.stdout.write(
+        printText(
             `Starting resource ${TestUtils.zFill(
                 resourceIndex + 1,
                 numResources,
@@ -109,10 +123,9 @@ async function main(): Promise<void> {
             const durations: number[] = [];
 
             for (let iteration: number = 0; iteration < IterationsPerFile; iteration += 1) {
-                process.stdout.clearLine(0);
-                process.stdout.cursorTo(0);
+                clearLineIfPossible();
 
-                process.stdout.write(
+                printText(
                     `\tIteration ${TestUtils.zFill(
                         iteration + 1,
                         IterationsPerFile,
@@ -165,6 +178,8 @@ async function main(): Promise<void> {
                 filePath,
             };
 
+            printText("\n");
+
             const resourceSummaries: ResourceSummary[] = [...(resourceSummariesByParserName.get(parserName) ?? [])];
             resourceSummaries.push(resourceSummary);
             resourceSummariesByParserName.set(parserName, resourceSummaries);
@@ -173,16 +188,12 @@ async function main(): Promise<void> {
                 path.join(BenchmarkDirectory, "summary", "byResource", parserName, `${resourceName}.log`),
                 jsonStringify(resourceSummary),
             );
-
-            process.stdout.write(`\n`);
         }
     }
 
-    process.stdout.write(`Finished all resources/iterations.\n`);
+    printText(`Finished all resources/iterations/parsers. Begining parsing of data.\n`);
 
     for (const [parserName, resourceSummaries] of resourceSummariesByParserName.entries()) {
-        process.stdout.write(`Writing summary for ${parserName}.\n`);
-
         const failedToParseResourcePaths: ReadonlyArray<string> = resourceSummaries
             .filter((resourceSummary: ResourceSummary) => resourceSummary.failedToParse)
             .map((resourceSummary: ResourceSummary) => resourceSummary.filePath)
@@ -197,10 +208,9 @@ async function main(): Promise<void> {
 
         const outputFilepath: string = path.join(BenchmarkDirectory, "summary", "byParser", `${parserName}.log`);
         TestFileUtils.writeContents(outputFilepath, jsonStringify(parserSummary));
-        process.stdout.write(`Wrote contents to ${outputFilepath}\n`);
     }
 
-    process.stdout.write("All done\n");
+    printText("All done\n");
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises

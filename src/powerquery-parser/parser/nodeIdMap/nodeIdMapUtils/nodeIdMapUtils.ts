@@ -126,10 +126,9 @@ export function validate(nodeIdMapCollection: Collection): CollectionValidation 
     ]);
 
     const encounteredIds: Set<number> = new Set([...astNodeById.keys(), ...contextNodeById.keys()]);
-
     const duplicateIds: number[] = [];
 
-    // // There's exists some duplicate
+    // There's exists some duplicate
     if (encounteredIds.size !== astNodeById.size + contextNodeById.size) {
         for (const nodeId of astNodeById.keys()) {
             if (contextNodeById.has(nodeId)) {
@@ -138,11 +137,11 @@ export function validate(nodeIdMapCollection: Collection): CollectionValidation 
         }
     }
 
-    const astNodesSummaries: Map<number, NodeSummary> = new Map();
-    const contextNodesSummaries: Map<number, NodeSummary> = new Map();
+    const astNodeSummaries: Map<number, NodeSummary> = new Map();
+    const contextNodeSummaries: Map<number, NodeSummary> = new Map();
 
     for (const [nodeId, astNode] of astNodeById.entries()) {
-        astNodesSummaries.set(nodeId, {
+        astNodeSummaries.set(nodeId, {
             nodeKind: astNode.kind,
             childIds: nodeIdMapCollection.childIdsById.get(nodeId),
             parentId: nodeIdMapCollection.parentIdById.get(nodeId),
@@ -151,7 +150,7 @@ export function validate(nodeIdMapCollection: Collection): CollectionValidation 
     }
 
     for (const [nodeId, contextNode] of contextNodeById.entries()) {
-        contextNodesSummaries.set(nodeId, {
+        contextNodeSummaries.set(nodeId, {
             nodeKind: contextNode.kind,
             childIds: nodeIdMapCollection.childIdsById.get(nodeId),
             parentId: nodeIdMapCollection.parentIdById.get(nodeId),
@@ -166,7 +165,6 @@ export function validate(nodeIdMapCollection: Collection): CollectionValidation 
     }
 
     const badParentChildLink: [number, number][] = [];
-
     const unknownParentIdKeys: number[] = [];
     const unknownParentIdValues: number[] = [];
 
@@ -216,20 +214,21 @@ export function validate(nodeIdMapCollection: Collection): CollectionValidation 
     }
 
     return {
-        astNodes: astNodesSummaries,
-        contextNodes: contextNodesSummaries,
+        astNodes: astNodeSummaries,
+        contextNodes: contextNodeSummaries,
         leafIds: Array.from(nodeIdMapCollection.leafIds),
         nodeIdsByNodeKind,
-        unknownLeafIds: Array.from(nodeIdMapCollection.leafIds).filter((id: number) => !encounteredIds.has(id)),
-        unknownParentIdKeys,
-        unknownParentIdValues,
-        unknownChildIdsKeys,
-        unknownChildIdsValues,
+
+        badParentChildLink,
+        duplicateIds,
+        unknownByNodeKindNodeIds,
         unknownByNodeKindNodeKinds: Array.from(nodeIdMapCollection.idsByNodeKind.keys()).filter(
             (nodeKind: Ast.NodeKind) => !encounteredNodeKinds.has(nodeKind),
         ),
-        unknownByNodeKindNodeIds,
-        badParentChildLink,
-        duplicateIds,
+        unknownChildIdsKeys,
+        unknownChildIdsValues,
+        unknownLeafIds: Array.from(nodeIdMapCollection.leafIds).filter((id: number) => !encounteredIds.has(id)),
+        unknownParentIdKeys,
+        unknownParentIdValues,
     };
 }
