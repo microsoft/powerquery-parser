@@ -315,7 +315,7 @@ function typeCheckRecordOrTable(
                     actual: type,
                 });
             }
-        } else if (schemaIsOpen === true) {
+        } else if (schemaIsOpen) {
             validFields.push(key);
         } else {
             extraneousFields.push(key);

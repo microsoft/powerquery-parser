@@ -127,11 +127,11 @@ export function nameOfFunctionParameter(
 
     let partial: string = `${parameter.nameLiteral}:`;
 
-    if (parameter.isOptional === true) {
+    if (parameter.isOptional) {
         partial += " optional";
     }
 
-    if (parameter.isNullable === true) {
+    if (parameter.isNullable) {
         partial += " nullable";
     }
 
@@ -190,7 +190,7 @@ function nameOfFieldSpecificationList(
         chunks.push(`${key}: ${nameOf(value, traceManager, trace.id)}`);
     }
 
-    if (type.isOpen === true) {
+    if (type.isOpen) {
         chunks.push("...");
     }
 

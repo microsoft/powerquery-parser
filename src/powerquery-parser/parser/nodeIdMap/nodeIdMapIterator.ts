@@ -4,7 +4,6 @@
 import { Ast, Constant, TextUtils } from "../../language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
 import { Assert } from "../../common";
-import { IConstant } from "../../language/ast/ast";
 import { parameterIdentifier } from "./nodeIdMapUtils";
 import { XorNode } from "./xorNode";
 
@@ -21,7 +20,7 @@ export interface IKeyValuePair<Key extends Ast.GeneralizedIdentifier | Ast.Ident
 
 export interface FieldSpecificationKeyValuePair extends IKeyValuePair<Ast.GeneralizedIdentifier> {
     readonly pairKind: PairKind.FieldSpecification;
-    readonly optional: IConstant<Constant.LanguageConstant.Optional> | undefined;
+    readonly optional: Ast.IConstant<Constant.LanguageConstant.Optional> | undefined;
 }
 
 export interface LetKeyValuePair extends IKeyValuePair<Ast.Identifier> {
@@ -183,7 +182,7 @@ export function iterArrayWrapper(
 export function iterFieldProjection(
     nodeIdMapCollection: NodeIdMap.Collection,
     fieldProjection: TXorNode,
-): ReadonlyArray<TXorNode> {
+): ReadonlyArray<XorNode<Ast.FieldSelector>> {
     XorNodeUtils.assertIsNodeKind(fieldProjection, Ast.NodeKind.FieldProjection);
 
     const arrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.arrayWrapperContentXor(
@@ -191,11 +190,23 @@ export function iterFieldProjection(
         fieldProjection.node.id,
     );
 
-    return arrayWrapper === undefined ? [] : iterArrayWrapper(nodeIdMapCollection, arrayWrapper);
+    if (!arrayWrapper) {
+        return [];
+    }
+
+    const result: XorNode<Ast.FieldSelector>[] = [];
+
+    for (const child of iterArrayWrapper(nodeIdMapCollection, arrayWrapper)) {
+        XorNodeUtils.assertIsNodeKind<Ast.FieldSelector>(child, Ast.NodeKind.FieldSelector);
+
+        result.push(child);
+    }
+
+    return result;
 }
 
 // Return all FieldSelector names under the given FieldProjection.
-export function iterFieldProjectionNames(
+export function iterFieldProjectionFieldLiterals(
     nodeIdMapCollection: NodeIdMap.Collection,
     fieldProjection: TXorNode,
 ): ReadonlyArray<string> {
@@ -220,7 +231,7 @@ export function iterFieldProjectionNames(
 export function iterFunctionExpressionParameters(
     nodeIdMapCollection: NodeIdMap.Collection,
     functionExpression: TXorNode,
-): ReadonlyArray<TXorNode> {
+): ReadonlyArray<XorNode<Ast.IParameter<Ast.AsNullablePrimitiveType | undefined>>> {
     XorNodeUtils.assertIsNodeKind(functionExpression, Ast.NodeKind.FunctionExpression);
 
     if (XorNodeUtils.isAstChecked<Ast.FunctionExpression>(functionExpression, Ast.NodeKind.FunctionExpression)) {
@@ -242,7 +253,18 @@ export function iterFunctionExpressionParameters(
         return [];
     }
 
-    return iterArrayWrapperInWrappedContent(nodeIdMapCollection, parameterList);
+    const result: XorNode<Ast.IParameter<Ast.AsNullablePrimitiveType | undefined>>[] = [];
+
+    for (const xorNode of iterArrayWrapperInWrappedContent(nodeIdMapCollection, parameterList)) {
+        XorNodeUtils.assertIsNodeKind<Ast.IParameter<Ast.AsNullablePrimitiveType | undefined>>(
+            xorNode,
+            Ast.NodeKind.Parameter,
+        );
+
+        result.push(xorNode);
+    }
+
+    return result;
 }
 
 export function iterFunctionExpressionParameterNames(

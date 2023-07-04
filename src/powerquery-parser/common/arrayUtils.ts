@@ -99,7 +99,7 @@ export function isSubset<T>(
             }
         }
 
-        if (foundMatch === false) {
+        if (!foundMatch) {
             return false;
         }
     }

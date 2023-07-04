@@ -37,7 +37,7 @@ export function anyUnion(
     const result: Type.AnyUnion = {
         kind: Type.TypeKind.Any,
         extendedKind: Type.ExtendedTypeKind.AnyUnion,
-        isNullable: unionedTypePairs.find((ttype: Type.TPowerQueryType) => ttype.isNullable === true) !== undefined,
+        isNullable: unionedTypePairs.find((ttype: Type.TPowerQueryType) => ttype.isNullable) !== undefined,
         unionedTypePairs: simplified,
     };
 
