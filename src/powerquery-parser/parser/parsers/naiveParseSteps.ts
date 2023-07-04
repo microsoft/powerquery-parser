@@ -99,7 +99,7 @@ export async function readGeneralizedIdentifier(
     const tokenRangeStartIndex: number = state.tokenIndex;
     let tokenRangeEndIndex: number = tokenRangeStartIndex;
 
-    while (state.currentTokenKind && GeneralizedIdentifierTerminatorTokenKinds.indexOf(state.currentTokenKind) === -1) {
+    while (state.currentTokenKind && !GeneralizedIdentifierTerminatorTokenKinds.includes(state.currentTokenKind)) {
         readToken(state);
         tokenRangeEndIndex = state.tokenIndex;
     }

@@ -180,7 +180,7 @@ export function normalizeNumber(text: string): string | undefined {
     } else if (regexMatchLength(Pattern.Numeric, allButUnaryOperators, 0) !== allButUnaryOperators.length) {
         return undefined;
     } else {
-        return isPositive === true ? allButUnaryOperators : `-${allButUnaryOperators}`;
+        return isPositive ? allButUnaryOperators : `-${allButUnaryOperators}`;
     }
 }
 

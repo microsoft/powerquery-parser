@@ -105,7 +105,7 @@ export function generalizedIdentifierLength(text: string, index: number): number
 
     let continueMatching: boolean = true;
 
-    while (continueMatching === true) {
+    while (continueMatching) {
         const currentChr: string = text[index];
 
         if (currentChr === " ") {
