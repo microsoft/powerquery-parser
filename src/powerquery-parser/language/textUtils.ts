@@ -169,9 +169,9 @@ export function unescape(text: string): string {
 }
 
 const enum IdentifierRegexpState {
-    Done,
-    RegularIdentifier,
-    Start,
+    Done = "Done",
+    RegularIdentifier = "RegularIdentifier",
+    Start = "Start",
 }
 
 const EscapedWhitespaceRegexp: ReadonlyArray<[RegExp, string]> = [
