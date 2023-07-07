@@ -350,41 +350,21 @@ function sortByPrecedence(
 
 function validatorForOperator(operator: Constant.TBinOpExpressionOperator): TValidator {
     switch (operator) {
-        case Constant.KeywordConstant.Meta:
-            return ValidatorForMetadataExpression;
-
         case Constant.ArithmeticOperator.Multiplication:
-            return ValidatorForEqualityExpressionAndBelow;
-
         case Constant.ArithmeticOperator.Division:
-            return ValidatorForEqualityExpressionAndBelow;
-
         case Constant.ArithmeticOperator.Addition:
-            return ValidatorForEqualityExpressionAndBelow;
-
         case Constant.ArithmeticOperator.Subtraction:
-            return ValidatorForEqualityExpressionAndBelow;
-
         case Constant.ArithmeticOperator.And:
-            return ValidatorForEqualityExpressionAndBelow;
-
         case Constant.RelationalOperator.LessThan:
-            return ValidatorForEqualityExpressionAndBelow;
-
         case Constant.RelationalOperator.LessThanEqualTo:
-            return ValidatorForEqualityExpressionAndBelow;
-
         case Constant.RelationalOperator.GreaterThan:
-            return ValidatorForEqualityExpressionAndBelow;
-
         case Constant.RelationalOperator.GreaterThanEqualTo:
-            return ValidatorForEqualityExpressionAndBelow;
-
         case Constant.EqualityOperator.EqualTo:
-            return ValidatorForEqualityExpressionAndBelow;
-
         case Constant.EqualityOperator.NotEqualTo:
             return ValidatorForEqualityExpressionAndBelow;
+
+        case Constant.KeywordConstant.Meta:
+            return ValidatorForMetadataExpression;
 
         case Constant.KeywordConstant.As:
             return ValidatorForAsExpression;

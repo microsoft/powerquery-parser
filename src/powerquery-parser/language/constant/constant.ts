@@ -171,6 +171,7 @@ export const KeywordConstants: ReadonlyArray<KeywordConstant> = [
 ];
 
 export const LanguageConstants: ReadonlyArray<LanguageConstant> = [
+    LanguageConstant.Catch,
     LanguageConstant.Nullable,
     LanguageConstant.Optional,
 ];
