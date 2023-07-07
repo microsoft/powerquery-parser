@@ -14,7 +14,7 @@ import { TestResource } from "../testUtils/resourceUtils";
 const BenchmarkDirectory: string = path.join(__dirname, "benchmark");
 
 // We want to run each file ${IterationsPerFile} times to get a more accurate average duration.
-const IterationsPerFile: number = 10;
+const IterationsPerFile: number = 100;
 // Additionally, we drop the top and bottom ${IterationPercentageDropped}% of
 // durations from iterations to reduce the impact of outliers.
 const IterationPercentageDropped: number = 0.05;
