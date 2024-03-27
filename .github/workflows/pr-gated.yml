@@ -15,6 +15,6 @@ jobs:
                   node-version: "18.17"
             - run: node -v
             - run: npm ci
-            - run: npm run audit
+            - run: npm audit
             - run: npm run build
             - run: npm run test
