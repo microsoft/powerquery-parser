@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export const enum TypeUtilsTraceConstant {
+export enum TypeUtilsTraceConstant {
     AnyUnion = "CreateAnyUnion",
     Categorize = "Categorize",
     IsCompatible = "IsCompatible",

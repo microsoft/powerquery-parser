@@ -29,7 +29,7 @@ export type TExpandNodesFn<State extends ITraversalState<ResultType>, ResultType
     collection: NodesById,
 ) => Promise<ReadonlyArray<Node>>;
 
-export const enum VisitNodeStrategy {
+export enum VisitNodeStrategy {
     BreadthFirst = "BreadthFirst",
     DepthFirst = "DepthFirst",
 }

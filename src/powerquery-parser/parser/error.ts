@@ -20,12 +20,12 @@ export type TInnerParseError =
     | UnterminatedSequence
     | UnusedTokensRemainError;
 
-export const enum CsvContinuationKind {
+export enum CsvContinuationKind {
     DanglingComma = "DanglingComma",
     LetExpression = "LetExpression",
 }
 
-export const enum SequenceKind {
+export enum SequenceKind {
     Bracket = "Bracket",
     Parenthesis = "Parenthesis",
 }

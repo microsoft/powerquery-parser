@@ -33,7 +33,7 @@ export type PartialResult<Ok, Partial, Error> =
     | PartialResultIncomplete<Partial>
     | PartialResultError<Error>;
 
-export const enum PartialResultKind {
+export enum PartialResultKind {
     Ok = "Ok",
     Incomplete = "Incomplete",
     Error = "Error",

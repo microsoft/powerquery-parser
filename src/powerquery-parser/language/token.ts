@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export const enum LineTokenKindAdditions {
+export enum LineTokenKindAdditions {
     LineComment = "LineComment",
     MultilineComment = "MultilineComment",
     MultilineCommentContent = "MultilineCommentContent",
@@ -15,7 +15,7 @@ export const enum LineTokenKindAdditions {
     QuotedIdentifierStart = "QuotedIdentifierStart",
 }
 
-export const enum TokenKind {
+export enum TokenKind {
     Ampersand = "Ampersand",
     Asterisk = "Asterisk",
     AtSign = "AtSign",
@@ -80,7 +80,7 @@ export const enum TokenKind {
     TextLiteral = "TextLiteral",
 }
 
-export const enum LineTokenKind {
+export enum LineTokenKind {
     Ampersand = TokenKind.Ampersand,
     Asterisk = TokenKind.Asterisk,
     AtSign = TokenKind.AtSign,

@@ -14,7 +14,7 @@ export interface FoundQuotes {
     readonly quoteLength: number;
 }
 
-export const enum NewlineKind {
+export enum NewlineKind {
     SingleCharacter = "SingleCharacter",
     DoubleCharacter = "DoubleCharacter", // CARRIAGE RETURN + LINE FEED
 }

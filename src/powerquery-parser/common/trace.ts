@@ -40,7 +40,7 @@ import performanceNow = require("performance-now");
 // foobar(10);
 
 // Constants used in multiple files as part of a trace's phase/task/message/details.
-export const enum TraceConstant {
+export enum TraceConstant {
     CorrelationId = "CorrelationId",
     Empty = "[Empty]",
     Entry = "Entry",

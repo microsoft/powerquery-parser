@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export const enum KeywordKind {
+export enum KeywordKind {
     And = "and",
     As = "as",
     Each = "each",

@@ -10,18 +10,18 @@ export type TAmbiguousBracketNode = Ast.FieldProjection | Ast.FieldSelector | As
 
 export type TAmbiguousParenthesisNode = Ast.FunctionExpression | Ast.ParenthesizedExpression | Ast.TLogicalExpression;
 
-export const enum DismabiguationBehavior {
+export enum DismabiguationBehavior {
     Strict = "Strict",
     Thorough = "Thorough",
 }
 
-export const enum BracketDisambiguation {
+export enum BracketDisambiguation {
     FieldProjection = "FieldProjection",
     FieldSelection = "FieldSelection",
     RecordExpression = "RecordExpression",
 }
 
-export const enum ParenthesisDisambiguation {
+export enum ParenthesisDisambiguation {
     FunctionExpression = "FunctionExpression",
     ParenthesizedExpression = "ParenthesizedExpression",
 }
