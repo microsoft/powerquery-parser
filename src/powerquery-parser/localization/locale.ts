@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export const enum Locale {
+export enum Locale {
     bg_BG = "bg-BG",
     ca_EZ = "ca-EZ",
     cs_CZ = "cs-CZ",

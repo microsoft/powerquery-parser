@@ -40,7 +40,7 @@ export type TLine = TouchedLine | UntouchedLine | TouchedWithErrorLine | ErrorLi
 
 export type TErrorLine = ErrorLine | TouchedWithErrorLine;
 
-export const enum LineKind {
+export enum LineKind {
     Error = "Error",
     Touched = "Touched",
     TouchedWithError = "TouchedWithError",
@@ -53,7 +53,7 @@ export const enum LineKind {
 //  * Continuation of a multiline token (eg. multiline comment)
 //
 // All LineModes other than Default are a type of multiline tokenization.
-export const enum LineMode {
+export enum LineMode {
     Comment = "Comment",
     Default = "Default",
     QuotedIdentifier = "QuotedIdentifier",

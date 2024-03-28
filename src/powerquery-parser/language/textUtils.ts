@@ -3,7 +3,7 @@
 
 import { Assert, Pattern, StringUtils } from "../common";
 
-export const enum IdentifierKind {
+export enum IdentifierKind {
     Generalized = "Generalized",
     Invalid = "Invalid",
     Quote = "Quote",

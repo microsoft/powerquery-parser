@@ -4,7 +4,7 @@
 import { Constant } from "..";
 import { TokenRange } from "../token";
 
-export const enum NodeKind {
+export enum NodeKind {
     ArithmeticExpression = "ArithmeticExpression",
     ArrayWrapper = "ArrayWrapper",
     AsExpression = "AsExpression",
@@ -355,7 +355,7 @@ export type TPrimaryExpression =
 // ---------- 12.2.3.11 Literal expression ----------
 // --------------------------------------------------
 
-export const enum LiteralKind {
+export enum LiteralKind {
     List = "List",
     Logical = "Logical",
     Null = "Null",
@@ -557,7 +557,7 @@ export type ErrorRaisingExpression = IPairedConstant<
 // ---------- 12.2.3.27 Error handling expression ----------
 // ---------------------------------------------------------
 
-export const enum ErrorHandlerKind {
+export enum ErrorHandlerKind {
     Catch = "Catch",
     Otherwise = "Otherwise",
 }
@@ -883,7 +883,7 @@ export interface Identifier extends INode {
     readonly identifierContextKind: IdentifierContextKind;
 }
 
-export const enum IdentifierContextKind {
+export enum IdentifierContextKind {
     Key = "Key",
     Keyword = "Keyword",
     Parameter = "Parameter",

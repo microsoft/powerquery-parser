@@ -5,7 +5,7 @@ import { TokenPosition } from "./token";
 
 export type TComment = LineComment | MultilineComment;
 
-export const enum CommentKind {
+export enum CommentKind {
     Line = "Line",
     Multiline = "Multiline",
 }

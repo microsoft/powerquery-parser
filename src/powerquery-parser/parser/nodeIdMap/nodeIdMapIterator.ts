@@ -35,7 +35,7 @@ export interface SectionKeyValuePair extends IKeyValuePair<Ast.Identifier> {
     readonly pairKind: PairKind.SectionMember;
 }
 
-export const enum PairKind {
+export enum PairKind {
     FieldSpecification = "RecordType",
     LetExpression = "LetExpression",
     Record = "Record",

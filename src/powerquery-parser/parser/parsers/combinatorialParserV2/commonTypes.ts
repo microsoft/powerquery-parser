@@ -5,7 +5,7 @@ import { Ast } from "../../../language";
 
 export type TOperand = Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType;
 
-export const enum CombinatorialParserV2TraceConstant {
+export enum CombinatorialParserV2TraceConstant {
     CombinatorialParseV2 = "CombinatorialParseV2",
 }
 

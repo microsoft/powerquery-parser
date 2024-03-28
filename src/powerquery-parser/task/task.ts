@@ -14,7 +14,7 @@ export type TriedParseTask = ParseTaskOk | ParseTaskCommonError | ParseTaskParse
 
 export type TriedLexParseTask = LexTaskError | TriedParseTask;
 
-export const enum TaskStage {
+export enum TaskStage {
     Lex = "Lex",
     Parse = "Parse",
 }

@@ -3,7 +3,7 @@
 
 export type Result<T, E> = OkResult<T> | ErrorResult<E>;
 
-export const enum ResultKind {
+export enum ResultKind {
     Ok = "Ok",
     Error = "Error",
 }

@@ -4,7 +4,7 @@
 import { Ast } from "../../language";
 import { ParseContext } from "..";
 
-export const enum XorNodeKind {
+export enum XorNodeKind {
     Ast = "Ast",
     Context = "Context",
 }

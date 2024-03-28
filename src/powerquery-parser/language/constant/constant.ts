@@ -27,13 +27,13 @@ export type TBinOpExpressionOperator =
 // ---------- const enums ----------
 // ---------------------------------
 
-export const enum LanguageConstant {
+export enum LanguageConstant {
     Catch = "catch",
     Nullable = "nullable",
     Optional = "optional",
 }
 
-export const enum KeywordConstant {
+export enum KeywordConstant {
     As = "as",
     Each = "each",
     Else = "else",
@@ -54,7 +54,7 @@ export const enum KeywordConstant {
 }
 
 // Mostly direct mappings from their respective TokenKind
-export const enum MiscConstant {
+export enum MiscConstant {
     Ampersand = "&",
     AtSign = "@",
     Comma = ",",
@@ -67,7 +67,7 @@ export const enum MiscConstant {
     QuestionMark = "?",
 }
 
-export const enum PrimitiveTypeConstant {
+export enum PrimitiveTypeConstant {
     Action = "action",
     Any = "any",
     AnyNonNull = "anynonnull",
@@ -89,7 +89,7 @@ export const enum PrimitiveTypeConstant {
     Type = "type",
 }
 
-export const enum WrapperConstant {
+export enum WrapperConstant {
     LeftBrace = "{",
     LeftBracket = "[",
     LeftParenthesis = "(",
@@ -102,7 +102,7 @@ export const enum WrapperConstant {
 // ---------- operator const enums ----------
 // ------------------------------------------
 
-export const enum ArithmeticOperator {
+export enum ArithmeticOperator {
     Multiplication = "*",
     Division = "/",
     Addition = "+",
@@ -110,24 +110,24 @@ export const enum ArithmeticOperator {
     And = "&",
 }
 
-export const enum EqualityOperator {
+export enum EqualityOperator {
     EqualTo = "=",
     NotEqualTo = "<>",
 }
 
-export const enum LogicalOperator {
+export enum LogicalOperator {
     And = "and",
     Or = "or",
 }
 
-export const enum RelationalOperator {
+export enum RelationalOperator {
     LessThan = "<",
     LessThanEqualTo = "<=",
     GreaterThan = ">",
     GreaterThanEqualTo = ">=",
 }
 
-export const enum UnaryOperator {
+export enum UnaryOperator {
     Positive = "+",
     Negative = "-",
     Not = "not",

@@ -116,7 +116,7 @@ export type TFields = OrderedFields | UnorderedFields;
 export type OrderedFields = OrderedMap<string, TPowerQueryType>;
 export type UnorderedFields = Map<string, TPowerQueryType>;
 
-export const enum TypeKind {
+export enum TypeKind {
     Any = "Any",
     AnyNonNull = "AnyNonNull",
     Binary = "Binary",
@@ -168,7 +168,7 @@ export const TypeKinds: ReadonlyArray<TypeKind> = [
     TypeKind.Type,
 ];
 
-export const enum ExtendedTypeKind {
+export enum ExtendedTypeKind {
     // In Power Query if you want a union type, such as when a function returns either a `text` OR a `number`,
     // then you're only option is to give it the 'any' type.
     // This is a narrower definition which restricts that typing to the union `text | number`.

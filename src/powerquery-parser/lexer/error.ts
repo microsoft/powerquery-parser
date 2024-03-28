@@ -18,14 +18,14 @@ export type TInnerLexError =
     | UnexpectedReadError
     | UnterminatedMultilineTokenError;
 
-export const enum BadLineNumberKind {
+export enum BadLineNumberKind {
     LessThanZero = "LessThanZero",
     GreaterThanNumLines = "GreaterThanNumLines",
 }
 
 // do not these sort variants,
 // they are in order that logical checks are made, which in turn help create logical variants
-export const enum BadRangeKind {
+export enum BadRangeKind {
     SameLine_LineCodeUnitStart_Higher = "SameLine_LineCodeUnitStart_Higher",
     LineNumberStart_GreaterThan_LineNumberEnd = "LineNumberStart_GreaterThan_LineNumberEnd",
     LineNumberStart_LessThan_Zero = "LineNumberStart_LessThan_Zero",
@@ -35,13 +35,13 @@ export const enum BadRangeKind {
     LineCodeUnitEnd_GreaterThan_LineLength = "LineCodeUnitEnd_GreaterThan_LineLength",
 }
 
-export const enum ExpectedKind {
+export enum ExpectedKind {
     HexLiteral = "HexLiteral",
     KeywordOrIdentifier = "KeywordOrIdentifier",
     Numeric = "Numeric",
 }
 
-export const enum UnterminatedMultilineTokenKind {
+export enum UnterminatedMultilineTokenKind {
     MultilineComment = "MultilineComment",
     QuotedIdentifier = "QuotedIdentifier",
     Text = "Text",
