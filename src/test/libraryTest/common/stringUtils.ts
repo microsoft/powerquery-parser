@@ -13,6 +13,7 @@ describe("StringUtils", () => {
         it(`"`, () => expect(StringUtils.ensureQuoted(`"`)).to.equal(`""""`));
         it(`""`, () => expect(StringUtils.ensureQuoted(`""`)).to.equal(`""`));
         it(`"a"`, () => expect(StringUtils.ensureQuoted(`"a"`)).to.equal(`"a"`));
+        it(`a"b"c`, () => expect(StringUtils.ensureQuoted(`a"b"c`)).to.equal(`"a""b""c"`));
     });
 
     describe(`findQuote`, () => {

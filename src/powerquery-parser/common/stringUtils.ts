@@ -45,7 +45,7 @@ export function ensureQuoted(text: string): string {
         return text;
     }
 
-    return `"${text.includes(`"`) ? text.replace(`"`, `""`) : text}"`;
+    return `"${text.replace(/"/g, '""')}"`;
 }
 
 export function columnNumberFrom(text: string, requiredCodeUnit: number): number {
