@@ -3,5 +3,6 @@
     "files.exclude": {
         "src/**/*.js": true
     },
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "sarif-viewer.connectToGithubCodeScanning": "off"
 }
