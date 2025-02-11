@@ -33,7 +33,7 @@ export function assertGetFormatted(template: string, args: Map<string, string>):
 
     for (const [key, value] of args.entries()) {
         const formatKey: string = `{${key}}`;
-        Assert.isTrue(template.indexOf(formatKey) !== -1, `unknown formatKey`, { formatKey });
+        Assert.isTrue(template.indexOf(formatKey) !== -1, `unknown formatKey in template`, { template, formatKey });
         result = result.replace(formatKey, value);
     }
 

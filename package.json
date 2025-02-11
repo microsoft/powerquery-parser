@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/powerquery-parser",
-    "version": "0.15.10",
+    "version": "0.15.11",
     "description": "A parser for the Power Query/M formula language.",
     "author": "Microsoft",
     "license": "MIT",
@@ -46,7 +46,7 @@
         "eslint-plugin-prettier": "4.0.0",
         "eslint-plugin-promise": "6.0.0",
         "eslint-plugin-security": "1.4.0",
-        "mocha": "^9.1.3",
+        "mocha": "^11.1.0",
         "mocha-junit-reporter": "^2.0.2",
         "mocha-multi-reporters": "^1.5.1",
         "prettier": "^2.5.1",
