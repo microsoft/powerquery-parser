@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import * as Comment from "./comment";
+export * as IdentifierUtils from "./identifierUtils";
 export * as TextUtils from "./textUtils";
 import * as Token from "./token";
 

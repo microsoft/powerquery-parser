@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
-import { Ast, AstUtils, Constant, ConstantUtils, TextUtils, Token } from "../../language";
+import { Ast, AstUtils, Constant, ConstantUtils, IdentifierUtils, Token } from "../../language";
 import { Disambiguation, DisambiguationUtils } from "../disambiguation";
 import { NaiveParseSteps, ParseContext, ParseContextUtils, ParseError } from "..";
 import { Parser, ParseStateCheckpoint } from "../parser";
@@ -121,9 +121,9 @@ export async function readGeneralizedIdentifier(
     const contiguousIdentifierStartIndex: number = tokens[tokenRangeStartIndex].positionStart.codeUnit;
     const contiguousIdentifierEndIndex: number = tokens[tokenRangeEndIndex - 1].positionEnd.codeUnit;
     const literal: string = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
-    const literalKind: TextUtils.IdentifierKind = TextUtils.identifierKind(literal, true);
+    const literalKind: IdentifierUtils.IdentifierKind = IdentifierUtils.getIdentifierKind(literal, true);
 
-    if (literalKind === TextUtils.IdentifierKind.Invalid) {
+    if (literalKind === IdentifierUtils.IdentifierKind.Invalid) {
         trace.exit({
             [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
             [TraceConstant.IsThrowing]: true,

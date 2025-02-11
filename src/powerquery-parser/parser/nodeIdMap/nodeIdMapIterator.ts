@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Constant, TextUtils } from "../../language";
+import { Ast, Constant, IdentifierUtils } from "../../language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
 import { Assert } from "../../common";
 import { parameterIdentifier } from "./nodeIdMapUtils";
@@ -342,7 +342,7 @@ export function iterFieldSpecificationList(
             keyLiteral,
             optional,
             value,
-            normalizedKeyLiteral: TextUtils.normalizeIdentifier(keyLiteral),
+            normalizedKeyLiteral: IdentifierUtils.normalizeIdentifier(keyLiteral),
             pairKind: PairKind.FieldSpecification,
             source: fieldSpecification,
         });
@@ -450,7 +450,7 @@ export function iterSection(
                 source: XorNodeUtils.boxAst(namePairedExpression),
                 key: namePairedExpression.key,
                 keyLiteral,
-                normalizedKeyLiteral: TextUtils.normalizeIdentifier(keyLiteral),
+                normalizedKeyLiteral: IdentifierUtils.normalizeIdentifier(keyLiteral),
                 value: XorNodeUtils.boxAst(namePairedExpression.value),
                 pairKind: PairKind.SectionMember,
             };
@@ -504,7 +504,7 @@ export function iterSection(
             source: keyValuePair,
             key,
             keyLiteral,
-            normalizedKeyLiteral: TextUtils.normalizeIdentifier(keyLiteral),
+            normalizedKeyLiteral: IdentifierUtils.normalizeIdentifier(keyLiteral),
             value: NodeIdMapUtils.nthChildXor(nodeIdMapCollection, keyValuePairNodeId, 2),
             pairKind: PairKind.SectionMember,
         });
@@ -539,7 +539,7 @@ function iterKeyValuePairs<
             source: keyValuePair,
             key,
             keyLiteral,
-            normalizedKeyLiteral: TextUtils.normalizeIdentifier(keyLiteral),
+            normalizedKeyLiteral: IdentifierUtils.normalizeIdentifier(keyLiteral),
             value: NodeIdMapUtils.nthChildXor(nodeIdMapCollection, keyValuePair.node.id, 2),
             pairKind,
         } as KVP);

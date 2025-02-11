@@ -14,7 +14,7 @@ import {
     ResultUtils,
     StringUtils,
 } from "../common";
-import { Keyword, TextUtils, Token } from "../language";
+import { IdentifierUtils, Keyword, Token } from "../language";
 import { LexError } from ".";
 import { LexSettings } from "./lexSettings";
 
@@ -1137,7 +1137,7 @@ function indexOfRegexEnd(pattern: RegExp, text: string, positionStart: number): 
 }
 
 function indexOfIdentifierEnd(text: string, positionStart: number): number | undefined {
-    const length: number | undefined = TextUtils.identifierLength(text, positionStart, true);
+    const length: number | undefined = IdentifierUtils.getIdentifierLength(text, positionStart, true);
 
     return length !== undefined ? positionStart + length : undefined;
 }
