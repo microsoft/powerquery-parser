@@ -13,8 +13,8 @@ import {
     ParseStateUtils,
     RecursiveDescentParser,
 } from "../../../powerquery-parser/parser";
+import { AssertTestUtils } from "../../testUtils";
 import { Ast } from "../../../powerquery-parser/language";
-import { TestAssertUtils } from "../../testUtils";
 
 const DefaultSettingsWithStrict: Settings = {
     ...DefaultSettings,
@@ -30,7 +30,7 @@ const DefaultSettingsWithStrict: Settings = {
 
 async function assertGetCsvContinuationError(text: string): Promise<ParseError.ExpectedCsvContinuationError> {
     const innerError: ParseError.TInnerParseError = (
-        await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+        await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
     ).innerError;
 
     Assert.isTrue(
@@ -46,7 +46,7 @@ describe("Parser.Error", () => {
         const text: string = "(optional x, y) => x";
 
         const innerError: ParseError.TInnerParseError = (
-            await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+            await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
         ).innerError;
 
         expect(innerError instanceof ParseError.RequiredParameterAfterOptionalParameterError).to.equal(
@@ -59,7 +59,7 @@ describe("Parser.Error", () => {
         const text: string = "let x = [";
 
         const innerError: ParseError.TInnerParseError = (
-            await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+            await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
         ).innerError;
 
         expect(innerError instanceof ParseError.UnterminatedSequence).to.equal(true, innerError.message);
@@ -74,7 +74,7 @@ describe("Parser.Error", () => {
         const text: string = "let x = (1";
 
         const innerError: ParseError.TInnerParseError = (
-            await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+            await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
         ).innerError;
 
         expect(innerError instanceof ParseError.UnterminatedSequence).to.equal(true, innerError.message);
@@ -90,7 +90,7 @@ describe("Parser.Error", () => {
             const text: string = "1 1";
 
             const innerError: ParseError.TInnerParseError = (
-                await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+                await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
             ).innerError;
 
             expect(innerError instanceof ParseError.UnusedTokensRemainError).to.equal(true, innerError.message);
@@ -108,7 +108,7 @@ describe("Parser.Error", () => {
             const text: string = "a b";
 
             const innerError: ParseError.TInnerParseError = (
-                await TestAssertUtils.assertGetParseError(customSettings, text)
+                await AssertTestUtils.assertGetParseError(customSettings, text)
             ).innerError;
 
             expect(innerError instanceof ParseError.UnusedTokensRemainError).to.equal(true, innerError.message);
@@ -227,7 +227,7 @@ describe("Parser.Error", () => {
             const text: string = "let foo = 1 bar = 1 in foo + bar";
 
             const innerError: ParseError.TInnerParseError = (
-                await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+                await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
             ).innerError;
 
             expect(innerError instanceof ParseError.ExpectedClosingTokenKind).to.equal(true, innerError.message);
@@ -237,7 +237,7 @@ describe("Parser.Error", () => {
             const text: string = "{1 2}";
 
             const innerError: ParseError.TInnerParseError = (
-                await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+                await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
             ).innerError;
 
             expect(innerError instanceof ParseError.ExpectedClosingTokenKind).to.equal(true, innerError.message);
@@ -247,7 +247,7 @@ describe("Parser.Error", () => {
             const text: string = "[foo = 1 bar = 1]";
 
             const innerError: ParseError.TInnerParseError = (
-                await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+                await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
             ).innerError;
 
             expect(innerError instanceof ParseError.ExpectedClosingTokenKind).to.equal(true, innerError.message);
@@ -257,7 +257,7 @@ describe("Parser.Error", () => {
             const text: string = "[foo = 1 bar = 2]section baz;";
 
             const innerError: ParseError.TInnerParseError = (
-                await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+                await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
             ).innerError;
 
             expect(innerError instanceof ParseError.ExpectedClosingTokenKind).to.equal(true, innerError.message);
@@ -267,7 +267,7 @@ describe("Parser.Error", () => {
             const text: string = "type [foo = number bar = number]";
 
             const innerError: ParseError.TInnerParseError = (
-                await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+                await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
             ).innerError;
 
             expect(innerError instanceof ParseError.ExpectedClosingTokenKind).to.equal(true, innerError.message);
@@ -277,7 +277,7 @@ describe("Parser.Error", () => {
             const text: string = "type table [a = 1 b = 2]";
 
             const innerError: ParseError.TInnerParseError = (
-                await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+                await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
             ).innerError;
 
             expect(innerError instanceof ParseError.ExpectedClosingTokenKind).to.equal(true, innerError.message);
@@ -288,7 +288,7 @@ describe("Parser.Error", () => {
         const text: string = `try 1 catch (x as number) => 0`;
 
         const innerError: ParseError.TInnerParseError = (
-            await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+            await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
         ).innerError;
 
         expect(innerError instanceof ParseError.InvalidCatchFunctionError).to.equal(true, innerError.message);
@@ -298,7 +298,7 @@ describe("Parser.Error", () => {
         const text: string = `try 1 catch (x) as number => 0`;
 
         const innerError: ParseError.TInnerParseError = (
-            await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+            await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
         ).innerError;
 
         expect(innerError instanceof ParseError.InvalidCatchFunctionError).to.equal(true, innerError.message);
@@ -308,7 +308,7 @@ describe("Parser.Error", () => {
         const text: string = `try 1 catch (x, y) => 0`;
 
         const innerError: ParseError.TInnerParseError = (
-            await TestAssertUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+            await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
         ).innerError;
 
         expect(innerError instanceof ParseError.InvalidCatchFunctionError).to.equal(true, innerError.message);

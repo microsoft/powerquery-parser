@@ -5,6 +5,7 @@ import * as path from "path";
 
 import { ArrayUtils, Assert, DefaultSettings, Settings, Task, TaskUtils } from "../../powerquery-parser";
 import { Ast, AstUtils } from "../../powerquery-parser/language";
+import { FileTestUtils, ResourceTestUtils, TestConstants } from "../testUtils";
 import {
     NodeIdMap,
     NodeIdMapIterator,
@@ -13,8 +14,8 @@ import {
     XorNodeKind,
     XorNodeUtils,
 } from "../../powerquery-parser/parser";
-import { TestConstants, TestFileUtils, TestResourceUtils, TestUtils } from "../testUtils";
-import { TestResource } from "../testUtils/resourceUtils";
+import { TestResource } from "../testUtils/resourceTestUtils";
+import { zFill } from "../helperUtils";
 
 const OutputDirectory: string = path.join(__dirname, "nodeDump");
 
@@ -37,7 +38,7 @@ type ContextNodeDump = Pick<ParseContext.TNode, "kind" | "attributeIndex" | "id"
 };
 
 async function main(): Promise<void> {
-    const resources: ReadonlyArray<TestResource> = TestResourceUtils.getResources();
+    const resources: ReadonlyArray<TestResource> = ResourceTestUtils.getResources();
 
     for (const [parserName, parser] of TestConstants.ParserByParserName.entries()) {
         const settings: Settings = {
@@ -49,7 +50,7 @@ async function main(): Promise<void> {
 
         for (const [resource, index] of ArrayUtils.enumerate(resources)) {
             console.log(
-                `Starting ${TestUtils.zFill(index + 1, numResources)} out of ${numResources} for ${parserName}: ${
+                `Starting ${zFill(index + 1, numResources)} out of ${numResources} for ${parserName}: ${
                     resource.filePath
                 }`,
             );
@@ -57,7 +58,7 @@ async function main(): Promise<void> {
             // eslint-disable-next-line no-await-in-loop
             const nodeDump: TNodeDump = await lexParseDump(settings, resource);
 
-            TestFileUtils.writeContents(
+            FileTestUtils.writeContents(
                 path.join(OutputDirectory, parserName, `${resource.resourceName}.log`),
                 JSON.stringify(nodeDump, undefined, 2),
             );

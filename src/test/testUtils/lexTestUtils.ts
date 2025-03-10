@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 
-import { Assert, DefaultSettings, Language, Lexer, ResultUtils } from "../../..";
+import { Assert, DefaultSettings, Language, Lexer, ResultUtils } from "../..";
 
 export type AbridgedComments = ReadonlyArray<[Language.Comment.CommentKind, string]>;
 

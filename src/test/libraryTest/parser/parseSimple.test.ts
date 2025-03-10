@@ -7,8 +7,8 @@ import { expect } from "chai";
 import { Assert, DefaultLocale, DefaultSettings, ResultUtils, Task, TaskUtils, Traverse } from "../../..";
 import { Ast, Constant } from "../../../powerquery-parser/language";
 import { NodeIdMap, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
+import { AssertTestUtils } from "../../testUtils";
 import { NoOpTraceManagerInstance } from "../../../powerquery-parser/common/trace";
-import { TestAssertUtils } from "../../testUtils";
 
 type AbridgedNode = [Ast.NodeKind, number | undefined];
 
@@ -55,7 +55,7 @@ async function assertGetNthNodeOfKind<N extends Ast.TNode>(
     nodeKind: Ast.NodeKind,
     nthRequired: number,
 ): Promise<N> {
-    const parseTaskOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+    const parseTaskOk: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(DefaultSettings, text);
 
     const state: NthNodeOfKindState = {
         locale: DefaultLocale,

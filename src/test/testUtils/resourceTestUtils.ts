@@ -8,7 +8,7 @@ import "mocha";
 import * as path from "path";
 
 import { ArrayUtils, Settings, Task, TaskUtils } from "../../powerquery-parser";
-import { TestFileUtils } from ".";
+import { FileTestUtils } from ".";
 
 export interface ResourceTestRun {
     readonly fileContents: string;
@@ -24,12 +24,12 @@ export interface TestResource {
 }
 
 export function getResourceFilePaths(): ReadonlyArray<string> {
-    return TestFileUtils.getPowerQueryFilePathsRecursively(ResourcesDirectory);
+    return FileTestUtils.getPowerQueryFilePathsRecursively(ResourcesDirectory);
 }
 
 export function getResources(): ReadonlyArray<TestResource> {
     return getResourceFilePaths().map((filePath: string) => {
-        const fileContents: string = TestFileUtils.readContents(filePath);
+        const fileContents: string = FileTestUtils.readContents(filePath);
 
         const resourceName: string = ArrayUtils.assertGet(
             filePath.split(ResourcesDirectory),
@@ -48,7 +48,7 @@ export function getResources(): ReadonlyArray<TestResource> {
 }
 
 export async function visitResources(visitFn: (filePath: string) => Promise<void>): Promise<void> {
-    for (const filePath of TestFileUtils.getPowerQueryFilePathsRecursively(ResourcesDirectory)) {
+    for (const filePath of FileTestUtils.getPowerQueryFilePathsRecursively(ResourcesDirectory)) {
         // eslint-disable-next-line no-await-in-loop
         await visitFn(filePath);
     }
@@ -63,7 +63,7 @@ export function runResourceTestSuite(
     describe(suiteName, () => {
         for (const filePath of getResourceFilePaths()) {
             it(testNameFn(filePath), async () => {
-                const fileContents: string = TestFileUtils.readContents(filePath);
+                const fileContents: string = FileTestUtils.readContents(filePath);
                 const testStart: number = performanceNow();
 
                 // eslint-disable-next-line no-await-in-loop
