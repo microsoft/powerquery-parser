@@ -5,7 +5,7 @@ import "mocha";
 import { expect } from "chai";
 
 import { DefaultSettings, Lexer, ResultUtils } from "../../..";
-import { ILineTokens, IState, IToken, Tokenizer } from "./common";
+import { ILineTokens, IState, IToken, Tokenizer } from "../../testUtils/tokenizerTestUtils";
 
 const tokenizer: Tokenizer = new Tokenizer("\n");
 

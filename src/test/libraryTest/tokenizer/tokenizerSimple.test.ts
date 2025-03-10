@@ -4,7 +4,7 @@
 import "mocha";
 import { expect } from "chai";
 
-import { ILineTokens, IState, IToken, Tokenizer, TokenizerState } from "./common";
+import { ILineTokens, IState, IToken, Tokenizer, TokenizerState } from "../../testUtils/tokenizerTestUtils";
 
 const tokenizer: Tokenizer = new Tokenizer(`\n`);
 const initialState: TokenizerState = tokenizer.getInitialState() as TokenizerState;

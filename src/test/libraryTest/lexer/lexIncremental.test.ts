@@ -5,7 +5,7 @@ import "mocha";
 import { expect } from "chai";
 
 import { Lexer, ResultUtils } from "../../..";
-import { assertGetLexOk } from "./common";
+import { assertGetLexOk } from "../../testUtils/lexTestUtils";
 
 const LINE_TERMINATOR: string = `\n`;
 

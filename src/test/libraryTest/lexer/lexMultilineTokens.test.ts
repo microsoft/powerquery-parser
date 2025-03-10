@@ -12,7 +12,7 @@ import {
     assertGetLineTokenMatch,
     assertGetSnapshotAbridgedComments,
     assertGetSnapshotAbridgedTokens,
-} from "./common";
+} from "../../testUtils/lexTestUtils";
 import { Language } from "../../..";
 
 const LINE_TERMINATOR: string = "\n";

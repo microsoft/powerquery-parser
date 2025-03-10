@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { DefaultLocale, Language, ResultUtils } from "../../../powerquery-parser";
-import { Lexer } from "../../../";
+import { DefaultLocale, Language, ResultUtils } from "../../powerquery-parser";
+import { Lexer } from "../..";
 
 export class Tokenizer implements TokensProvider {
     constructor(private readonly lineTerminator: string) {}
