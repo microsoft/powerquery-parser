@@ -282,7 +282,7 @@ export function isTWrapped(xorNode: TXorNode): xorNode is XorNode<Ast.TWrapped> 
     ]);
 }
 
-export function getIdentifierLiteral(xorNode: TXorNode): string | undefined {
+export function identifierExpressionLiteral(xorNode: TXorNode): string | undefined {
     const identifierExpression: Ast.IdentifierExpression | undefined = astChecked(
         xorNode,
         Ast.NodeKind.IdentifierExpression,
