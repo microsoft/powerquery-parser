@@ -4,7 +4,7 @@
 import "mocha";
 import { expect } from "chai";
 
-import { assertGetSnapshotAbridgedTokens } from "../../testUtils/lexTestTestUtils";
+import { assertGetSnapshotAbridgedTokens } from "../../testUtils/lexTestUtils";
 import { Language } from "../../..";
 
 describe(`Lexer.Simple.TokenKinds`, () => {
