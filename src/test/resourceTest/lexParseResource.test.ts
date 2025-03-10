@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { ArrayUtils, TaskUtils } from "../../powerquery-parser";
 import { DefaultSettings, Parser, Settings } from "../..";
 import { NodeIdMap, NodeIdMapUtils } from "../../powerquery-parser/parser";
-import { TestConstants, TestResourceUtils } from "../testUtils";
+import { ResourceTestUtils, TestConstants } from "../testUtils";
 
 function createSettings(parser: Parser.Parser): Settings {
     return {
@@ -19,7 +19,7 @@ function createSettings(parser: Parser.Parser): Settings {
 for (const [parserName, parser] of TestConstants.ParserByParserName.entries()) {
     const settings: Settings = createSettings(parser);
 
-    TestResourceUtils.runResourceTestSuite(
+    ResourceTestUtils.runResourceTestSuite(
         settings,
         `Attempt lex and parse resources (${parserName})`,
         (filePath: string) => {
@@ -27,7 +27,7 @@ for (const [parserName, parser] of TestConstants.ParserByParserName.entries()) {
 
             return `${filePathSlice}`;
         },
-        (testRun: TestResourceUtils.ResourceTestRun) => {
+        (testRun: ResourceTestUtils.ResourceTestRun) => {
             TaskUtils.assertIsParseStageOk(testRun.triedLexParse);
 
             const validation: NodeIdMap.CollectionValidation = NodeIdMapUtils.validate(

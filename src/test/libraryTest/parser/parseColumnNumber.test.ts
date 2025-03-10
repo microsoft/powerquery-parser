@@ -5,11 +5,11 @@ import "mocha";
 import { expect } from "chai";
 
 import { Assert, DefaultSettings } from "../../..";
+import { AssertTestUtils } from "../../testUtils";
 import { ParseError } from "../../../powerquery-parser/parser";
-import { TestAssertUtils } from "../../testUtils";
 
 async function assertGetExpectedTokenKindError(text: string): Promise<ParseError.ExpectedTokenKindError> {
-    const error: ParseError.ParseError = await TestAssertUtils.assertGetParseError(DefaultSettings, text);
+    const error: ParseError.ParseError = await AssertTestUtils.assertGetParseError(DefaultSettings, text);
     const innerError: ParseError.TInnerParseError = error.innerError;
 
     Assert.isTrue(

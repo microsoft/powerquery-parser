@@ -19,13 +19,13 @@ import {
     XorNode,
     XorNodeUtils,
 } from "../../../powerquery-parser/parser";
+import { AssertTestUtils } from "../../testUtils";
 import { Ast } from "../../../powerquery-parser/language";
-import { TestAssertUtils } from "../../testUtils";
 
 describe("nodeIdMapIterator", () => {
     it(`iterFieldSpecficationList`, async () => {
         const text: string = `type [foo = number, optional bar = logical]`;
-        const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+        const parseOk: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(DefaultSettings, text);
 
         const fieldSpecificationListIds: Set<number> = MapUtils.assertGet(
             parseOk.nodeIdMapCollection.idsByNodeKind,
@@ -58,7 +58,7 @@ describe("nodeIdMapIterator", () => {
     describe(`iterFunctionExpressionParameters`, () => {
         it(`ast`, async () => {
             const text: string = `(x, y as number) => x + y`;
-            const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+            const parseOk: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(DefaultSettings, text);
 
             const functionExpressionIds: Set<number> = MapUtils.assertGet(
                 parseOk.nodeIdMapCollection.idsByNodeKind,
@@ -97,7 +97,7 @@ describe("nodeIdMapIterator", () => {
 
         it(`context`, async () => {
             const text: string = `(x, y as number) => let`;
-            const parseError: ParseError.ParseError = await TestAssertUtils.assertGetParseError(DefaultSettings, text);
+            const parseError: ParseError.ParseError = await AssertTestUtils.assertGetParseError(DefaultSettings, text);
 
             const functionExpressionIds: Set<number> = MapUtils.assertGet(
                 parseError.state.contextState.nodeIdMapCollection.idsByNodeKind,
@@ -138,7 +138,7 @@ describe("nodeIdMapIterator", () => {
     describe(`iterFunctionExpressionParameterNameLiterals`, () => {
         it(`ast`, async () => {
             const text: string = `(x, y as number) => x + y`;
-            const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+            const parseOk: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(DefaultSettings, text);
 
             const functionExpressionIds: Set<number> = MapUtils.assertGet(
                 parseOk.nodeIdMapCollection.idsByNodeKind,
@@ -164,7 +164,7 @@ describe("nodeIdMapIterator", () => {
 
         it(`context`, async () => {
             const text: string = `(x, y as number) => let`;
-            const parseError: ParseError.ParseError = await TestAssertUtils.assertGetParseError(DefaultSettings, text);
+            const parseError: ParseError.ParseError = await AssertTestUtils.assertGetParseError(DefaultSettings, text);
 
             const functionExpressionIds: Set<number> = MapUtils.assertGet(
                 parseError.state.contextState.nodeIdMapCollection.idsByNodeKind,
@@ -192,7 +192,7 @@ describe("nodeIdMapIterator", () => {
     describe(`iterRecord`, () => {
         it(`normalize record key`, async () => {
             const text: string = `let key = [#"foo" = bar] in key`;
-            const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+            const parseOk: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(DefaultSettings, text);
 
             const recordIds: Set<number> = MapUtils.assertGet(
                 parseOk.nodeIdMapCollection.idsByNodeKind,
@@ -218,7 +218,7 @@ describe("nodeIdMapIterator", () => {
 
     it(`iterRecordType`, async () => {
         const text: string = `type [foo = number, optional bar = logical]`;
-        const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+        const parseOk: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(DefaultSettings, text);
 
         const recordTypeIds: Set<number> = MapUtils.assertGet(
             parseOk.nodeIdMapCollection.idsByNodeKind,
@@ -249,7 +249,7 @@ describe(`nodeIdMapUtils`, () => {
     describe(`invokeExpressionIdentifier`, () => {
         it(`Ast`, async () => {
             const text: string = `Foo(1)`;
-            const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+            const parseOk: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(DefaultSettings, text);
             const nodeIdMapCollection: NodeIdMap.Collection = parseOk.nodeIdMapCollection;
 
             const invokeExpressionNodeIds: Set<number> = Assert.asDefined(
@@ -270,7 +270,7 @@ describe(`nodeIdMapUtils`, () => {
         it(`Context`, async () => {
             const text: string = `Foo(1, `;
 
-            const parseError: Task.ParseTaskParseError = await TestAssertUtils.assertGetLexParseError(
+            const parseError: Task.ParseTaskParseError = await AssertTestUtils.assertGetLexParseError(
                 DefaultSettings,
                 text,
             );
@@ -296,7 +296,7 @@ describe(`nodeIdMapUtils`, () => {
     describe("wrappedContentXor", () => {
         it("Ast", async () => {
             const text: string = `[a = 1]`;
-            const parseOk: Task.ParseTaskOk = await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+            const parseOk: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(DefaultSettings, text);
             const nodeIdMapCollection: NodeIdMap.Collection = parseOk.nodeIdMapCollection;
 
             const recordExpressionNodeIds: Set<number> = Assert.asDefined(
@@ -315,7 +315,7 @@ describe(`nodeIdMapUtils`, () => {
         it("Context", async () => {
             const text: string = `[a = 1][`;
 
-            const parseError: Parser.ParseError.ParseError = await TestAssertUtils.assertGetParseError(
+            const parseError: Parser.ParseError.ParseError = await AssertTestUtils.assertGetParseError(
                 DefaultSettings,
                 text,
             );

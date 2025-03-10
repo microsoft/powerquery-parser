@@ -5,9 +5,9 @@ import "mocha";
 import { expect } from "chai";
 
 import { NodeIdMap, NodeIdMapUtils, ParseOk } from "../../../powerquery-parser/parser";
+import { AssertTestUtils } from "../../testUtils";
 import { Ast } from "../../../powerquery-parser/language";
 import { DefaultSettings } from "../../..";
-import { TestAssertUtils } from "../../testUtils";
 
 function assertGetIdentifierByLiteral(parseOk: ParseOk, identifierLiteral: string): Ast.Identifier {
     const nodeIdMapCollection: NodeIdMap.Collection = parseOk.state.contextState.nodeIdMapCollection;
@@ -45,14 +45,14 @@ function assertIdentifierIsInContext(
 
 describe("Parser.IdentifierContextKind", () => {
     it("let foo = 1 in bar", async () => {
-        const parseOk: ParseOk = await TestAssertUtils.assertGetParseOk(DefaultSettings, "let foo = 1 in bar");
+        const parseOk: ParseOk = await AssertTestUtils.assertGetParseOk(DefaultSettings, "let foo = 1 in bar");
 
         assertIdentifierIsInContext(parseOk, "foo", Ast.IdentifierContextKind.Key);
         assertIdentifierIsInContext(parseOk, "bar", Ast.IdentifierContextKind.Value);
     });
 
     it("let fn = (foo as number) => 1 in 1", async () => {
-        const parseOk: ParseOk = await TestAssertUtils.assertGetParseOk(
+        const parseOk: ParseOk = await AssertTestUtils.assertGetParseOk(
             DefaultSettings,
             "let fn = (foo as number) => 1 in 1",
         );
@@ -62,7 +62,7 @@ describe("Parser.IdentifierContextKind", () => {
     });
 
     it("let foo = #date in 1", async () => {
-        const parseOk: ParseOk = await TestAssertUtils.assertGetParseOk(DefaultSettings, "let foo = #date in 1");
+        const parseOk: ParseOk = await AssertTestUtils.assertGetParseOk(DefaultSettings, "let foo = #date in 1");
 
         assertIdentifierIsInContext(parseOk, "foo", Ast.IdentifierContextKind.Key);
         assertIdentifierIsInContext(parseOk, "#date", Ast.IdentifierContextKind.Keyword);

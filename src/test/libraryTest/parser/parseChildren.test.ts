@@ -5,7 +5,7 @@ import "mocha";
 import { expect } from "chai";
 
 import { Assert, DefaultSettings, Language, Parser, Task } from "../../..";
-import { TestAssertUtils } from "../../testUtils";
+import { AssertTestUtils } from "../../testUtils";
 
 interface ChildIdsByIdEntry {
     readonly childNodeIds: ReadonlyArray<number>;
@@ -51,7 +51,7 @@ describe("Parser.Children", () => {
         ];
 
         const actual: ReadonlyArray<ChildIdsByIdEntry> = createActual(
-            await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text),
+            await AssertTestUtils.assertGetLexParseOk(DefaultSettings, text),
         );
 
         expect(actual).to.deep.equal(expected);
@@ -74,7 +74,7 @@ describe("Parser.Children", () => {
         ];
 
         const actual: ReadonlyArray<ChildIdsByIdEntry> = createActual(
-            await TestAssertUtils.assertGetLexParseOk(DefaultSettings, text),
+            await AssertTestUtils.assertGetLexParseOk(DefaultSettings, text),
         );
 
         expect(actual).to.deep.equal(expected);

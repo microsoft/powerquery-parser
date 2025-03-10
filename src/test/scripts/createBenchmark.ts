@@ -8,8 +8,9 @@ import * as path from "path";
 
 import { ArrayUtils, DefaultSettings, Settings, Task, TaskUtils } from "../../powerquery-parser";
 import { BenchmarkTraceManager, NoOpTraceManagerInstance } from "../../powerquery-parser/common/trace";
-import { TestConstants, TestFileUtils, TestResourceUtils, TestUtils } from "../testUtils";
-import { TestResource } from "../testUtils/resourceUtils";
+import { FileTestUtils, ResourceTestUtils, TestConstants } from "../testUtils";
+import { TestResource } from "../testUtils/resourceTestUtils";
+import { zFill } from "../helperUtils";
 
 const BenchmarkDirectory: string = path.join(__dirname, "benchmark");
 
@@ -105,18 +106,13 @@ function createResourceSummaryDurations(durations: ReadonlyArray<number>, filter
 // Optionally writes traces to disk with $WriteTracesToDisk.
 async function main(): Promise<void> {
     const resourceSummariesByParserName: Map<string, ReadonlyArray<ResourceSummary>> = new Map();
-    const resources: ReadonlyArray<TestResource> = TestResourceUtils.getResources();
+    const resources: ReadonlyArray<TestResource> = ResourceTestUtils.getResources();
     const numResources: number = resources.length;
 
     for (let resourceIndex: number = 0; resourceIndex < numResources; resourceIndex += 1) {
         const { fileContents, filePath, resourceName }: TestResource = ArrayUtils.assertGet(resources, resourceIndex);
 
-        printText(
-            `Starting resource ${TestUtils.zFill(
-                resourceIndex + 1,
-                numResources,
-            )} out of ${numResources}: ${filePath}\n`,
-        );
+        printText(`Starting resource ${zFill(resourceIndex + 1, numResources)} out of ${numResources}: ${filePath}\n`);
 
         for (const [parserName, parser] of TestConstants.ParserByParserName.entries()) {
             let failedToParse: boolean = false;
@@ -126,7 +122,7 @@ async function main(): Promise<void> {
                 clearLineIfPossible();
 
                 printText(
-                    `\tIteration ${TestUtils.zFill(
+                    `\tIteration ${zFill(
                         iteration + 1,
                         IterationsPerFile,
                     )} out of ${IterationsPerFile} using ${parserName}`,
@@ -157,13 +153,13 @@ async function main(): Promise<void> {
                 }
 
                 if (WriteTracesToDisk) {
-                    TestFileUtils.writeContents(
+                    FileTestUtils.writeContents(
                         path.join(
                             BenchmarkDirectory,
                             "traces",
                             parserName,
                             resourceName,
-                            `iteration_${TestUtils.zFill(iteration, IterationsPerFile)}.log`,
+                            `iteration_${zFill(iteration, IterationsPerFile)}.log`,
                         ),
                         contents,
                     );
@@ -184,7 +180,7 @@ async function main(): Promise<void> {
             resourceSummaries.push(resourceSummary);
             resourceSummariesByParserName.set(parserName, resourceSummaries);
 
-            TestFileUtils.writeContents(
+            FileTestUtils.writeContents(
                 path.join(BenchmarkDirectory, "summary", "byResource", parserName, `${resourceName}.log`),
                 jsonStringify(resourceSummary),
             );
@@ -207,7 +203,7 @@ async function main(): Promise<void> {
         };
 
         const outputFilepath: string = path.join(BenchmarkDirectory, "summary", "byParser", `${parserName}.log`);
-        TestFileUtils.writeContents(outputFilepath, jsonStringify(parserSummary));
+        FileTestUtils.writeContents(outputFilepath, jsonStringify(parserSummary));
     }
 
     printText("All done\n");
