@@ -257,7 +257,7 @@ describe(`nodeIdMapUtils`, () => {
             );
 
             expect(invokeExpressionNodeIds.size).to.equal(1);
-            const invokeExpressionNodeId: number = invokeExpressionNodeIds.values().next().value;
+            const invokeExpressionNodeId: number = Assert.asDefined(invokeExpressionNodeIds.values().next().value);
 
             const invokeExpressionIdentifier: XorNode<Ast.IdentifierExpression> = Assert.asDefined(
                 NodeIdMapUtils.invokeExpressionIdentifier(nodeIdMapCollection, invokeExpressionNodeId),
@@ -282,7 +282,7 @@ describe(`nodeIdMapUtils`, () => {
             );
 
             expect(invokeExpressionNodeIds.size).to.equal(1);
-            const invokeExpressionNodeId: number = invokeExpressionNodeIds.values().next().value;
+            const invokeExpressionNodeId: number = Assert.asDefined(invokeExpressionNodeIds.values().next().value);
 
             const invokeExpressionIdentifier: XorNode<Ast.IdentifierExpression> = Assert.asDefined(
                 NodeIdMapUtils.invokeExpressionIdentifier(nodeIdMapCollection, invokeExpressionNodeId),
@@ -304,7 +304,7 @@ describe(`nodeIdMapUtils`, () => {
             );
 
             expect(recordExpressionNodeIds.size).to.equal(1);
-            const recordExpressionNodeId: number = recordExpressionNodeIds.values().next().value;
+            const recordExpressionNodeId: number = Assert.asDefined(recordExpressionNodeIds.values().next().value);
 
             XorNodeUtils.assertAstChecked(
                 Assert.asDefined(NodeIdMapUtils.wrappedContentXor(nodeIdMapCollection, recordExpressionNodeId)),
@@ -327,7 +327,7 @@ describe(`nodeIdMapUtils`, () => {
             );
 
             expect(recordExpressionNodeIds.size).to.equal(1);
-            const recordExpressionNodeId: number = recordExpressionNodeIds.values().next().value;
+            const recordExpressionNodeId: number = Assert.asDefined(recordExpressionNodeIds.values().next().value);
 
             XorNodeUtils.assertAstChecked(
                 Assert.asDefined(NodeIdMapUtils.wrappedContentXor(nodeIdMapCollection, recordExpressionNodeId)),

@@ -30,6 +30,19 @@ export function assertIsTNullablePrimitiveType(node: Ast.TNode): asserts node is
     }
 }
 
+export function getIdentifierLiteral(node: Ast.Identifier | Ast.IdentifierExpression): string {
+    switch (node.kind) {
+        case Ast.NodeKind.Identifier:
+            return node.literal;
+
+        case Ast.NodeKind.IdentifierExpression:
+            return node.inclusiveConstant ? `@${node.identifier.literal}` : node.identifier.literal;
+
+        default:
+            throw Assert.isNever(node);
+    }
+}
+
 export function isTAnyLiteral(node: Ast.TNode): node is Ast.TAnyLiteral {
     return Ast.NodeKindsForTAnyLiteral.has(node.kind);
 }
