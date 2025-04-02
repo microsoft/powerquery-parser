@@ -6,7 +6,7 @@ import { expect } from "chai";
 
 import { IdentifierUtils } from "../../powerquery-parser/language";
 
-describe("TextUtils", () => {
+describe("IdentifierUtils", () => {
     describe(`isRegularIdentifier`, () => {
         describe(`valid`, () => {
             it(`foo`, () => expect(IdentifierUtils.isRegularIdentifier("foo", false), "should be true").to.be.true);
