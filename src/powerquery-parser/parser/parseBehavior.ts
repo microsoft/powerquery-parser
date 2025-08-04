@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 export enum ParseBehavior {
-    ParseAll = "ParseAll",
+    ParseEitherExpressionOrSection = "ParseEitherExpressionOrSection",
     ParseExpression = "ParseExpression",
     ParseSection = "ParseSection",
 }

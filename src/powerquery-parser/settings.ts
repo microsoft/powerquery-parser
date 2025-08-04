@@ -16,7 +16,7 @@ export const DefaultSettings: Settings = {
     cancellationToken: undefined,
     initialCorrelationId: undefined,
     parserEntryPoint: undefined,
-    parseBehavior: ParseBehavior.ParseAll,
+    parseBehavior: ParseBehavior.ParseEitherExpressionOrSection,
     parser: CombinatorialParserV2,
     traceManager: NoOpTraceManagerInstance,
 };

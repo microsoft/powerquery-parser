@@ -31,7 +31,7 @@ export function newState(lexerSnapshot: LexerSnapshot, overrides?: Partial<Parse
 
     return {
         ...overrides,
-        parseBehavior: overrides?.parseBehavior ?? ParseBehavior.ParseAll,
+        parseBehavior: overrides?.parseBehavior ?? ParseBehavior.ParseEitherExpressionOrSection,
         disambiguationBehavior: overrides?.disambiguationBehavior ?? Disambiguation.DismabiguationBehavior.Thorough,
         lexerSnapshot,
         locale: overrides?.locale ?? DefaultLocale,

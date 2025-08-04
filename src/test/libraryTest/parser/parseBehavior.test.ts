@@ -51,9 +51,9 @@ describe("ParseBehavior", () => {
         return result;
     }
 
-    it(`1 // with ParseAll`, async () => {
+    it(`1 // with ParseEitherExpressionOrSection`, async () => {
         await runParseBehaviorTest({
-            parseBehavior: ParseBehavior.ParseAll,
+            parseBehavior: ParseBehavior.ParseEitherExpressionOrSection,
             text: `1`,
             expectedAbridgedNodes: [[NodeKind.LiteralExpression, undefined]],
             expectedStatus: "ParseStageOk",
@@ -78,9 +78,9 @@ describe("ParseBehavior", () => {
         });
     });
 
-    it(`section Foo; shared Bar = 1; // with ParseAll`, async () => {
+    it(`section Foo; shared Bar = 1; // with ParseEitherExpressionOrSection`, async () => {
         await runParseBehaviorTest({
-            parseBehavior: ParseBehavior.ParseAll,
+            parseBehavior: ParseBehavior.ParseEitherExpressionOrSection,
             text: `section Foo; shared Bar = 1;`,
             expectedAbridgedNodes: [
                 [NodeKind.Section, undefined],

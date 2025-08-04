@@ -165,7 +165,7 @@ async function tryParseEntryPoint(
 // Whichever attempt consumed the most tokens is the one returned. Ties go to expression documents.
 async function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: LexerSnapshot): Promise<TriedParse> {
     switch (parseSettings.parseBehavior) {
-        case ParseBehavior.ParseAll:
+        case ParseBehavior.ParseEitherExpressionOrSection:
             return await tryParseExpressionDocumentOrSectionDocument(parseSettings, lexerSnapshot);
 
         case ParseBehavior.ParseExpression: {
