@@ -332,7 +332,8 @@ async function tryParseSectionDocument(
     }
 }
 
-// Internal type: Used specifically for comparing parse attempts when both an expression and section document are attempted.
+// Note: Internal type:
+// Used specifically for comparing parse attempts when both an expression and section document are attempted.
 // Not a general extension of TriedParse; do not use outside this context.
 // Adds `tokensConsumed` to the TriedParse type to help determine which parse attempt should be returned.
 type InternalTriedParse = Result<ParseOk, InternalTriedParseError>;
