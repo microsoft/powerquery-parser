@@ -4,7 +4,7 @@
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, IdentifierUtils, Token } from "../../language";
 import { Disambiguation, DisambiguationUtils } from "../disambiguation";
-import { NaiveParseSteps, ParseContext, ParseContextUtils, ParseError } from "..";
+import { NaiveParseSteps, ParseError } from "..";
 import { Parser, ParseStateCheckpoint } from "../parser";
 import { ParseState, ParseStateUtils } from "../parseState";
 import { Trace, TraceConstant } from "../../common/trace";
@@ -195,83 +195,6 @@ export function readKeyword(
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return identifierExpression;
-}
-
-// --------------------------------------
-// ---------- 12.2.1 Documents ----------
-// --------------------------------------
-
-export async function readDocument(
-    state: ParseState,
-    parser: Parser,
-    correlationId: number | undefined,
-): Promise<Ast.TDocument> {
-    const trace: Trace = state.traceManager.entry(NaiveTraceConstant.Parse, readDocument.name, correlationId, {
-        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-    });
-
-    state.cancellationToken?.throwIfCancelled();
-
-    let document: Ast.TDocument;
-
-    // Try parsing as an Expression document first.
-    // If Expression document fails (including UnusedTokensRemainError) then try parsing a SectionDocument.
-    // If both fail then return the error which parsed more tokens.
-    try {
-        document = await parser.readExpression(state, parser, trace.id);
-        ParseStateUtils.assertIsDoneParsing(state);
-    } catch (expressionError: unknown) {
-        Assert.isInstanceofError(expressionError);
-        CommonError.throwIfCancellationError(expressionError);
-
-        // Fast backup deletes context state, but we want to preserve it for the case
-        // where both parsing an expression and section document error out.
-        const expressionCheckpoint: ParseStateCheckpoint = await parser.checkpoint(state);
-        const expressionErrorContextState: ParseContext.State = state.contextState;
-
-        // Reset the parser's state.
-        state.tokenIndex = 0;
-        state.contextState = ParseContextUtils.newState();
-        state.currentContextNode = undefined;
-
-        if (state.lexerSnapshot.tokens.length) {
-            state.currentToken = state.lexerSnapshot.tokens[0];
-            state.currentTokenKind = state.currentToken?.kind;
-        }
-
-        try {
-            document = await readSectionDocument(state, parser, trace.id);
-            ParseStateUtils.assertIsDoneParsing(state);
-        } catch (sectionError: unknown) {
-            Assert.isInstanceofError(sectionError);
-            CommonError.throwIfCancellationError(sectionError);
-
-            let triedError: Error;
-
-            if (expressionCheckpoint.tokenIndex > /* sectionErrorState */ state.tokenIndex) {
-                triedError = expressionError;
-                await parser.restoreCheckpoint(state, expressionCheckpoint);
-                // eslint-disable-next-line require-atomic-updates
-                state.contextState = expressionErrorContextState;
-            } else {
-                triedError = sectionError;
-            }
-
-            trace.exit({
-                [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-                [TraceConstant.IsThrowing]: true,
-            });
-
-            throw triedError;
-        }
-    }
-
-    trace.exit({
-        [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
-        [TraceConstant.IsThrowing]: false,
-    });
-
-    return document;
 }
 
 // ----------------------------------------------

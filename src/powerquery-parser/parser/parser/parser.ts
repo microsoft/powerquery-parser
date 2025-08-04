@@ -50,13 +50,6 @@ export interface Parser {
         correlationId: number | undefined,
     ) => Ast.IdentifierExpression;
 
-    // 12.2.1 Documents
-    readonly readDocument: (
-        state: ParseState,
-        parser: Parser,
-        correlationId: number | undefined,
-    ) => Promise<Ast.TDocument>;
-
     // 12.2.2 Section Documents
     readonly readSectionDocument: (
         state: ParseState,

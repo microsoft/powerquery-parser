@@ -15,8 +15,6 @@ export const RecursiveDescentParser: Parser = {
     readGeneralizedIdentifier: NaiveParseSteps.readGeneralizedIdentifier,
     readKeyword: NaiveParseSteps.readKeyword,
 
-    readDocument: NaiveParseSteps.readDocument,
-
     readSectionDocument: NaiveParseSteps.readSectionDocument,
     readSectionMembers: NaiveParseSteps.readSectionMembers,
     readSectionMember: NaiveParseSteps.readSectionMember,
