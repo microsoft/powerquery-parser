@@ -4,54 +4,210 @@
 import "mocha";
 import { expect } from "chai";
 
+import { CommonError, Result, ResultUtils } from "../../powerquery-parser";
+import { IdentifierKind } from "../../powerquery-parser/language/identifierUtils";
 import { IdentifierUtils } from "../../powerquery-parser/language";
 
 describe("IdentifierUtils", () => {
-    describe(`isRegularIdentifier`, () => {
-        describe(`valid`, () => {
-            it(`foo`, () => expect(IdentifierUtils.isRegularIdentifier("foo", false), "should be true").to.be.true);
-            it(`foo`, () => expect(IdentifierUtils.isRegularIdentifier("foo", true), "should be true").to.be.true);
-            it(`foo.`, () => expect(IdentifierUtils.isRegularIdentifier("foo.", true), "should be true").to.be.true);
-            it(`foo.1`, () => expect(IdentifierUtils.isRegularIdentifier("foo.1", false), "should be true").to.be.true);
+    function createIdentifierUtilsOptions(
+        allowTrailingPeriod?: boolean,
+        allowGeneralizedIdentifier?: boolean,
+    ): IdentifierUtils.IdentifierUtilsOptions {
+        return {
+            allowTrailingPeriod: allowTrailingPeriod ?? false,
+            allowGeneralizedIdentifier: allowGeneralizedIdentifier ?? false,
+        };
+    }
 
-            it(`WIP foo.bar123`, () =>
-                expect(IdentifierUtils.isRegularIdentifier("foo.bar123", true), "should be true").to.be.true);
+    describe(`getIdentifierKind`, () => {
+        function runGetIdentifierKindTest(params: {
+            readonly text: string;
+            readonly expected: IdentifierKind;
+            readonly allowTrailingPeriod?: boolean;
+            readonly allowGeneralizedIdentifier?: boolean;
+        }): void {
+            const text: string = params.text;
+
+            const identifierUtilsOptions: IdentifierUtils.IdentifierUtilsOptions = createIdentifierUtilsOptions(
+                params.allowTrailingPeriod,
+                params.allowGeneralizedIdentifier,
+            );
+
+            it(`${text} with ${JSON.stringify(identifierUtilsOptions)}`, () => {
+                const actual: IdentifierKind = IdentifierUtils.getIdentifierKind(text, identifierUtilsOptions);
+                expect(actual).to.equal(params.expected);
+            });
+        }
+
+        runGetIdentifierKindTest({
+            text: "foo",
+            expected: IdentifierKind.Regular,
         });
 
-        describe(`invalid`, () => {
-            it(`foo.`, () => expect(IdentifierUtils.isRegularIdentifier("foo.", false), "should be false").to.be.false);
+        runGetIdentifierKindTest({
+            text: "",
+            expected: IdentifierKind.Invalid,
+        });
+
+        runGetIdentifierKindTest({
+            text: "foo.",
+            expected: IdentifierKind.Regular,
+            allowTrailingPeriod: true,
+        });
+
+        runGetIdentifierKindTest({
+            text: "foo.",
+            expected: IdentifierKind.Invalid,
+            allowTrailingPeriod: false,
+        });
+
+        runGetIdentifierKindTest({
+            text: "foo.bar",
+            expected: IdentifierKind.Regular,
+        });
+
+        runGetIdentifierKindTest({
+            text: "foo.1",
+            expected: IdentifierKind.Regular,
+        });
+
+        runGetIdentifierKindTest({
+            text: "with space",
+            expected: IdentifierKind.Invalid,
+        });
+
+        runGetIdentifierKindTest({
+            text: "with space",
+            expected: IdentifierKind.Generalized,
+            allowGeneralizedIdentifier: true,
+        });
+
+        runGetIdentifierKindTest({
+            text: '#"quoteNotNeeded"',
+            expected: IdentifierKind.RegularWithQuotes,
+        });
+
+        runGetIdentifierKindTest({
+            text: '#"quote needed"',
+            expected: IdentifierKind.RegularWithRequiredQuotes,
+        });
+
+        runGetIdentifierKindTest({
+            text: '#"quoted generalized identifier"',
+            expected: IdentifierKind.GeneralizedWithQuotes,
+            allowGeneralizedIdentifier: true,
         });
     });
 
-    describe(`isGeneralizedIdentifier`, () => {
-        describe(`valid`, () => {
-            it("a", () => expect(IdentifierUtils.isGeneralizedIdentifier("a"), "should be true").to.be.true);
-            it("a.1", () => expect(IdentifierUtils.isGeneralizedIdentifier("a.1"), "should be true").to.be.true);
-            it("a b", () => expect(IdentifierUtils.isGeneralizedIdentifier("a b"), "should be true").to.be.true);
+    describe(`getNormalizedIdentifier`, () => {
+        function runGetNormalizedIdentifierTest(params: {
+            readonly text: string;
+            readonly expectedSuccess: string | undefined;
+            readonly allowGeneralizedIdentifier?: boolean;
+            readonly allowTrailingPeriod?: boolean;
+        }): void {
+            const text: string = params.text;
+
+            const identifierUtilsOptions: IdentifierUtils.IdentifierUtilsOptions = createIdentifierUtilsOptions(
+                params.allowTrailingPeriod,
+                params.allowGeneralizedIdentifier,
+            );
+
+            const actual: Result<string, CommonError.InvariantError> = IdentifierUtils.getNormalizedIdentifier(
+                text,
+                identifierUtilsOptions,
+            );
+
+            if (params.expectedSuccess !== undefined) {
+                ResultUtils.assertIsOk(actual);
+                expect(actual.value).to.equal(params.expectedSuccess);
+            } else {
+                ResultUtils.assertIsError(actual);
+            }
+        }
+
+        it("foo", () => {
+            runGetNormalizedIdentifierTest({
+                text: "foo",
+                expectedSuccess: "foo",
+            });
         });
 
-        describe(`invalid`, () => {
-            it("a..1", () => expect(IdentifierUtils.isGeneralizedIdentifier("a..1"), "should be false").to.be.false);
-        });
-    });
-
-    describe(`isQuotedIdentifier`, () => {
-        describe(`valid`, () => {
-            it(`#"foo"`, () => expect(IdentifierUtils.isQuotedIdentifier(`#"foo"`), "should be true").to.be.true);
-            it(`#""`, () => expect(IdentifierUtils.isQuotedIdentifier(`#""`), "should be true").to.be.true);
-            it(`#""""`, () => expect(IdentifierUtils.isQuotedIdentifier(`#""""`), "should be true").to.be.true);
-
-            it(`#"a""b""c"`, () =>
-                expect(IdentifierUtils.isQuotedIdentifier(`#"a""b""c"`), "should be true").to.be.true);
-
-            it(`#"""b""c"`, () => expect(IdentifierUtils.isQuotedIdentifier(`#"""b""c"`), "should be true").to.be.true);
-            it(`#"a""b"""`, () => expect(IdentifierUtils.isQuotedIdentifier(`#"a""b"""`), "should be true").to.be.true);
-            it(`#"bar.1"`, () => expect(IdentifierUtils.isQuotedIdentifier(`#"foo"`), "should be true").to.be.true);
+        it("[empty string]", () => {
+            runGetNormalizedIdentifierTest({
+                text: "",
+                expectedSuccess: undefined,
+            });
         });
 
-        describe(`invalid`, () => {
-            it(`#"`, () => expect(IdentifierUtils.isGeneralizedIdentifier(`#"`), "should be false").to.be.false);
-            it(`""`, () => expect(IdentifierUtils.isGeneralizedIdentifier(`""`), "should be false").to.be.false);
+        it("foo. // allowTrailingPeriod - true", () => {
+            runGetNormalizedIdentifierTest({
+                text: "foo.",
+                expectedSuccess: "foo.",
+                allowTrailingPeriod: true,
+            });
+        });
+
+        it("foo. // allowTrailingPeriod - false", () => {
+            runGetNormalizedIdentifierTest({
+                text: "foo.",
+                expectedSuccess: undefined,
+                allowTrailingPeriod: false,
+            });
+        });
+
+        it("foo.bar", () => {
+            runGetNormalizedIdentifierTest({
+                text: "foo.bar",
+                expectedSuccess: "foo.bar",
+            });
+        });
+
+        it("foo.1", () => {
+            runGetNormalizedIdentifierTest({
+                text: "foo.1",
+                expectedSuccess: "foo.1",
+            });
+        });
+
+        it("with space // allowGeneralizedIdentifier - false", () => {
+            runGetNormalizedIdentifierTest({
+                text: "with space",
+                allowGeneralizedIdentifier: false,
+                expectedSuccess: undefined,
+            });
+        });
+
+        it("with space // allowGeneralizedIdentifier - true", () => {
+            runGetNormalizedIdentifierTest({
+                text: "with space",
+                expectedSuccess: "with space",
+                allowGeneralizedIdentifier: true,
+            });
+        });
+
+        it(`#"regularIdentifierWithUnneededQuotes" // allowGeneralizedIdentifier - false`, () => {
+            runGetNormalizedIdentifierTest({
+                text: '#"regularIdentifierWithUnneededQuotes"',
+                expectedSuccess: "regularIdentifierWithUnneededQuotes",
+                allowGeneralizedIdentifier: false,
+            });
+        });
+
+        it(`#"quoted regular identifier" // allowGeneralizedIdentifier - false`, () => {
+            runGetNormalizedIdentifierTest({
+                text: '#"quoted regular identifier"',
+                expectedSuccess: `#"quoted regular identifier"`,
+                allowGeneralizedIdentifier: false,
+            });
+        });
+
+        it(`#"quoted generalized identifier" // allowGeneralizedIdentifier - true`, () => {
+            runGetNormalizedIdentifierTest({
+                text: '#"quoted generalized identifier"',
+                expectedSuccess: "quoted generalized identifier",
+                allowGeneralizedIdentifier: true,
+            });
         });
     });
 });

@@ -343,7 +343,7 @@ export function iterFieldSpecificationList(
             optional,
             value,
             normalizedKeyLiteral: ResultUtils.assertOk(
-                IdentifierUtils.getNormalizedIdentifier(keyLiteral, /* isGeneralizedIdentifierAllowed */ true),
+                IdentifierUtils.getNormalizedIdentifier(keyLiteral, { allowGeneralizedIdentifier: true }),
             ),
             pairKind: PairKind.FieldSpecification,
             source: fieldSpecification,
@@ -382,7 +382,7 @@ export function iterLetExpression(
         nodeIdMapCollection,
         arrayWrapper,
         PairKind.LetExpression,
-        /* isGeneralizedIdentifierAllowed */ false,
+        { allowGeneralizedIdentifier: false },
     );
 }
 
@@ -413,7 +413,7 @@ export function iterRecord(
         nodeIdMapCollection,
         arrayWrapper,
         PairKind.Record,
-        /* isGeneralizedIdentifierAllowed */ true,
+        { allowGeneralizedIdentifier: true },
     );
 }
 
@@ -455,7 +455,7 @@ export function iterSection(
                 key: namePairedExpression.key,
                 keyLiteral,
                 normalizedKeyLiteral: ResultUtils.assertOk(
-                    IdentifierUtils.getNormalizedIdentifier(keyLiteral, /* isGeneralizedIdentifierAllowed */ true),
+                    IdentifierUtils.getNormalizedIdentifier(keyLiteral, { allowGeneralizedIdentifier: true }),
                 ),
                 value: XorNodeUtils.boxAst(namePairedExpression.value),
                 pairKind: PairKind.SectionMember,
@@ -511,7 +511,7 @@ export function iterSection(
             key,
             keyLiteral,
             normalizedKeyLiteral: ResultUtils.assertOk(
-                IdentifierUtils.getNormalizedIdentifier(keyLiteral, /* isGeneralizedIdentifierAllowed */ true),
+                IdentifierUtils.getNormalizedIdentifier(keyLiteral, { allowGeneralizedIdentifier: true }),
             ),
             value: NodeIdMapUtils.nthChildXor(nodeIdMapCollection, keyValuePairNodeId, 2),
             pairKind: PairKind.SectionMember,
@@ -528,7 +528,7 @@ function iterKeyValuePairs<
     nodeIdMapCollection: NodeIdMap.Collection,
     arrayWrapper: TXorNode,
     pairKind: TKeyValuePair["pairKind"],
-    isGeneralizedIdentifierAllowed: boolean,
+    identifierUtilsOptions: IdentifierUtils.IdentifierUtilsOptions,
 ): ReadonlyArray<KVP> {
     const partial: KVP[] = [];
 
@@ -549,7 +549,7 @@ function iterKeyValuePairs<
             key,
             keyLiteral,
             normalizedKeyLiteral: ResultUtils.assertOk(
-                IdentifierUtils.getNormalizedIdentifier(keyLiteral, isGeneralizedIdentifierAllowed),
+                IdentifierUtils.getNormalizedIdentifier(keyLiteral, identifierUtilsOptions),
             ),
             value: NodeIdMapUtils.nthChildXor(nodeIdMapCollection, keyValuePair.node.id, 2),
             pairKind,
