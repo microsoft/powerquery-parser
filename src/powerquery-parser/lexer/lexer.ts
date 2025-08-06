@@ -1015,6 +1015,7 @@ function readKeyword(text: string, lineNumber: number, positionStart: number, lo
 
 function readKeywordHelper(text: string, currentPosition: number): Token.LineToken | undefined {
     const identifierPositionStart: number = text[currentPosition] === "#" ? currentPosition + 1 : currentPosition;
+
     const identifierPositionEnd: number | undefined = indexOfIdentifierEnd(text, identifierPositionStart);
 
     if (identifierPositionEnd === undefined) {
@@ -1136,9 +1137,7 @@ function indexOfRegexEnd(pattern: RegExp, text: string, positionStart: number): 
 }
 
 function indexOfIdentifierEnd(text: string, positionStart: number): number | undefined {
-    const length: number | undefined = IdentifierUtils.getIdentifierLength(text, positionStart, {
-        allowTrailingPeriod: true,
-    });
+    const length: number | undefined = IdentifierUtils.getIdentifierLength(text, positionStart, true);
 
     return length !== undefined ? positionStart + length : undefined;
 }
