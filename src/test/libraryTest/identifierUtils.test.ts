@@ -12,9 +12,9 @@ describe("IdentifierUtils", () => {
             it(`foo`, () => expect(IdentifierUtils.isRegularIdentifier("foo", false), "should be true").to.be.true);
             it(`foo`, () => expect(IdentifierUtils.isRegularIdentifier("foo", true), "should be true").to.be.true);
             it(`foo.`, () => expect(IdentifierUtils.isRegularIdentifier("foo.", true), "should be true").to.be.true);
-            it(`foo.1`, () => expect(IdentifierUtils.isRegularIdentifier("foo.1", true), "should be true").to.be.true);
+            it(`foo.1`, () => expect(IdentifierUtils.isRegularIdentifier("foo.1", false), "should be true").to.be.true);
 
-            it(`foo.bar123`, () =>
+            it(`WIP foo.bar123`, () =>
                 expect(IdentifierUtils.isRegularIdentifier("foo.bar123", true), "should be true").to.be.true);
         });
 
