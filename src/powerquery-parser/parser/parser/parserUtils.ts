@@ -245,8 +245,7 @@ async function tryParseExpressionDocument(
     const result: InternalTriedParse = await tryParseHelper(
         parseSettings,
         lexerSnapshot,
-        (state: ParseState, parser: Parser, correlationId: number | undefined) =>
-            parser.readExpression(state, parser, correlationId),
+        parseSettings.parser.readExpression,
         trace.id,
     );
 
@@ -268,8 +267,7 @@ async function tryParseSectionDocument(
     const result: InternalTriedParse = await tryParseHelper(
         parseSettings,
         lexerSnapshot,
-        (state: ParseState, parser: Parser, correlationId: number | undefined) =>
-            parser.readSectionDocument(state, parser, correlationId),
+        parseSettings.parser.readSectionDocument,
         trace.id,
     );
 
