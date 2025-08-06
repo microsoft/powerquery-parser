@@ -242,36 +242,17 @@ async function tryParseExpressionDocument(
         parseSettings.initialCorrelationId,
     );
 
-    const parseState: ParseState = parseSettings.newParseState(lexerSnapshot, defaultOverrides(parseSettings));
+    const result: InternalTriedParse = await tryParseHelper(
+        parseSettings,
+        lexerSnapshot,
+        (state: ParseState, parser: Parser, correlationId: number | undefined) =>
+            parser.readExpression(state, parser, correlationId),
+        trace.id,
+    );
 
-    try {
-        const root: Ast.TExpression = await parseSettings.parser.readExpression(
-            parseState,
-            parseSettings.parser,
-            trace.id,
-        );
+    trace.exit();
 
-        ParseStateUtils.assertIsDoneParsing(parseState);
-        trace.exit();
-
-        return ResultUtils.ok({
-            lexerSnapshot,
-            root,
-            state: parseState,
-        });
-    } catch (error: unknown) {
-        Assert.isInstanceofError(error);
-        CommonError.throwIfCancellationError(error);
-
-        const result: InternalTriedParse = ResultUtils.error({
-            innerError: ensureParseError(parseState, error, parseSettings.locale),
-            tokensConsumed: parseState.tokenIndex,
-        });
-
-        trace.exit();
-
-        return result;
-    }
+    return result;
 }
 
 async function tryParseSectionDocument(
@@ -284,17 +265,31 @@ async function tryParseSectionDocument(
         parseSettings.initialCorrelationId,
     );
 
+    const result: InternalTriedParse = await tryParseHelper(
+        parseSettings,
+        lexerSnapshot,
+        (state: ParseState, parser: Parser, correlationId: number | undefined) =>
+            parser.readSectionDocument(state, parser, correlationId),
+        trace.id,
+    );
+
+    trace.exit();
+
+    return result;
+}
+
+async function tryParseHelper<T extends Ast.TNode>(
+    parseSettings: ParseSettings,
+    lexerSnapshot: LexerSnapshot,
+    parserFunction: (state: ParseState, parser: Parser, correlationId: number | undefined) => Promise<T>,
+    correlationId: number | undefined,
+): Promise<InternalTriedParse> {
     const parseState: ParseState = parseSettings.newParseState(lexerSnapshot, defaultOverrides(parseSettings));
 
     try {
-        const root: Ast.Section = await parseSettings.parser.readSectionDocument(
-            parseState,
-            parseSettings.parser,
-            trace.id,
-        );
+        const root: T = await parserFunction(parseState, parseSettings.parser, correlationId);
 
         ParseStateUtils.assertIsDoneParsing(parseState);
-        trace.exit();
 
         return ResultUtils.ok({
             lexerSnapshot,
@@ -309,8 +304,6 @@ async function tryParseSectionDocument(
             innerError: ensureParseError(parseState, error, parseSettings.locale),
             tokensConsumed: parseState.tokenIndex,
         });
-
-        trace.exit();
 
         return result;
     }
