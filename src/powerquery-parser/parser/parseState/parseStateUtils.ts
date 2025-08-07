@@ -8,10 +8,11 @@ import { NoOpTraceManagerInstance, Trace } from "../../common/trace";
 import { DefaultLocale } from "../../localization";
 import { Disambiguation } from "../disambiguation";
 import { LexerSnapshot } from "../../lexer";
+import { ParseBehavior } from "../parseBehavior";
 import { ParseState } from "./parseState";
 import { SequenceKind } from "../error";
 
-export function newState(lexerSnapshot: LexerSnapshot, overrides: Partial<ParseState> | undefined): ParseState {
+export function newState(lexerSnapshot: LexerSnapshot, overrides?: Partial<ParseState>): ParseState {
     const tokenIndex: number = overrides?.tokenIndex ?? 0;
     const currentToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
     const currentTokenKind: Token.TokenKind | undefined = currentToken?.kind;
@@ -30,6 +31,7 @@ export function newState(lexerSnapshot: LexerSnapshot, overrides: Partial<ParseS
 
     return {
         ...overrides,
+        parseBehavior: overrides?.parseBehavior ?? ParseBehavior.ParseEitherExpressionOrSection,
         disambiguationBehavior: overrides?.disambiguationBehavior ?? Disambiguation.DismabiguationBehavior.Thorough,
         lexerSnapshot,
         locale: overrides?.locale ?? DefaultLocale,
