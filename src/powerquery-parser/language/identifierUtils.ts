@@ -17,6 +17,9 @@ export interface IdentifierUtilsOptions {
     readonly allowTrailingPeriod?: boolean;
 }
 
+// Identifiers have multiple forms that can be used interchangeably.
+// For example, if you have `[key = 1]`, you can use `key` or `#""key""`.
+// The `getAllowedIdentifiers` function returns all the forms of the identifier that are allowed in the current context.
 export function getAllowedIdentifiers(text: string, options?: IdentifierUtilsOptions): ReadonlyArray<string> {
     const allowGeneralizedIdentifier: boolean =
         options?.allowGeneralizedIdentifier ?? DefaultallowGeneralizedIdentifier;
@@ -49,9 +52,15 @@ export function getAllowedIdentifiers(text: string, options?: IdentifierUtilsOpt
     }
 }
 
-// Determines what kind of identifier the text is.
-// It's possible that the text is a partially completed identifier,
-// which is why we have the `allowTrailingPeriod` parameter.
+// An identifier can have multiple forms:
+// - Regular: `foo`
+// - Regular with quotes: `#""foo""`
+// - Regular with required quotes: `#""foo bar""`
+//    - Regular with required quotes is used when the identifier has spaces or special characters,
+//      and when generalized identifiers are not allowed.
+// - Generalized: `foo bar`
+// - Generalized with quotes: `#""foo bar""`
+// - Invalid: `foo..bar`
 export function getIdentifierKind(text: string, options?: IdentifierUtilsOptions): IdentifierKind {
     const allowGeneralizedIdentifier: boolean =
         options?.allowGeneralizedIdentifier ?? DefaultallowGeneralizedIdentifier;
@@ -163,6 +172,7 @@ export function getIdentifierLength(text: string, index: number, options?: Ident
 }
 
 // Removes the quotes from a quoted identifier if possible.
+// When given an invalid identifier, returns undefined.
 export function getNormalizedIdentifier(text: string, options?: IdentifierUtilsOptions): string | undefined {
     const allowGeneralizedIdentifier: boolean =
         options?.allowGeneralizedIdentifier ?? DefaultallowGeneralizedIdentifier;
@@ -206,8 +216,8 @@ const enum IdentifierRegexpState {
     Start = "Start",
 }
 
-// Assuming the text is a quoted identifier, finds the quotes that enclose the identifier.
-// Otherwise returns undefined.
+// Finds the locations of quotes in a quoted identifier.
+// Returns undefined if the identifier is not quoted.
 function findQuotedIdentifierQuotes(text: string, index: number): StringUtils.FoundQuotes | undefined {
     if (text[index] !== "#") {
         return undefined;
@@ -258,6 +268,7 @@ function getGeneralizedIdentifierLength(text: string, index: number): number | u
     return index !== startingIndex ? index - startingIndex : undefined;
 }
 
+// Returns the quoted and unquoted versions of the identifier (if applicable).
 function getQuotedAndUnquoted(text: string, options?: IdentifierUtilsOptions): TQuotedAndUnquoted {
     const identifierKind: IdentifierKind = getIdentifierKind(text, options);
 
