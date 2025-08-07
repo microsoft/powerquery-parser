@@ -4,7 +4,6 @@
 import "mocha";
 import { expect } from "chai";
 
-import { CommonError, Result, ResultUtils } from "../../powerquery-parser";
 import { IdentifierKind } from "../../powerquery-parser/language/identifierUtils";
 import { IdentifierUtils } from "../../powerquery-parser/language";
 
@@ -113,16 +112,12 @@ describe("IdentifierUtils", () => {
                 params.allowGeneralizedIdentifier,
             );
 
-            const actual: Result<string, CommonError.InvariantError> = IdentifierUtils.getNormalizedIdentifier(
-                text,
-                identifierUtilsOptions,
-            );
+            const actual: string | undefined = IdentifierUtils.getNormalizedIdentifier(text, identifierUtilsOptions);
 
             if (params.expectedSuccess !== undefined) {
-                ResultUtils.assertIsOk(actual);
-                expect(actual.value).to.equal(params.expectedSuccess);
+                expect(actual).to.equal(params.expectedSuccess);
             } else {
-                ResultUtils.assertIsError(actual);
+                expect(actual).to.be.undefined;
             }
         }
 

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, Pattern, Result, ResultUtils, StringUtils } from "../common";
+import { Assert, Pattern, StringUtils } from "../common";
 
 export enum IdentifierKind {
     Generalized = "Generalized",
@@ -163,30 +163,23 @@ export function getIdentifierLength(text: string, index: number, options?: Ident
 }
 
 // Removes the quotes from a quoted identifier if possible.
-export function getNormalizedIdentifier(
-    text: string,
-    options?: IdentifierUtilsOptions,
-): Result<string, CommonError.InvariantError> {
+export function getNormalizedIdentifier(text: string, options?: IdentifierUtilsOptions): string | undefined {
     const allowGeneralizedIdentifier: boolean =
         options?.allowGeneralizedIdentifier ?? DefaultallowGeneralizedIdentifier;
 
     const quotedAndUnquoted: TQuotedAndUnquoted = getQuotedAndUnquoted(text, options);
 
     if (quotedAndUnquoted.identifierKind === IdentifierKind.Invalid) {
-        return ResultUtils.error(new CommonError.InvariantError(`The text "${text}" is not a valid identifier.`));
+        return undefined;
     }
 
     // Validate a generalized identifier is allowed in this context.
     if (quotedAndUnquoted.identifierKind === IdentifierKind.Generalized && !allowGeneralizedIdentifier) {
-        return ResultUtils.error(
-            new CommonError.InvariantError(
-                `The text "${text}" is a generalized identifier, but it is not allowed in this context.`,
-            ),
-        );
+        return undefined;
     }
 
     // Prefer without quotes if it exists.
-    return ResultUtils.ok(quotedAndUnquoted.withoutQuotes ?? quotedAndUnquoted.withQuotes);
+    return quotedAndUnquoted.withoutQuotes ?? quotedAndUnquoted.withQuotes;
 }
 
 interface IQuotedAndUnquoted<
