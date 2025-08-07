@@ -8,34 +8,148 @@ import { IdentifierKind } from "../../powerquery-parser/language/identifierUtils
 import { IdentifierUtils } from "../../powerquery-parser/language";
 
 describe("IdentifierUtils", () => {
-    function createIdentifierUtilsOptions(
-        allowTrailingPeriod?: boolean,
-        allowGeneralizedIdentifier?: boolean,
-    ): IdentifierUtils.IdentifierUtilsOptions {
+    function createCommonIdentifierUtilsOptions(
+        overrides?: Partial<IdentifierUtils.CommonIdentifierUtilsOptions>,
+    ): IdentifierUtils.CommonIdentifierUtilsOptions {
         return {
-            allowTrailingPeriod: allowTrailingPeriod ?? false,
-            allowGeneralizedIdentifier: allowGeneralizedIdentifier ?? false,
+            allowTrailingPeriod: false,
+            allowGeneralizedIdentifier: false,
+            ...overrides,
         };
     }
+
+    function createGetAllowedIdentifiersOptions(
+        overrides?: Partial<IdentifierUtils.GetAllowedIdentifiersOptions>,
+    ): IdentifierUtils.GetAllowedIdentifiersOptions {
+        return {
+            allowRecursive: false,
+            ...overrides,
+        };
+    }
+
+    describe(`getAllowedIdentifiers`, () => {
+        function getAllowedIdentifiersTest(params: {
+            readonly text: string;
+            readonly expected: ReadonlyArray<string>;
+            readonly options?: Partial<IdentifierUtils.GetAllowedIdentifiersOptions>;
+        }): void {
+            const text: string = params.text;
+
+            const options: IdentifierUtils.GetAllowedIdentifiersOptions = createGetAllowedIdentifiersOptions(
+                params.options,
+            );
+
+            const actual: ReadonlyArray<string> = IdentifierUtils.getAllowedIdentifiers(text, options);
+            expect(actual).to.have.members(params.expected);
+        }
+
+        it("foo", () => {
+            getAllowedIdentifiersTest({
+                text: "foo",
+                expected: ["foo", `#"foo"`],
+            });
+        });
+
+        it("[empty string]", () => {
+            getAllowedIdentifiersTest({
+                text: "",
+                expected: [],
+            });
+        });
+
+        it("foo. // allowTrailingPeriod - true", () => {
+            getAllowedIdentifiersTest({
+                text: "foo.",
+                options: { allowTrailingPeriod: true },
+                expected: ["foo.", `#"foo."`],
+            });
+        });
+
+        it("foo. // allowTrailingPeriod - false", () => {
+            getAllowedIdentifiersTest({
+                text: "foo.",
+                options: { allowTrailingPeriod: false },
+                expected: [],
+            });
+        });
+
+        it("foo.bar", () => {
+            getAllowedIdentifiersTest({
+                text: "foo.bar",
+                expected: ["foo.bar", `#"foo.bar"`],
+            });
+        });
+
+        it("foo.1", () => {
+            getAllowedIdentifiersTest({
+                text: "foo.1",
+                expected: ["foo.1", `#"foo.1"`],
+            });
+        });
+
+        it("with space // allowGeneralizedIdentifier - false", () => {
+            getAllowedIdentifiersTest({
+                text: "with space",
+                options: { allowGeneralizedIdentifier: false },
+                expected: [],
+            });
+        });
+
+        it("with space // allowGeneralizedIdentifier - true", () => {
+            getAllowedIdentifiersTest({
+                text: "with space",
+                options: { allowGeneralizedIdentifier: true },
+                expected: ["with space", `#"with space"`],
+            });
+        });
+
+        it(`#"regularIdentifierWithUnneededQuotes" // allowGeneralizedIdentifier - false`, () => {
+            getAllowedIdentifiersTest({
+                text: '#"regularIdentifierWithUnneededQuotes"',
+                options: { allowGeneralizedIdentifier: false },
+                expected: ["regularIdentifierWithUnneededQuotes", `#"regularIdentifierWithUnneededQuotes"`],
+            });
+        });
+
+        it(`#"quoted regular identifier" // allowGeneralizedIdentifier - false`, () => {
+            getAllowedIdentifiersTest({
+                text: '#"quoted regular identifier"',
+                options: { allowGeneralizedIdentifier: false },
+                expected: [`#"quoted regular identifier"`],
+            });
+        });
+
+        it(`#"quoted generalized identifier" // allowGeneralizedIdentifier - true`, () => {
+            getAllowedIdentifiersTest({
+                text: '#"quoted generalized identifier"',
+                options: { allowGeneralizedIdentifier: true },
+                expected: ["quoted generalized identifier", `#"quoted generalized identifier"`],
+            });
+        });
+
+        it("foo // allowRecursive - true", () => {
+            getAllowedIdentifiersTest({
+                text: "foo",
+                options: { allowRecursive: true },
+                expected: ["foo", `#"foo"`, "@foo", `@#"foo"`],
+            });
+        });
+    });
 
     describe(`getIdentifierKind`, () => {
         function runGetIdentifierKindTest(params: {
             readonly text: string;
             readonly expected: IdentifierKind;
-            readonly allowTrailingPeriod?: boolean;
-            readonly allowGeneralizedIdentifier?: boolean;
+            readonly options?: Partial<IdentifierUtils.CommonIdentifierUtilsOptions>;
         }): void {
             const text: string = params.text;
 
-            const identifierUtilsOptions: IdentifierUtils.IdentifierUtilsOptions = createIdentifierUtilsOptions(
-                params.allowTrailingPeriod,
-                params.allowGeneralizedIdentifier,
+            const options: IdentifierUtils.CommonIdentifierUtilsOptions = createCommonIdentifierUtilsOptions(
+                params.options,
             );
 
-            it(`${text} with ${JSON.stringify(identifierUtilsOptions)}`, () => {
-                const actual: IdentifierKind = IdentifierUtils.getIdentifierKind(text, identifierUtilsOptions);
-                expect(actual).to.equal(params.expected);
-            });
+            const actual: IdentifierKind = IdentifierUtils.getIdentifierKind(text, options);
+            expect(actual).to.equal(params.expected);
         }
 
         runGetIdentifierKindTest({
@@ -50,14 +164,14 @@ describe("IdentifierUtils", () => {
 
         runGetIdentifierKindTest({
             text: "foo.",
+            options: { allowTrailingPeriod: true },
             expected: IdentifierKind.Regular,
-            allowTrailingPeriod: true,
         });
 
         runGetIdentifierKindTest({
             text: "foo.",
+            options: { allowTrailingPeriod: false },
             expected: IdentifierKind.Invalid,
-            allowTrailingPeriod: false,
         });
 
         runGetIdentifierKindTest({
@@ -77,8 +191,8 @@ describe("IdentifierUtils", () => {
 
         runGetIdentifierKindTest({
             text: "with space",
+            options: { allowGeneralizedIdentifier: true },
             expected: IdentifierKind.Generalized,
-            allowGeneralizedIdentifier: true,
         });
 
         runGetIdentifierKindTest({
@@ -93,8 +207,8 @@ describe("IdentifierUtils", () => {
 
         runGetIdentifierKindTest({
             text: '#"quoted generalized identifier"',
+            options: { allowGeneralizedIdentifier: true },
             expected: IdentifierKind.GeneralizedWithQuotes,
-            allowGeneralizedIdentifier: true,
         });
     });
 
@@ -102,15 +216,12 @@ describe("IdentifierUtils", () => {
         function runGetNormalizedIdentifierTest(params: {
             readonly text: string;
             readonly expectedSuccess: string | undefined;
-            readonly allowGeneralizedIdentifier?: boolean;
-            readonly allowTrailingPeriod?: boolean;
+            readonly options?: Partial<IdentifierUtils.CommonIdentifierUtilsOptions>;
         }): void {
             const text: string = params.text;
 
-            const identifierUtilsOptions: IdentifierUtils.IdentifierUtilsOptions = createIdentifierUtilsOptions(
-                params.allowTrailingPeriod,
-                params.allowGeneralizedIdentifier,
-            );
+            const identifierUtilsOptions: IdentifierUtils.CommonIdentifierUtilsOptions =
+                createCommonIdentifierUtilsOptions(params.options);
 
             const actual: string | undefined = IdentifierUtils.getNormalizedIdentifier(text, identifierUtilsOptions);
 
@@ -138,16 +249,16 @@ describe("IdentifierUtils", () => {
         it("foo. // allowTrailingPeriod - true", () => {
             runGetNormalizedIdentifierTest({
                 text: "foo.",
+                options: { allowTrailingPeriod: true },
                 expectedSuccess: "foo.",
-                allowTrailingPeriod: true,
             });
         });
 
         it("foo. // allowTrailingPeriod - false", () => {
             runGetNormalizedIdentifierTest({
                 text: "foo.",
+                options: { allowTrailingPeriod: false },
                 expectedSuccess: undefined,
-                allowTrailingPeriod: false,
             });
         });
 
@@ -168,7 +279,7 @@ describe("IdentifierUtils", () => {
         it("with space // allowGeneralizedIdentifier - false", () => {
             runGetNormalizedIdentifierTest({
                 text: "with space",
-                allowGeneralizedIdentifier: false,
+                options: { allowGeneralizedIdentifier: false },
                 expectedSuccess: undefined,
             });
         });
@@ -176,32 +287,32 @@ describe("IdentifierUtils", () => {
         it("with space // allowGeneralizedIdentifier - true", () => {
             runGetNormalizedIdentifierTest({
                 text: "with space",
+                options: { allowGeneralizedIdentifier: true },
                 expectedSuccess: "with space",
-                allowGeneralizedIdentifier: true,
             });
         });
 
         it(`#"regularIdentifierWithUnneededQuotes" // allowGeneralizedIdentifier - false`, () => {
             runGetNormalizedIdentifierTest({
                 text: '#"regularIdentifierWithUnneededQuotes"',
+                options: { allowGeneralizedIdentifier: false },
                 expectedSuccess: "regularIdentifierWithUnneededQuotes",
-                allowGeneralizedIdentifier: false,
             });
         });
 
         it(`#"quoted regular identifier" // allowGeneralizedIdentifier - false`, () => {
             runGetNormalizedIdentifierTest({
                 text: '#"quoted regular identifier"',
+                options: { allowGeneralizedIdentifier: false },
                 expectedSuccess: `#"quoted regular identifier"`,
-                allowGeneralizedIdentifier: false,
             });
         });
 
         it(`#"quoted generalized identifier" // allowGeneralizedIdentifier - true`, () => {
             runGetNormalizedIdentifierTest({
                 text: '#"quoted generalized identifier"',
+                options: { allowGeneralizedIdentifier: true },
                 expectedSuccess: "quoted generalized identifier",
-                allowGeneralizedIdentifier: true,
             });
         });
     });

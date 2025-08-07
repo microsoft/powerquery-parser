@@ -12,15 +12,19 @@ export enum IdentifierKind {
     RegularWithRequiredQuotes = "RegularWithRequiredQuotes",
 }
 
-export interface IdentifierUtilsOptions {
+export interface CommonIdentifierUtilsOptions {
     readonly allowGeneralizedIdentifier?: boolean;
     readonly allowTrailingPeriod?: boolean;
+}
+
+export interface GetAllowedIdentifiersOptions extends CommonIdentifierUtilsOptions {
+    readonly allowRecursive?: boolean;
 }
 
 // Identifiers have multiple forms that can be used interchangeably.
 // For example, if you have `[key = 1]`, you can use `key` or `#""key""`.
 // The `getAllowedIdentifiers` function returns all the forms of the identifier that are allowed in the current context.
-export function getAllowedIdentifiers(text: string, options?: IdentifierUtilsOptions): ReadonlyArray<string> {
+export function getAllowedIdentifiers(text: string, options?: GetAllowedIdentifiersOptions): ReadonlyArray<string> {
     const allowGeneralizedIdentifier: boolean =
         options?.allowGeneralizedIdentifier ?? DefaultallowGeneralizedIdentifier;
 
@@ -30,26 +34,39 @@ export function getAllowedIdentifiers(text: string, options?: IdentifierUtilsOpt
         return [];
     }
 
+    let result: string[];
+
     switch (quotedAndUnquoted.identifierKind) {
         case IdentifierKind.Generalized:
         case IdentifierKind.GeneralizedWithQuotes:
-            return allowGeneralizedIdentifier ? [quotedAndUnquoted.withQuotes, quotedAndUnquoted.withoutQuotes] : [];
+            result = allowGeneralizedIdentifier ? [quotedAndUnquoted.withQuotes, quotedAndUnquoted.withoutQuotes] : [];
+            break;
 
         case IdentifierKind.Invalid:
-            return [];
+            result = [];
+            break;
 
         case IdentifierKind.RegularWithQuotes:
-            return [quotedAndUnquoted.withQuotes, quotedAndUnquoted.withoutQuotes];
+            result = [quotedAndUnquoted.withQuotes, quotedAndUnquoted.withoutQuotes];
+            break;
 
         case IdentifierKind.RegularWithRequiredQuotes:
-            return [quotedAndUnquoted.withQuotes];
+            result = [quotedAndUnquoted.withQuotes];
+            break;
 
         case IdentifierKind.Regular:
-            return [quotedAndUnquoted.withoutQuotes, quotedAndUnquoted.withQuotes];
+            result = [quotedAndUnquoted.withoutQuotes, quotedAndUnquoted.withQuotes];
+            break;
 
         default:
             throw Assert.isNever(quotedAndUnquoted);
     }
+
+    if (options?.allowRecursive) {
+        result = result.concat(result.map((value: string) => prefixInclusiveConstant(value)));
+    }
+
+    return result;
 }
 
 // An identifier can have multiple forms:
@@ -61,7 +78,7 @@ export function getAllowedIdentifiers(text: string, options?: IdentifierUtilsOpt
 // - Generalized: `foo bar`
 // - Generalized with quotes: `#""foo bar""`
 // - Invalid: `foo..bar`
-export function getIdentifierKind(text: string, options?: IdentifierUtilsOptions): IdentifierKind {
+export function getIdentifierKind(text: string, options?: CommonIdentifierUtilsOptions): IdentifierKind {
     const allowGeneralizedIdentifier: boolean =
         options?.allowGeneralizedIdentifier ?? DefaultallowGeneralizedIdentifier;
 
@@ -90,7 +107,11 @@ export function getIdentifierKind(text: string, options?: IdentifierUtilsOptions
 
 // I'd prefer if this was internal, but it's used by the lexer so it's marked as public.
 // Returns the length of the identifier starting at the given index.
-export function getIdentifierLength(text: string, index: number, options?: IdentifierUtilsOptions): number | undefined {
+export function getIdentifierLength(
+    text: string,
+    index: number,
+    options?: CommonIdentifierUtilsOptions,
+): number | undefined {
     const allowTrailingPeriod: boolean = options?.allowTrailingPeriod ?? DefaultAllowTrailingPeriod;
     const startingIndex: number = index;
     const textLength: number = text.length;
@@ -173,7 +194,7 @@ export function getIdentifierLength(text: string, index: number, options?: Ident
 
 // Removes the quotes from a quoted identifier if possible.
 // When given an invalid identifier, returns undefined.
-export function getNormalizedIdentifier(text: string, options?: IdentifierUtilsOptions): string | undefined {
+export function getNormalizedIdentifier(text: string, options?: CommonIdentifierUtilsOptions): string | undefined {
     const allowGeneralizedIdentifier: boolean =
         options?.allowGeneralizedIdentifier ?? DefaultallowGeneralizedIdentifier;
 
@@ -269,7 +290,7 @@ function getGeneralizedIdentifierLength(text: string, index: number): number | u
 }
 
 // Returns the quoted and unquoted versions of the identifier (if applicable).
-function getQuotedAndUnquoted(text: string, options?: IdentifierUtilsOptions): TQuotedAndUnquoted {
+function getQuotedAndUnquoted(text: string, options?: CommonIdentifierUtilsOptions): TQuotedAndUnquoted {
     const identifierKind: IdentifierKind = getIdentifierKind(text, options);
 
     switch (identifierKind) {
@@ -324,11 +345,15 @@ function insertQuotes(text: string): string {
     return `#"${text}"`;
 }
 
+function prefixInclusiveConstant(text: string): string {
+    return `@${text}`;
+}
+
 function isGeneralizedIdentifier(text: string): boolean {
     return text.length > 0 && getGeneralizedIdentifierLength(text, 0) === text.length;
 }
 
-function isRegularIdentifier(text: string, options?: IdentifierUtilsOptions): boolean {
+function isRegularIdentifier(text: string, options?: CommonIdentifierUtilsOptions): boolean {
     return text.length > 0 && getIdentifierLength(text, 0, options) === text.length;
 }
 

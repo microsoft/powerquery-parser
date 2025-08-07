@@ -531,7 +531,7 @@ function iterKeyValuePairs<
     nodeIdMapCollection: NodeIdMap.Collection,
     arrayWrapper: TXorNode,
     pairKind: TKeyValuePair["pairKind"],
-    identifierUtilsOptions: IdentifierUtils.IdentifierUtilsOptions,
+    identifierUtilsOptions: IdentifierUtils.CommonIdentifierUtilsOptions,
 ): ReadonlyArray<KVP> {
     const partial: KVP[] = [];
 
