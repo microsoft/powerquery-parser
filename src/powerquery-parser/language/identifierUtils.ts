@@ -26,7 +26,7 @@ export interface GetAllowedIdentifiersOptions extends CommonIdentifierUtilsOptio
 // The `getAllowedIdentifiers` function returns all the forms of the identifier that are allowed in the current context.
 export function getAllowedIdentifiers(text: string, options?: GetAllowedIdentifiersOptions): ReadonlyArray<string> {
     const allowGeneralizedIdentifier: boolean =
-        options?.allowGeneralizedIdentifier ?? DefaultallowGeneralizedIdentifier;
+        options?.allowGeneralizedIdentifier ?? DefaultAllowGeneralizedIdentifier;
 
     const quotedAndUnquoted: TQuotedAndUnquoted | undefined = getQuotedAndUnquoted(text, options);
 
@@ -80,7 +80,7 @@ export function getAllowedIdentifiers(text: string, options?: GetAllowedIdentifi
 // - Invalid: `foo..bar`
 export function getIdentifierKind(text: string, options?: CommonIdentifierUtilsOptions): IdentifierKind {
     const allowGeneralizedIdentifier: boolean =
-        options?.allowGeneralizedIdentifier ?? DefaultallowGeneralizedIdentifier;
+        options?.allowGeneralizedIdentifier ?? DefaultAllowGeneralizedIdentifier;
 
     if (isRegularIdentifier(text, options)) {
         return IdentifierKind.Regular;
@@ -196,7 +196,7 @@ export function getIdentifierLength(
 // When given an invalid identifier, returns undefined.
 export function getNormalizedIdentifier(text: string, options?: CommonIdentifierUtilsOptions): string | undefined {
     const allowGeneralizedIdentifier: boolean =
-        options?.allowGeneralizedIdentifier ?? DefaultallowGeneralizedIdentifier;
+        options?.allowGeneralizedIdentifier ?? DefaultAllowGeneralizedIdentifier;
 
     const quotedAndUnquoted: TQuotedAndUnquoted = getQuotedAndUnquoted(text, options);
 
@@ -366,4 +366,4 @@ function stripQuotes(text: string): string {
 }
 
 const DefaultAllowTrailingPeriod: boolean = false;
-const DefaultallowGeneralizedIdentifier: boolean = false;
+const DefaultAllowGeneralizedIdentifier: boolean = false;
