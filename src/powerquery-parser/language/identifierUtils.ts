@@ -185,36 +185,54 @@ export function getNormalizedIdentifier(text: string, options?: CommonIdentifier
 
     const quotedAndUnquoted: TQuotedAndUnquoted = getQuotedAndUnquoted(text, options);
 
-    if (quotedAndUnquoted.identifierKind === IdentifierKind.Invalid) {
-        return undefined;
+    switch (quotedAndUnquoted.identifierKind) {
+        case IdentifierKind.Regular:
+        case IdentifierKind.RegularWithQuotes:
+            return quotedAndUnquoted.withoutQuotes;
+
+        case IdentifierKind.GeneralizedWithQuotes:
+        case IdentifierKind.Generalized:
+            return allowGeneralizedIdentifier ? quotedAndUnquoted.withoutQuotes : undefined;
+
+        case IdentifierKind.Invalid:
+            return undefined;
+
+        case IdentifierKind.RegularWithRequiredQuotes:
+            return quotedAndUnquoted.withQuotes;
+
+        default:
+            throw Assert.isNever(quotedAndUnquoted);
     }
-
-    // Validate a generalized identifier is allowed in this context.
-    if (quotedAndUnquoted.identifierKind === IdentifierKind.Generalized && !allowGeneralizedIdentifier) {
-        return undefined;
-    }
-
-    // Prefer without quotes if it exists.
-    return quotedAndUnquoted.withoutQuotes ?? quotedAndUnquoted.withQuotes;
-}
-
-interface IQuotedAndUnquoted<
-    TKind extends IdentifierKind,
-    TWithQuotes extends string | undefined,
-    TWithoutQuotes extends string | undefined,
-> {
-    readonly identifierKind: TKind;
-    readonly withQuotes: TWithQuotes;
-    readonly withoutQuotes: TWithoutQuotes;
 }
 
 type TQuotedAndUnquoted =
-    | IQuotedAndUnquoted<IdentifierKind.Generalized, string, string>
-    | IQuotedAndUnquoted<IdentifierKind.GeneralizedWithQuotes, string, string>
-    | IQuotedAndUnquoted<IdentifierKind.Invalid, undefined, undefined>
-    | IQuotedAndUnquoted<IdentifierKind.RegularWithQuotes, string, string>
-    | IQuotedAndUnquoted<IdentifierKind.RegularWithRequiredQuotes, string, undefined>
-    | IQuotedAndUnquoted<IdentifierKind.Regular, string, string>;
+    | {
+          readonly identifierKind: IdentifierKind.Generalized;
+          readonly withQuotes: string;
+          readonly withoutQuotes: string;
+      }
+    | {
+          readonly identifierKind: IdentifierKind.GeneralizedWithQuotes;
+          readonly withQuotes: string;
+          readonly withoutQuotes: string;
+      }
+    | {
+          readonly identifierKind: IdentifierKind.Invalid;
+      }
+    | {
+          readonly identifierKind: IdentifierKind.Regular;
+          readonly withQuotes: string;
+          readonly withoutQuotes: string;
+      }
+    | {
+          readonly identifierKind: IdentifierKind.RegularWithQuotes;
+          readonly withQuotes: string;
+          readonly withoutQuotes: string;
+      }
+    | {
+          readonly identifierKind: IdentifierKind.RegularWithRequiredQuotes;
+          readonly withQuotes: string;
+      };
 
 const enum IdentifierRegexpState {
     Done = "Done",
@@ -296,8 +314,6 @@ function getQuotedAndUnquoted(text: string, options?: CommonIdentifierUtilsOptio
         case IdentifierKind.Invalid:
             return {
                 identifierKind,
-                withoutQuotes: undefined,
-                withQuotes: undefined,
             };
 
         case IdentifierKind.RegularWithQuotes:
@@ -310,7 +326,6 @@ function getQuotedAndUnquoted(text: string, options?: CommonIdentifierUtilsOptio
         case IdentifierKind.RegularWithRequiredQuotes:
             return {
                 identifierKind,
-                withoutQuotes: undefined,
                 withQuotes: text,
             };
 
