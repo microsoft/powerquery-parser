@@ -152,63 +152,116 @@ describe("IdentifierUtils", () => {
             expect(actual).to.equal(params.expected);
         }
 
-        runGetIdentifierKindTest({
-            text: "foo",
-            expected: IdentifierKind.Regular,
+        it("foo", () => {
+            runGetIdentifierKindTest({
+                text: "foo",
+                expected: IdentifierKind.Regular,
+            });
         });
 
-        runGetIdentifierKindTest({
-            text: "",
-            expected: IdentifierKind.Invalid,
+        it("", () => {
+            runGetIdentifierKindTest({
+                text: "",
+                expected: IdentifierKind.Invalid,
+            });
         });
 
-        runGetIdentifierKindTest({
-            text: "foo.",
-            options: { allowTrailingPeriod: true },
-            expected: IdentifierKind.Regular,
+        it("foo. // allowTrailingPeriod - true", () => {
+            runGetIdentifierKindTest({
+                text: "foo.",
+                options: { allowTrailingPeriod: true },
+                expected: IdentifierKind.Regular,
+            });
         });
 
-        runGetIdentifierKindTest({
-            text: "foo.",
-            options: { allowTrailingPeriod: false },
-            expected: IdentifierKind.Invalid,
+        it("foo. // allowTrailingPeriod - false", () => {
+            runGetIdentifierKindTest({
+                text: "foo.",
+                options: { allowTrailingPeriod: false },
+                expected: IdentifierKind.Invalid,
+            });
         });
 
-        runGetIdentifierKindTest({
-            text: "foo.bar",
-            expected: IdentifierKind.Regular,
+        it("foo.bar", () => {
+            runGetIdentifierKindTest({
+                text: "foo.bar",
+                expected: IdentifierKind.Regular,
+            });
         });
 
-        runGetIdentifierKindTest({
-            text: "foo.1",
-            expected: IdentifierKind.Regular,
+        it("foo..bar", () => {
+            runGetIdentifierKindTest({
+                text: "foo..bar",
+                expected: IdentifierKind.Invalid,
+            });
         });
 
-        runGetIdentifierKindTest({
-            text: "with space",
-            expected: IdentifierKind.Invalid,
+        it("foo.bar.baz.green.eggs.and.ham", () => {
+            runGetIdentifierKindTest({
+                text: "foo.bar.baz.green.eggs.and.ham",
+                expected: IdentifierKind.Regular,
+            });
         });
 
-        runGetIdentifierKindTest({
-            text: "with space",
-            options: { allowGeneralizedIdentifier: true },
-            expected: IdentifierKind.Generalized,
+        it("foo.bar.baz.green.eggs.and.ham. // allowTrailingPeriod - true", () => {
+            runGetIdentifierKindTest({
+                text: "foo.bar.baz.green.eggs.and.ham",
+                options: { allowTrailingPeriod: true },
+                expected: IdentifierKind.Regular,
+            });
         });
 
-        runGetIdentifierKindTest({
-            text: '#"quoteNotNeeded"',
-            expected: IdentifierKind.RegularWithQuotes,
+        it("foo.bar.baz.green.eggs.and.ham. // allowTrailingPeriod - false", () => {
+            runGetIdentifierKindTest({
+                text: "foo.bar.baz.green.eggs.and.ham.",
+                options: { allowTrailingPeriod: false },
+                expected: IdentifierKind.Invalid,
+            });
         });
 
-        runGetIdentifierKindTest({
-            text: '#"quote needed"',
-            expected: IdentifierKind.RegularWithRequiredQuotes,
+        it("foo.1", () => {
+            runGetIdentifierKindTest({
+                text: "foo.1",
+                expected: IdentifierKind.Regular,
+            });
         });
 
-        runGetIdentifierKindTest({
-            text: '#"quoted generalized identifier"',
-            options: { allowGeneralizedIdentifier: true },
-            expected: IdentifierKind.GeneralizedWithQuotes,
+        it("with space // allowGeneralizedIdentifier - false", () => {
+            runGetIdentifierKindTest({
+                text: "with space",
+                options: { allowGeneralizedIdentifier: false },
+                expected: IdentifierKind.Invalid,
+            });
+        });
+
+        it("with space // allowGeneralizedIdentifier - true", () => {
+            runGetIdentifierKindTest({
+                text: "with space",
+                options: { allowGeneralizedIdentifier: true },
+                expected: IdentifierKind.Generalized,
+            });
+        });
+
+        it("with space", () => {
+            runGetIdentifierKindTest({
+                text: '#"quoteNotNeeded"',
+                expected: IdentifierKind.RegularWithQuotes,
+            });
+        });
+
+        it(`#"quote needed"`, () => {
+            runGetIdentifierKindTest({
+                text: '#"quote needed"',
+                expected: IdentifierKind.RegularWithRequiredQuotes,
+            });
+        });
+
+        it(`#"quoted generalized identifier"' // allowGeneralizedIdentifier - true`, () => {
+            runGetIdentifierKindTest({
+                text: '#"quoted generalized identifier"',
+                options: { allowGeneralizedIdentifier: true },
+                expected: IdentifierKind.GeneralizedWithQuotes,
+            });
         });
     });
 

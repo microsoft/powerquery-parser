@@ -137,52 +137,37 @@ export function getIdentifierLength(
 
                 break;
 
-            case IdentifierRegexpState.RegularIdentifier:
-                if (text[index] === ".") {
+            // We should allow a single period as part of the identifier,
+            // but only if it's not the last character and not followed by another period.
+            // Allow an exception for when it's the last character and allowTrailingPeriod is true.
+            case IdentifierRegexpState.RegularIdentifier: {
+                const currentChr: string | undefined = text[index];
+
+                if (currentChr === undefined) {
+                    state = IdentifierRegexpState.Done;
+                } else if (currentChr === ".") {
                     const nextChr: string | undefined = text[index + 1];
 
-                    // If the last character is a period
-                    if (nextChr === undefined) {
-                        // If we allow trailing period, we can consider it part of the identifier.
-                        if (allowTrailingPeriod) {
-                            index += 1;
-                        }
-                        // Else we are done.
-                        else {
-                            state = IdentifierRegexpState.Done;
-                        }
-                    }
-                    // Else if it's two sequential periods, we are done.
-                    else if (nextChr === ".") {
+                    // If we have a single period we might include it as part of the identifier when:
+                    // 1. It's not the last character and not followed by another period
+                    // 2. It's the last character and allowTrailingPeriod is true
+                    if ((nextChr && nextChr !== ".") || (nextChr === undefined && allowTrailingPeriod)) {
+                        index += 1;
+                    } else {
                         state = IdentifierRegexpState.Done;
                     }
-                    // Else if it's a single period followed by a potentially valid identifier character.
-                    else {
-                        index += 1;
-                    }
-
-                    break;
-                }
-
-                // Don't consider `..` or `...` part of an identifier.
-                if (allowTrailingPeriod && text[index] === "." && text[index + 1] !== ".") {
-                    index += 1;
-                }
-
-                matchLength = StringUtils.regexMatchLength(Pattern.IdentifierPartCharacters, text, index);
-
-                if (matchLength === undefined) {
-                    state = IdentifierRegexpState.Done;
                 } else {
-                    index += matchLength;
+                    matchLength = StringUtils.regexMatchLength(Pattern.IdentifierPartCharacters, text, index);
 
-                    // Don't consider `..` or `...` part of an identifier.
-                    if (allowTrailingPeriod && text[index] === "." && text[index + 1] !== ".") {
-                        index += 1;
+                    if (matchLength === undefined) {
+                        state = IdentifierRegexpState.Done;
+                    } else {
+                        index += matchLength;
                     }
                 }
 
                 break;
+            }
 
             default:
                 throw Assert.isNever(state);
