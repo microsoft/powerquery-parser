@@ -283,7 +283,7 @@ function getQuotedAndUnquoted(text: string, options?: CommonIdentifierUtilsOptio
             return {
                 identifierKind,
                 withoutQuotes: text,
-                withQuotes: insertQuotes(text),
+                withQuotes: makeQuoted(text),
             };
 
         case IdentifierKind.GeneralizedWithQuotes:
@@ -318,7 +318,7 @@ function getQuotedAndUnquoted(text: string, options?: CommonIdentifierUtilsOptio
             return {
                 identifierKind,
                 withoutQuotes: text,
-                withQuotes: insertQuotes(text),
+                withQuotes: makeQuoted(text),
             };
 
         default:
@@ -326,7 +326,7 @@ function getQuotedAndUnquoted(text: string, options?: CommonIdentifierUtilsOptio
     }
 }
 
-function insertQuotes(text: string): string {
+function makeQuoted(text: string): string {
     return `#"${text}"`;
 }
 
