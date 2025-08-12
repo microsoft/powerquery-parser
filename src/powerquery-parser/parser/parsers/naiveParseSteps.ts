@@ -121,7 +121,11 @@ export async function readGeneralizedIdentifier(
     const contiguousIdentifierStartIndex: number = tokens[tokenRangeStartIndex].positionStart.codeUnit;
     const contiguousIdentifierEndIndex: number = tokens[tokenRangeEndIndex - 1].positionEnd.codeUnit;
     const literal: string = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
-    const literalKind: IdentifierUtils.IdentifierKind = IdentifierUtils.getIdentifierKind(literal, true);
+
+    const literalKind: IdentifierUtils.IdentifierKind = IdentifierUtils.getIdentifierKind(literal, {
+        allowTrailingPeriod: true,
+        allowGeneralizedIdentifier: true,
+    });
 
     if (literalKind === IdentifierUtils.IdentifierKind.Invalid) {
         trace.exit({

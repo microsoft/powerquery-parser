@@ -342,7 +342,10 @@ export function iterFieldSpecificationList(
             keyLiteral,
             optional,
             value,
-            normalizedKeyLiteral: IdentifierUtils.normalizeIdentifier(keyLiteral),
+            normalizedKeyLiteral: Assert.asDefined(
+                IdentifierUtils.getNormalizedIdentifier(keyLiteral, { allowGeneralizedIdentifier: true }),
+                `Expected key "${keyLiteral}" to be a valid identifier.`,
+            ),
             pairKind: PairKind.FieldSpecification,
             source: fieldSpecification,
         });
@@ -380,6 +383,7 @@ export function iterLetExpression(
         nodeIdMapCollection,
         arrayWrapper,
         PairKind.LetExpression,
+        { allowGeneralizedIdentifier: false },
     );
 }
 
@@ -410,6 +414,7 @@ export function iterRecord(
         nodeIdMapCollection,
         arrayWrapper,
         PairKind.Record,
+        { allowGeneralizedIdentifier: true },
     );
 }
 
@@ -450,7 +455,10 @@ export function iterSection(
                 source: XorNodeUtils.boxAst(namePairedExpression),
                 key: namePairedExpression.key,
                 keyLiteral,
-                normalizedKeyLiteral: IdentifierUtils.normalizeIdentifier(keyLiteral),
+                normalizedKeyLiteral: Assert.asDefined(
+                    IdentifierUtils.getNormalizedIdentifier(keyLiteral, { allowGeneralizedIdentifier: true }),
+                    `Expected key "${keyLiteral}" to be a valid identifier.`,
+                ),
                 value: XorNodeUtils.boxAst(namePairedExpression.value),
                 pairKind: PairKind.SectionMember,
             };
@@ -504,7 +512,10 @@ export function iterSection(
             source: keyValuePair,
             key,
             keyLiteral,
-            normalizedKeyLiteral: IdentifierUtils.normalizeIdentifier(keyLiteral),
+            normalizedKeyLiteral: Assert.asDefined(
+                IdentifierUtils.getNormalizedIdentifier(keyLiteral, { allowGeneralizedIdentifier: true }),
+                `Expected key "${keyLiteral}" to be a valid identifier.`,
+            ),
             value: NodeIdMapUtils.nthChildXor(nodeIdMapCollection, keyValuePairNodeId, 2),
             pairKind: PairKind.SectionMember,
         });
@@ -520,6 +531,7 @@ function iterKeyValuePairs<
     nodeIdMapCollection: NodeIdMap.Collection,
     arrayWrapper: TXorNode,
     pairKind: TKeyValuePair["pairKind"],
+    identifierUtilsOptions: IdentifierUtils.CommonIdentifierUtilsOptions,
 ): ReadonlyArray<KVP> {
     const partial: KVP[] = [];
 
@@ -539,7 +551,10 @@ function iterKeyValuePairs<
             source: keyValuePair,
             key,
             keyLiteral,
-            normalizedKeyLiteral: IdentifierUtils.normalizeIdentifier(keyLiteral),
+            normalizedKeyLiteral: Assert.asDefined(
+                IdentifierUtils.getNormalizedIdentifier(keyLiteral, identifierUtilsOptions),
+                `Expected key "${keyLiteral}" to be a valid identifier.`,
+            ),
             value: NodeIdMapUtils.nthChildXor(nodeIdMapCollection, keyValuePair.node.id, 2),
             pairKind,
         } as KVP);

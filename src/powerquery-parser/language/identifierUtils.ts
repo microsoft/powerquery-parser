@@ -5,39 +5,114 @@ import { Assert, Pattern, StringUtils } from "../common";
 
 export enum IdentifierKind {
     Generalized = "Generalized",
+    GeneralizedWithQuotes = "GeneralizedWithQuotes",
     Invalid = "Invalid",
-    Quote = "Quote",
-    QuoteRequired = "QuoteRequired",
     Regular = "Regular",
+    RegularWithQuotes = "RegularWithQuotes",
+    RegularWithRequiredQuotes = "RegularWithRequiredQuotes",
 }
 
-// Assuming the text is a quoted identifier, finds the quotes that enclose the identifier.
-// Otherwise returns undefined.
-export function findQuotedIdentifierQuotes(text: string, index: number): StringUtils.FoundQuotes | undefined {
-    if (text[index] !== "#") {
-        return undefined;
+export interface CommonIdentifierUtilsOptions {
+    readonly allowGeneralizedIdentifier?: boolean;
+    readonly allowTrailingPeriod?: boolean;
+}
+
+export interface GetAllowedIdentifiersOptions extends CommonIdentifierUtilsOptions {
+    readonly allowRecursive?: boolean;
+}
+
+// Identifiers have multiple forms that can be used interchangeably.
+// For example, if you have `[key = 1]`, you can use `key` or `#""key""`.
+// The `getAllowedIdentifiers` function returns all the forms of the identifier that are allowed in the current context.
+export function getAllowedIdentifiers(text: string, options?: GetAllowedIdentifiersOptions): ReadonlyArray<string> {
+    const allowGeneralizedIdentifier: boolean =
+        options?.allowGeneralizedIdentifier ?? DefaultAllowGeneralizedIdentifier;
+
+    const quotedAndUnquoted: TQuotedAndUnquoted | undefined = getQuotedAndUnquoted(text, options);
+
+    if (quotedAndUnquoted === undefined) {
+        return [];
     }
 
-    return StringUtils.findQuotes(text, index + 1);
+    let result: string[];
+
+    switch (quotedAndUnquoted.identifierKind) {
+        case IdentifierKind.Generalized:
+        case IdentifierKind.GeneralizedWithQuotes:
+            result = allowGeneralizedIdentifier ? [quotedAndUnquoted.withQuotes, quotedAndUnquoted.withoutQuotes] : [];
+            break;
+
+        case IdentifierKind.Invalid:
+            result = [];
+            break;
+
+        case IdentifierKind.RegularWithQuotes:
+            result = [quotedAndUnquoted.withQuotes, quotedAndUnquoted.withoutQuotes];
+            break;
+
+        case IdentifierKind.RegularWithRequiredQuotes:
+            result = [quotedAndUnquoted.withQuotes];
+            break;
+
+        case IdentifierKind.Regular:
+            result = [quotedAndUnquoted.withoutQuotes, quotedAndUnquoted.withQuotes];
+            break;
+
+        default:
+            throw Assert.isNever(quotedAndUnquoted);
+    }
+
+    if (options?.allowRecursive) {
+        result = result.concat(result.map((value: string) => prefixInclusiveConstant(value)));
+    }
+
+    return result;
 }
 
-// Determines what kind of identifier the text is.
-// It's possible that the text is a partially completed identifier,
-// which is why we have the `allowTrailingPeriod` parameter.
-export function getIdentifierKind(text: string, allowTrailingPeriod: boolean): IdentifierKind {
-    if (isRegularIdentifier(text, allowTrailingPeriod)) {
+// An identifier can have multiple forms:
+// - Regular: `foo`
+// - Regular with quotes: `#""foo""`
+// - Regular with required quotes: `#""foo bar""`
+//    - Regular with required quotes is used when the identifier has spaces or special characters,
+//      and when generalized identifiers are not allowed.
+// - Generalized: `foo bar`
+// - Generalized with quotes: `#""foo bar""`
+// - Invalid: `foo..bar`
+export function getIdentifierKind(text: string, options?: CommonIdentifierUtilsOptions): IdentifierKind {
+    const allowGeneralizedIdentifier: boolean =
+        options?.allowGeneralizedIdentifier ?? DefaultAllowGeneralizedIdentifier;
+
+    if (isRegularIdentifier(text, options)) {
         return IdentifierKind.Regular;
-    } else if (isQuotedIdentifier(text)) {
-        return isRegularIdentifier(text.slice(2, -1), false) ? IdentifierKind.Quote : IdentifierKind.QuoteRequired;
-    } else if (isGeneralizedIdentifier(text)) {
+    } else if (allowGeneralizedIdentifier && isGeneralizedIdentifier(text)) {
         return IdentifierKind.Generalized;
+    }
+    // If the identifier is quoted it's either:
+    // - a regular identifier with quotes,
+    // - a generalized identifier with quotes,
+    else if (isQuotedIdentifier(text)) {
+        const stripped: string = stripQuotes(text);
+
+        if (isRegularIdentifier(stripped, options)) {
+            return IdentifierKind.RegularWithQuotes;
+        } else if (isGeneralizedIdentifier(stripped) && allowGeneralizedIdentifier) {
+            return IdentifierKind.GeneralizedWithQuotes;
+        } else {
+            return IdentifierKind.RegularWithRequiredQuotes;
+        }
     } else {
         return IdentifierKind.Invalid;
     }
 }
 
-// Assuming the text is an identifier, returns the length of the identifier.
-export function getIdentifierLength(text: string, index: number, allowTrailingPeriod: boolean): number | undefined {
+// I'd prefer if this was internal, but it's used by the lexer so it's marked as public.
+// Returns the length of the identifier starting at the given index.
+export function getIdentifierLength(
+    text: string,
+    index: number,
+    options?: CommonIdentifierUtilsOptions,
+): number | undefined {
+    const allowTrailingPeriod: boolean = options?.allowTrailingPeriod ?? DefaultAllowTrailingPeriod;
     const startingIndex: number = index;
     const textLength: number = text.length;
 
@@ -62,26 +137,37 @@ export function getIdentifierLength(text: string, index: number, allowTrailingPe
 
                 break;
 
-            case IdentifierRegexpState.RegularIdentifier:
-                // Don't consider `..` or `...` part of an identifier.
-                if (allowTrailingPeriod && text[index] === "." && text[index + 1] !== ".") {
-                    index += 1;
-                }
+            // We should allow a single period as part of the identifier,
+            // but only if it's not the last character and not followed by another period.
+            // Allow an exception for when it's the last character and allowTrailingPeriod is true.
+            case IdentifierRegexpState.RegularIdentifier: {
+                const currentChr: string | undefined = text[index];
 
-                matchLength = StringUtils.regexMatchLength(Pattern.IdentifierPartCharacters, text, index);
-
-                if (matchLength === undefined) {
+                if (currentChr === undefined) {
                     state = IdentifierRegexpState.Done;
-                } else {
-                    index += matchLength;
+                } else if (currentChr === ".") {
+                    const nextChr: string | undefined = text[index + 1];
 
-                    // Don't consider `..` or `...` part of an identifier.
-                    if (allowTrailingPeriod && text[index] === "." && text[index + 1] !== ".") {
+                    // If we have a single period we might include it as part of the identifier when:
+                    // 1. It's not the last character and not followed by another period
+                    // 2. It's the last character and allowTrailingPeriod is true
+                    if ((nextChr && nextChr !== ".") || (nextChr === undefined && allowTrailingPeriod)) {
                         index += 1;
+                    } else {
+                        state = IdentifierRegexpState.Done;
+                    }
+                } else {
+                    matchLength = StringUtils.regexMatchLength(Pattern.IdentifierPartCharacters, text, index);
+
+                    if (matchLength === undefined) {
+                        state = IdentifierRegexpState.Done;
+                    } else {
+                        index += matchLength;
                     }
                 }
 
                 break;
+            }
 
             default:
                 throw Assert.isNever(state);
@@ -91,8 +177,81 @@ export function getIdentifierLength(text: string, index: number, allowTrailingPe
     return index !== startingIndex ? index - startingIndex : undefined;
 }
 
+// Removes the quotes from a quoted identifier if possible.
+// When given an invalid identifier, returns undefined.
+export function getNormalizedIdentifier(text: string, options?: CommonIdentifierUtilsOptions): string | undefined {
+    const allowGeneralizedIdentifier: boolean =
+        options?.allowGeneralizedIdentifier ?? DefaultAllowGeneralizedIdentifier;
+
+    const quotedAndUnquoted: TQuotedAndUnquoted = getQuotedAndUnquoted(text, options);
+
+    switch (quotedAndUnquoted.identifierKind) {
+        case IdentifierKind.Regular:
+        case IdentifierKind.RegularWithQuotes:
+            return quotedAndUnquoted.withoutQuotes;
+
+        case IdentifierKind.GeneralizedWithQuotes:
+        case IdentifierKind.Generalized:
+            return allowGeneralizedIdentifier ? quotedAndUnquoted.withoutQuotes : undefined;
+
+        case IdentifierKind.Invalid:
+            return undefined;
+
+        case IdentifierKind.RegularWithRequiredQuotes:
+            return quotedAndUnquoted.withQuotes;
+
+        default:
+            throw Assert.isNever(quotedAndUnquoted);
+    }
+}
+
+type TQuotedAndUnquoted =
+    | {
+          readonly identifierKind: IdentifierKind.Generalized;
+          readonly withQuotes: string;
+          readonly withoutQuotes: string;
+      }
+    | {
+          readonly identifierKind: IdentifierKind.GeneralizedWithQuotes;
+          readonly withQuotes: string;
+          readonly withoutQuotes: string;
+      }
+    | {
+          readonly identifierKind: IdentifierKind.Invalid;
+      }
+    | {
+          readonly identifierKind: IdentifierKind.Regular;
+          readonly withQuotes: string;
+          readonly withoutQuotes: string;
+      }
+    | {
+          readonly identifierKind: IdentifierKind.RegularWithQuotes;
+          readonly withQuotes: string;
+          readonly withoutQuotes: string;
+      }
+    | {
+          readonly identifierKind: IdentifierKind.RegularWithRequiredQuotes;
+          readonly withQuotes: string;
+      };
+
+const enum IdentifierRegexpState {
+    Done = "Done",
+    RegularIdentifier = "RegularIdentifier",
+    Start = "Start",
+}
+
+// Finds the locations of quotes in a quoted identifier.
+// Returns undefined if the identifier is not quoted.
+function findQuotedIdentifierQuotes(text: string, index: number): StringUtils.FoundQuotes | undefined {
+    if (text[index] !== "#") {
+        return undefined;
+    }
+
+    return StringUtils.findQuotes(text, index + 1);
+}
+
 // Assuming the text is a generalized identifier, returns the length of the identifier.
-export function getGeneralizedIdentifierLength(text: string, index: number): number | undefined {
+function getGeneralizedIdentifierLength(text: string, index: number): number | undefined {
     const startingIndex: number = index;
     const textLength: number = text.length;
 
@@ -133,31 +292,78 @@ export function getGeneralizedIdentifierLength(text: string, index: number): num
     return index !== startingIndex ? index - startingIndex : undefined;
 }
 
-export function isGeneralizedIdentifier(text: string): boolean {
-    return getGeneralizedIdentifierLength(text, 0) === text.length;
-}
+// Returns the quoted and unquoted versions of the identifier (if applicable).
+function getQuotedAndUnquoted(text: string, options?: CommonIdentifierUtilsOptions): TQuotedAndUnquoted {
+    const identifierKind: IdentifierKind = getIdentifierKind(text, options);
 
-export function isRegularIdentifier(text: string, allowTrailingPeriod: boolean): boolean {
-    return getIdentifierLength(text, 0, allowTrailingPeriod) === text.length;
-}
+    switch (identifierKind) {
+        case IdentifierKind.Generalized:
+            return {
+                identifierKind,
+                withoutQuotes: text,
+                withQuotes: makeQuoted(text),
+            };
 
-export function isQuotedIdentifier(text: string): boolean {
-    return findQuotedIdentifierQuotes(text, 0) !== undefined;
-}
+        case IdentifierKind.GeneralizedWithQuotes:
+            return {
+                identifierKind,
+                withoutQuotes: stripQuotes(text),
+                withQuotes: text,
+            };
 
-// Removes the quotes from a quoted identifier if possible.
-export function normalizeIdentifier(text: string): string {
-    if (isQuotedIdentifier(text)) {
-        const stripped: string = text.slice(2, -1);
+        case IdentifierKind.Invalid:
+            return {
+                identifierKind,
+            };
 
-        return isRegularIdentifier(stripped, false) ? stripped : text;
-    } else {
-        return text;
+        case IdentifierKind.RegularWithQuotes:
+            return {
+                identifierKind,
+                withoutQuotes: stripQuotes(text),
+                withQuotes: text,
+            };
+
+        case IdentifierKind.RegularWithRequiredQuotes:
+            return {
+                identifierKind,
+                withQuotes: text,
+            };
+
+        case IdentifierKind.Regular:
+            return {
+                identifierKind,
+                withoutQuotes: text,
+                withQuotes: makeQuoted(text),
+            };
+
+        default:
+            throw Assert.isNever(identifierKind);
     }
 }
 
-const enum IdentifierRegexpState {
-    Done = "Done",
-    RegularIdentifier = "RegularIdentifier",
-    Start = "Start",
+function makeQuoted(text: string): string {
+    return `#"${text}"`;
 }
+
+function prefixInclusiveConstant(text: string): string {
+    return `@${text}`;
+}
+
+function isGeneralizedIdentifier(text: string): boolean {
+    return text.length > 0 && getGeneralizedIdentifierLength(text, 0) === text.length;
+}
+
+function isRegularIdentifier(text: string, options?: CommonIdentifierUtilsOptions): boolean {
+    return text.length > 0 && getIdentifierLength(text, 0, options) === text.length;
+}
+
+function isQuotedIdentifier(text: string): boolean {
+    return findQuotedIdentifierQuotes(text, 0) !== undefined;
+}
+
+function stripQuotes(text: string): string {
+    return text.slice(2, -1);
+}
+
+const DefaultAllowTrailingPeriod: boolean = false;
+const DefaultAllowGeneralizedIdentifier: boolean = false;
