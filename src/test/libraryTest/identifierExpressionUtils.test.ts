@@ -53,5 +53,12 @@ describe("IdentifierUtils", () => {
                 expectedSuccess: "foo",
             });
         });
+
+        it("#table", () => {
+            runGetNormalizedIdentifierExpressionTest({
+                text: "#table",
+                expectedSuccess: "#table",
+            });
+        });
     });
 });
