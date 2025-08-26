@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert, Pattern, StringUtils } from "../common";
+import { KeywordKind } from "./keyword/keyword";
 
 export enum IdentifierKind {
     Generalized = "Generalized",
@@ -19,6 +20,14 @@ export interface CommonIdentifierUtilsOptions {
 
 export interface GetAllowedIdentifiersOptions extends CommonIdentifierUtilsOptions {
     readonly allowRecursive?: boolean;
+}
+
+// Wraps an assert around the getNormalizedIdentifier method
+export function assertNormalizedIdentifier(text: string, options?: CommonIdentifierUtilsOptions): string {
+    return Assert.asDefined(
+        getNormalizedIdentifier(text, options),
+        `Expected a valid identifier but received '${text}'`,
+    );
 }
 
 // Identifiers have multiple forms that can be used interchangeably.
@@ -180,6 +189,10 @@ export function getIdentifierLength(
 // Removes the quotes from a quoted identifier if possible.
 // When given an invalid identifier, returns undefined.
 export function getNormalizedIdentifier(text: string, options?: CommonIdentifierUtilsOptions): string | undefined {
+    if (AllowedHashKeywords.has(text)) {
+        return text;
+    }
+
     const allowGeneralizedIdentifier: boolean =
         options?.allowGeneralizedIdentifier ?? DefaultAllowGeneralizedIdentifier;
 
@@ -367,3 +380,17 @@ function stripQuotes(text: string): string {
 
 const DefaultAllowTrailingPeriod: boolean = false;
 const DefaultAllowGeneralizedIdentifier: boolean = false;
+
+const AllowedHashKeywords: ReadonlySet<string> = new Set([
+    KeywordKind.HashBinary,
+    KeywordKind.HashDate,
+    KeywordKind.HashDateTime,
+    KeywordKind.HashDateTimeZone,
+    KeywordKind.HashDuration,
+    KeywordKind.HashInfinity,
+    KeywordKind.HashNan,
+    KeywordKind.HashSections,
+    KeywordKind.HashShared,
+    KeywordKind.HashTable,
+    KeywordKind.HashTime,
+]);

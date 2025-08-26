@@ -368,5 +368,12 @@ describe("IdentifierUtils", () => {
                 expectedSuccess: "quoted generalized identifier",
             });
         });
+
+        it("#table", () => {
+            runGetNormalizedIdentifierTest({
+                text: "#table",
+                expectedSuccess: "#table",
+            });
+        });
     });
 });
