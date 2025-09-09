@@ -304,8 +304,55 @@ function nextOperatorAndOperandRead(tokenKind: Token.TokenKind): NextOperatorAnd
                 operatorTokenKind: Token.TokenKind.NullCoalescingOperator,
             };
 
-        default:
+        case Token.TokenKind.AtSign:
+        case Token.TokenKind.Bang:
+        case Token.TokenKind.Comma:
+        case Token.TokenKind.DotDot:
+        case Token.TokenKind.Ellipsis:
+        case Token.TokenKind.FatArrow:
+        case Token.TokenKind.HexLiteral:
+        case Token.TokenKind.Identifier:
+        case Token.TokenKind.KeywordEach:
+        case Token.TokenKind.KeywordElse:
+        case Token.TokenKind.KeywordError:
+        case Token.TokenKind.KeywordFalse:
+        case Token.TokenKind.KeywordHashBinary:
+        case Token.TokenKind.KeywordHashDate:
+        case Token.TokenKind.KeywordHashDateTime:
+        case Token.TokenKind.KeywordHashDateTimeZone:
+        case Token.TokenKind.KeywordHashDuration:
+        case Token.TokenKind.KeywordHashInfinity:
+        case Token.TokenKind.KeywordHashNan:
+        case Token.TokenKind.KeywordHashSections:
+        case Token.TokenKind.KeywordHashShared:
+        case Token.TokenKind.KeywordHashTable:
+        case Token.TokenKind.KeywordHashTime:
+        case Token.TokenKind.KeywordIf:
+        case Token.TokenKind.KeywordIn:
+        case Token.TokenKind.KeywordLet:
+        case Token.TokenKind.KeywordNot:
+        case Token.TokenKind.KeywordOtherwise:
+        case Token.TokenKind.KeywordSection:
+        case Token.TokenKind.KeywordShared:
+        case Token.TokenKind.KeywordThen:
+        case Token.TokenKind.KeywordTrue:
+        case Token.TokenKind.KeywordTry:
+        case Token.TokenKind.KeywordType:
+        case Token.TokenKind.LeftBrace:
+        case Token.TokenKind.LeftBracket:
+        case Token.TokenKind.LeftParenthesis:
+        case Token.TokenKind.NullLiteral:
+        case Token.TokenKind.NumericLiteral:
+        case Token.TokenKind.QuestionMark:
+        case Token.TokenKind.RightBrace:
+        case Token.TokenKind.RightBracket:
+        case Token.TokenKind.RightParenthesis:
+        case Token.TokenKind.Semicolon:
+        case Token.TokenKind.TextLiteral:
             return undefined;
+
+        default:
+            throw Assert.isNever(tokenKind);
     }
 }
 

@@ -387,7 +387,6 @@ export interface IdentifierExpression extends INode {
 // --------------------------------------------------------
 
 // Can't be a type as it'll be a recursive definition
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ParenthesizedExpression extends IParenthesisWrapped<NodeKind.ParenthesizedExpression, TExpression> {}
 
 // ----------------------------------------------------------
@@ -405,7 +404,6 @@ export interface NotImplementedExpression extends INode {
 // -------------------------------------------------
 
 // Can't be a type as it'll be a recursive definition
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface InvokeExpression extends IParenthesisWrapped<NodeKind.InvokeExpression, ICsvArray<TExpression>> {}
 
 // -----------------------------------------------
@@ -415,7 +413,6 @@ export interface InvokeExpression extends IParenthesisWrapped<NodeKind.InvokeExp
 export type TListItem = TExpression | RangeExpression;
 
 // Can't be a type as it'll be a recursive definition
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ListExpression extends IBraceWrapped<NodeKind.ListExpression, ICsvArray<TListItem>> {}
 
 export interface RangeExpression extends INode {
@@ -525,7 +522,6 @@ export interface FunctionType extends INode {
 }
 
 // Can't be a type as it'll be a recursive definition
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ListType extends IBraceWrapped<NodeKind.ListType, TType> {}
 
 export type NullableType = IPairedConstant<NodeKind.NullableType, Constant.LanguageConstant.Nullable, TType>;
@@ -784,7 +780,6 @@ export type GeneralizedIdentifierPairedAnyLiteral = IKeyValuePair<
 >;
 
 // Can't be a type as it'll be a recursive definition
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface GeneralizedIdentifierPairedExpression
     extends IKeyValuePair<NodeKind.GeneralizedIdentifierPairedExpression, GeneralizedIdentifier, TExpression> {}
 

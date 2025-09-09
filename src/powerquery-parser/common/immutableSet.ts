@@ -23,7 +23,6 @@ export class ImmutableSet<T> {
     }
 
     public addMany(values: Iterable<T>): ImmutableSet<T> {
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
         let result: ImmutableSet<T> = this;
 
         for (const value of values) {

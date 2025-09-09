@@ -143,8 +143,65 @@ export function literalKindFrom(
         case TokenKind.TextLiteral:
             return Ast.LiteralKind.Text;
 
-        default:
+        case TokenKind.Ampersand:
+        case TokenKind.Asterisk:
+        case TokenKind.AtSign:
+        case TokenKind.Bang:
+        case TokenKind.Comma:
+        case TokenKind.Division:
+        case TokenKind.DotDot:
+        case TokenKind.Ellipsis:
+        case TokenKind.Equal:
+        case TokenKind.FatArrow:
+        case TokenKind.GreaterThan:
+        case TokenKind.GreaterThanEqualTo:
+        case TokenKind.Identifier:
+        case TokenKind.KeywordAnd:
+        case TokenKind.KeywordAs:
+        case TokenKind.KeywordEach:
+        case TokenKind.KeywordElse:
+        case TokenKind.KeywordError:
+        case TokenKind.KeywordHashBinary:
+        case TokenKind.KeywordHashDate:
+        case TokenKind.KeywordHashDateTime:
+        case TokenKind.KeywordHashDateTimeZone:
+        case TokenKind.KeywordHashDuration:
+        case TokenKind.KeywordHashSections:
+        case TokenKind.KeywordHashShared:
+        case TokenKind.KeywordHashTable:
+        case TokenKind.KeywordHashTime:
+        case TokenKind.KeywordIf:
+        case TokenKind.KeywordIn:
+        case TokenKind.KeywordIs:
+        case TokenKind.KeywordLet:
+        case TokenKind.KeywordMeta:
+        case TokenKind.KeywordNot:
+        case TokenKind.KeywordOr:
+        case TokenKind.KeywordOtherwise:
+        case TokenKind.KeywordSection:
+        case TokenKind.KeywordShared:
+        case TokenKind.KeywordThen:
+        case TokenKind.KeywordTry:
+        case TokenKind.KeywordType:
+        case TokenKind.LeftBrace:
+        case TokenKind.LeftBracket:
+        case TokenKind.LeftParenthesis:
+        case TokenKind.LessThan:
+        case TokenKind.LessThanEqualTo:
+        case TokenKind.Minus:
+        case TokenKind.NotEqual:
+        case TokenKind.NullCoalescingOperator:
+        case TokenKind.Plus:
+        case TokenKind.QuestionMark:
+        case TokenKind.RightBrace:
+        case TokenKind.RightBracket:
+        case TokenKind.RightParenthesis:
+        case TokenKind.Semicolon:
+        case undefined:
             return undefined;
+
+        default:
+            throw Assert.isNever(tokenKind);
     }
 }
 
@@ -183,11 +240,40 @@ export function simplifyType(type: Ast.TType): SimplifiedType {
             primitiveTypeConstantKind = Constant.PrimitiveTypeConstant.Table;
             break;
 
-        default:
+        case Ast.NodeKind.ArithmeticExpression:
+        case Ast.NodeKind.AsExpression:
+        case Ast.NodeKind.EachExpression:
+        case Ast.NodeKind.EqualityExpression:
+        case Ast.NodeKind.ErrorHandlingExpression:
+        case Ast.NodeKind.ErrorRaisingExpression:
+        case Ast.NodeKind.FieldProjection:
+        case Ast.NodeKind.FieldSelector:
+        case Ast.NodeKind.FunctionExpression:
+        case Ast.NodeKind.IdentifierExpression:
+        case Ast.NodeKind.IfExpression:
+        case Ast.NodeKind.InvokeExpression:
+        case Ast.NodeKind.IsExpression:
+        case Ast.NodeKind.ItemAccessExpression:
+        case Ast.NodeKind.LetExpression:
+        case Ast.NodeKind.ListExpression:
+        case Ast.NodeKind.LiteralExpression:
+        case Ast.NodeKind.LogicalExpression:
+        case Ast.NodeKind.MetadataExpression:
+        case Ast.NodeKind.NotImplementedExpression:
+        case Ast.NodeKind.NullCoalescingExpression:
+        case Ast.NodeKind.ParenthesizedExpression:
+        case Ast.NodeKind.RecordExpression:
+        case Ast.NodeKind.RecursivePrimaryExpression:
+        case Ast.NodeKind.RelationalExpression:
+        case Ast.NodeKind.TypePrimaryType:
+        case Ast.NodeKind.UnaryExpression:
             throw new CommonError.InvariantError("this should never be reached", {
                 nodeId: type.id,
                 nodeKind: type.kind,
             });
+
+        default:
+            throw Assert.isNever(type);
     }
 
     return {

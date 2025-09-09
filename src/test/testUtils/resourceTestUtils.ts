@@ -65,8 +65,6 @@ export function runResourceTestSuite(
             it(testNameFn(filePath), async () => {
                 const fileContents: string = FileTestUtils.readContents(filePath);
                 const testStart: number = performanceNow();
-
-                // eslint-disable-next-line no-await-in-loop
                 const triedLexParse: Task.TriedLexParseTask = await TaskUtils.tryLexParse(settings, fileContents);
 
                 visitFn({

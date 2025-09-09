@@ -13,5 +13,4 @@ export const Whitespace: RegExp =
 
 export const Hex: RegExp = /0[xX][a-fA-F0-9]+/g;
 
-// eslint-disable-next-line security/detect-unsafe-regex
 export const Numeric: RegExp = /(([0-9]*\.[0-9]+)|([0-9]+))([eE][\\+\\-]?[0-9]+)?/g;

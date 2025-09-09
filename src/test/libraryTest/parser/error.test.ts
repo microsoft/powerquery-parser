@@ -119,9 +119,8 @@ describe("Parser.Error", () => {
         it(`LetExpression`, async () => {
             const text: string = "let a = 1, in 1";
 
-            const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
-                text,
-            );
+            const continuationError: ParseError.ExpectedCsvContinuationError =
+                await assertGetCsvContinuationError(text);
 
             expect(continuationError.message).to.equal(
                 Localization.error_parse_csvContinuation(
@@ -134,9 +133,8 @@ describe("Parser.Error", () => {
         it(`ListExpression`, async () => {
             const text: string = "{1, }";
 
-            const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
-                text,
-            );
+            const continuationError: ParseError.ExpectedCsvContinuationError =
+                await assertGetCsvContinuationError(text);
 
             expect(continuationError.message).to.equal(
                 Localization.error_parse_csvContinuation(
@@ -149,9 +147,8 @@ describe("Parser.Error", () => {
         it(`FunctionExpression`, async () => {
             const text: string = "(a, ) => a";
 
-            const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
-                text,
-            );
+            const continuationError: ParseError.ExpectedCsvContinuationError =
+                await assertGetCsvContinuationError(text);
 
             expect(continuationError.message).to.equal(
                 Localization.error_parse_csvContinuation(
@@ -164,9 +161,8 @@ describe("Parser.Error", () => {
         it(`FunctionType`, async () => {
             const text: string = "type function (a as number, ) as number";
 
-            const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
-                text,
-            );
+            const continuationError: ParseError.ExpectedCsvContinuationError =
+                await assertGetCsvContinuationError(text);
 
             expect(continuationError.message).to.equal(
                 Localization.error_parse_csvContinuation(
@@ -179,9 +175,8 @@ describe("Parser.Error", () => {
         it(`RecordExpression`, async () => {
             const text: string = "[a = 1,]";
 
-            const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
-                text,
-            );
+            const continuationError: ParseError.ExpectedCsvContinuationError =
+                await assertGetCsvContinuationError(text);
 
             expect(continuationError.message).to.equal(
                 Localization.error_parse_csvContinuation(
@@ -194,9 +189,8 @@ describe("Parser.Error", () => {
         it(`RecordType`, async () => {
             const text: string = "type [a = 1,]";
 
-            const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
-                text,
-            );
+            const continuationError: ParseError.ExpectedCsvContinuationError =
+                await assertGetCsvContinuationError(text);
 
             expect(continuationError.message).to.equal(
                 Localization.error_parse_csvContinuation(
@@ -209,9 +203,8 @@ describe("Parser.Error", () => {
         it(`TableType`, async () => {
             const text: string = "type table [a = 1,]";
 
-            const continuationError: ParseError.ExpectedCsvContinuationError = await assertGetCsvContinuationError(
-                text,
-            );
+            const continuationError: ParseError.ExpectedCsvContinuationError =
+                await assertGetCsvContinuationError(text);
 
             expect(continuationError.message).to.equal(
                 Localization.error_parse_csvContinuation(

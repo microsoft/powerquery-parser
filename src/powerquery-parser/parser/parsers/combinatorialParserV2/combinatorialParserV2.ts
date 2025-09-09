@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { ArrayUtils, Assert } from "../../../common";
 import { Ast, Token } from "../../../language";
 import { CombinatorialParserV2TraceConstant, OperatorsAndOperands } from "./commonTypes";
 import { Disambiguation, DisambiguationUtils } from "../../disambiguation";
 import { Parser, ParserUtils } from "../../parser";
 import { ParseState, ParseStateUtils } from "../../parseState";
-import { ArrayUtils } from "../../../common";
 import { combineOperatorsAndOperands } from "./combineOperatorsAndOperands";
 import { NaiveParseSteps } from "..";
 import { ParseContext } from "../..";
@@ -264,10 +264,53 @@ async function readUnaryExpression(
             break;
 
         // Let NaiveParseSteps throw an error.
-        default:
+        case Token.TokenKind.Ampersand:
+        case Token.TokenKind.Asterisk:
+        case Token.TokenKind.Bang:
+        case Token.TokenKind.Comma:
+        case Token.TokenKind.Division:
+        case Token.TokenKind.DotDot:
+        case Token.TokenKind.Equal:
+        case Token.TokenKind.FatArrow:
+        case Token.TokenKind.GreaterThan:
+        case Token.TokenKind.GreaterThanEqualTo:
+        case Token.TokenKind.KeywordAnd:
+        case Token.TokenKind.KeywordAs:
+        case Token.TokenKind.KeywordEach:
+        case Token.TokenKind.KeywordElse:
+        case Token.TokenKind.KeywordError:
+        case Token.TokenKind.KeywordHashInfinity:
+        case Token.TokenKind.KeywordHashNan:
+        case Token.TokenKind.KeywordIf:
+        case Token.TokenKind.KeywordIn:
+        case Token.TokenKind.KeywordIs:
+        case Token.TokenKind.KeywordLet:
+        case Token.TokenKind.KeywordMeta:
+        case Token.TokenKind.KeywordNot:
+        case Token.TokenKind.KeywordOr:
+        case Token.TokenKind.KeywordOtherwise:
+        case Token.TokenKind.KeywordSection:
+        case Token.TokenKind.KeywordShared:
+        case Token.TokenKind.KeywordThen:
+        case Token.TokenKind.KeywordTry:
+        case Token.TokenKind.LessThan:
+        case Token.TokenKind.LessThanEqualTo:
+        case Token.TokenKind.Minus:
+        case Token.TokenKind.NotEqual:
+        case Token.TokenKind.NullCoalescingOperator:
+        case Token.TokenKind.Plus:
+        case Token.TokenKind.QuestionMark:
+        case Token.TokenKind.RightBrace:
+        case Token.TokenKind.RightBracket:
+        case Token.TokenKind.RightParenthesis:
+        case Token.TokenKind.Semicolon:
+        case undefined:
             trace.exit();
 
             return NaiveParseSteps.readUnaryExpression(state, parser, trace.id);
+
+        default:
+            throw Assert.isNever(state.currentTokenKind);
     }
 
     let result: Ast.TUnaryExpression;
