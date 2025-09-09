@@ -5,6 +5,7 @@
 import performanceNow = require("performance-now");
 
 import * as path from "path";
+import * as process from "process";
 
 import { ArrayUtils, DefaultSettings, Settings, Task, TaskUtils } from "../../powerquery-parser";
 import { BenchmarkTraceManager, NoOpTraceManagerInstance } from "../../powerquery-parser/common/trace";

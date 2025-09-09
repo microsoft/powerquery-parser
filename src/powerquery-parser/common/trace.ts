@@ -98,12 +98,10 @@ export class BenchmarkTrace extends Trace {
 }
 
 export class NoOpTrace extends Trace {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     public override trace(_message: string, _details?: object): void {}
 }
 
 export const NoOpTraceInstance: NoOpTrace = new NoOpTrace(
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     (_trace: Trace, _message: string, _details?: object) => {},
     "",
     "",
@@ -114,7 +112,10 @@ export const NoOpTraceInstance: NoOpTrace = new NoOpTrace(
 export abstract class TraceManager {
     protected readonly idFactory: () => number = createAutoIncrementIdFactory();
 
-    constructor(protected readonly valueDelimiter: string = ",", protected readonly newline: "\n" | "\r\n" = "\r\n") {}
+    constructor(
+        protected readonly valueDelimiter: string = ",",
+        protected readonly newline: "\n" | "\r\n" = "\r\n",
+    ) {}
 
     abstract emit(trace: Trace, message: string, details?: object): void;
 
@@ -152,7 +153,6 @@ export abstract class TraceManager {
     // Subclass this by providing values for `replacer` and/or `space`.
     protected safeJsonStringify(
         obj: object,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         replacer?: (this: any, key: string, value: any) => any,
         space?: string | number,
     ): string {
@@ -166,7 +166,10 @@ export abstract class TraceManager {
 
 // Each trace entry gets passed to a callback function.
 export class ReportTraceManager extends TraceManager {
-    constructor(private readonly emitter: (message: string) => void, valueDelimiter: string = "\t") {
+    constructor(
+        private readonly emitter: (message: string) => void,
+        valueDelimiter: string = "\t",
+    ) {
         super(valueDelimiter);
     }
 
@@ -193,7 +196,6 @@ export class BenchmarkTraceManager extends ReportTraceManager {
 
 // The TraceManager for DefaultSettings.
 export class NoOpTraceManager extends TraceManager {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     emit(_tracer: Trace, _message: string, _details?: object): void {}
 
     protected override trace(

@@ -15,22 +15,30 @@ export class CommonError extends Error {
 }
 
 export class CancellationError extends Error {
-    constructor(readonly cancellationToken: ICancellationToken, readonly reason: string) {
+    constructor(
+        readonly cancellationToken: ICancellationToken,
+        readonly reason: string,
+    ) {
         super(Localization.error_common_cancellationError(Templates.DefaultTemplates, reason));
         Object.setPrototypeOf(this, CancellationError.prototype);
     }
 }
 
 export class InvariantError extends Error {
-    constructor(readonly invariantBroken: string, readonly details?: object) {
+    constructor(
+        readonly invariantBroken: string,
+        readonly details?: object,
+    ) {
         super(Localization.error_common_invariantError(Templates.DefaultTemplates, invariantBroken, details));
         Object.setPrototypeOf(this, InvariantError.prototype);
     }
 }
 
 export class UnknownError extends Error {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(readonly innerError: any, locale: string) {
+    constructor(
+        readonly innerError: any,
+        locale: string,
+    ) {
         super(Localization.error_common_unknown(LocalizationUtils.getLocalizationTemplates(locale), innerError));
         Object.setPrototypeOf(this, UnknownError.prototype);
     }

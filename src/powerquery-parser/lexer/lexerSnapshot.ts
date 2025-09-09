@@ -99,8 +99,9 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
         state.cancellationToken?.throwIfCancelled();
 
         const flatToken: FlatLineToken = flatTokens[flatIndex];
+        const lineTokenKind: Token.LineTokenKind = flatToken.kind;
 
-        switch (flatToken.kind) {
+        switch (lineTokenKind) {
             case Token.LineTokenKind.LineComment:
                 comments.push(readLineComment(flatToken));
                 break;
@@ -148,17 +149,90 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
                 break;
             }
 
-            default: {
-                const positionStart: Token.TokenPosition = flatToken.positionStart;
-                const positionEnd: Token.TokenPosition = flatToken.positionEnd;
+            case Token.LineTokenKind.Ampersand:
+            case Token.LineTokenKind.Asterisk:
+            case Token.LineTokenKind.AtSign:
+            case Token.LineTokenKind.Bang:
+            case Token.LineTokenKind.Comma:
+            case Token.LineTokenKind.Division:
+            case Token.LineTokenKind.DotDot:
+            case Token.LineTokenKind.Ellipsis:
+            case Token.LineTokenKind.Equal:
+            case Token.LineTokenKind.FatArrow:
+            case Token.LineTokenKind.GreaterThan:
+            case Token.LineTokenKind.GreaterThanEqualTo:
+            case Token.LineTokenKind.HexLiteral:
+            case Token.LineTokenKind.Identifier:
+            case Token.LineTokenKind.KeywordAnd:
+            case Token.LineTokenKind.KeywordAs:
+            case Token.LineTokenKind.KeywordEach:
+            case Token.LineTokenKind.KeywordElse:
+            case Token.LineTokenKind.KeywordError:
+            case Token.LineTokenKind.KeywordFalse:
+            case Token.LineTokenKind.KeywordHashBinary:
+            case Token.LineTokenKind.KeywordHashDate:
+            case Token.LineTokenKind.KeywordHashDateTime:
+            case Token.LineTokenKind.KeywordHashDateTimeZone:
+            case Token.LineTokenKind.KeywordHashDuration:
+            case Token.LineTokenKind.KeywordHashInfinity:
+            case Token.LineTokenKind.KeywordHashNan:
+            case Token.LineTokenKind.KeywordHashSections:
+            case Token.LineTokenKind.KeywordHashShared:
+            case Token.LineTokenKind.KeywordHashTable:
+            case Token.LineTokenKind.KeywordHashTime:
+            case Token.LineTokenKind.KeywordIf:
+            case Token.LineTokenKind.KeywordIn:
+            case Token.LineTokenKind.KeywordIs:
+            case Token.LineTokenKind.KeywordLet:
+            case Token.LineTokenKind.KeywordMeta:
+            case Token.LineTokenKind.KeywordNot:
+            case Token.LineTokenKind.KeywordOr:
+            case Token.LineTokenKind.KeywordOtherwise:
+            case Token.LineTokenKind.KeywordSection:
+            case Token.LineTokenKind.KeywordShared:
+            case Token.LineTokenKind.KeywordThen:
+            case Token.LineTokenKind.KeywordTrue:
+            case Token.LineTokenKind.KeywordTry:
+            case Token.LineTokenKind.KeywordType:
+            case Token.LineTokenKind.LeftBrace:
+            case Token.LineTokenKind.LeftBracket:
+            case Token.LineTokenKind.LeftParenthesis:
+            case Token.LineTokenKind.LessThan:
+            case Token.LineTokenKind.LessThanEqualTo:
+            case Token.LineTokenKind.Minus:
+            case Token.LineTokenKind.NotEqual:
+            case Token.LineTokenKind.NullCoalescingOperator:
+            case Token.LineTokenKind.NullLiteral:
+            case Token.LineTokenKind.NumericLiteral:
+            case Token.LineTokenKind.Plus:
+            case Token.LineTokenKind.QuestionMark:
+            case Token.LineTokenKind.RightBrace:
+            case Token.LineTokenKind.RightBracket:
+            case Token.LineTokenKind.RightParenthesis:
+            case Token.LineTokenKind.Semicolon:
+            case Token.LineTokenKind.TextLiteral:
+            case Token.LineTokenKind.MultilineCommentContent:
+            case Token.LineTokenKind.MultilineCommentEnd:
+            case Token.LineTokenKind.TextLiteralContent:
+            case Token.LineTokenKind.TextLiteralEnd:
+            case Token.LineTokenKind.QuotedIdentifierContent:
+            case Token.LineTokenKind.QuotedIdentifierEnd:
+                {
+                    const positionStart: Token.TokenPosition = flatToken.positionStart;
+                    const positionEnd: Token.TokenPosition = flatToken.positionEnd;
 
-                tokens.push({
-                    kind: flatToken.kind as unknown as Token.TokenKind,
-                    data: flatToken.data,
-                    positionStart,
-                    positionEnd,
-                });
-            }
+                    tokens.push({
+                        kind: flatToken.kind as unknown as Token.TokenKind,
+                        data: flatToken.data,
+                        positionStart,
+                        positionEnd,
+                    });
+                }
+
+                break;
+
+            default:
+                throw Assert.isNever(lineTokenKind);
         }
 
         flatIndex += 1;

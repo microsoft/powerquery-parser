@@ -31,7 +31,10 @@ export enum SequenceKind {
 }
 
 export class ParseError extends Error {
-    constructor(readonly innerError: TInnerParseError, readonly state: ParseState) {
+    constructor(
+        readonly innerError: TInnerParseError,
+        readonly state: ParseState,
+    ) {
         super(innerError.message);
         Object.setPrototypeOf(this, ParseError.prototype);
     }
@@ -102,7 +105,10 @@ export class ExpectedTokenKindError extends Error {
 }
 
 export class ExpectedGeneralizedIdentifierError extends Error {
-    constructor(readonly foundToken: TokenWithColumnNumber | undefined, locale: string) {
+    constructor(
+        readonly foundToken: TokenWithColumnNumber | undefined,
+        locale: string,
+    ) {
         super(
             Localization.error_parse_expectGeneralizedIdentifier(
                 LocalizationUtils.getLocalizationTemplates(locale),
@@ -126,7 +132,11 @@ export class InvalidCatchFunctionError extends Error {
 }
 
 export class InvalidPrimitiveTypeError extends Error {
-    constructor(readonly token: Token.Token, readonly positionStart: StringUtils.GraphemePosition, locale: string) {
+    constructor(
+        readonly token: Token.Token,
+        readonly positionStart: StringUtils.GraphemePosition,
+        locale: string,
+    ) {
         super(Localization.error_parse_invalidPrimitiveType(LocalizationUtils.getLocalizationTemplates(locale), token));
         Object.setPrototypeOf(this, InvalidPrimitiveTypeError.prototype);
     }

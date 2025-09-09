@@ -424,9 +424,68 @@ export async function readExpression(
             expression = await DisambiguationUtils.readAmbiguousParenthesis(state, parser, trace.id);
             break;
 
-        default:
+        case TokenKind.Ampersand:
+        case TokenKind.Asterisk:
+        case TokenKind.AtSign:
+        case TokenKind.Bang:
+        case TokenKind.Comma:
+        case TokenKind.Division:
+        case TokenKind.DotDot:
+        case TokenKind.Ellipsis:
+        case TokenKind.Equal:
+        case TokenKind.FatArrow:
+        case TokenKind.GreaterThan:
+        case TokenKind.GreaterThanEqualTo:
+        case TokenKind.HexLiteral:
+        case TokenKind.Identifier:
+        case TokenKind.KeywordAnd:
+        case TokenKind.KeywordAs:
+        case TokenKind.KeywordElse:
+        case TokenKind.KeywordFalse:
+        case TokenKind.KeywordHashBinary:
+        case TokenKind.KeywordHashDate:
+        case TokenKind.KeywordHashDateTime:
+        case TokenKind.KeywordHashDateTimeZone:
+        case TokenKind.KeywordHashDuration:
+        case TokenKind.KeywordHashInfinity:
+        case TokenKind.KeywordHashNan:
+        case TokenKind.KeywordHashSections:
+        case TokenKind.KeywordHashShared:
+        case TokenKind.KeywordHashTable:
+        case TokenKind.KeywordHashTime:
+        case TokenKind.KeywordIn:
+        case TokenKind.KeywordIs:
+        case TokenKind.KeywordMeta:
+        case TokenKind.KeywordNot:
+        case TokenKind.KeywordOr:
+        case TokenKind.KeywordOtherwise:
+        case TokenKind.KeywordSection:
+        case TokenKind.KeywordShared:
+        case TokenKind.KeywordThen:
+        case TokenKind.KeywordTrue:
+        case TokenKind.KeywordType:
+        case TokenKind.LeftBrace:
+        case TokenKind.LeftBracket:
+        case TokenKind.LessThan:
+        case TokenKind.LessThanEqualTo:
+        case TokenKind.Minus:
+        case TokenKind.NotEqual:
+        case TokenKind.NullCoalescingOperator:
+        case TokenKind.NullLiteral:
+        case TokenKind.NumericLiteral:
+        case TokenKind.Plus:
+        case TokenKind.QuestionMark:
+        case TokenKind.RightBrace:
+        case TokenKind.RightBracket:
+        case TokenKind.RightParenthesis:
+        case TokenKind.Semicolon:
+        case TokenKind.TextLiteral:
+        case undefined:
             expression = await parser.readNullCoalescingExpression(state, parser, trace.id);
             break;
+
+        default:
+            throw Assert.isNever(state.currentTokenKind);
     }
 
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
@@ -867,8 +926,61 @@ export async function readPrimaryExpression(
                 primaryExpression = parser.readKeyword(state, parser, trace.id);
                 break;
 
-            default:
+            case TokenKind.Ampersand:
+            case TokenKind.Asterisk:
+            case TokenKind.AtSign:
+            case TokenKind.Bang:
+            case TokenKind.Comma:
+            case TokenKind.Division:
+            case TokenKind.DotDot:
+            case TokenKind.Equal:
+            case TokenKind.FatArrow:
+            case TokenKind.GreaterThan:
+            case TokenKind.GreaterThanEqualTo:
+            case TokenKind.HexLiteral:
+            case TokenKind.Identifier:
+            case TokenKind.KeywordAnd:
+            case TokenKind.KeywordAs:
+            case TokenKind.KeywordEach:
+            case TokenKind.KeywordElse:
+            case TokenKind.KeywordError:
+            case TokenKind.KeywordFalse:
+            case TokenKind.KeywordHashInfinity:
+            case TokenKind.KeywordHashNan:
+            case TokenKind.KeywordIf:
+            case TokenKind.KeywordIn:
+            case TokenKind.KeywordIs:
+            case TokenKind.KeywordLet:
+            case TokenKind.KeywordMeta:
+            case TokenKind.KeywordNot:
+            case TokenKind.KeywordOr:
+            case TokenKind.KeywordOtherwise:
+            case TokenKind.KeywordSection:
+            case TokenKind.KeywordShared:
+            case TokenKind.KeywordThen:
+            case TokenKind.KeywordTrue:
+            case TokenKind.KeywordTry:
+            case TokenKind.KeywordType:
+            case TokenKind.LessThan:
+            case TokenKind.LessThanEqualTo:
+            case TokenKind.Minus:
+            case TokenKind.NotEqual:
+            case TokenKind.NullCoalescingOperator:
+            case TokenKind.NullLiteral:
+            case TokenKind.NumericLiteral:
+            case TokenKind.Plus:
+            case TokenKind.QuestionMark:
+            case TokenKind.RightBrace:
+            case TokenKind.RightBracket:
+            case TokenKind.RightParenthesis:
+            case TokenKind.Semicolon:
+            case TokenKind.TextLiteral:
+            case undefined:
                 primaryExpression = parser.readLiteralExpression(state, parser, trace.id);
+                break;
+
+            default:
+                throw Assert.isNever(currentTokenKind);
         }
     }
 
@@ -3338,7 +3450,6 @@ async function genericReadParameterList<T extends Ast.TParameterType>(
             reachedOptionalParameter = true;
         }
 
-        // eslint-disable-next-line no-await-in-loop
         const name: Ast.Identifier = parser.readIdentifier(
             state,
             parser,

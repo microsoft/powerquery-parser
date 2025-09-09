@@ -742,6 +742,7 @@ function tokenizeMultilineCommentContentOrEnd(line: TLine, positionStart: number
 function tokenizeQuotedIdentifierContentOrEnd(line: TLine, currentPosition: number): LineModeAlteringRead {
     const read: LineModeAlteringRead = tokenizeTextLiteralContentOrEnd(line, currentPosition);
 
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (read.token.kind) {
         case Token.LineTokenKind.TextLiteralContent:
             return {

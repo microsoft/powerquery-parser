@@ -5,7 +5,6 @@ import { ArrayUtils, Assert } from ".";
 
 export class OrderedMap<K, V> implements Map<K, V> {
     public size: number;
-    public [Symbol.toStringTag]: string;
 
     private readonly map: Map<K, V>;
     private order: ReadonlyArray<K>;
@@ -27,6 +26,7 @@ export class OrderedMap<K, V> implements Map<K, V> {
             }
         }
     }
+    [Symbol.toStringTag]: string = "OrderedMap";
 
     public [Symbol.iterator](): IterableIterator<[K, V]> {
         return this.entries();

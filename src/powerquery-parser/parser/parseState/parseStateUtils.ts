@@ -145,7 +145,7 @@ export function incrementAttributeCounter(state: ParseState): void {
 // -------------------------
 
 export function isTokenKind(state: ParseState, tokenKind: Token.TokenKind, tokenIndex: number): boolean {
-    return state.lexerSnapshot.tokens[tokenIndex]?.kind === tokenKind ?? false;
+    return state.lexerSnapshot.tokens[tokenIndex]?.kind === tokenKind;
 }
 
 export function isNextTokenKind(state: ParseState, tokenKind: Token.TokenKind): boolean {
@@ -219,8 +219,40 @@ export function isOnGeneralizedIdentifierStart(state: ParseState, tokenIndex: nu
         case Token.TokenKind.KeywordType:
             return true;
 
-        default:
+        case Token.TokenKind.Ampersand:
+        case Token.TokenKind.Asterisk:
+        case Token.TokenKind.AtSign:
+        case Token.TokenKind.Bang:
+        case Token.TokenKind.Comma:
+        case Token.TokenKind.Division:
+        case Token.TokenKind.DotDot:
+        case Token.TokenKind.Ellipsis:
+        case Token.TokenKind.Equal:
+        case Token.TokenKind.FatArrow:
+        case Token.TokenKind.GreaterThan:
+        case Token.TokenKind.GreaterThanEqualTo:
+        case Token.TokenKind.HexLiteral:
+        case Token.TokenKind.LeftBrace:
+        case Token.TokenKind.LeftBracket:
+        case Token.TokenKind.LeftParenthesis:
+        case Token.TokenKind.LessThan:
+        case Token.TokenKind.LessThanEqualTo:
+        case Token.TokenKind.Minus:
+        case Token.TokenKind.NotEqual:
+        case Token.TokenKind.NullCoalescingOperator:
+        case Token.TokenKind.NullLiteral:
+        case Token.TokenKind.NumericLiteral:
+        case Token.TokenKind.Plus:
+        case Token.TokenKind.QuestionMark:
+        case Token.TokenKind.RightBrace:
+        case Token.TokenKind.RightBracket:
+        case Token.TokenKind.RightParenthesis:
+        case Token.TokenKind.Semicolon:
+        case Token.TokenKind.TextLiteral:
             return false;
+
+        default:
+            throw Assert.isNever(tokenKind);
     }
 }
 

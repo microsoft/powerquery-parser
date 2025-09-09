@@ -45,9 +45,7 @@ export type TLiteralKind =
 export type TAny = Any | AnyUnion;
 export type TList = List | DefinedList;
 export type TLogical = Logical | LogicalLiteral;
-// eslint-disable-next-line @typescript-eslint/ban-types
 export type TFunction = Function | DefinedFunction;
-// eslint-disable-next-line @typescript-eslint/ban-types
 export type TNumber = Number | NumberLiteral;
 export type TRecord = Record | DefinedRecord;
 export type TTable = Table | DefinedTable;
@@ -93,14 +91,12 @@ export type TPrimitiveType =
     | DateTime
     | DateTimeZone
     | Duration
-    // eslint-disable-next-line @typescript-eslint/ban-types
     | Function
     | List
     | Logical
     | None
     | NotApplicable
     | Null
-    // eslint-disable-next-line @typescript-eslint/ban-types
     | Number
     | Record
     | Table

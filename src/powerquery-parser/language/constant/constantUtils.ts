@@ -3,67 +3,88 @@ import { Constant } from ".";
 import { TokenKind } from "../token";
 
 export function unaryOperatorKindFrom(tokenKind: TokenKind | undefined): Constant.UnaryOperator | undefined {
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (tokenKind) {
         case TokenKind.Plus:
             return Constant.UnaryOperator.Positive;
+
         case TokenKind.Minus:
             return Constant.UnaryOperator.Negative;
+
         case TokenKind.KeywordNot:
             return Constant.UnaryOperator.Not;
+
         default:
             return undefined;
     }
 }
 
 export function arithmeticOperatorKindFrom(tokenKind: TokenKind | undefined): Constant.ArithmeticOperator | undefined {
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (tokenKind) {
         case TokenKind.Asterisk:
             return Constant.ArithmeticOperator.Multiplication;
+
         case TokenKind.Division:
             return Constant.ArithmeticOperator.Division;
+
         case TokenKind.Plus:
             return Constant.ArithmeticOperator.Addition;
+
         case TokenKind.Minus:
             return Constant.ArithmeticOperator.Subtraction;
+
         case TokenKind.Ampersand:
             return Constant.ArithmeticOperator.And;
+
         default:
             return undefined;
     }
 }
 
 export function equalityOperatorKindFrom(tokenKind: TokenKind | undefined): Constant.EqualityOperator | undefined {
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (tokenKind) {
         case TokenKind.Equal:
             return Constant.EqualityOperator.EqualTo;
+
         case TokenKind.NotEqual:
             return Constant.EqualityOperator.NotEqualTo;
+
         default:
             return undefined;
     }
 }
 
 export function logicalOperatorKindFrom(tokenKind: TokenKind | undefined): Constant.LogicalOperator | undefined {
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (tokenKind) {
         case TokenKind.KeywordAnd:
             return Constant.LogicalOperator.And;
+
         case TokenKind.KeywordOr:
             return Constant.LogicalOperator.Or;
+
         default:
             return undefined;
     }
 }
 
 export function relationalOperatorKindFrom(tokenKind: TokenKind | undefined): Constant.RelationalOperator | undefined {
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (tokenKind) {
         case TokenKind.LessThan:
             return Constant.RelationalOperator.LessThan;
+
         case TokenKind.LessThanEqualTo:
             return Constant.RelationalOperator.LessThanEqualTo;
+
         case TokenKind.GreaterThan:
             return Constant.RelationalOperator.GreaterThan;
+
         case TokenKind.GreaterThanEqualTo:
             return Constant.RelationalOperator.GreaterThanEqualTo;
+
         default:
             return undefined;
     }
@@ -72,6 +93,7 @@ export function relationalOperatorKindFrom(tokenKind: TokenKind | undefined): Co
 export function binOpExpressionOperatorKindFrom(
     tokenKind: TokenKind | undefined,
 ): Constant.TBinOpExpressionOperator | undefined {
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (tokenKind) {
         // ArithmeticOperator
         case TokenKind.Asterisk:
