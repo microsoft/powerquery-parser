@@ -44,13 +44,14 @@ class MockDocument2 {
 // TODO: Replace with MockDocument2 to use built-in incremental updates
 class MockDocument {
     public readonly tokenizer: Tokenizer = new Tokenizer("\n");
+    public lines: string[];
+    public lineEndStates: IState[];
+    public lineTokens: IToken[][];
 
-    constructor(
-        initialText: string,
-        public lines: string[] = initialText.split("\n"),
-        public lineEndStates: IState[] = [],
-        public lineTokens: IToken[][] = [],
-    ) {
+    constructor(initialText: string, lines?: string[], lineEndStates?: IState[], lineTokens?: IToken[][]) {
+        this.lines = lines ?? initialText.split("\n");
+        this.lineEndStates = lineEndStates ?? [];
+        this.lineTokens = lineTokens ?? [];
         this.startTokenize(0);
     }
 
