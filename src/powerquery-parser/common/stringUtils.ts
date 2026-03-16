@@ -51,6 +51,16 @@ export function ensureQuoted(text: string): string {
 export function columnNumberFrom(text: string, requiredCodeUnit: number): number {
     const graphemes: ReadonlyArray<string> = graphemeSplitter.splitGraphemes(text);
 
+    return columnNumberFromGraphemes(graphemes, text, requiredCodeUnit);
+}
+
+// Variant that accepts pre-split graphemes, allowing callers to cache the expensive splitGraphemes
+// result across multiple calls for the same line text.
+export function columnNumberFromGraphemes(
+    graphemes: ReadonlyArray<string>,
+    text: string,
+    requiredCodeUnit: number,
+): number {
     let columnNumber: number = 0;
     let summedCodeUnits: number = 0;
 
