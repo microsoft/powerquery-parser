@@ -21,6 +21,15 @@ export class LexerSnapshot {
     public readonly tokens: ReadonlyArray<Token.Token>;
     public readonly comments: ReadonlyArray<Comment.TComment>;
     public readonly lineTerminators: ReadonlyArray<LineTerminator>;
+    // Caches grapheme split results per line to avoid redundant O(n) grapheme splitting.
+    // The parser may call graphemePositionStartFrom hundreds of times on the same line
+    // (e.g., for speculative error creation during tryReadPrimitiveType), and grapheme
+    // splitting is expensive for long lines with multi-byte characters.
+    // Keyed by line start position (substringPositionStart) since all single-line tokens
+    // on the same line share the same line boundaries. For multi-line tokens, only the
+    // starting line's graphemes matter for column number computation (lineCodeUnit is
+    // always within the starting line, and line terminators are grapheme boundaries).
+    private readonly lineGraphemeCache: Map<number, CachedLineGraphemes> = new Map();
 
     constructor(
         text: string,
@@ -39,33 +48,41 @@ export class LexerSnapshot {
         lineTerminators: ReadonlyArray<LineTerminator>,
         flatLineToken: Token.Token | FlatLineToken,
     ): StringUtils.GraphemePosition {
-        const positionStart: Token.TokenPosition = flatLineToken.positionStart;
-        const positionEnd: Token.TokenPosition = flatLineToken.positionEnd;
-
-        let substringPositionStart: number = 0;
-        let substringPositionEnd: number = text.length;
-
-        for (const lineTerminator of lineTerminators) {
-            if (lineTerminator.codeUnit < positionStart.codeUnit) {
-                substringPositionStart = lineTerminator.codeUnit + lineTerminator.text.length;
-            }
-
-            if (lineTerminator.codeUnit >= positionEnd.codeUnit) {
-                substringPositionEnd = lineTerminator.codeUnit + lineTerminator.text.length;
-                break;
-            }
-        }
+        const lineBounds: LineBounds = findLineBounds(text, lineTerminators, flatLineToken);
 
         return StringUtils.graphemePositionFrom(
-            text.substring(substringPositionStart, substringPositionEnd),
-            positionStart.lineCodeUnit,
-            positionStart.lineNumber,
-            positionEnd.codeUnit,
+            text.substring(lineBounds.substringPositionStart, lineBounds.substringPositionEnd),
+            flatLineToken.positionStart.lineCodeUnit,
+            flatLineToken.positionStart.lineNumber,
+            flatLineToken.positionEnd.codeUnit,
         );
     }
 
     public graphemePositionStartFrom(token: Token.Token): StringUtils.GraphemePosition {
-        return LexerSnapshot.graphemePositionStartFrom(this.text, this.lineTerminators, token);
+        const lineBounds: LineBounds = findLineBounds(this.text, this.lineTerminators, token);
+        let cached: CachedLineGraphemes | undefined = this.lineGraphemeCache.get(lineBounds.substringPositionStart);
+
+        if (cached === undefined) {
+            const lineText: string = this.text.substring(
+                lineBounds.substringPositionStart,
+                lineBounds.substringPositionEnd,
+            );
+
+            const graphemes: ReadonlyArray<string> = StringUtils.graphemeSplitter.splitGraphemes(lineText);
+            cached = { lineText, graphemes };
+            this.lineGraphemeCache.set(lineBounds.substringPositionStart, cached);
+        }
+
+        return {
+            lineCodeUnit: token.positionStart.lineCodeUnit,
+            lineNumber: token.positionStart.lineNumber,
+            columnNumber: StringUtils.columnNumberFromGraphemes(
+                cached.graphemes,
+                cached.lineText,
+                token.positionStart.lineCodeUnit,
+            ),
+            codeUnit: token.positionEnd.codeUnit,
+        };
     }
 
     public columnNumberStartFrom(token: Token.Token): number {
@@ -520,4 +537,42 @@ interface LineTerminator {
 
 interface FlatLineToken extends Token.IToken<Token.LineTokenKind, Token.TokenPosition> {
     readonly flatIndex: number;
+}
+
+interface CachedLineGraphemes {
+    readonly lineText: string;
+    readonly graphemes: ReadonlyArray<string>;
+}
+
+interface LineBounds {
+    readonly substringPositionStart: number;
+    readonly substringPositionEnd: number;
+}
+
+// Finds the line boundaries for a token by scanning lineTerminators.
+// substringPositionStart: first character of the line containing positionStart.
+// substringPositionEnd: end of the line terminator at or after positionEnd (or text.length for the last line).
+function findLineBounds(
+    text: string,
+    lineTerminators: ReadonlyArray<LineTerminator>,
+    token: Token.Token | FlatLineToken,
+): LineBounds {
+    const positionStart: Token.TokenPosition = token.positionStart;
+    const positionEnd: Token.TokenPosition = token.positionEnd;
+
+    let substringPositionStart: number = 0;
+    let substringPositionEnd: number = text.length;
+
+    for (const lineTerminator of lineTerminators) {
+        if (lineTerminator.codeUnit < positionStart.codeUnit) {
+            substringPositionStart = lineTerminator.codeUnit + lineTerminator.text.length;
+        }
+
+        if (lineTerminator.codeUnit >= positionEnd.codeUnit) {
+            substringPositionEnd = lineTerminator.codeUnit + lineTerminator.text.length;
+            break;
+        }
+    }
+
+    return { substringPositionStart, substringPositionEnd };
 }
