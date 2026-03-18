@@ -1,5 +1,4 @@
 {
     "require": ["ts-node/register"],
-    "extensions": ["ts"],
-    "node-option": ["no-experimental-strip-types"]
+    "extensions": ["ts"]
 }

@@ -8,8 +8,11 @@ import { ICancellationToken } from "./cancellationToken/ICancellationToken";
 export type TInnerCommonError = CancellationError | InvariantError | UnknownError;
 
 export class CommonError extends Error {
-    constructor(readonly innerError: TInnerCommonError) {
+    readonly innerError: TInnerCommonError;
+
+    constructor(innerError: TInnerCommonError) {
         super(innerError.message);
+        this.innerError = innerError;
         Object.setPrototypeOf(this, CommonError.prototype);
     }
 }

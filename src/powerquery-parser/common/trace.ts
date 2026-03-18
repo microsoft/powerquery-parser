@@ -54,15 +54,25 @@ export enum TraceConstant {
 
 export class Trace {
     public readonly timeCreated: number = performanceNow();
+    protected readonly emitter: (trace: Trace, message: string, details?: object) => void;
+    public readonly phase: string;
+    public readonly task: string;
+    public readonly id: number;
+    public readonly correlationId: number | undefined;
 
     constructor(
-        protected readonly emitter: (trace: Trace, message: string, details?: object) => void,
-        public readonly phase: string,
-        public readonly task: string,
-        public readonly id: number,
-        public readonly correlationId: number | undefined,
+        emitter: (trace: Trace, message: string, details?: object) => void,
+        phase: string,
+        task: string,
+        id: number,
+        correlationId: number | undefined,
         details?: object,
     ) {
+        this.emitter = emitter;
+        this.phase = phase;
+        this.task = task;
+        this.id = id;
+        this.correlationId = correlationId;
         this.entry(details);
     }
 
@@ -111,11 +121,13 @@ export const NoOpTraceInstance: NoOpTrace = new NoOpTrace(
 
 export abstract class TraceManager {
     protected readonly idFactory: () => number = createAutoIncrementIdFactory();
+    protected readonly valueDelimiter: string;
+    protected readonly newline: "\n" | "\r\n";
 
-    constructor(
-        protected readonly valueDelimiter: string = ",",
-        protected readonly newline: "\n" | "\r\n" = "\r\n",
-    ) {}
+    constructor(valueDelimiter: string = ",", newline: "\n" | "\r\n" = "\r\n") {
+        this.valueDelimiter = valueDelimiter;
+        this.newline = newline;
+    }
 
     abstract emit(trace: Trace, message: string, details?: object): void;
 
@@ -166,11 +178,11 @@ export abstract class TraceManager {
 
 // Each trace entry gets passed to a callback function.
 export class ReportTraceManager extends TraceManager {
-    constructor(
-        private readonly emitter: (message: string) => void,
-        valueDelimiter: string = "\t",
-    ) {
+    private readonly emitter: (message: string) => void;
+
+    constructor(emitter: (message: string) => void, valueDelimiter: string = "\t") {
         super(valueDelimiter);
+        this.emitter = emitter;
     }
 
     emit(trace: Trace, message: string, details?: object): void {

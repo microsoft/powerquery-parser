@@ -5,11 +5,13 @@
 export class ImmutableSet<T> {
     public readonly size: number;
     private internalCollection: ReadonlyArray<T>;
+    private readonly comparer: (left: T, right: T) => boolean;
 
     public constructor(
         iterable: Iterable<T> = [],
-        private readonly comparer: (left: T, right: T) => boolean = (left: T, right: T): boolean => left === right,
+        comparer: (left: T, right: T) => boolean = (left: T, right: T): boolean => left === right,
     ) {
+        this.comparer = comparer;
         this.internalCollection = [...iterable];
         this.size = this.internalCollection.length;
     }

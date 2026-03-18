@@ -17,12 +17,22 @@ import { LexError } from ".";
 export type TriedLexerSnapshot = Result<LexerSnapshot, LexError.TLexError>;
 
 export class LexerSnapshot {
+    public readonly text: string;
+    public readonly tokens: ReadonlyArray<Token.Token>;
+    public readonly comments: ReadonlyArray<Comment.TComment>;
+    public readonly lineTerminators: ReadonlyArray<LineTerminator>;
+
     constructor(
-        public readonly text: string,
-        public readonly tokens: ReadonlyArray<Token.Token>,
-        public readonly comments: ReadonlyArray<Comment.TComment>,
-        public readonly lineTerminators: ReadonlyArray<LineTerminator>,
-    ) {}
+        text: string,
+        tokens: ReadonlyArray<Token.Token>,
+        comments: ReadonlyArray<Comment.TComment>,
+        lineTerminators: ReadonlyArray<LineTerminator>,
+    ) {
+        this.text = text;
+        this.tokens = tokens;
+        this.comments = comments;
+        this.lineTerminators = lineTerminators;
+    }
 
     public static graphemePositionStartFrom(
         text: string,

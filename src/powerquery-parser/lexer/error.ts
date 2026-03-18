@@ -48,8 +48,11 @@ export enum UnterminatedMultilineTokenKind {
 }
 
 export class LexError extends Error {
-    constructor(readonly innerError: TInnerLexError) {
+    readonly innerError: TInnerLexError;
+
+    constructor(innerError: TInnerLexError) {
         super(innerError.message);
+        this.innerError = innerError;
         Object.setPrototypeOf(this, LexError);
     }
 }
