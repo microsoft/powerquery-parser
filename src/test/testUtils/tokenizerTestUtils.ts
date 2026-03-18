@@ -5,7 +5,11 @@ import { DefaultLocale, Language, ResultUtils } from "../../powerquery-parser";
 import { Lexer } from "../..";
 
 export class Tokenizer implements TokensProvider {
-    constructor(private readonly lineTerminator: string) {}
+    private readonly lineTerminator: string;
+
+    constructor(lineTerminator: string) {
+        this.lineTerminator = lineTerminator;
+    }
 
     // tslint:disable-next-line: function-name
     public static ITokenFrom(lineToken: Language.Token.LineToken): IToken {
@@ -51,7 +55,11 @@ export class Tokenizer implements TokensProvider {
 }
 
 export class TokenizerState implements IState {
-    constructor(public readonly lexerState: Lexer.State) {}
+    public readonly lexerState: Lexer.State;
+
+    constructor(lexerState: Lexer.State) {
+        this.lexerState = lexerState;
+    }
 
     public clone(): IState {
         return new TokenizerState(this.lexerState);

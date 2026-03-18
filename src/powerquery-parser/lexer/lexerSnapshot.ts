@@ -17,6 +17,10 @@ import { LexError } from ".";
 export type TriedLexerSnapshot = Result<LexerSnapshot, LexError.TLexError>;
 
 export class LexerSnapshot {
+    public readonly text: string;
+    public readonly tokens: ReadonlyArray<Token.Token>;
+    public readonly comments: ReadonlyArray<Comment.TComment>;
+    public readonly lineTerminators: ReadonlyArray<LineTerminator>;
     // Caches grapheme split results per line to avoid redundant O(n) grapheme splitting.
     // The parser may call graphemePositionStartFrom hundreds of times on the same line
     // (e.g., for speculative error creation during tryReadPrimitiveType), and grapheme
@@ -28,11 +32,16 @@ export class LexerSnapshot {
     private readonly lineGraphemeCache: Map<number, CachedLineGraphemes> = new Map();
 
     constructor(
-        public readonly text: string,
-        public readonly tokens: ReadonlyArray<Token.Token>,
-        public readonly comments: ReadonlyArray<Comment.TComment>,
-        public readonly lineTerminators: ReadonlyArray<LineTerminator>,
-    ) {}
+        text: string,
+        tokens: ReadonlyArray<Token.Token>,
+        comments: ReadonlyArray<Comment.TComment>,
+        lineTerminators: ReadonlyArray<LineTerminator>,
+    ) {
+        this.text = text;
+        this.tokens = tokens;
+        this.comments = comments;
+        this.lineTerminators = lineTerminators;
+    }
 
     public static graphemePositionStartFrom(
         text: string,

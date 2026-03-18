@@ -7,11 +7,13 @@ import { ICancellationToken } from "./ICancellationToken";
 // Cancelled after X calls are made to isCancelled.
 // Not really useful other than as an example of how to create your own cancellation token.
 export class CounterCancellationToken implements ICancellationToken {
+    private readonly cancellationThreshold: number;
     private cancelReason: string | undefined;
     private counter: number;
     private wasForceCancelled: boolean;
 
-    constructor(private readonly cancellationThreshold: number) {
+    constructor(cancellationThreshold: number) {
+        this.cancellationThreshold = cancellationThreshold;
         this.wasForceCancelled = false;
         this.counter = 0;
     }
@@ -39,11 +41,13 @@ export class CounterCancellationToken implements ICancellationToken {
 
 // Cancelled after X milliseconds.
 export class TimedCancellationToken implements ICancellationToken {
+    private readonly milliseconds: number;
     private readonly threshold: number;
     private cancelReason: string | undefined;
     private wasForceCancelled: boolean;
 
-    constructor(private readonly milliseconds: number) {
+    constructor(milliseconds: number) {
+        this.milliseconds = milliseconds;
         this.threshold = Date.now() + milliseconds;
         this.wasForceCancelled = false;
     }
