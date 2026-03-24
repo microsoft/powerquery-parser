@@ -4,10 +4,15 @@
 import { TokenPosition } from "./token";
 
 export type TComment = LineComment | MultilineComment;
+export type TDirective = TypeDirective;
 
 export enum CommentKind {
     Line = "Line",
     Multiline = "Multiline",
+}
+
+export enum DirectiveKind {
+    Type = "Type",
 }
 
 export interface IComment {
@@ -25,3 +30,11 @@ export interface LineComment extends IComment {
 export interface MultilineComment extends IComment {
     readonly kind: CommentKind.Multiline;
 }
+
+export interface IDirective<Kind extends DirectiveKind> {
+    readonly kind: Kind;
+    readonly value: string;
+    readonly comment: LineComment;
+}
+
+export interface TypeDirective extends IDirective<DirectiveKind.Type> {}

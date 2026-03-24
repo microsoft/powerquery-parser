@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
-import { Ast, AstUtils, Constant, ConstantUtils, IdentifierUtils, Token } from "../../language";
+import { Ast, AstUtils, Comment, Constant, ConstantUtils, IdentifierUtils, Token } from "../../language";
 import { Disambiguation, DisambiguationUtils } from "../disambiguation";
 import { NaiveParseSteps, ParseError } from "..";
 import { Parser, ParseStateCheckpoint } from "../parser";
@@ -36,6 +36,68 @@ interface WrappedRead<
     Close extends Constant.WrapperConstant,
 > extends Ast.IWrapped<Kind, Open, Content, Close> {
     readonly optionalConstant: Ast.IConstant<Constant.MiscConstant.QuestionMark> | undefined;
+}
+
+const TypeDirectiveLineCommentRegex: RegExp = /^\/\/\/\s*@type\s+(.+?)\s*$/;
+
+function getPrecedingDirectives(
+    state: ParseState,
+    positionStart: Token.TokenPosition,
+): ReadonlyArray<Comment.TDirective> | undefined {
+    if (!state.isTypeDirectiveAllowed) {
+        return undefined;
+    }
+
+    const directives: Comment.TDirective[] = [];
+    let expectedLineNumber: number = positionStart.lineNumber - 1;
+
+    for (let index: number = state.lexerSnapshot.comments.length - 1; index >= 0; index -= 1) {
+        const comment: Comment.TComment = state.lexerSnapshot.comments[index];
+
+        if (comment.positionEnd.codeUnit > positionStart.codeUnit) {
+            continue;
+        }
+
+        if (comment.kind !== Comment.CommentKind.Line) {
+            break;
+        }
+
+        const commentLineNumber: number = comment.positionStart.lineNumber;
+
+        if (commentLineNumber !== expectedLineNumber) {
+            if (commentLineNumber < expectedLineNumber) {
+                break;
+            }
+
+            continue;
+        }
+
+        const directive: Comment.TypeDirective | undefined = tryParseTypeDirective(comment);
+
+        if (directive === undefined) {
+            break;
+        }
+
+        directives.unshift(directive);
+        expectedLineNumber = commentLineNumber - 1;
+    }
+
+    return directives.length === 0 ? undefined : directives;
+}
+
+function tryParseTypeDirective(comment: Comment.LineComment): Comment.TypeDirective | undefined {
+    const matches: RegExpMatchArray | null = comment.data.match(TypeDirectiveLineCommentRegex);
+    const value: string | undefined = matches?.[1]?.trim();
+
+    if (!value) {
+        return undefined;
+    }
+
+    return {
+        kind: Comment.DirectiveKind.Type,
+        value,
+        comment,
+    };
 }
 
 const GeneralizedIdentifierTerminatorTokenKinds: ReadonlyArray<TokenKind> = [
@@ -315,6 +377,10 @@ export async function readSectionMember(
     state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
+    const precedingDirectives: ReadonlyArray<Comment.TDirective> | undefined = state.currentToken
+        ? getPrecedingDirectives(state, state.currentToken.positionStart)
+        : undefined;
+
     const literalAttributes: Ast.RecordLiteral | undefined = await readLiteralAttributes(state, parser, trace.id);
 
     const sharedConstant: Ast.IConstant<Constant.KeywordConstant.Shared> | undefined =
@@ -337,6 +403,7 @@ export async function readSectionMember(
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: false,
+        precedingDirectives,
         literalAttributes,
         sharedConstant,
         namePairedExpression,
@@ -3281,6 +3348,10 @@ async function readKeyValuePair<KVP extends Ast.TKeyValuePair>(
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
+    const precedingDirectives: ReadonlyArray<Comment.TDirective> | undefined = state.currentToken
+        ? getPrecedingDirectives(state, state.currentToken.positionStart)
+        : undefined;
+
     const key: KVP["key"] = await keyReader();
 
     const equalConstant: Ast.IConstant<Constant.MiscConstant.Equal> = readTokenKindAsConstant(
@@ -3296,6 +3367,7 @@ async function readKeyValuePair<KVP extends Ast.TKeyValuePair>(
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: false,
+        precedingDirectives,
         key,
         equalConstant,
         value,

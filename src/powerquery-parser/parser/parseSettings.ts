@@ -9,6 +9,7 @@ import { Parser } from "./parser";
 import { ParseState } from "./parseState";
 
 export interface ParseSettings extends CommonSettings {
+    readonly isTypeDirectiveAllowed: boolean;
     readonly parseBehavior: ParseBehavior;
     readonly parser: Parser;
     readonly newParseState: (lexerSnapshot: LexerSnapshot, overrides?: Partial<ParseState>) => ParseState;
