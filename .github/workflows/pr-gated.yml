@@ -22,24 +22,24 @@ jobs:
 
                   if ($LASTEXITCODE -eq 0) {
                       Write-Host "npm audit found no vulnerabilities."
-                      exit 0
+                  } else {
+                      try {
+                          $audit = $auditOutput | ConvertFrom-Json
+                          $vulnerabilities = $audit.metadata.vulnerabilities
+                          $summary = @(
+                              "total=$($vulnerabilities.total)"
+                              "critical=$($vulnerabilities.critical)"
+                              "high=$($vulnerabilities.high)"
+                              "moderate=$($vulnerabilities.moderate)"
+                              "low=$($vulnerabilities.low)"
+                          ) -join ", "
+
+                          Write-Host "::warning title=npm audit::$summary"
+                      } catch {
+                          Write-Host "::warning title=npm audit::npm audit reported vulnerabilities. See the step log for details."
+                      }
+
+                      Write-Host $auditOutput
                   }
-
-                  try {
-                      $audit = $auditOutput | ConvertFrom-Json
-                      $vulnerabilities = $audit.metadata.vulnerabilities
-                      $summary = @(
-                          "critical=$($vulnerabilities.critical)"
-                          "high=$($vulnerabilities.high)"
-                          "moderate=$($vulnerabilities.moderate)"
-                          "low=$($vulnerabilities.low)"
-                      ) -join ", "
-
-                      Write-Host "::warning title=npm audit::$summary"
-                  } catch {
-                      Write-Host "::warning title=npm audit::npm audit reported vulnerabilities. See the step log for details."
-                  }
-
-                  Write-Host $auditOutput
             - run: npm run build
             - run: npm run test
