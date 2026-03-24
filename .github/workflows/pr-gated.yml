@@ -19,6 +19,7 @@ jobs:
               shell: bash
               run: |
                   audit_output_path="$(mktemp)"
+                  trap 'rm -f "$audit_output_path"' EXIT
 
                   if npm audit --json >"$audit_output_path"; then
                       echo "npm audit found no vulnerabilities."
