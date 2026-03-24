@@ -31,8 +31,6 @@ jobs:
                       else
                           echo "::warning title=npm audit::npm audit reported vulnerabilities, but the JSON summary could not be parsed."
                       fi
-
-                      cat "$audit_output_path"
                   fi
             - run: npm run build
             - run: npm run test
