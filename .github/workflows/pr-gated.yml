@@ -16,31 +16,22 @@ jobs:
             - run: node -v
             - run: npm ci
             - name: npm audit
-              shell: pwsh
+              shell: bash
               run: |
-                  $auditOutput = npm audit --json | Out-String
-                  $auditExitCode = $LASTEXITCODE
+                  audit_output_path="$(mktemp)"
 
-                  if ($auditExitCode -eq 0) {
-                      Write-Host "npm audit found no vulnerabilities."
-                  } else {
-                      try {
-                          $audit = $auditOutput | ConvertFrom-Json
-                          $vulnerabilities = $audit.metadata.vulnerabilities
-                          $summary = @(
-                              "total=$($vulnerabilities.total)"
-                              "critical=$($vulnerabilities.critical)"
-                              "high=$($vulnerabilities.high)"
-                              "moderate=$($vulnerabilities.moderate)"
-                              "low=$($vulnerabilities.low)"
-                          ) -join ", "
+                  if npm audit --json >"$audit_output_path"; then
+                      echo "npm audit found no vulnerabilities."
+                  else
+                      summary="$(node -e 'const fs=require(\"fs\"); const audit=JSON.parse(fs.readFileSync(process.argv[1], \"utf8\")); const v=audit.metadata?.vulnerabilities ?? {}; console.log([\"total\", \"critical\", \"high\", \"moderate\", \"low\"].map(key => `${key}=${v[key] ?? 0}`).join(\", \"));' "$audit_output_path" 2>/dev/null || true)"
 
-                          Write-Host "::warning title=npm audit::$summary"
-                      } catch {
-                          Write-Host "::warning title=npm audit::npm audit reported vulnerabilities, but the JSON summary could not be parsed: $($_.Exception.Message)"
-                      }
+                      if [ -n "$summary" ]; then
+                          echo "::warning title=npm audit::$summary"
+                      else
+                          echo "::warning title=npm audit::npm audit reported vulnerabilities, but the JSON summary could not be parsed."
+                      fi
 
-                      Write-Host $auditOutput
-                  }
+                      cat "$audit_output_path"
+                  fi
             - run: npm run build
             - run: npm run test
