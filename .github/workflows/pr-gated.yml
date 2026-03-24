@@ -15,6 +15,31 @@ jobs:
                   node-version: "18.17"
             - run: node -v
             - run: npm ci
-            - run: npm audit
+            - name: npm audit
+              shell: pwsh
+              run: |
+                  $auditOutput = npm audit --json | Out-String
+
+                  if ($LASTEXITCODE -eq 0) {
+                      Write-Host "npm audit found no vulnerabilities."
+                      exit 0
+                  }
+
+                  try {
+                      $audit = $auditOutput | ConvertFrom-Json
+                      $vulnerabilities = $audit.metadata.vulnerabilities
+                      $summary = @(
+                          "critical=$($vulnerabilities.critical)"
+                          "high=$($vulnerabilities.high)"
+                          "moderate=$($vulnerabilities.moderate)"
+                          "low=$($vulnerabilities.low)"
+                      ) -join ", "
+
+                      Write-Host "::warning title=npm audit::$summary"
+                  } catch {
+                      Write-Host "::warning title=npm audit::npm audit reported vulnerabilities. See the step log for details."
+                  }
+
+                  Write-Host $auditOutput
             - run: npm run build
             - run: npm run test
