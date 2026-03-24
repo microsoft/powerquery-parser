@@ -15,24 +15,7 @@ jobs:
                   node-version: "18.17"
             - run: node -v
             - run: npm ci
-            - name: npm audit
-              shell: bash
-              run: |
-                  audit_output_path="$(mktemp)"
-                  trap 'rm -f "$audit_output_path"' EXIT
-
-                  if npm audit --json >"$audit_output_path"; then
-                      echo "npm audit found no vulnerabilities."
-                  else
-                      if ! summary="$(node -e 'const fs=require(\"fs\"); const audit=JSON.parse(fs.readFileSync(process.argv[1], \"utf8\")); const v=audit.metadata?.vulnerabilities ?? {}; console.log([\"total\", \"critical\", \"high\", \"moderate\", \"low\"].map(key => `${key}=${v[key] ?? 0}`).join(\", \"));' "$audit_output_path" 2>/dev/null)"; then
-                          summary=""
-                      fi
-
-                      if [ -n "$summary" ]; then
-                          echo "::warning title=npm audit::$summary"
-                      else
-                          echo "::warning title=npm audit::npm audit reported vulnerabilities, but the JSON summary could not be parsed."
-                      fi
-                  fi
+            - run: npm audit
+              continue-on-error: true
             - run: npm run build
             - run: npm run test
