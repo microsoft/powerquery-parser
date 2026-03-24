@@ -19,8 +19,9 @@ jobs:
               shell: pwsh
               run: |
                   $auditOutput = npm audit --json | Out-String
+                  $auditExitCode = $LASTEXITCODE
 
-                  if ($LASTEXITCODE -eq 0) {
+                  if ($auditExitCode -eq 0) {
                       Write-Host "npm audit found no vulnerabilities."
                   } else {
                       try {
@@ -36,7 +37,7 @@ jobs:
 
                           Write-Host "::warning title=npm audit::$summary"
                       } catch {
-                          Write-Host "::warning title=npm audit::npm audit reported vulnerabilities. See the step log for details."
+                          Write-Host "::warning title=npm audit::npm audit reported vulnerabilities, but the JSON summary could not be parsed: $($_.Exception.Message)"
                       }
 
                       Write-Host $auditOutput
