@@ -4,12 +4,14 @@
 import "mocha";
 import { expect } from "chai";
 
-import { DefaultSettings, Language } from "../../../powerquery-parser";
 import * as AssertTestUtils from "../../testUtils/assertTestUtils";
+import { DefaultSettings, Language } from "../../../powerquery-parser";
+
+type ParseOk = Awaited<ReturnType<typeof AssertTestUtils.assertGetLexParseOk>>;
 
 describe("Type directives", () => {
     it("are disabled by default for let bindings", async () => {
-        const parseOk = await AssertTestUtils.assertGetLexParseOk(
+        const parseOk: ParseOk = await AssertTestUtils.assertGetLexParseOk(
             DefaultSettings,
             `let
     /// @type [ Foo = text ]
@@ -25,7 +27,7 @@ in
     });
 
     it("attach to let bindings when explicitly enabled", async () => {
-        const parseOk = await AssertTestUtils.assertGetLexParseOk(
+        const parseOk: ParseOk = await AssertTestUtils.assertGetLexParseOk(
             {
                 ...DefaultSettings,
                 isTypeDirectiveAllowed: true,
@@ -41,13 +43,14 @@ in
         const variable: Language.Ast.IdentifierPairedExpression = letExpression.variableList.elements[0].node;
 
         expect(variable.precedingDirectives).to.not.equal(undefined);
+
         expect(
             variable.precedingDirectives?.map((directive: Language.Comment.TDirective) => directive.value),
         ).to.deep.equal(["[ Foo = text ]"]);
     });
 
     it("attach to section members before shared", async () => {
-        const parseOk = await AssertTestUtils.assertGetLexParseOk(
+        const parseOk: ParseOk = await AssertTestUtils.assertGetLexParseOk(
             {
                 ...DefaultSettings,
                 isTypeDirectiveAllowed: true,
@@ -66,7 +69,7 @@ shared Value = [];`,
     });
 
     it("do not attach when a non-directive comment is closer than the directive", async () => {
-        const parseOk = await AssertTestUtils.assertGetLexParseOk(
+        const parseOk: ParseOk = await AssertTestUtils.assertGetLexParseOk(
             {
                 ...DefaultSettings,
                 isTypeDirectiveAllowed: true,
