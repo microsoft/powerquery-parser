@@ -24,7 +24,11 @@ jobs:
                   if npm audit --json >"$audit_output_path"; then
                       echo "npm audit found no vulnerabilities."
                   else
-                      summary="$(node -e 'const fs=require(\"fs\"); const audit=JSON.parse(fs.readFileSync(process.argv[1], \"utf8\")); const v=audit.metadata?.vulnerabilities ?? {}; console.log([\"total\", \"critical\", \"high\", \"moderate\", \"low\"].map(key => `${key}=${v[key] ?? 0}`).join(\", \"));' "$audit_output_path" 2>/dev/null || true)"
+                      if summary="$(node -e 'const fs=require(\"fs\"); const audit=JSON.parse(fs.readFileSync(process.argv[1], \"utf8\")); const v=audit.metadata?.vulnerabilities ?? {}; console.log([\"total\", \"critical\", \"high\", \"moderate\", \"low\"].map(key => `${key}=${v[key] ?? 0}`).join(\", \"));' "$audit_output_path" 2>/dev/null)"; then
+                          :
+                      else
+                          summary=""
+                      fi
 
                       if [ -n "$summary" ]; then
                           echo "::warning title=npm audit::$summary"
