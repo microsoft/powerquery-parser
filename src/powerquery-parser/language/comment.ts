@@ -37,4 +37,4 @@ export interface IDirective<Kind extends DirectiveKind> {
     readonly comment: LineComment;
 }
 
-export interface TypeDirective extends IDirective<DirectiveKind.Type> {}
+export type TypeDirective = IDirective<DirectiveKind.Type>;
