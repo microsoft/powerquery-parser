@@ -108,7 +108,7 @@ export function typeCheckFunctionSignature(
 
 export function typeCheckInvocation(
     args: ReadonlyArray<Type.TPowerQueryType>,
-    definedFunction: Type.DefinedFunction,
+    definedFunction: Type.FunctionSignature,
     traceManager: TraceManager,
     correlationId: number | undefined,
 ): CheckedInvocation {
