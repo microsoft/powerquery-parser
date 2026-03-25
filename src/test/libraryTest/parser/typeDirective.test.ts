@@ -68,6 +68,27 @@ shared Value = [];`,
         ).to.deep.equal(["Resource.Type"]);
     });
 
+    it("accept tabs and trailing spaces around the directive payload", async () => {
+        const parseOk: ParseOk = await AssertTestUtils.assertGetLexParseOk(
+            {
+                ...DefaultSettings,
+                isTypeDirectiveAllowed: true,
+            },
+            `let
+	///	@type	Resource.Type   
+    value = []
+in
+    value`,
+        );
+
+        const letExpression: Language.Ast.LetExpression = parseOk.ast as Language.Ast.LetExpression;
+        const variable: Language.Ast.IdentifierPairedExpression = letExpression.variableList.elements[0].node;
+
+        expect(
+            variable.precedingDirectives?.map((directive: Language.Comment.TDirective) => directive.value),
+        ).to.deep.equal(["Resource.Type"]);
+    });
+
     it("do not attach when a non-directive comment is closer than the directive", async () => {
         const parseOk: ParseOk = await AssertTestUtils.assertGetLexParseOk(
             {

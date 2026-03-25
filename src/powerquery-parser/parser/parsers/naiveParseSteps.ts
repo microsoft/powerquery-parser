@@ -38,7 +38,8 @@ interface WrappedRead<
     readonly optionalConstant: Ast.IConstant<Constant.MiscConstant.QuestionMark> | undefined;
 }
 
-const TypeDirectiveLineCommentRegex: RegExp = /^\/\/\/\s*@type\s+(.+?)\s*$/;
+const TripleSlashPrefix: string = "///";
+const TypeDirectiveKeyword: string = "@type";
 
 function getPrecedingDirectives(
     state: ParseState,
@@ -86,8 +87,7 @@ function getPrecedingDirectives(
 }
 
 function tryParseTypeDirective(comment: Comment.LineComment): Comment.TypeDirective | undefined {
-    const matches: RegExpMatchArray | null = comment.data.match(TypeDirectiveLineCommentRegex);
-    const value: string | undefined = matches?.[1]?.trim();
+    const value: string | undefined = tryParseTypeDirectiveValue(comment.data);
 
     if (!value) {
         return undefined;
@@ -98,6 +98,61 @@ function tryParseTypeDirective(comment: Comment.LineComment): Comment.TypeDirect
         value,
         comment,
     };
+}
+
+function tryParseTypeDirectiveValue(commentData: string): string | undefined {
+    let position: number = 0;
+
+    if (!commentData.startsWith(TripleSlashPrefix)) {
+        return undefined;
+    }
+
+    position += TripleSlashPrefix.length;
+    position = indexAfterWhitespace(commentData, position);
+
+    if (!commentData.startsWith(TypeDirectiveKeyword, position)) {
+        return undefined;
+    }
+
+    position += TypeDirectiveKeyword.length;
+
+    const payloadStart: number = indexAfterWhitespace(commentData, position);
+
+    if (payloadStart === position || payloadStart >= commentData.length) {
+        return undefined;
+    }
+
+    const payloadEnd: number = indexBeforeTrailingWhitespace(commentData);
+
+    if (payloadStart >= payloadEnd) {
+        return undefined;
+    }
+
+    return commentData.slice(payloadStart, payloadEnd);
+}
+
+function indexAfterWhitespace(text: string, start: number): number {
+    let position: number = start;
+
+    while (position < text.length && isWhitespace(text.charCodeAt(position))) {
+        position += 1;
+    }
+
+    return position;
+}
+
+function indexBeforeTrailingWhitespace(text: string): number {
+    let position: number = text.length;
+
+    while (position > 0 && isWhitespace(text.charCodeAt(position - 1))) {
+        position -= 1;
+    }
+
+    return position;
+}
+
+function isWhitespace(charCode: number): boolean {
+    return charCode === 32 || charCode === 9;
 }
 
 const GeneralizedIdentifierTerminatorTokenKinds: ReadonlyArray<TokenKind> = [
