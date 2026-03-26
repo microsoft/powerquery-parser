@@ -14,6 +14,7 @@ export const DefaultSettings: Settings = {
         ParseStateUtils.newState(lexerSnapshot, overrides),
     locale: DefaultLocale,
     cancellationToken: undefined,
+    isTypeDirectiveAllowed: false,
     initialCorrelationId: undefined,
     parserEntryPoint: undefined,
     parseBehavior: ParseBehavior.ParseEitherExpressionOrSection,

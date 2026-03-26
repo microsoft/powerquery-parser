@@ -3,4 +3,6 @@
 
 import { CommonSettings } from "../common";
 
-export type LexSettings = CommonSettings;
+export interface LexSettings extends CommonSettings {
+    readonly isTypeDirectiveAllowed: boolean;
+}

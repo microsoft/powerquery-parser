@@ -21,6 +21,7 @@ export class LexerSnapshot {
     public readonly tokens: ReadonlyArray<Token.Token>;
     public readonly comments: ReadonlyArray<Comment.TComment>;
     public readonly lineTerminators: ReadonlyArray<LineTerminator>;
+    private readonly precedingDirectivesByLineNumber: ReadonlyMap<number, ReadonlyArray<Comment.TDirective>>;
     // Caches grapheme split results per line to avoid redundant O(n) grapheme splitting.
     // The parser may call graphemePositionStartFrom hundreds of times on the same line
     // (e.g., for speculative error creation during tryReadPrimitiveType), and grapheme
@@ -36,11 +37,13 @@ export class LexerSnapshot {
         tokens: ReadonlyArray<Token.Token>,
         comments: ReadonlyArray<Comment.TComment>,
         lineTerminators: ReadonlyArray<LineTerminator>,
+        precedingDirectivesByLineNumber: ReadonlyMap<number, ReadonlyArray<Comment.TDirective>>,
     ) {
         this.text = text;
         this.tokens = tokens;
         this.comments = comments;
         this.lineTerminators = lineTerminators;
+        this.precedingDirectivesByLineNumber = precedingDirectivesByLineNumber;
     }
 
     public static graphemePositionStartFrom(
@@ -88,7 +91,14 @@ export class LexerSnapshot {
     public columnNumberStartFrom(token: Token.Token): number {
         return this.graphemePositionStartFrom(token).columnNumber;
     }
+
+    public getPrecedingDirectives(lineNumber: number): ReadonlyArray<Comment.TDirective> | undefined {
+        return this.precedingDirectivesByLineNumber.get(lineNumber);
+    }
 }
+
+const TripleSlashPrefix: string = "///";
+const TypeDirectiveKeyword: string = "@type";
 
 export function trySnapshot(state: Lexer.State): TriedLexerSnapshot {
     try {
@@ -130,7 +140,7 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
 
         switch (lineTokenKind) {
             case Token.LineTokenKind.LineComment:
-                comments.push(readLineComment(flatToken));
+                comments.push(readLineComment(flatToken, state.isTypeDirectiveAllowed));
                 break;
 
             case Token.LineTokenKind.MultilineComment:
@@ -265,20 +275,129 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
         flatIndex += 1;
     }
 
-    return new LexerSnapshot(text, tokens, comments, flattenedLines.lineTerminators);
+    return new LexerSnapshot(
+        text,
+        tokens,
+        comments,
+        flattenedLines.lineTerminators,
+        createPrecedingDirectivesByLineNumber(comments),
+    );
 }
 
-function readLineComment(flatToken: FlatLineToken): Comment.LineComment {
+function createPrecedingDirectivesByLineNumber(
+    comments: ReadonlyArray<Comment.TComment>,
+): ReadonlyMap<number, ReadonlyArray<Comment.TDirective>> {
+    const precedingDirectivesByLineNumber: Map<number, ReadonlyArray<Comment.TDirective>> = new Map();
+
+    for (const comment of comments) {
+        if (comment.kind !== Comment.CommentKind.Line || comment.directive === undefined) {
+            continue;
+        }
+
+        const lineNumber: number = comment.positionStart.lineNumber;
+        const previousDirectives: ReadonlyArray<Comment.TDirective> | undefined =
+            precedingDirectivesByLineNumber.get(lineNumber);
+
+        precedingDirectivesByLineNumber.set(
+            lineNumber + 1,
+            previousDirectives ? [...previousDirectives, comment.directive] : [comment.directive],
+        );
+    }
+
+    return precedingDirectivesByLineNumber;
+}
+
+function readLineComment(flatToken: FlatLineToken, isTypeDirectiveAllowed: boolean): Comment.LineComment {
     const positionStart: Token.TokenPosition = flatToken.positionStart;
     const positionEnd: Token.TokenPosition = flatToken.positionEnd;
+    const data: string = flatToken.data;
 
-    return {
+    const lineComment: Comment.LineComment = {
         kind: Comment.CommentKind.Line,
-        data: flatToken.data,
+        data,
+        directive: undefined,
         containsNewline: true,
         positionStart,
         positionEnd,
     };
+
+    if (isTypeDirectiveAllowed) {
+        (lineComment as { directive: Comment.TDirective | undefined }).directive = tryParseTypeDirective(
+            data,
+            lineComment,
+        );
+    }
+
+    return lineComment;
+}
+
+function tryParseTypeDirective(commentData: string, comment: Comment.LineComment): Comment.TypeDirective | undefined {
+    const value: string | undefined = tryParseTypeDirectiveValue(commentData);
+
+    if (!value) {
+        return undefined;
+    }
+
+    return {
+        kind: Comment.DirectiveKind.Type,
+        value,
+        comment,
+    };
+}
+
+function tryParseTypeDirectiveValue(commentData: string): string | undefined {
+    let position: number = 0;
+
+    if (!commentData.startsWith(TripleSlashPrefix)) {
+        return undefined;
+    }
+
+    position += TripleSlashPrefix.length;
+    position = indexAfterWhitespace(commentData, position);
+
+    if (!commentData.startsWith(TypeDirectiveKeyword, position)) {
+        return undefined;
+    }
+
+    position += TypeDirectiveKeyword.length;
+
+    const payloadStart: number = indexAfterWhitespace(commentData, position);
+
+    if (payloadStart === position || payloadStart >= commentData.length) {
+        return undefined;
+    }
+
+    const payloadEnd: number = indexBeforeTrailingWhitespace(commentData);
+
+    if (payloadStart >= payloadEnd) {
+        return undefined;
+    }
+
+    return commentData.slice(payloadStart, payloadEnd);
+}
+
+function indexAfterWhitespace(text: string, start: number): number {
+    let position: number = start;
+
+    while (position < text.length && isWhitespace(text.charCodeAt(position))) {
+        position += 1;
+    }
+
+    return position;
+}
+
+function indexBeforeTrailingWhitespace(text: string): number {
+    let position: number = text.length;
+
+    while (position > 0 && isWhitespace(text.charCodeAt(position - 1))) {
+        position -= 1;
+    }
+
+    return position;
+}
+
+function isWhitespace(charCode: number): boolean {
+    return charCode === 32 || charCode === 9;
 }
 
 // a multiline comment that spans a single line

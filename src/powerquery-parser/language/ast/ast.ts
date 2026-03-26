@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Constant } from "..";
+import { Comment, Constant } from "..";
 import { TokenRange } from "../token";
 
 export enum NodeKind {
@@ -235,6 +235,7 @@ export interface Section extends INode {
 export interface SectionMember extends INode {
     readonly kind: NodeKind.SectionMember;
     readonly isLeaf: false;
+    readonly precedingDirectives: ReadonlyArray<Comment.TDirective> | undefined;
     readonly literalAttributes: RecordLiteral | undefined;
     readonly sharedConstant: IConstant<Constant.KeywordConstant.Shared> | undefined;
     readonly namePairedExpression: IdentifierPairedExpression;
@@ -607,8 +608,10 @@ export interface ListLiteral extends IBraceWrapped<NodeKind.ListLiteral, ICsvArr
     readonly literalKind: LiteralKind.List;
 }
 
-export interface RecordLiteral
-    extends IBracketWrapped<NodeKind.RecordLiteral, ICsvArray<GeneralizedIdentifierPairedAnyLiteral>> {
+export interface RecordLiteral extends IBracketWrapped<
+    NodeKind.RecordLiteral,
+    ICsvArray<GeneralizedIdentifierPairedAnyLiteral>
+> {
     readonly literalKind: LiteralKind.Record;
 }
 
@@ -633,6 +636,7 @@ export interface ICsv<T> extends INode {
 
 export interface IKeyValuePair<Kind extends TKeyValuePairNodeKind, Key, Value> extends INode {
     readonly kind: Kind;
+    readonly precedingDirectives: ReadonlyArray<Comment.TDirective> | undefined;
     readonly key: Key;
     readonly equalConstant: IConstant<Constant.MiscConstant.Equal>;
     readonly value: Value;
@@ -640,8 +644,11 @@ export interface IKeyValuePair<Kind extends TKeyValuePairNodeKind, Key, Value> e
 
 // A [Constant, T] tuple
 // eg. EachExpression is a `each` Constant paired with a TExpression
-export interface IPairedConstant<Kind extends TPairedConstantNodeKind, ConstantKind extends Constant.TConstant, Paired>
-    extends INode {
+export interface IPairedConstant<
+    Kind extends TPairedConstantNodeKind,
+    ConstantKind extends Constant.TConstant,
+    Paired,
+> extends INode {
     readonly kind: Kind;
     readonly constant: IConstant<ConstantKind>;
     readonly paired: Paired;
@@ -780,8 +787,11 @@ export type GeneralizedIdentifierPairedAnyLiteral = IKeyValuePair<
 >;
 
 // Can't be a type as it'll be a recursive definition
-export interface GeneralizedIdentifierPairedExpression
-    extends IKeyValuePair<NodeKind.GeneralizedIdentifierPairedExpression, GeneralizedIdentifier, TExpression> {}
+export interface GeneralizedIdentifierPairedExpression extends IKeyValuePair<
+    NodeKind.GeneralizedIdentifierPairedExpression,
+    GeneralizedIdentifier,
+    TExpression
+> {}
 
 export type IdentifierPairedExpression = IKeyValuePair<NodeKind.IdentifierPairedExpression, Identifier, TExpression>;
 
@@ -853,8 +863,10 @@ export interface FieldSpecification extends INode {
     readonly name: GeneralizedIdentifier;
     readonly fieldTypeSpecification: FieldTypeSpecification | undefined;
 }
-export interface FieldSpecificationList
-    extends IBracketWrapped<NodeKind.FieldSpecificationList, ICsvArray<FieldSpecification>> {
+export interface FieldSpecificationList extends IBracketWrapped<
+    NodeKind.FieldSpecificationList,
+    ICsvArray<FieldSpecification>
+> {
     // located between content and closeWrapperConstant
     readonly openRecordMarkerConstant: IConstant<Constant.MiscConstant.Ellipsis> | undefined;
 }

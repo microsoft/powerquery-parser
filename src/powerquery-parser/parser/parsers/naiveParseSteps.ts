@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
-import { Ast, AstUtils, Constant, ConstantUtils, IdentifierUtils, Token } from "../../language";
+import { Ast, AstUtils, Comment, Constant, ConstantUtils, IdentifierUtils, Token } from "../../language";
 import { Disambiguation, DisambiguationUtils } from "../disambiguation";
 import { NaiveParseSteps, ParseError } from "..";
 import { Parser, ParseStateCheckpoint } from "../parser";
@@ -36,6 +36,10 @@ interface WrappedRead<
     Close extends Constant.WrapperConstant,
 > extends Ast.IWrapped<Kind, Open, Content, Close> {
     readonly optionalConstant: Ast.IConstant<Constant.MiscConstant.QuestionMark> | undefined;
+}
+
+function getPrecedingDirectives(state: ParseState, lineNumber: number): ReadonlyArray<Comment.TDirective> | undefined {
+    return state.lexerSnapshot.getPrecedingDirectives(lineNumber);
 }
 
 const GeneralizedIdentifierTerminatorTokenKinds: ReadonlyArray<TokenKind> = [
@@ -315,6 +319,10 @@ export async function readSectionMember(
     state.cancellationToken?.throwIfCancelled();
     ParseStateUtils.startContext(state, nodeKind);
 
+    const precedingDirectives: ReadonlyArray<Comment.TDirective> | undefined = state.currentToken
+        ? getPrecedingDirectives(state, state.currentToken.positionStart.lineNumber)
+        : undefined;
+
     const literalAttributes: Ast.RecordLiteral | undefined = await readLiteralAttributes(state, parser, trace.id);
 
     const sharedConstant: Ast.IConstant<Constant.KeywordConstant.Shared> | undefined =
@@ -337,6 +345,7 @@ export async function readSectionMember(
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: false,
+        precedingDirectives,
         literalAttributes,
         sharedConstant,
         namePairedExpression,
@@ -3281,6 +3290,10 @@ async function readKeyValuePair<KVP extends Ast.TKeyValuePair>(
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
+    const precedingDirectives: ReadonlyArray<Comment.TDirective> | undefined = state.currentToken
+        ? getPrecedingDirectives(state, state.currentToken.positionStart.lineNumber)
+        : undefined;
+
     const key: KVP["key"] = await keyReader();
 
     const equalConstant: Ast.IConstant<Constant.MiscConstant.Equal> = readTokenKindAsConstant(
@@ -3296,6 +3309,7 @@ async function readKeyValuePair<KVP extends Ast.TKeyValuePair>(
         ...ParseStateUtils.assertGetContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: false,
+        precedingDirectives,
         key,
         equalConstant,
         value,
