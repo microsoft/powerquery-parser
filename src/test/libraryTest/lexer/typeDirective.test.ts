@@ -53,4 +53,32 @@ describe("Lexer type directives", () => {
 
         expect(comment.directive?.value).to.equal("Resource.Type");
     });
+
+    it("precomputes contiguous preceding directives by line number", () => {
+        const snapshot: Lexer.LexerSnapshot = assertGetLexerSnapshot(
+            {
+                ...DefaultSettings,
+                isTypeDirectiveAllowed: true,
+            },
+            "/// @type Foo\n/// @type Bar\nvalue",
+        );
+
+        expect(
+            snapshot.getPrecedingDirectives(2)?.map((directive: Language.Comment.TDirective) => directive.value),
+        ).to.deep.equal(["Foo", "Bar"]);
+    });
+
+    it("breaks the precomputed chain on non-directive comments", () => {
+        const snapshot: Lexer.LexerSnapshot = assertGetLexerSnapshot(
+            {
+                ...DefaultSettings,
+                isTypeDirectiveAllowed: true,
+            },
+            "/// @type Foo\n// not a directive\n/// @type Bar\nvalue",
+        );
+
+        expect(
+            snapshot.getPrecedingDirectives(3)?.map((directive: Language.Comment.TDirective) => directive.value),
+        ).to.deep.equal(["Bar"]);
+    });
 });

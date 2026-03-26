@@ -38,45 +38,8 @@ interface WrappedRead<
     readonly optionalConstant: Ast.IConstant<Constant.MiscConstant.QuestionMark> | undefined;
 }
 
-function getPrecedingDirectives(
-    state: ParseState,
-    positionStart: Token.TokenPosition,
-): ReadonlyArray<Comment.TDirective> | undefined {
-    const directives: Comment.TDirective[] = [];
-    let expectedLineNumber: number = positionStart.lineNumber - 1;
-
-    for (let index: number = state.lexerSnapshot.comments.length - 1; index >= 0; index -= 1) {
-        const comment: Comment.TComment = state.lexerSnapshot.comments[index];
-
-        if (comment.positionEnd.codeUnit > positionStart.codeUnit) {
-            continue;
-        }
-
-        if (comment.kind !== Comment.CommentKind.Line) {
-            break;
-        }
-
-        const commentLineNumber: number = comment.positionStart.lineNumber;
-
-        if (commentLineNumber !== expectedLineNumber) {
-            if (commentLineNumber < expectedLineNumber) {
-                break;
-            }
-
-            continue;
-        }
-
-        const directive: Comment.TDirective | undefined = comment.directive;
-
-        if (directive === undefined) {
-            break;
-        }
-
-        directives.unshift(directive);
-        expectedLineNumber = commentLineNumber - 1;
-    }
-
-    return directives.length === 0 ? undefined : directives;
+function getPrecedingDirectives(state: ParseState, lineNumber: number): ReadonlyArray<Comment.TDirective> | undefined {
+    return state.lexerSnapshot.getPrecedingDirectives(lineNumber);
 }
 
 const GeneralizedIdentifierTerminatorTokenKinds: ReadonlyArray<TokenKind> = [
@@ -357,7 +320,7 @@ export async function readSectionMember(
     ParseStateUtils.startContext(state, nodeKind);
 
     const precedingDirectives: ReadonlyArray<Comment.TDirective> | undefined = state.currentToken
-        ? getPrecedingDirectives(state, state.currentToken.positionStart)
+        ? getPrecedingDirectives(state, state.currentToken.positionStart.lineNumber)
         : undefined;
 
     const literalAttributes: Ast.RecordLiteral | undefined = await readLiteralAttributes(state, parser, trace.id);
@@ -3328,7 +3291,7 @@ async function readKeyValuePair<KVP extends Ast.TKeyValuePair>(
     });
 
     const precedingDirectives: ReadonlyArray<Comment.TDirective> | undefined = state.currentToken
-        ? getPrecedingDirectives(state, state.currentToken.positionStart)
+        ? getPrecedingDirectives(state, state.currentToken.positionStart.lineNumber)
         : undefined;
 
     const key: KVP["key"] = await keyReader();

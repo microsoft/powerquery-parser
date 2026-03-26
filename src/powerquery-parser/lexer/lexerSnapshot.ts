@@ -21,6 +21,7 @@ export class LexerSnapshot {
     public readonly tokens: ReadonlyArray<Token.Token>;
     public readonly comments: ReadonlyArray<Comment.TComment>;
     public readonly lineTerminators: ReadonlyArray<LineTerminator>;
+    private readonly precedingDirectivesByLineNumber: ReadonlyMap<number, ReadonlyArray<Comment.TDirective>>;
     // Caches grapheme split results per line to avoid redundant O(n) grapheme splitting.
     // The parser may call graphemePositionStartFrom hundreds of times on the same line
     // (e.g., for speculative error creation during tryReadPrimitiveType), and grapheme
@@ -36,11 +37,13 @@ export class LexerSnapshot {
         tokens: ReadonlyArray<Token.Token>,
         comments: ReadonlyArray<Comment.TComment>,
         lineTerminators: ReadonlyArray<LineTerminator>,
+        precedingDirectivesByLineNumber: ReadonlyMap<number, ReadonlyArray<Comment.TDirective>>,
     ) {
         this.text = text;
         this.tokens = tokens;
         this.comments = comments;
         this.lineTerminators = lineTerminators;
+        this.precedingDirectivesByLineNumber = precedingDirectivesByLineNumber;
     }
 
     public static graphemePositionStartFrom(
@@ -87,6 +90,10 @@ export class LexerSnapshot {
 
     public columnNumberStartFrom(token: Token.Token): number {
         return this.graphemePositionStartFrom(token).columnNumber;
+    }
+
+    public getPrecedingDirectives(lineNumber: number): ReadonlyArray<Comment.TDirective> | undefined {
+        return this.precedingDirectivesByLineNumber.get(lineNumber);
     }
 }
 
@@ -268,7 +275,36 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
         flatIndex += 1;
     }
 
-    return new LexerSnapshot(text, tokens, comments, flattenedLines.lineTerminators);
+    return new LexerSnapshot(
+        text,
+        tokens,
+        comments,
+        flattenedLines.lineTerminators,
+        createPrecedingDirectivesByLineNumber(comments),
+    );
+}
+
+function createPrecedingDirectivesByLineNumber(
+    comments: ReadonlyArray<Comment.TComment>,
+): ReadonlyMap<number, ReadonlyArray<Comment.TDirective>> {
+    const precedingDirectivesByLineNumber: Map<number, ReadonlyArray<Comment.TDirective>> = new Map();
+
+    for (const comment of comments) {
+        if (comment.kind !== Comment.CommentKind.Line || comment.directive === undefined) {
+            continue;
+        }
+
+        const lineNumber: number = comment.positionStart.lineNumber;
+        const previousDirectives: ReadonlyArray<Comment.TDirective> | undefined =
+            precedingDirectivesByLineNumber.get(lineNumber);
+
+        precedingDirectivesByLineNumber.set(
+            lineNumber + 1,
+            previousDirectives ? [...previousDirectives, comment.directive] : [comment.directive],
+        );
+    }
+
+    return precedingDirectivesByLineNumber;
 }
 
 function readLineComment(flatToken: FlatLineToken, isTypeDirectiveAllowed: boolean): Comment.LineComment {
