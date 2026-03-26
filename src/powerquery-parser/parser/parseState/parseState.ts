@@ -12,7 +12,6 @@ import { TraceManager } from "../../common/trace";
 export interface ParseState {
     readonly cancellationToken: ICancellationToken | undefined;
     readonly disambiguationBehavior: Disambiguation.DismabiguationBehavior;
-    readonly isTypeDirectiveAllowed: boolean;
     readonly lexerSnapshot: LexerSnapshot;
     readonly locale: string;
     readonly parseBehavior: ParseBehavior;

@@ -120,7 +120,6 @@ function defaultOverrides(parseSettings: ParseSettings): Partial<ParseState> {
     return {
         locale: parseSettings.locale,
         cancellationToken: parseSettings.cancellationToken,
-        isTypeDirectiveAllowed: parseSettings.isTypeDirectiveAllowed,
         traceManager: parseSettings.traceManager,
         parseBehavior: parseSettings.parseBehavior,
     };

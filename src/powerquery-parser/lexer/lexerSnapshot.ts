@@ -90,6 +90,9 @@ export class LexerSnapshot {
     }
 }
 
+const TripleSlashPrefix: string = "///";
+const TypeDirectiveKeyword: string = "@type";
+
 export function trySnapshot(state: Lexer.State): TriedLexerSnapshot {
     try {
         return ResultUtils.ok(createSnapshot(state));
@@ -130,7 +133,7 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
 
         switch (lineTokenKind) {
             case Token.LineTokenKind.LineComment:
-                comments.push(readLineComment(flatToken));
+                comments.push(readLineComment(flatToken, state.isTypeDirectiveAllowed));
                 break;
 
             case Token.LineTokenKind.MultilineComment:
@@ -268,17 +271,97 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
     return new LexerSnapshot(text, tokens, comments, flattenedLines.lineTerminators);
 }
 
-function readLineComment(flatToken: FlatLineToken): Comment.LineComment {
+function readLineComment(flatToken: FlatLineToken, isTypeDirectiveAllowed: boolean): Comment.LineComment {
     const positionStart: Token.TokenPosition = flatToken.positionStart;
     const positionEnd: Token.TokenPosition = flatToken.positionEnd;
+    const data: string = flatToken.data;
 
-    return {
+    const lineComment: Comment.LineComment = {
         kind: Comment.CommentKind.Line,
-        data: flatToken.data,
+        data,
+        directive: undefined,
         containsNewline: true,
         positionStart,
         positionEnd,
     };
+
+    if (isTypeDirectiveAllowed) {
+        (lineComment as { directive: Comment.TDirective | undefined }).directive = tryParseTypeDirective(
+            data,
+            lineComment,
+        );
+    }
+
+    return lineComment;
+}
+
+function tryParseTypeDirective(commentData: string, comment: Comment.LineComment): Comment.TypeDirective | undefined {
+    const value: string | undefined = tryParseTypeDirectiveValue(commentData);
+
+    if (!value) {
+        return undefined;
+    }
+
+    return {
+        kind: Comment.DirectiveKind.Type,
+        value,
+        comment,
+    };
+}
+
+function tryParseTypeDirectiveValue(commentData: string): string | undefined {
+    let position: number = 0;
+
+    if (!commentData.startsWith(TripleSlashPrefix)) {
+        return undefined;
+    }
+
+    position += TripleSlashPrefix.length;
+    position = indexAfterWhitespace(commentData, position);
+
+    if (!commentData.startsWith(TypeDirectiveKeyword, position)) {
+        return undefined;
+    }
+
+    position += TypeDirectiveKeyword.length;
+
+    const payloadStart: number = indexAfterWhitespace(commentData, position);
+
+    if (payloadStart === position || payloadStart >= commentData.length) {
+        return undefined;
+    }
+
+    const payloadEnd: number = indexBeforeTrailingWhitespace(commentData);
+
+    if (payloadStart >= payloadEnd) {
+        return undefined;
+    }
+
+    return commentData.slice(payloadStart, payloadEnd);
+}
+
+function indexAfterWhitespace(text: string, start: number): number {
+    let position: number = start;
+
+    while (position < text.length && isWhitespace(text.charCodeAt(position))) {
+        position += 1;
+    }
+
+    return position;
+}
+
+function indexBeforeTrailingWhitespace(text: string): number {
+    let position: number = text.length;
+
+    while (position > 0 && isWhitespace(text.charCodeAt(position - 1))) {
+        position -= 1;
+    }
+
+    return position;
+}
+
+function isWhitespace(charCode: number): boolean {
+    return charCode === 32 || charCode === 9;
 }
 
 // a multiline comment that spans a single line

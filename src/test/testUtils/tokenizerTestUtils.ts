@@ -34,6 +34,7 @@ export class Tokenizer implements TokensProvider {
             lines: [],
             locale: DefaultLocale,
             cancellationToken: undefined,
+            isTypeDirectiveAllowed: false,
         };
 
         return new TokenizerState(lexerState);

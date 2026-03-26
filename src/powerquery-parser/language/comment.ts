@@ -25,6 +25,7 @@ export interface IComment {
 
 export interface LineComment extends IComment {
     readonly kind: CommentKind.Line;
+    readonly directive: TDirective | undefined;
 }
 
 export interface MultilineComment extends IComment {

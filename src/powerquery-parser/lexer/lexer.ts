@@ -64,6 +64,7 @@ export interface State {
     readonly lines: ReadonlyArray<TLine>;
     readonly locale: string;
     readonly cancellationToken: ICancellationToken | undefined;
+    readonly isTypeDirectiveAllowed: boolean;
 }
 
 export interface ILexerLine {
@@ -326,6 +327,7 @@ function lex(settings: LexSettings, text: string): State {
         lines: tokenizedLines,
         locale: settings.locale,
         cancellationToken: settings.cancellationToken,
+        isTypeDirectiveAllowed: settings.isTypeDirectiveAllowed,
     };
 }
 
@@ -405,6 +407,7 @@ function updateRange(state: State, range: Range, text: string): State {
         lines,
         locale: state.locale,
         cancellationToken: state.cancellationToken,
+        isTypeDirectiveAllowed: state.isTypeDirectiveAllowed,
     };
 }
 

@@ -33,7 +33,6 @@ export function newState(lexerSnapshot: LexerSnapshot, overrides?: Partial<Parse
         ...overrides,
         parseBehavior: overrides?.parseBehavior ?? ParseBehavior.ParseEitherExpressionOrSection,
         disambiguationBehavior: overrides?.disambiguationBehavior ?? Disambiguation.DismabiguationBehavior.Thorough,
-        isTypeDirectiveAllowed: overrides?.isTypeDirectiveAllowed ?? false,
         lexerSnapshot,
         locale: overrides?.locale ?? DefaultLocale,
         cancellationToken: overrides?.cancellationToken,
