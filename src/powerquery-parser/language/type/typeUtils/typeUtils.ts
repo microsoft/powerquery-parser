@@ -75,7 +75,7 @@ export function isTypeKind(text: string): text is Type.TypeKind {
 }
 
 export function isValidInvocation(
-    functionType: Type.FunctionSignature,
+    functionType: Type.DefinedFunction,
     args: ReadonlyArray<Type.TPowerQueryType>,
     traceManager: TraceManager,
     correlationId: number | undefined,
