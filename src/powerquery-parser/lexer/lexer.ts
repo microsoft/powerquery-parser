@@ -22,9 +22,9 @@ import { LexSettings } from "./lexSettings";
 // Lexer functions will return a new state object.
 // Call LexerSnapshot.tryFrom to perform a final validation pass before freezing the State.
 
-// The lexer is mostly functional in nature with a few throws to make error propegation easier.
+// The lexer is mostly functional in nature with a few throws to make error propagation easier.
 //
-// To accomodate being consumed by a VSCode extension the lexer is designed to be line aware.
+// To accommodate being consumed by a VSCode extension the lexer is designed to be line aware.
 // Users who don't care about line awareness and simply want a complete lex pass
 // can call Lexer.stateFrom using a multiline blob.
 //
@@ -238,7 +238,7 @@ interface LineModeAlteringRead {
 }
 
 // Attributes can't be readOnly.
-// In `updateRange` text is updated by adding existing existing lines as a suffix/prefix.
+// In `updateRange` text is updated by adding existing lines as a suffix/prefix.
 // In `splitOnLineTerminators` lineTerminator is updated as the last must have no terminator, eg. ""
 interface SplitLine {
     text: string;
@@ -486,7 +486,6 @@ function retokenizeLines(state: State, lineNumber: number, previousLineModeEnd: 
     const retokenizedLines: TLine[] = [];
 
     if (previousLineModeEnd !== lines[lineNumber].lineModeStart) {
-        const offsetLineNumber: number = lineNumber;
         let currentLine: TLine | undefined = lines[lineNumber];
 
         while (currentLine) {
@@ -497,7 +496,7 @@ function retokenizeLines(state: State, lineNumber: number, previousLineModeEnd: 
 
                 const retokenizedLine: TLine = tokenize(
                     untokenizedLine,
-                    offsetLineNumber,
+                    lineNumber,
                     state.locale,
                     state.cancellationToken,
                 );

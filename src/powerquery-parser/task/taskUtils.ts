@@ -44,7 +44,7 @@ export function assertIsLexStageOk(task: TTask): asserts task is LexTaskOk {
             expectedResultKind: ResultKind.Ok,
             expectedTaskStage: TaskStage.Lex,
             actualResultKind: task.resultKind,
-            acutalTaskStage: task.stage,
+            actualTaskStage: task.stage,
         });
     }
 }
@@ -55,7 +55,7 @@ export function assertIsLexStageError(task: TTask): asserts task is LexTaskError
             expectedResultKind: ResultKind.Error,
             expectedTaskStage: TaskStage.Lex,
             actualResultKind: task.resultKind,
-            acutalTaskStage: task.stage,
+            actualTaskStage: task.stage,
         });
     }
 }
@@ -73,7 +73,7 @@ export function assertIsParseStage(task: TTask): asserts task is TriedParseTask 
     if (!isParseStage(task)) {
         throw new CommonError.InvariantError(`assert failed, expected a different task stage kind`, {
             expectedTaskStage: TaskStage.Parse,
-            acutalTaskStage: task.stage,
+            actualTaskStage: task.stage,
         });
     }
 }
@@ -84,7 +84,7 @@ export function assertIsParseStageOk(task: TTask): asserts task is ParseTaskOk {
             expectedResultKind: ResultKind.Ok,
             expectedTaskStage: TaskStage.Parse,
             actualResultKind: task.resultKind,
-            acutalTaskStage: task.stage,
+            actualTaskStage: task.stage,
         });
     }
 }
@@ -95,7 +95,7 @@ export function assertIsParseStageError(task: TTask): asserts task is ParseTaskP
             expectedResultKind: ResultKind.Error,
             expectedTaskStage: TaskStage.Parse,
             actualResultKind: task.resultKind,
-            acutalTaskStage: task.stage,
+            actualTaskStage: task.stage,
         });
     }
 }
@@ -107,7 +107,7 @@ export function assertIsParseStageCommonError(task: TTask): asserts task is Pars
             expectedTaskStage: TaskStage.Parse,
             expectedIsCommonError: true,
             actualResultKind: task.resultKind,
-            acutalTaskStage: task.stage,
+            actualTaskStage: task.stage,
             actualIsCommonError: isParseStageError(task) ? task.isCommonError : undefined,
         });
     }
@@ -120,7 +120,7 @@ export function assertIsParseStageParseError(task: TTask): asserts task is Parse
             expectedTaskStage: TaskStage.Parse,
             expectedIsCommonError: true,
             actualResultKind: task.resultKind,
-            acutalTaskStage: task.stage,
+            actualTaskStage: task.stage,
             actualIsCommonError: isParseStageError(task) ? task.isCommonError : undefined,
         });
     }

@@ -107,7 +107,7 @@ export function isTRecursivePrimaryExpression(node: Ast.TNode): node is Ast.TRec
     return Ast.NodeKindsForTRecursivePrimaryExpression.has(node.kind);
 }
 
-export function isTRelationalExpression(node: Ast.TNode): node is Ast.TEqualityExpression {
+export function isTRelationalExpression(node: Ast.TNode): node is Ast.TRelationalExpression {
     return Ast.NodeKindsForTRelationalExpression.has(node.kind);
 }
 

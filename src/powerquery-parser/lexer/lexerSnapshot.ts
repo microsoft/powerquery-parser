@@ -295,6 +295,7 @@ function createPrecedingDirectivesByLineNumber(
         }
 
         const lineNumber: number = comment.positionStart.lineNumber;
+
         const previousDirectives: ReadonlyArray<Comment.TDirective> | undefined =
             precedingDirectivesByLineNumber.get(lineNumber);
 

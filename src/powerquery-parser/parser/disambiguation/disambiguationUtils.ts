@@ -410,7 +410,7 @@ async function thoroughReadAmbiguous<T extends TAmbiguousBracketNode | TAmbiguou
     }
 }
 
-// Converts BracketDisambiguation into its corrosponding read function.
+// Converts BracketDisambiguation into its corresponding read function.
 function bracketDisambiguationParseFunctions(
     parser: Parser,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,

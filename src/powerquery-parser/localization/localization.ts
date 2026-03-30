@@ -120,7 +120,7 @@ export function localizeTokenKind(localizationTemplates: ILocalizationTemplates,
         case Token.TokenKind.KeywordHashSections:
             return localizationTemplates.tokenKind_keywordHashSections;
         case Token.TokenKind.KeywordHashShared:
-            return localizationTemplates.tokenKind_keywordShared;
+            return localizationTemplates.tokenKind_keywordHashShared;
         case Token.TokenKind.KeywordHashTable:
             return localizationTemplates.tokenKind_keywordHashTable;
         case Token.TokenKind.KeywordHashTime:
@@ -136,7 +136,7 @@ export function localizeTokenKind(localizationTemplates: ILocalizationTemplates,
         case Token.TokenKind.KeywordMeta:
             return localizationTemplates.tokenKind_keywordMeta;
         case Token.TokenKind.KeywordNot:
-            return localizationTemplates.tokenKind_notEqual;
+            return localizationTemplates.tokenKind_keywordNot;
         case Token.TokenKind.KeywordOr:
             return localizationTemplates.tokenKind_keywordOr;
         case Token.TokenKind.KeywordOtherwise:

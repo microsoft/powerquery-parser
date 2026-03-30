@@ -162,22 +162,33 @@ async function traverseRecursion<State extends ITraversalState<ResultType>, Resu
         correlationId,
     );
 
-    state.cancellationToken?.throwIfCancelled();
+    try {
+        state.cancellationToken?.throwIfCancelled();
 
-    if (isEarlyExit && (await isEarlyExit(state, node, trace.id))) {
-        return;
-    } else if (strategy === VisitNodeStrategy.BreadthFirst) {
-        await visitNode(state, node, trace.id);
+        if (isEarlyExit && (await isEarlyExit(state, node, trace.id))) {
+            return;
+        } else if (strategy === VisitNodeStrategy.BreadthFirst) {
+            await visitNode(state, node, trace.id);
+        }
+
+        for (const child of await visitOrderQueue(state, node, nodesById)) {
+            // eslint-disable-next-line no-await-in-loop
+            await traverseRecursion(
+                state,
+                nodesById,
+                child,
+                strategy,
+                visitNode,
+                visitOrderQueue,
+                isEarlyExit,
+                trace.id,
+            );
+        }
+
+        if (strategy === VisitNodeStrategy.DepthFirst) {
+            await visitNode(state, node, trace.id);
+        }
+    } finally {
+        trace.exit();
     }
-
-    for (const child of await visitOrderQueue(state, node, nodesById)) {
-        // eslint-disable-next-line no-await-in-loop
-        await traverseRecursion(state, nodesById, child, strategy, visitNode, visitOrderQueue, isEarlyExit, trace.id);
-    }
-
-    if (strategy === VisitNodeStrategy.DepthFirst) {
-        await visitNode(state, node, trace.id);
-    }
-
-    trace.exit();
 }

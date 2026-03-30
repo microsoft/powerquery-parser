@@ -3,7 +3,7 @@
 
 export enum Locale {
     bg_BG = "bg-BG",
-    ca_EZ = "ca-EZ",
+    ca_ES = "ca-ES",
     cs_CZ = "cs-CZ",
     da_DK = "da-DK",
     de_DE = "de-DE",
