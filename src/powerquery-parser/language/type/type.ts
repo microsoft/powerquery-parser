@@ -143,6 +143,8 @@ export enum TypeKind {
     Unknown = "Unknown",
 }
 
+// Intentionally limited to official Power Query types.
+// Excludes internal-only TypeKinds (None, NotApplicable, Unknown).
 export const TypeKinds: ReadonlyArray<TypeKind> = [
     TypeKind.Action,
     TypeKind.Any,

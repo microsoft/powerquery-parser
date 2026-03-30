@@ -284,7 +284,7 @@ export function deleteAst(state: ParseContext.State, nodeId: number, parentWillB
     // Not a leaf node.
     Assert.isUndefined(
         childIds,
-        `failed to deleteAst as the given nodeId has one ore more children which must be deleted first`,
+        `failed to deleteAst as the given nodeId has one or more children which must be deleted first`,
         {
             nodeId,
             childIds,
@@ -410,7 +410,7 @@ function deleteFromKindMap(nodeIdMapCollection: NodeIdMap.Collection, nodeId: nu
 }
 
 // Asserts `childId` is in the list of children in for `parentId`.
-// Either removes `childId` in its list of children if no `replcementId` is given,
+// Either removes `childId` from its list of children if no `replacementId` is given,
 // else replaces the `childId` with `replacementId`.
 function removeOrReplaceChildId(
     nodeIdMapCollection: NodeIdMap.Collection,

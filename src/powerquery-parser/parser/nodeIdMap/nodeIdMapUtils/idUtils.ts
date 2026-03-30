@@ -31,7 +31,7 @@ export function recalculateAndUpdateIds(
 }
 
 // Builds up a list of all nodeIds under the given nodeId (including itself),
-// then creates a Map<oldId, newId> such that the Ids are in a BFS ordering.
+// then creates a Map<oldId, newId> such that the Ids are in a DFS ordering.
 // Does not include nodeIds which remain unchanged.
 export function recalculateIds(
     nodeIdMapCollection: NodeIdMap.Collection,

@@ -35,11 +35,13 @@ export class OrderedMap<K, V> implements Map<K, V> {
     public clear(): void {
         this.map.clear();
         this.order = [];
+        this.size = 0;
     }
 
     public delete(key: K): boolean {
         if (this.map.delete(key)) {
             this.order = ArrayUtils.assertRemoveFirstInstance(this.order, key);
+            this.size -= 1;
 
             return true;
         } else {
@@ -68,7 +70,7 @@ export class OrderedMap<K, V> implements Map<K, V> {
     }
 
     public keys(): IterableIterator<K> {
-        return this.map.keys();
+        return this.order[Symbol.iterator]();
     }
 
     public set(key: K, value: V, maintainIndex?: boolean): this {
@@ -78,6 +80,7 @@ export class OrderedMap<K, V> implements Map<K, V> {
             }
         } else {
             this.order = [...this.order, key];
+            this.size += 1;
         }
 
         this.map.set(key, value);

@@ -34,8 +34,8 @@ export class ImmutableSet<T> {
         return result;
     }
 
-    public clear(): void {
-        this.internalCollection = [];
+    public clear(): ImmutableSet<T> {
+        return new ImmutableSet([], this.comparer);
     }
 
     public delete(value: T): ImmutableSet<T> {

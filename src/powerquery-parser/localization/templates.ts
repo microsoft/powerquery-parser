@@ -92,7 +92,7 @@ export {
 
 export const TemplatesByLocale: Map<string, ILocalizationTemplates> = new Map([
     [Locale.bg_BG.toLowerCase(), bg_BG],
-    [Locale.ca_EZ.toLowerCase(), ca_ES],
+    [Locale.ca_ES.toLowerCase(), ca_ES],
     [Locale.cs_CZ.toLowerCase(), cs_CZ],
     [Locale.da_DK.toLowerCase(), da_DK],
     [Locale.de_DE.toLowerCase(), de_DE],
