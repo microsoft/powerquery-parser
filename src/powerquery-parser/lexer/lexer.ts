@@ -855,7 +855,7 @@ function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number,
         } else if ("1" <= chr2 && chr2 <= "9") {
             token = readNumericLiteral(text, lineNumber, positionStart, locale);
         } else if (chr2 === ".") {
-            const chr3: string = StringUtils.assertGet(text, positionStart + 2);
+            const chr3: string | undefined = text[positionStart + 2];
 
             if (chr3 === ".") {
                 token = readConstant(Token.LineTokenKind.Ellipsis, text, positionStart, 3);
