@@ -5,6 +5,14 @@
 import GraphemeSplitter = require("grapheme-splitter");
 import { Assert, CommonError, Pattern } from ".";
 
+export function assertGet(text: string, index: number, message?: string, details?: object): string {
+    return Assert.asDefined(
+        text[index],
+        message ?? "index out of bounds",
+        details ?? { index, textLength: text.length },
+    );
+}
+
 export const graphemeSplitter: GraphemeSplitter = new GraphemeSplitter();
 
 export interface FoundQuotes {
@@ -162,7 +170,7 @@ export function findQuotes(text: string, indexStart: number): FoundQuotes | unde
 }
 
 export function newlineKindAt(text: string, index: number): NewlineKind | undefined {
-    const chr1: string = text[index];
+    const chr1: string | undefined = text[index];
 
     switch (chr1) {
         case `\u000d`: {
@@ -199,7 +207,7 @@ export function isHex(text: string): boolean {
 }
 
 export function getSign(text: string): [boolean, number] {
-    let char: string = text[0];
+    let char: string | undefined = text[0];
     let charOffset: number = 0;
     let isPositive: boolean = true;
 

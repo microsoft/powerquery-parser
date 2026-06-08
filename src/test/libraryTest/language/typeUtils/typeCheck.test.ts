@@ -7,6 +7,7 @@ import { expect } from "chai";
 import { CheckedDefinedList, CheckedInvocation } from "../../../../powerquery-parser/language/type/typeUtils";
 import { Type, TypeUtils } from "../../../../powerquery-parser/language";
 import { Language } from "../../../..";
+import { ArrayUtils } from "../../../../powerquery-parser/common";
 import { NoOpTraceManagerInstance } from "../../../../powerquery-parser/common/trace";
 import { OrderedMap } from "../../../../powerquery-parser";
 
@@ -300,7 +301,7 @@ describe(`TypeUtils.typeCheck`, () => {
                         0,
                         {
                             actual: args[0],
-                            expected: definedFunction.parameters[0],
+                            expected: ArrayUtils.assertGet(definedFunction.parameters, 0),
                         },
                     ],
                 ]),
@@ -359,7 +360,7 @@ describe(`TypeUtils.typeCheck`, () => {
 
             const expected: TypeUtils.CheckedInvocation = {
                 valid: [],
-                invalid: new Map([[0, { actual: args[0], expected: definedFunction.parameters[0] }]]),
+                invalid: new Map([[0, { actual: args[0], expected: ArrayUtils.assertGet(definedFunction.parameters, 0) }]]),
                 extraneous: [],
                 missing: [],
             };
@@ -387,7 +388,7 @@ describe(`TypeUtils.typeCheck`, () => {
 
             const expected: TypeUtils.CheckedInvocation = {
                 valid: [],
-                invalid: new Map([[0, { actual: args[0], expected: definedFunction.parameters[0] }]]),
+                invalid: new Map([[0, { actual: args[0], expected: ArrayUtils.assertGet(definedFunction.parameters, 0) }]]),
                 extraneous: [],
                 missing: [],
             };
@@ -429,14 +430,14 @@ describe(`TypeUtils.typeCheck`, () => {
                         0,
                         {
                             actual: args[0],
-                            expected: definedFunction.parameters[0],
+                            expected: ArrayUtils.assertGet(definedFunction.parameters, 0),
                         },
                     ],
                     [
                         1,
                         {
                             actual: args[1],
-                            expected: definedFunction.parameters[1],
+                            expected: ArrayUtils.assertGet(definedFunction.parameters, 1),
                         },
                     ],
                 ]),

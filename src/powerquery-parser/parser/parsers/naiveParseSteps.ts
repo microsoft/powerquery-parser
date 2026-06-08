@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, Result, ResultUtils } from "../../common";
+import { ArrayUtils, Assert, CommonError, Result, ResultUtils } from "../../common";
 import { Ast, AstUtils, Comment, Constant, ConstantUtils, IdentifierUtils, Token } from "../../language";
 import { Disambiguation, DisambiguationUtils } from "../disambiguation";
 import { NaiveParseSteps, ParseError } from "..";
@@ -122,8 +122,8 @@ export async function readGeneralizedIdentifier(
 
     const lexerSnapshot: LexerSnapshot = state.lexerSnapshot;
     const tokens: ReadonlyArray<Token.Token> = lexerSnapshot.tokens;
-    const contiguousIdentifierStartIndex: number = tokens[tokenRangeStartIndex].positionStart.codeUnit;
-    const contiguousIdentifierEndIndex: number = tokens[tokenRangeEndIndex - 1].positionEnd.codeUnit;
+    const contiguousIdentifierStartIndex: number = ArrayUtils.assertGet(tokens, tokenRangeStartIndex).positionStart.codeUnit;
+    const contiguousIdentifierEndIndex: number = ArrayUtils.assertGet(tokens, tokenRangeEndIndex - 1).positionEnd.codeUnit;
     const literal: string = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
 
     const literalKind: IdentifierUtils.IdentifierKind = IdentifierUtils.getIdentifierKind(literal, {
@@ -2806,7 +2806,7 @@ async function tryReadPrimitiveType(
     let primitiveTypeKind: Constant.PrimitiveTypeConstant;
 
     if (ParseStateUtils.isOnTokenKind(state, TokenKind.Identifier)) {
-        const currentTokenData: string = state.lexerSnapshot.tokens[state.tokenIndex].data;
+        const currentTokenData: string = ArrayUtils.assertGet(state.lexerSnapshot.tokens, state.tokenIndex).data;
 
         switch (currentTokenData) {
             case Constant.PrimitiveTypeConstant.Action:
@@ -3602,7 +3602,7 @@ export function readToken(state: ParseState): string {
         tokensLength: tokens.length,
     });
 
-    const data: string = tokens[state.tokenIndex].data;
+    const data: string = ArrayUtils.assertGet(tokens, state.tokenIndex).data;
     state.tokenIndex += 1;
 
     if (state.tokenIndex === tokens.length) {
@@ -3615,7 +3615,7 @@ export function readToken(state: ParseState): string {
         // So, for now when a IParseState is Eof when currentTokenKind === undefined.
         state.currentTokenKind = undefined;
     } else {
-        state.currentToken = tokens[state.tokenIndex];
+        state.currentToken = ArrayUtils.assertGet(tokens, state.tokenIndex);
         state.currentTokenKind = state.currentToken.kind;
     }
 
@@ -3867,7 +3867,7 @@ function testCatchFunction(
 
     if (
         parameters.length > 1 ||
-        (parameters.length === 1 && parameters[0].node.parameterType) ||
+        (parameters.length === 1 && ArrayUtils.assertGet(parameters, 0).node.parameterType) ||
         catchFunction.functionReturnType
     ) {
         const tokenStart: Token.Token = Assert.asDefined(

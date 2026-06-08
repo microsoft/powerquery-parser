@@ -4,7 +4,7 @@
 import { Ast, Token } from "../../../language";
 import { Collection, CollectionValidation, IdsByNodeKind, NodeSummary } from "../nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "../xorNode";
-import { Assert } from "../../../common";
+import { ArrayUtils, Assert } from "../../../common";
 import { ParseContext } from "../../context";
 import { rightMostLeaf } from "./leafSelectors";
 
@@ -56,7 +56,7 @@ export function hasParsedToken(nodeIdMapCollection: Collection, nodeId: number):
         }
         // There might be a child under here.
         else if (numChildren === 1) {
-            const childId: number = childIds[0];
+            const childId: number = ArrayUtils.assertGet(childIds, 0);
 
             // We know it's an Ast Node, therefore something was parsed.
             if (nodeIdMapCollection.astNodeById.has(childId)) {

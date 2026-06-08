@@ -5,6 +5,7 @@ import "mocha";
 import { expect } from "chai";
 
 import { DefaultSettings, Lexer, ResultUtils } from "../../..";
+import { ArrayUtils } from "../../../powerquery-parser/common";
 import { ILineTokens, IState, IToken, Tokenizer } from "../../testUtils/tokenizerTestUtils";
 
 const tokenizer: Tokenizer = new Tokenizer("\n");
@@ -74,16 +75,18 @@ class MockDocument {
         if (startingIndex === 0 || this.lineEndStates[startingIndex - 1] === undefined) {
             state = this.tokenizer.getInitialState();
         } else {
-            state = this.lineEndStates[startingIndex - 1];
+            state = ArrayUtils.assertGet(this.lineEndStates, startingIndex - 1);
         }
 
         for (let index: number = startingIndex; index < this.lines.length; index += 1) {
-            const result: ILineTokens = tokenizer.tokenize(this.lines[index], state);
+            const result: ILineTokens = tokenizer.tokenize(ArrayUtils.assertGet(this.lines, index), state);
             this.lineTokens[index] = result.tokens;
             tokenizedLineCount += 1;
 
             // If the new end state matches the previous state, we can stop tokenizing
-            if (result.endState.equals(this.lineEndStates[index])) {
+            const previousEndState: IState | undefined = this.lineEndStates[index];
+
+            if (previousEndState !== undefined && result.endState.equals(previousEndState)) {
                 break;
             }
 
@@ -158,14 +161,14 @@ describe("MockDocument validation", () => {
 describe("Incremental updates", () => {
     it("Re-parse with no change", () => {
         const document: MockDocument = new MockDocument(ORIGINAL_QUERY);
-        const originalLine: string = document.lines[2];
+        const originalLine: string = ArrayUtils.assertGet(document.lines, 2);
         const count: number = document.applyChangeAndTokenize(originalLine, 2);
         expect(count).equals(1, "we should not have tokenized more than one line");
     });
 
     it("Re-parse with simple change", () => {
         const document: MockDocument = new MockDocument(ORIGINAL_QUERY);
-        const modified: string = document.lines[2].replace("source", "source123");
+        const modified: string = ArrayUtils.assertGet(document.lines, 2).replace("source", "source123");
         const count: number = document.applyChangeAndTokenize(modified, 2);
         expect(count).equals(1, "we should not have tokenized more than one line");
     });
@@ -173,12 +176,12 @@ describe("Incremental updates", () => {
     it("Re-parse with unterminated string", () => {
         const lineNumber: number = 4;
         const document: MockDocument = new MockDocument(ORIGINAL_QUERY);
-        const modified: string = document.lines[lineNumber].replace(`"text",`, `"text`);
+        const modified: string = ArrayUtils.assertGet(document.lines, lineNumber).replace(`"text",`, `"text`);
         const count: number = document.applyChangeAndTokenize(modified, lineNumber);
         expect(count).equals(document.lines.length - lineNumber, "remaining lines should have been tokenized");
 
         for (let index: number = lineNumber + 1; index < document.lineTokens.length; index += 1) {
-            const lineTokens: ReadonlyArray<IToken> = document.lineTokens[index];
+            const lineTokens: ReadonlyArray<IToken> = ArrayUtils.assertGet(document.lineTokens, index);
 
             lineTokens.forEach((token: IToken) => {
                 expect(token.scopes).equals("TextContent", "expecting remaining tokens to be strings");
@@ -189,12 +192,12 @@ describe("Incremental updates", () => {
     it("Re-parse with unterminated block comment", () => {
         const lineNumber: number = 3;
         const document: MockDocument = new MockDocument(ORIGINAL_QUERY);
-        const modified: string = document.lines[lineNumber].replace(`rce),`, `rce), /* my open comment`);
+        const modified: string = ArrayUtils.assertGet(document.lines, lineNumber).replace(`rce),`, `rce), /* my open comment`);
         const count: number = document.applyChangeAndTokenize(modified, lineNumber);
         expect(count).equals(document.lines.length - lineNumber, "remaining lines should have been tokenized");
 
         for (let index: number = lineNumber + 1; index < document.lineTokens.length; index += 1) {
-            const lineTokens: ReadonlyArray<IToken> = document.lineTokens[index];
+            const lineTokens: ReadonlyArray<IToken> = ArrayUtils.assertGet(document.lineTokens, index);
 
             lineTokens.forEach((token: IToken) => {
                 expect(token.scopes).equals("MultilineCommentContent", "expecting remaining tokens to be comments");

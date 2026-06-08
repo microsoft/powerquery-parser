@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, MapUtils } from "../../../common";
+import { ArrayUtils, Assert, CommonError, MapUtils } from "../../../common";
 import { isEqualFunctionSignature, isEqualType } from "./isEqualType";
 import { isFieldSpecificationList, isFunctionSignature } from "./isType";
 import { Trace, TraceManager } from "../../../common/trace";
@@ -777,7 +777,7 @@ function isCompatibleDefinedListOrDefinedListType<T extends Type.DefinedList | T
     const numElements: number = leftElements.length;
 
     for (let index: number = 0; index < numElements; index += 1) {
-        if (!isCompatible(leftElements[index], rightElements[index], traceManager, trace.id)) {
+        if (!isCompatible(ArrayUtils.assertGet(leftElements, index), ArrayUtils.assertGet(rightElements, index), traceManager, trace.id)) {
             trace.exit();
 
             return false;

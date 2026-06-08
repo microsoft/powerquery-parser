@@ -7,6 +7,7 @@ import { expect } from "chai";
 import { Type, TypeUtils } from "../../../../powerquery-parser/language";
 import { NoOpTraceManagerInstance } from "../../../../powerquery-parser/common/trace";
 import { OrderedMap } from "../../../../powerquery-parser";
+import { ArrayUtils } from "../../../../powerquery-parser/common";
 
 interface AbridgedType {
     readonly kind: Type.TypeKind;
@@ -137,7 +138,7 @@ describe(`TypeUtils`, () => {
 
             expect(simplified.length).to.equal(1);
 
-            const actual: AbridgedType = typeToAbridged(simplified[0]);
+            const actual: AbridgedType = typeToAbridged(ArrayUtils.assertGet(simplified, 0));
             const expected: AbridgedType = TypeUtils.primitiveType(false, Type.TypeKind.Record);
             expect(actual).deep.equal(expected);
         });
@@ -209,7 +210,7 @@ describe(`TypeUtils`, () => {
 
             expect(simplified.length).to.equal(1);
 
-            const actual: AbridgedType = typeToAbridged(simplified[0]);
+            const actual: AbridgedType = typeToAbridged(ArrayUtils.assertGet(simplified, 0));
             const expected: AbridgedType = typeToAbridged(Type.AnyInstance);
             expect(actual).deep.equal(expected);
         });
