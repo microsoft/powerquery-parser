@@ -506,7 +506,7 @@ function retokenizeLines(state: State, lineNumber: number, previousLineModeEnd: 
                 lineNumber += 1;
                 currentLine = lines[lineNumber];
             } else {
-                return [...retokenizedLines, ...lines.slice(lineNumber + 1)];
+                return [...retokenizedLines, ...lines.slice(lineNumber)];
             }
         }
 

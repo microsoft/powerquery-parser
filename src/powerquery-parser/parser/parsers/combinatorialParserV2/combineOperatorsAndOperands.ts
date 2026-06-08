@@ -188,7 +188,7 @@ interface Validator<Node extends Ast.TBinOpExpression> {
 
 const ValidatorForAsExpression: Validator<Ast.AsExpression> = {
     tag: "AsExpression",
-    validateLeftOperand: (node: Ast.TNode): node is Ast.TEqualityExpression => AstUtils.isTAsExpression(node),
+    validateLeftOperand: (node: Ast.TNode): node is Ast.TAsExpression => AstUtils.isTAsExpression(node),
     validateRightOperand: (node: Ast.TNode): node is Ast.TNullablePrimitiveType =>
         AstUtils.isTNullablePrimitiveType(node),
     fallbackLeftOperand: (state: ParseState, parser: Parser, correlationId: number) =>
@@ -199,8 +199,8 @@ const ValidatorForAsExpression: Validator<Ast.AsExpression> = {
 
 const ValidatorForEqualityExpressionAndBelow: Validator<TEqualityExpressionAndBelow> = {
     tag: "EqualityExpression",
-    validateLeftOperand: (node: Ast.TNode): node is Ast.TMetadataExpression => AstUtils.isTEqualityExpression(node),
-    validateRightOperand: (node: Ast.TNode): node is Ast.TMetadataExpression => AstUtils.isTEqualityExpression(node),
+    validateLeftOperand: (node: Ast.TNode): node is Ast.TEqualityExpression => AstUtils.isTEqualityExpression(node),
+    validateRightOperand: (node: Ast.TNode): node is Ast.TEqualityExpression => AstUtils.isTEqualityExpression(node),
     fallbackLeftOperand: (state: ParseState, parser: Parser, correlationId: number) =>
         NaiveParseSteps.readMetadataExpression(state, parser, correlationId),
     fallbackRightOperand: (state: ParseState, parser: Parser, correlationId: number) =>

@@ -129,6 +129,21 @@ describe(`Lexer`, () => {
                 assertGetLineTokenMatch(text, expected, true);
             });
         });
+
+        describe(`LineTokenKindAdditions enum values match member names (Bug 23)`, () => {
+            it(`TextLiteralContent value should equal "TextLiteralContent"`, () => {
+                // Bug 23: TextLiteralContent = "TextContent" (missing "Literal" in value)
+                // All other members have values matching their names exactly
+                const expected: string = "TextLiteralContent";
+                const actual: string = Language.Token.LineTokenKind.TextLiteralContent;
+
+                if (actual !== expected) {
+                    throw new Error(
+                        `LineTokenKindAdditions.TextLiteralContent has value "${actual}" but should be "${expected}"`,
+                    );
+                }
+            });
+        });
     });
 
     describe(`MultilineTokens Abridged LexerSnapshot`, () => {

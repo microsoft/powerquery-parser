@@ -122,4 +122,38 @@ describe("LexerSnapshot.graphemePositionStartFrom cache", () => {
             expect(positions[3].lineNumber).to.equal(2);
         });
     });
+
+    describe("codeUnit correctness", () => {
+        it("codeUnit should reflect the token start position, not end (bug 21)", () => {
+            const snapshot: Lexer.LexerSnapshot = assertGetLexerSnapshot("let x = 1");
+
+            for (const token of snapshot.tokens) {
+                const position: StringUtils.GraphemePosition = snapshot.graphemePositionStartFrom(token);
+
+                expect(position.codeUnit).to.equal(
+                    token.positionStart.codeUnit,
+                    `graphemePositionStartFrom("${token.data}") returned codeUnit ${position.codeUnit} ` +
+                        `but token.positionStart.codeUnit is ${token.positionStart.codeUnit}`,
+                );
+            }
+        });
+
+        it("static graphemePositionStartFrom returns start codeUnit (bug 21)", () => {
+            const snapshot: Lexer.LexerSnapshot = assertGetLexerSnapshot("let x = 1");
+
+            for (const token of snapshot.tokens) {
+                const position: StringUtils.GraphemePosition = Lexer.LexerSnapshot.graphemePositionStartFrom(
+                    snapshot.text,
+                    snapshot.lineTerminators,
+                    token,
+                );
+
+                expect(position.codeUnit).to.equal(
+                    token.positionStart.codeUnit,
+                    `static graphemePositionStartFrom("${token.data}") returned codeUnit ${position.codeUnit} ` +
+                        `but token.positionStart.codeUnit is ${token.positionStart.codeUnit}`,
+                );
+            }
+        });
+    });
 });

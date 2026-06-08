@@ -139,6 +139,8 @@ export function findQuotes(text: string, indexStart: number): FoundQuotes | unde
                 continue;
             } else {
                 index += 2;
+
+                continue;
             }
         }
 

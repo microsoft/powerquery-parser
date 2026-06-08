@@ -124,7 +124,7 @@ export function nthSiblingXor(
         parentXorNode.node.id,
     );
 
-    if (childIds.length >= attributeIndex) {
+    if (attributeIndex >= childIds.length) {
         return undefined;
     }
 

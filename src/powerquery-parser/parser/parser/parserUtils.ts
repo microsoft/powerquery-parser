@@ -188,7 +188,7 @@ async function tryParseDocument(parseSettings: ParseSettings, lexerSnapshot: Lex
         }
 
         default:
-            Assert.isNever(parseSettings.parseBehavior);
+            throw Assert.isNever(parseSettings.parseBehavior);
     }
 }
 

@@ -398,4 +398,35 @@ describe(`Lexer.Incremental`, () => {
             });
         });
     });
+
+    describe(`retokenizeLines does not drop lines (Bug 6)`, () => {
+        it(`changing block comment start preserves subsequent lines`, () => {
+            // Original: 4 lines — block comment on lines 0-1, then "beta" and "charlie"
+            // Line 0: /* → Default→Comment
+            // Line 1: */ → Comment→Default
+            // Line 2: beta → Default→Default
+            // Line 3: charlie → Default→Default
+            const originalText: string = `/*\n*/\nbeta\ncharlie`;
+
+            const originalExpected: AbridgedTLexerLine = [
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Comment, `/*`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Comment, Lexer.LineMode.Default, `*/`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `beta`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
+            ];
+
+            // Change line 0 from "/*" to "alpha" — removes the comment context
+            // retokenizeLines retokenizes line 1 ("*/" in Default mode → Default→Default)
+            // then hits line 2 which already starts in Default → early exit
+            // Bug 6: lines.slice(lineNumber + 1) drops line 2 ("beta")
+            const state: Lexer.State = assertGetLexerUpdateLine(originalText, originalExpected, 0, `alpha`, [
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `*/`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `beta`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
+            ]);
+
+            expect(state.lines.length).to.equal(4, "retokenizeLines dropped a line");
+        });
+    });
 });

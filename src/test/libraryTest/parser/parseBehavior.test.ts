@@ -5,7 +5,8 @@ import "mocha";
 import { expect } from "chai";
 
 import * as ParserTestUtils from "./parserTestUtils";
-import { Assert, DefaultSettings, Task, TaskUtils } from "../../../powerquery-parser";
+import { Assert, DefaultSettings, Language, Task, TaskUtils } from "../../../powerquery-parser";
+import { AssertTestUtils } from "../../testUtils";
 import { NodeKind } from "../../../powerquery-parser/language/ast/ast";
 import { ParseBehavior } from "../../../powerquery-parser/parser/parseBehavior";
 import { ParseError } from "../../../powerquery-parser/parser";
@@ -45,7 +46,7 @@ describe("ParseBehavior", () => {
                 break;
 
             default:
-                Assert.isNever(params.expectedStatus);
+                throw Assert.isNever(params.expectedStatus);
         }
 
         return result;
@@ -129,5 +130,78 @@ describe("ParseBehavior", () => {
             ],
             expectedStatus: "ParseStageOk",
         });
+    });
+
+    it(`invalid parseBehavior throws InvariantError (Bug 18)`, async () => {
+        // Bug 18: missing `throw` before Assert.isNever means TypeScript
+        // doesn't guarantee the default branch is recognized as unreachable.
+        // Verify the default branch actually throws for invalid enum values.
+        const invalidBehavior: ParseBehavior = "InvalidBehavior" as unknown as ParseBehavior;
+
+        let threw: boolean = false;
+
+        try {
+            await TaskUtils.tryLexParse(
+                {
+                    ...DefaultSettings,
+                    parseBehavior: invalidBehavior,
+                },
+                "1",
+            );
+        } catch (error: unknown) {
+            threw = true;
+            expect((error as Error).message).to.contain("Should never be reached");
+        }
+
+        expect(threw).to.equal(true, "An invalid parseBehavior should throw an InvariantError");
+    });
+});
+
+type ParseOk = Awaited<ReturnType<typeof AssertTestUtils.assertGetLexParseOk>>;
+
+describe("Type directives - regression", () => {
+    // BUG: type directive scoping — directive on x's line incorrectly attaches to y
+    xit("should not attach directive from previous variable to next variable", async () => {
+        const parseOk: ParseOk = await AssertTestUtils.assertGetLexParseOk(
+            {
+                ...DefaultSettings,
+                isTypeDirectiveAllowed: true,
+            },
+            `let
+    x = 1, /// @type number
+    y = 2
+in
+    y`,
+        );
+
+        const letExpression: Language.Ast.LetExpression = parseOk.ast as Language.Ast.LetExpression;
+        const yVariable: Language.Ast.IdentifierPairedExpression = letExpression.variableList.elements[1].node;
+
+        expect(yVariable.precedingDirectives).to.equal(undefined, "y should not have directives from x's line");
+    });
+
+    it("should handle multiple consecutive directives in correct order", async () => {
+        const parseOk: ParseOk = await AssertTestUtils.assertGetLexParseOk(
+            {
+                ...DefaultSettings,
+                isTypeDirectiveAllowed: true,
+            },
+            `let
+    /// @type text
+    /// @type number
+    value = []
+in
+    value`,
+        );
+
+        const letExpression: Language.Ast.LetExpression = parseOk.ast as Language.Ast.LetExpression;
+        const variable: Language.Ast.IdentifierPairedExpression = letExpression.variableList.elements[0].node;
+
+        expect(variable.precedingDirectives).to.not.equal(undefined);
+        expect(variable.precedingDirectives?.length).to.equal(2);
+
+        expect(
+            variable.precedingDirectives?.map((directive: Language.Comment.TDirective) => directive.value),
+        ).to.deep.equal(["text", "number"]);
     });
 });
