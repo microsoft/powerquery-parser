@@ -162,7 +162,7 @@ export function isOnTokenKind(
 
 export function isOnConstantKind(state: ParseState, constantKind: Constant.TConstant): boolean {
     if (isOnTokenKind(state, Token.TokenKind.Identifier)) {
-        const currentToken: Token.Token = Assert.asDefined(state.lexerSnapshot.tokens[state.tokenIndex]);
+        const currentToken: Token.Token = ArrayUtils.assertGet(state.lexerSnapshot.tokens, state.tokenIndex);
 
         if (currentToken?.data === undefined) {
             const details: { currentToken: Token.Token } = { currentToken };
@@ -283,7 +283,7 @@ export function assertGetContextNodeMetadata(state: ParseState): ContextNodeMeta
 
     // inclusive token index
     const tokenIndexEnd: number = state.tokenIndex - 1;
-    const tokenEnd: Token.Token = Assert.asDefined(state.lexerSnapshot.tokens[tokenIndexEnd]);
+    const tokenEnd: Token.Token = ArrayUtils.assertGet(state.lexerSnapshot.tokens, tokenIndexEnd);
 
     const tokenRange: Token.TokenRange = {
         tokenIndexStart: currentContextNode.tokenIndexStart,

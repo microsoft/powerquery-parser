@@ -4,7 +4,7 @@
 import "mocha";
 import { expect } from "chai";
 
-import { Assert, Language, MapUtils, Parser } from "../../../powerquery-parser";
+import { ArrayUtils, Assert, Language, MapUtils, Parser } from "../../../powerquery-parser";
 import { DefaultSettings, Task } from "../../..";
 import {
     FieldSpecificationKeyValuePair,
@@ -34,7 +34,7 @@ describe("nodeIdMapIterator", () => {
 
         expect(fieldSpecificationListIds.size).to.equal(1);
 
-        const fieldSpecificationListId: number = Assert.asDefined([...fieldSpecificationListIds.values()][0]);
+        const fieldSpecificationListId: number = ArrayUtils.assertGet([...fieldSpecificationListIds.values()], 0);
 
         const fieldSpecificationList: TXorNode = NodeIdMapUtils.assertXor(
             parseOk.nodeIdMapCollection,
@@ -46,11 +46,11 @@ describe("nodeIdMapIterator", () => {
 
         expect(fieldSpecificationKeyValuePairs.length).to.equal(2);
 
-        const firstKeyValuePair: FieldSpecificationKeyValuePair = Assert.asDefined(fieldSpecificationKeyValuePairs[0]);
+        const firstKeyValuePair: FieldSpecificationKeyValuePair = ArrayUtils.assertGet(fieldSpecificationKeyValuePairs, 0);
         expect(firstKeyValuePair.optional).to.equal(undefined);
         expect(firstKeyValuePair.normalizedKeyLiteral).to.equal("foo");
 
-        const secondKeyValuePair: FieldSpecificationKeyValuePair = Assert.asDefined(fieldSpecificationKeyValuePairs[1]);
+        const secondKeyValuePair: FieldSpecificationKeyValuePair = ArrayUtils.assertGet(fieldSpecificationKeyValuePairs, 1);
         expect(Boolean(secondKeyValuePair.optional)).to.equal(true);
         expect(secondKeyValuePair.normalizedKeyLiteral).to.equal("bar");
     });
@@ -67,7 +67,7 @@ describe("nodeIdMapIterator", () => {
 
             expect(functionExpressionIds.size).to.equal(1);
 
-            const functionExpressionId: number = Assert.asDefined([...functionExpressionIds.values()][0]);
+            const functionExpressionId: number = ArrayUtils.assertGet([...functionExpressionIds.values()], 0);
 
             const functionExpression: TXorNode = NodeIdMapUtils.assertXor(
                 parseOk.nodeIdMapCollection,
@@ -82,12 +82,12 @@ describe("nodeIdMapIterator", () => {
             expect(parameters.length).to.equal(2);
 
             const firstParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
-                XorNodeUtils.assertAst(Assert.asDefined(parameters[0])),
+                XorNodeUtils.assertAst(ArrayUtils.assertGet(parameters, 0)),
                 Ast.NodeKind.Parameter,
             );
 
             const secondParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
-                XorNodeUtils.assertAst(Assert.asDefined(parameters[1])),
+                XorNodeUtils.assertAst(ArrayUtils.assertGet(parameters, 1)),
                 Ast.NodeKind.Parameter,
             );
 
@@ -106,7 +106,7 @@ describe("nodeIdMapIterator", () => {
 
             expect(functionExpressionIds.size).to.equal(1);
 
-            const functionExpressionId: number = Assert.asDefined([...functionExpressionIds.values()][0]);
+            const functionExpressionId: number = ArrayUtils.assertGet([...functionExpressionIds.values()], 0);
 
             const functionExpression: TXorNode = NodeIdMapUtils.assertXor(
                 parseError.state.contextState.nodeIdMapCollection,
@@ -121,12 +121,12 @@ describe("nodeIdMapIterator", () => {
             expect(parameters.length).to.equal(2);
 
             const firstParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
-                XorNodeUtils.assertAst(Assert.asDefined(parameters[0])),
+                XorNodeUtils.assertAst(ArrayUtils.assertGet(parameters, 0)),
                 Ast.NodeKind.Parameter,
             );
 
             const secondParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
-                XorNodeUtils.assertAst(Assert.asDefined(parameters[1])),
+                XorNodeUtils.assertAst(ArrayUtils.assertGet(parameters, 1)),
                 Ast.NodeKind.Parameter,
             );
 
@@ -147,7 +147,7 @@ describe("nodeIdMapIterator", () => {
 
             expect(functionExpressionIds.size).to.equal(1);
 
-            const functionExpressionId: number = Assert.asDefined([...functionExpressionIds.values()][0]);
+            const functionExpressionId: number = ArrayUtils.assertGet([...functionExpressionIds.values()], 0);
 
             const functionExpression: TXorNode = NodeIdMapUtils.assertXor(
                 parseOk.nodeIdMapCollection,
@@ -173,7 +173,7 @@ describe("nodeIdMapIterator", () => {
 
             expect(functionExpressionIds.size).to.equal(1);
 
-            const functionExpressionId: number = Assert.asDefined([...functionExpressionIds.values()][0]);
+            const functionExpressionId: number = ArrayUtils.assertGet([...functionExpressionIds.values()], 0);
 
             const functionExpression: TXorNode = NodeIdMapUtils.assertXor(
                 parseError.state.contextState.nodeIdMapCollection,
@@ -201,7 +201,7 @@ describe("nodeIdMapIterator", () => {
 
             expect(recordIds.size).to.equal(1);
 
-            const recordId: number = Assert.asDefined([...recordIds.values()][0]);
+            const recordId: number = ArrayUtils.assertGet([...recordIds.values()], 0);
             const record: TXorNode = NodeIdMapUtils.assertXor(parseOk.nodeIdMapCollection, recordId);
 
             const recordKeyValuePairs: ReadonlyArray<RecordKeyValuePair> = NodeIdMapIterator.iterRecord(
@@ -211,7 +211,7 @@ describe("nodeIdMapIterator", () => {
 
             expect(recordKeyValuePairs.length).to.equal(1);
 
-            const keyValuePair: RecordKeyValuePair = Assert.asDefined(recordKeyValuePairs[0]);
+            const keyValuePair: RecordKeyValuePair = ArrayUtils.assertGet(recordKeyValuePairs, 0);
             expect(keyValuePair.normalizedKeyLiteral).to.equal("foo");
         });
     });
@@ -227,7 +227,7 @@ describe("nodeIdMapIterator", () => {
 
         expect(recordTypeIds.size).to.equal(1);
 
-        const recordTypeId: number = Assert.asDefined([...recordTypeIds.values()][0]);
+        const recordTypeId: number = ArrayUtils.assertGet([...recordTypeIds.values()], 0);
         const recordType: TXorNode = NodeIdMapUtils.assertXor(parseOk.nodeIdMapCollection, recordTypeId);
 
         const fieldSpecificationKeyValuePairs: ReadonlyArray<FieldSpecificationKeyValuePair> =
@@ -235,11 +235,11 @@ describe("nodeIdMapIterator", () => {
 
         expect(fieldSpecificationKeyValuePairs.length).to.equal(2);
 
-        const firstKeyValuePair: FieldSpecificationKeyValuePair = Assert.asDefined(fieldSpecificationKeyValuePairs[0]);
+        const firstKeyValuePair: FieldSpecificationKeyValuePair = ArrayUtils.assertGet(fieldSpecificationKeyValuePairs, 0);
         expect(firstKeyValuePair.optional).to.equal(undefined);
         expect(firstKeyValuePair.normalizedKeyLiteral).to.equal("foo");
 
-        const secondKeyValuePair: FieldSpecificationKeyValuePair = Assert.asDefined(fieldSpecificationKeyValuePairs[1]);
+        const secondKeyValuePair: FieldSpecificationKeyValuePair = ArrayUtils.assertGet(fieldSpecificationKeyValuePairs, 1);
         expect(Boolean(secondKeyValuePair.optional)).to.equal(true);
         expect(secondKeyValuePair.normalizedKeyLiteral).to.equal("bar");
     });

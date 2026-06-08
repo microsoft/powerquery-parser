@@ -5,6 +5,14 @@
 import GraphemeSplitter = require("grapheme-splitter");
 import { Assert, CommonError, Pattern } from ".";
 
+export function assertGet(text: string, index: number, message?: string, details?: object): string {
+    return Assert.asDefined(
+        text[index],
+        message ?? "index out of bounds",
+        details ?? { index, textLength: text.length },
+    );
+}
+
 export const graphemeSplitter: GraphemeSplitter = new GraphemeSplitter();
 
 export interface FoundQuotes {

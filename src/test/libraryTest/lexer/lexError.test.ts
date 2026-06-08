@@ -5,7 +5,7 @@ import "mocha";
 import { expect } from "chai";
 
 import { DefaultSettings, Lexer, ResultUtils } from "../../..";
-import { Assert } from "../../../powerquery-parser/common";
+import { ArrayUtils } from "../../../powerquery-parser/common";
 
 function assertBadLineNumberKind(lineNumber: number, expectedKind: Lexer.LexError.BadLineNumberKind): void {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, `foo`);
@@ -37,7 +37,7 @@ function assertExpectedKind(text: string, expectedKind: Lexer.LexError.ExpectedK
     const state: Lexer.State = triedLex.value;
     expect(state.lines.length).to.equal(1);
 
-    const line: Lexer.TLine = Assert.asDefined(state.lines[0]);
+    const line: Lexer.TLine = ArrayUtils.assertGet(state.lines, 0);
 
     if (!Lexer.isErrorLine(line)) {
         throw new Error(`AssertFailed: Lexer.isErrorLine(line): ${JSON.stringify(line)}`);

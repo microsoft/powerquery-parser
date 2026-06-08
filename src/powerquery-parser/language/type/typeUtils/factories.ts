@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, StringUtils } from "../../../common";
+import { ArrayUtils, Assert, CommonError, StringUtils } from "../../../common";
 import { PrimitiveTypeConstantMap, primitiveTypeMapKey } from "./primitive";
 import { Trace, TraceManager } from "../../../common/trace";
 import { simplify } from "./simplify";
@@ -31,7 +31,7 @@ export function anyUnion(
     if (simplified.length === 1) {
         trace.exit();
 
-        return Assert.asDefined(simplified[0]);
+        return ArrayUtils.assertGet(simplified, 0);
     }
 
     const result: Type.AnyUnion = {

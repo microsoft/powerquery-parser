@@ -3,7 +3,7 @@
 
 import { Ast, Constant, IdentifierUtils } from "../../language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
-import { Assert } from "../../common";
+import { ArrayUtils, Assert } from "../../common";
 import { parameterIdentifier } from "./nodeIdMapUtils";
 import { XorNode } from "./xorNode";
 
@@ -128,7 +128,7 @@ export function nthSiblingXor(
         return undefined;
     }
 
-    return NodeIdMapUtils.xor(nodeIdMapCollection, Assert.asDefined(childIds[attributeIndex]));
+    return NodeIdMapUtils.xor(nodeIdMapCollection, ArrayUtils.assertGet(childIds, attributeIndex));
 }
 
 // ------------------------------------------

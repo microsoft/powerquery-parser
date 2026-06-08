@@ -5,7 +5,7 @@ import "mocha";
 import { expect } from "chai";
 
 import { Lexer, ResultUtils } from "../../..";
-import { Assert } from "../../../powerquery-parser/common";
+import { ArrayUtils } from "../../../powerquery-parser/common";
 import { assertGetLexOk } from "../../testUtils/lexTestUtils";
 
 const LINE_TERMINATOR: string = `\n`;
@@ -82,7 +82,7 @@ describe(`Lexer.Incremental`, () => {
 
             const state: Lexer.State = assertGetLexerUpdateRangeOk(`foobar`, "X", range);
             expect(state.lines.length).to.equal(1);
-            expect(Assert.asDefined(state.lines[0]).text).to.equal("Xfoobar");
+            expect(ArrayUtils.assertGet(state.lines, 0).text).to.equal("Xfoobar");
         });
 
         it(`foobar -> fooXbar`, () => {
@@ -99,7 +99,7 @@ describe(`Lexer.Incremental`, () => {
 
             const state: Lexer.State = assertGetLexerUpdateRangeOk(`foobar`, "X", range);
             expect(state.lines.length).to.equal(1);
-            expect(Assert.asDefined(state.lines[0]).text).to.equal("fooXbar");
+            expect(ArrayUtils.assertGet(state.lines, 0).text).to.equal("fooXbar");
         });
 
         it(`foobar -> Xoobar`, () => {
@@ -116,7 +116,7 @@ describe(`Lexer.Incremental`, () => {
 
             const state: Lexer.State = assertGetLexerUpdateRangeOk(`foobar`, "X", range);
             expect(state.lines.length).to.equal(1);
-            expect(Assert.asDefined(state.lines[0]).text).to.equal("Xoobar");
+            expect(ArrayUtils.assertGet(state.lines, 0).text).to.equal("Xoobar");
         });
 
         it(`foobar -> X`, () => {
@@ -133,7 +133,7 @@ describe(`Lexer.Incremental`, () => {
 
             const state: Lexer.State = assertGetLexerUpdateRangeOk(`foobar`, "X", range);
             expect(state.lines.length).to.equal(1);
-            expect(Assert.asDefined(state.lines[0]).text).to.equal("X");
+            expect(ArrayUtils.assertGet(state.lines, 0).text).to.equal("X");
         });
 
         it(`foo\\nbar -> X`, () => {
@@ -150,7 +150,7 @@ describe(`Lexer.Incremental`, () => {
 
             const state: Lexer.State = assertGetLexerUpdateRangeOk(`foo\nbar`, "X", range);
             expect(state.lines.length).to.equal(1);
-            expect(Assert.asDefined(state.lines[0]).text).to.equal("X");
+            expect(ArrayUtils.assertGet(state.lines, 0).text).to.equal("X");
         });
 
         it(`foo\\nbar -> fXr`, () => {
@@ -167,7 +167,7 @@ describe(`Lexer.Incremental`, () => {
 
             const state: Lexer.State = assertGetLexerUpdateRangeOk(`foo\nbar`, "X", range);
             expect(state.lines.length).to.equal(1);
-            expect(Assert.asDefined(state.lines[0]).text).to.equal("fXr");
+            expect(ArrayUtils.assertGet(state.lines, 0).text).to.equal("fXr");
         });
 
         it(`foo\\nbar\\baz -> foo\\nX\\nbaz`, () => {
@@ -184,9 +184,9 @@ describe(`Lexer.Incremental`, () => {
 
             const state: Lexer.State = assertGetLexerUpdateRangeOk(`foo\nbar\nbaz`, "X", range);
             expect(state.lines.length).to.equal(3);
-            expect(Assert.asDefined(state.lines[0]).text).to.equal("foo");
-            expect(Assert.asDefined(state.lines[1]).text).to.equal("X");
-            expect(Assert.asDefined(state.lines[2]).text).to.equal("baz");
+            expect(ArrayUtils.assertGet(state.lines, 0).text).to.equal("foo");
+            expect(ArrayUtils.assertGet(state.lines, 1).text).to.equal("X");
+            expect(ArrayUtils.assertGet(state.lines, 2).text).to.equal("baz");
         });
 
         it(`foo\\nbar\\baz -> foo\\nbXr\\nbaz`, () => {
@@ -203,9 +203,9 @@ describe(`Lexer.Incremental`, () => {
 
             const state: Lexer.State = assertGetLexerUpdateRangeOk(`foo\nbar\nbaz`, "X", range);
             expect(state.lines.length).to.equal(3);
-            expect(Assert.asDefined(state.lines[0]).text).to.equal("foo");
-            expect(Assert.asDefined(state.lines[1]).text).to.equal("bXr");
-            expect(Assert.asDefined(state.lines[2]).text).to.equal("baz");
+            expect(ArrayUtils.assertGet(state.lines, 0).text).to.equal("foo");
+            expect(ArrayUtils.assertGet(state.lines, 1).text).to.equal("bXr");
+            expect(ArrayUtils.assertGet(state.lines, 2).text).to.equal("baz");
         });
 
         it(`lineTerminator maintained on single line change`, () => {

@@ -56,7 +56,7 @@ export function isEqualTypes(
     const numTypes: number = leftTypes.length;
 
     for (let index: number = 0; index < numTypes; index += 1) {
-        if (!isTypeInArray(leftTypes, Assert.asDefined(rightTypes[index]))) {
+        if (!isTypeInArray(leftTypes, ArrayUtils.assertGet(rightTypes, index))) {
             return false;
         }
     }
@@ -144,7 +144,7 @@ export function isEqualDefinedList(left: Type.DefinedList, right: Type.DefinedLi
 
     return ArrayUtils.all(
         left.elements.map((leftType: Type.TPowerQueryType, index: number) =>
-            isEqualType(leftType, Assert.asDefined(rightElements[index])),
+            isEqualType(leftType, ArrayUtils.assertGet(rightElements, index)),
         ),
     );
 }
@@ -160,7 +160,7 @@ export function isEqualDefinedListType(left: Type.DefinedListType, right: Type.D
 
     return ArrayUtils.all(
         left.itemTypes.map((leftType: Type.TPowerQueryType, index: number) =>
-            isEqualType(leftType, Assert.asDefined(rightElements[index])),
+            isEqualType(leftType, ArrayUtils.assertGet(rightElements, index)),
         ),
     );
 }
@@ -224,8 +224,8 @@ export function isEqualFunctionParameters(
     const numParameters: number = left.length;
 
     for (let index: number = 0; index < numParameters; index += 1) {
-        const nthLeft: Type.FunctionParameter = Assert.asDefined(left[index]);
-        const nthRight: Type.FunctionParameter = Assert.asDefined(right[index]);
+        const nthLeft: Type.FunctionParameter = ArrayUtils.assertGet(left, index);
+        const nthRight: Type.FunctionParameter = ArrayUtils.assertGet(right, index);
 
         if (!isEqualFunctionParameter(nthLeft, nthRight)) {
             return false;

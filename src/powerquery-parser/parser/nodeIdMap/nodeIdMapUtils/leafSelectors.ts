@@ -3,7 +3,7 @@
 
 import { AstNodeById, Collection } from "../nodeIdMap";
 import { NodeIdMap, XorNodeUtils } from "..";
-import { Assert } from "../../../common";
+import { ArrayUtils, Assert } from "../../../common";
 import { Ast } from "../../../language";
 import { TXorNode } from "../xorNode";
 import { xor } from "./commonSelectors";
@@ -35,7 +35,7 @@ export function leftMostXor(nodeIdMapCollection: Collection, nodeId: number): TX
     let childIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(currentNodeId);
 
     while (childIds?.length) {
-        currentNodeId = Assert.asDefined(childIds[0]);
+        currentNodeId = ArrayUtils.assertGet(childIds, 0);
         childIds = nodeIdMapCollection.childIdsById.get(currentNodeId);
     }
 

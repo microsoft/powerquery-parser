@@ -4,7 +4,7 @@
 import { Ast, AstUtils } from "../..";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, XorNode, XorNodeKind } from "../../../parser";
 import { Trace, TraceManager } from "../../../common/trace";
-import { Assert } from "../../../common";
+import { ArrayUtils, Assert } from "../../../common";
 import { isCompatible } from "./isCompatible";
 import { isEqualType } from "./isEqualType";
 import { primitiveType } from "./factories";
@@ -91,7 +91,7 @@ export function isValidInvocation(
     const numParameters: number = parameters.length;
 
     for (let index: number = 1; index < numParameters; index += 1) {
-        const parameter: Type.FunctionParameter = Assert.asDefined(parameters[index]);
+        const parameter: Type.FunctionParameter = ArrayUtils.assertGet(parameters, index);
         const argType: Type.TPowerQueryType | undefined = args[index];
 
         if (argType !== undefined) {
