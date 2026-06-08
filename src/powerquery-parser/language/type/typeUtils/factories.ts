@@ -31,7 +31,7 @@ export function anyUnion(
     if (simplified.length === 1) {
         trace.exit();
 
-        return simplified[0];
+        return Assert.asDefined(simplified[0]);
     }
 
     const result: Type.AnyUnion = {

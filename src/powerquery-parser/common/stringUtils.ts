@@ -162,7 +162,7 @@ export function findQuotes(text: string, indexStart: number): FoundQuotes | unde
 }
 
 export function newlineKindAt(text: string, index: number): NewlineKind | undefined {
-    const chr1: string = text[index];
+    const chr1: string | undefined = text[index];
 
     switch (chr1) {
         case `\u000d`: {
@@ -199,7 +199,7 @@ export function isHex(text: string): boolean {
 }
 
 export function getSign(text: string): [boolean, number] {
-    let char: string = text[0];
+    let char: string | undefined = text[0];
     let charOffset: number = 0;
     let isPositive: boolean = true;
 

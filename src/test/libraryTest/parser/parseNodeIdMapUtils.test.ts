@@ -46,11 +46,11 @@ describe("nodeIdMapIterator", () => {
 
         expect(fieldSpecificationKeyValuePairs.length).to.equal(2);
 
-        const firstKeyValuePair: FieldSpecificationKeyValuePair = fieldSpecificationKeyValuePairs[0];
+        const firstKeyValuePair: FieldSpecificationKeyValuePair = Assert.asDefined(fieldSpecificationKeyValuePairs[0]);
         expect(firstKeyValuePair.optional).to.equal(undefined);
         expect(firstKeyValuePair.normalizedKeyLiteral).to.equal("foo");
 
-        const secondKeyValuePair: FieldSpecificationKeyValuePair = fieldSpecificationKeyValuePairs[1];
+        const secondKeyValuePair: FieldSpecificationKeyValuePair = Assert.asDefined(fieldSpecificationKeyValuePairs[1]);
         expect(Boolean(secondKeyValuePair.optional)).to.equal(true);
         expect(secondKeyValuePair.normalizedKeyLiteral).to.equal("bar");
     });
@@ -82,12 +82,12 @@ describe("nodeIdMapIterator", () => {
             expect(parameters.length).to.equal(2);
 
             const firstParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
-                XorNodeUtils.assertAst(parameters[0]),
+                XorNodeUtils.assertAst(Assert.asDefined(parameters[0])),
                 Ast.NodeKind.Parameter,
             );
 
             const secondParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
-                XorNodeUtils.assertAst(parameters[1]),
+                XorNodeUtils.assertAst(Assert.asDefined(parameters[1])),
                 Ast.NodeKind.Parameter,
             );
 
@@ -121,12 +121,12 @@ describe("nodeIdMapIterator", () => {
             expect(parameters.length).to.equal(2);
 
             const firstParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
-                XorNodeUtils.assertAst(parameters[0]),
+                XorNodeUtils.assertAst(Assert.asDefined(parameters[0])),
                 Ast.NodeKind.Parameter,
             );
 
             const secondParameter: Ast.TParameter = Language.AstUtils.assertAsNodeKind<Ast.TParameter>(
-                XorNodeUtils.assertAst(parameters[1]),
+                XorNodeUtils.assertAst(Assert.asDefined(parameters[1])),
                 Ast.NodeKind.Parameter,
             );
 
@@ -211,7 +211,7 @@ describe("nodeIdMapIterator", () => {
 
             expect(recordKeyValuePairs.length).to.equal(1);
 
-            const keyValuePair: RecordKeyValuePair = recordKeyValuePairs[0];
+            const keyValuePair: RecordKeyValuePair = Assert.asDefined(recordKeyValuePairs[0]);
             expect(keyValuePair.normalizedKeyLiteral).to.equal("foo");
         });
     });
@@ -235,11 +235,11 @@ describe("nodeIdMapIterator", () => {
 
         expect(fieldSpecificationKeyValuePairs.length).to.equal(2);
 
-        const firstKeyValuePair: FieldSpecificationKeyValuePair = fieldSpecificationKeyValuePairs[0];
+        const firstKeyValuePair: FieldSpecificationKeyValuePair = Assert.asDefined(fieldSpecificationKeyValuePairs[0]);
         expect(firstKeyValuePair.optional).to.equal(undefined);
         expect(firstKeyValuePair.normalizedKeyLiteral).to.equal("foo");
 
-        const secondKeyValuePair: FieldSpecificationKeyValuePair = fieldSpecificationKeyValuePairs[1];
+        const secondKeyValuePair: FieldSpecificationKeyValuePair = Assert.asDefined(fieldSpecificationKeyValuePairs[1]);
         expect(Boolean(secondKeyValuePair.optional)).to.equal(true);
         expect(secondKeyValuePair.normalizedKeyLiteral).to.equal("bar");
     });

@@ -56,7 +56,7 @@ export function hasParsedToken(nodeIdMapCollection: Collection, nodeId: number):
         }
         // There might be a child under here.
         else if (numChildren === 1) {
-            const childId: number = childIds[0];
+            const childId: number = Assert.asDefined(childIds[0]);
 
             // We know it's an Ast Node, therefore something was parsed.
             if (nodeIdMapCollection.astNodeById.has(childId)) {

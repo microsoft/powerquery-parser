@@ -4,6 +4,7 @@
 import "mocha";
 import { expect } from "chai";
 
+import { Assert } from "../../../powerquery-parser/common";
 import { NodeIdMap, NodeIdMapUtils, ParseOk } from "../../../powerquery-parser/parser";
 import { AssertTestUtils } from "../../testUtils";
 import { Ast } from "../../../powerquery-parser/language";
@@ -28,7 +29,7 @@ function assertGetIdentifierByLiteral(parseOk: ParseOk, identifierLiteral: strin
     if (matches.length === 0) {
         throw new Error(`could not find the following identifier in the ast: ${identifierLiteral}`);
     } else if (matches.length === 1) {
-        return matches[0];
+        return Assert.asDefined(matches[0]);
     } else {
         throw new Error(`found multiple instances of the following identifier: ${identifierLiteral}`);
     }

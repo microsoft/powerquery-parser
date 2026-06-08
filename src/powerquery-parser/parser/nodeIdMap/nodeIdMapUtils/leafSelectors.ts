@@ -35,7 +35,7 @@ export function leftMostXor(nodeIdMapCollection: Collection, nodeId: number): TX
     let childIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(currentNodeId);
 
     while (childIds?.length) {
-        currentNodeId = childIds[0];
+        currentNodeId = Assert.asDefined(childIds[0]);
         childIds = nodeIdMapCollection.childIdsById.get(currentNodeId);
     }
 

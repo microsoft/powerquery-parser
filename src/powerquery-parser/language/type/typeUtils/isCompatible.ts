@@ -777,7 +777,7 @@ function isCompatibleDefinedListOrDefinedListType<T extends Type.DefinedList | T
     const numElements: number = leftElements.length;
 
     for (let index: number = 0; index < numElements; index += 1) {
-        if (!isCompatible(leftElements[index], rightElements[index], traceManager, trace.id)) {
+        if (!isCompatible(Assert.asDefined(leftElements[index]), Assert.asDefined(rightElements[index]), traceManager, trace.id)) {
             trace.exit();
 
             return false;

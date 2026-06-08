@@ -335,7 +335,7 @@ export function deleteContext(state: ParseContext.State, nodeId: number): ParseC
     // Not a leaf node.
     if (childIds !== undefined) {
         ArrayUtils.assertNonZeroLength(childIds);
-        const childId: number = childIds[0];
+        const childId: number = Assert.asDefined(childIds[0]);
 
         // Not a leaf node, is the Root node.
         // Promote the child to the root if it's a Context node.

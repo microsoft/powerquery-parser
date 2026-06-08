@@ -3,7 +3,7 @@
 
 import { isCompatible, isCompatibleWithFunctionParameter } from "./isCompatible";
 import { Trace, TraceManager } from "../../../common/trace";
-import { ArrayUtils } from "../../../common";
+import { ArrayUtils, Assert } from "../../../common";
 import { isEqualFunctionParameter } from "./isEqualType";
 import { Type } from "..";
 import { TypeUtilsTraceConstant } from "./typeTraceConstant";
@@ -127,7 +127,7 @@ export function typeCheckInvocation(
 
     for (let index: number = 0; index < numParameters; index += 1) {
         const arg: Type.TPowerQueryType | undefined = args[index];
-        const parameter: Type.FunctionParameter = parameters[index];
+        const parameter: Type.FunctionParameter = Assert.asDefined(parameters[index]);
 
         if (isCompatibleWithFunctionParameter(arg, parameter)) {
             validArgs.push(index);
@@ -257,8 +257,8 @@ function typeCheckGenericNumber<
     const mismatches: Map<number, IMismatch<Value, Schema>> = new Map();
 
     for (let index: number = 0; index < upperBound; index += 1) {
-        const element: Value = valueElements[index];
-        const schemaItemType: Schema = schemaItemTypes[index];
+        const element: Value = Assert.asDefined(valueElements[index]);
+        const schemaItemType: Schema = Assert.asDefined(schemaItemTypes[index]);
 
         if (comparer(element, schemaItemType, traceManager, trace.id)) {
             validIndices.push(index);

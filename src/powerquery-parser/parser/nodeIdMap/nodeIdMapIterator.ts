@@ -128,7 +128,7 @@ export function nthSiblingXor(
         return undefined;
     }
 
-    return NodeIdMapUtils.xor(nodeIdMapCollection, childIds[attributeIndex]);
+    return NodeIdMapUtils.xor(nodeIdMapCollection, Assert.asDefined(childIds[attributeIndex]));
 }
 
 // ------------------------------------------

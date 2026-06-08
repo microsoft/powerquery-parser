@@ -148,8 +148,8 @@ export function equalLines(leftLines: ReadonlyArray<TLine>, rightLines: Readonly
     const numLines: number = leftLines.length;
 
     for (let lineIndex: number = 0; lineIndex < numLines; lineIndex += 1) {
-        const left: TLine = leftLines[lineIndex];
-        const right: TLine = rightLines[lineIndex];
+        const left: TLine = Assert.asDefined(leftLines[lineIndex]);
+        const right: TLine = Assert.asDefined(rightLines[lineIndex]);
         const leftTokens: ReadonlyArray<Token.LineToken> = left.tokens;
         const rightTokens: ReadonlyArray<Token.LineToken> = right.tokens;
 
@@ -168,7 +168,7 @@ export function equalLines(leftLines: ReadonlyArray<TLine>, rightLines: Readonly
         const numTokens: number = leftTokens.length;
 
         for (let tokenIndex: number = 0; tokenIndex < numTokens; tokenIndex += 1) {
-            if (!equalTokens(leftTokens[tokenIndex], rightTokens[tokenIndex])) {
+            if (!equalTokens(Assert.asDefined(leftTokens[tokenIndex]), Assert.asDefined(rightTokens[tokenIndex]))) {
                 return false;
             }
         }
@@ -265,7 +265,7 @@ function splitOnLineTerminators(startingText: string): SplitLine[] {
         let indexWasExpanded: boolean = false;
 
         for (const lineTerminator of lineTerminators) {
-            const splitLine: SplitLine = lines[index];
+            const splitLine: SplitLine = Assert.asDefined(lines[index]);
             const text: string = splitLine.text;
 
             if (text.indexOf(lineTerminator) !== -1) {
@@ -276,7 +276,7 @@ function splitOnLineTerminators(startingText: string): SplitLine[] {
                     lineTerminator,
                 }));
 
-                split[split.length - 1].lineTerminator = splitLine.lineTerminator;
+                Assert.asDefined(split[split.length - 1]).lineTerminator = splitLine.lineTerminator;
 
                 lines = [...lines.slice(0, index), ...split, ...lines.slice(index + 1)];
             }
@@ -287,7 +287,7 @@ function splitOnLineTerminators(startingText: string): SplitLine[] {
         }
     }
 
-    lines[lines.length - 1].lineTerminator = "";
+    Assert.asDefined(lines[lines.length - 1]).lineTerminator = "";
 
     return lines;
 }
@@ -356,7 +356,7 @@ function updateLine(state: State, lineNumber: number, text: string): State {
         throw error;
     }
 
-    const line: TLine = state.lines[lineNumber];
+    const line: TLine = Assert.asDefined(state.lines[lineNumber]);
     const range: Range = rangeFrom(line, lineNumber);
 
     return updateRange(state, range, text);
@@ -374,14 +374,14 @@ function updateRange(state: State, range: Range, text: string): State {
     const splitLines: SplitLine[] = splitOnLineTerminators(text);
 
     const rangeStart: RangePosition = range.start;
-    const lineStart: TLine = state.lines[rangeStart.lineNumber];
+    const lineStart: TLine = Assert.asDefined(state.lines[rangeStart.lineNumber]);
     const textPrefix: string = lineStart.text.substring(0, rangeStart.lineCodeUnit);
-    splitLines[0].text = textPrefix + splitLines[0].text;
+    Assert.asDefined(splitLines[0]).text = textPrefix + Assert.asDefined(splitLines[0]).text;
 
     const rangeEnd: RangePosition = range.end;
-    const lineEnd: TLine = state.lines[rangeEnd.lineNumber];
+    const lineEnd: TLine = Assert.asDefined(state.lines[rangeEnd.lineNumber]);
     const textSuffix: string = lineEnd.text.substr(rangeEnd.lineCodeUnit);
-    const lastSplitLine: SplitLine = splitLines[splitLines.length - 1];
+    const lastSplitLine: SplitLine = Assert.asDefined(splitLines[splitLines.length - 1]);
     lastSplitLine.text = lastSplitLine.text + textSuffix;
 
     // make sure we have a line terminator
@@ -400,7 +400,7 @@ function updateRange(state: State, range: Range, text: string): State {
     const lines: ReadonlyArray<TLine> = [
         ...state.lines.slice(0, rangeStart.lineNumber),
         ...newLines,
-        ...retokenizeLines(state, rangeEnd.lineNumber + 1, newLines[newLines.length - 1].lineModeEnd),
+        ...retokenizeLines(state, rangeEnd.lineNumber + 1, Assert.asDefined(newLines[newLines.length - 1]).lineModeEnd),
     ];
 
     return {
@@ -485,7 +485,7 @@ function retokenizeLines(state: State, lineNumber: number, previousLineModeEnd: 
 
     const retokenizedLines: TLine[] = [];
 
-    if (previousLineModeEnd !== lines[lineNumber].lineModeStart) {
+    if (previousLineModeEnd !== Assert.asDefined(lines[lineNumber]).lineModeStart) {
         let currentLine: TLine | undefined = lines[lineNumber];
 
         while (currentLine) {
@@ -793,7 +793,7 @@ function tokenizeTextLiteralContentOrEnd(line: TLine, currentPosition: number): 
 function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number, locale: string): LineModeAlteringRead {
     const text: string = line.text;
 
-    const chr1: string = text[positionStart];
+    const chr1: string = Assert.asDefined(text[positionStart]);
     let token: Token.LineToken;
     let lineMode: LineMode = LineMode.Default;
 
@@ -855,7 +855,7 @@ function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number,
         } else if ("1" <= chr2 && chr2 <= "9") {
             token = readNumericLiteral(text, lineNumber, positionStart, locale);
         } else if (chr2 === ".") {
-            const chr3: string = text[positionStart + 2];
+            const chr3: string = Assert.asDefined(text[positionStart + 2]);
 
             if (chr3 === ".") {
                 token = readConstant(Token.LineTokenKind.Ellipsis, text, positionStart, 3);
@@ -1321,8 +1321,8 @@ function testBadRangeError(state: State, range: Range): LexError.BadRangeError |
     const rangeStart: RangePosition = range.start;
     const rangeEnd: RangePosition = range.end;
 
-    const lineStart: TLine = lines[rangeStart.lineNumber];
-    const lineEnd: TLine = lines[rangeEnd.lineNumber];
+    const lineStart: TLine = Assert.asDefined(lines[rangeStart.lineNumber]);
+    const lineEnd: TLine = Assert.asDefined(lines[rangeEnd.lineNumber]);
 
     if (rangeStart.lineCodeUnit > lineStart.text.length) {
         kind = LexError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength;

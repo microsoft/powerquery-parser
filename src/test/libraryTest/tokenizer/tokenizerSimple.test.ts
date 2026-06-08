@@ -5,6 +5,7 @@ import "mocha";
 import { expect } from "chai";
 
 import { ILineTokens, IState, IToken, Tokenizer, TokenizerState } from "../../testUtils/tokenizerTestUtils";
+import { Assert } from "../../../powerquery-parser/common";
 
 const tokenizer: Tokenizer = new Tokenizer(`\n`);
 const initialState: TokenizerState = tokenizer.getInitialState() as TokenizerState;
@@ -16,14 +17,14 @@ function tokenizeLines(query: string, expectedTokenCounts: number[]): void {
     expect(lines.length).equals(expectedTokenCounts.length);
 
     for (let index: number = 0; index < lines.length; index += 1) {
-        const r: ILineTokens = tokenizer.tokenize(lines[index], state);
+        const r: ILineTokens = tokenizer.tokenize(Assert.asDefined(lines[index]), state);
         expect(!state.equals(r.endState), `state should have changed.`);
-        expect(r.tokens.length).equals(expectedTokenCounts[index], `unexpected token count`);
+        expect(r.tokens.length).equals(Assert.asDefined(expectedTokenCounts[index]), `unexpected token count`);
 
         state = r.endState as TokenizerState;
 
         r.tokens.forEach((token: IToken) => {
-            expect(token.startIndex).is.lessThan(lines[index].length);
+            expect(token.startIndex).is.lessThan(Assert.asDefined(lines[index]).length);
         });
     }
 }
