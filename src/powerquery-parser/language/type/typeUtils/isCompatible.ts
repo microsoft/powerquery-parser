@@ -415,7 +415,7 @@ function isCompatibleWithFunction(
 ): boolean {
     const trace: Trace = traceManager.entry(
         TypeUtilsTraceConstant.IsCompatible,
-        isCompatibleWithFieldSpecificationList.name,
+        isCompatibleWithFunction.name,
         correlationId,
     );
 
