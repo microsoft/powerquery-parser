@@ -348,4 +348,18 @@ describe(`Lexer.Simple.Whitespace Pattern`, () => {
         expect(match).to.not.equal(null, "Whitespace pattern should match vertical tab U+000B");
         expect(match![0]).to.equal("\u000B");
     });
+
+    it(`should match a consecutive run of whitespace in one match`, () => {
+        // P-08: Whitespace regex should use + quantifier to match entire run at once
+        // rather than one character per regex call in a loop
+        const regex: RegExp = Pattern.Whitespace;
+        regex.lastIndex = 0;
+
+        const testStr: string = "   \t  "; // 3 spaces + tab + 2 spaces
+        const match: RegExpExecArray | null = regex.exec(testStr);
+
+        expect(match).to.not.equal(null, "should match whitespace run");
+        expect(match![0].length).to.equal(6, "should match the entire whitespace run in one match");
+    });
+
 });

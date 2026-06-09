@@ -934,19 +934,11 @@ function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number,
 
 // newlines are not considered whitespace
 function drainWhitespace(text: string, position: number): number {
-    let continueDraining: boolean = text[position] !== undefined;
+    // Pattern.Whitespace uses a + quantifier, so a single match consumes
+    // the entire contiguous whitespace run without needing a loop.
+    const length: number | undefined = StringUtils.regexMatchLength(Pattern.Whitespace, text, position);
 
-    while (continueDraining) {
-        const length: number | undefined = StringUtils.regexMatchLength(Pattern.Whitespace, text, position);
-
-        if (length) {
-            position += length;
-        } else {
-            continueDraining = false;
-        }
-    }
-
-    return position;
+    return length ? position + length : position;
 }
 
 function readOrStartTextLiteral(text: string, currentPosition: number): LineModeAlteringRead {
