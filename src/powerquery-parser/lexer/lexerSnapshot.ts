@@ -57,7 +57,7 @@ export class LexerSnapshot {
             text.substring(lineBounds.substringPositionStart, lineBounds.substringPositionEnd),
             flatLineToken.positionStart.lineCodeUnit,
             flatLineToken.positionStart.lineNumber,
-            flatLineToken.positionEnd.codeUnit,
+            flatLineToken.positionStart.codeUnit,
         );
     }
 
@@ -84,7 +84,7 @@ export class LexerSnapshot {
                 cached.lineText,
                 token.positionStart.lineCodeUnit,
             ),
-            codeUnit: token.positionEnd.codeUnit,
+            codeUnit: token.positionStart.codeUnit,
         };
     }
 

@@ -6,8 +6,8 @@ import { expect } from "chai";
 
 import { CheckedDefinedList, CheckedInvocation } from "../../../../powerquery-parser/language/type/typeUtils";
 import { Type, TypeUtils } from "../../../../powerquery-parser/language";
-import { Language } from "../../../..";
 import { ArrayUtils } from "../../../../powerquery-parser/common";
+import { Language } from "../../../..";
 import { NoOpTraceManagerInstance } from "../../../../powerquery-parser/common/trace";
 import { OrderedMap } from "../../../../powerquery-parser";
 
@@ -360,7 +360,9 @@ describe(`TypeUtils.typeCheck`, () => {
 
             const expected: TypeUtils.CheckedInvocation = {
                 valid: [],
-                invalid: new Map([[0, { actual: args[0], expected: ArrayUtils.assertGet(definedFunction.parameters, 0) }]]),
+                invalid: new Map([
+                    [0, { actual: args[0], expected: ArrayUtils.assertGet(definedFunction.parameters, 0) }],
+                ]),
                 extraneous: [],
                 missing: [],
             };
@@ -388,7 +390,9 @@ describe(`TypeUtils.typeCheck`, () => {
 
             const expected: TypeUtils.CheckedInvocation = {
                 valid: [],
-                invalid: new Map([[0, { actual: args[0], expected: ArrayUtils.assertGet(definedFunction.parameters, 0) }]]),
+                invalid: new Map([
+                    [0, { actual: args[0], expected: ArrayUtils.assertGet(definedFunction.parameters, 0) }],
+                ]),
                 extraneous: [],
                 missing: [],
             };

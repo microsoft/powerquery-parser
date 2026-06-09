@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { ArrayUtils, Assert } from "../../../common";
 import { Ast, Token } from "../../../language";
 import { Collection, CollectionValidation, IdsByNodeKind, NodeSummary } from "../nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "../xorNode";
-import { ArrayUtils, Assert } from "../../../common";
 import { ParseContext } from "../../context";
 import { rightMostLeaf } from "./leafSelectors";
 

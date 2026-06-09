@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { ArrayUtils, Assert } from "../../common";
 import { Ast, Constant, IdentifierUtils } from "../../language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
-import { ArrayUtils, Assert } from "../../common";
 import { parameterIdentifier } from "./nodeIdMapUtils";
 import { XorNode } from "./xorNode";
 
@@ -124,7 +124,7 @@ export function nthSiblingXor(
         parentXorNode.node.id,
     );
 
-    if (childIds.length >= attributeIndex) {
+    if (attributeIndex >= childIds.length) {
         return undefined;
     }
 

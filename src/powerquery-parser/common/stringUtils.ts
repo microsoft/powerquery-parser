@@ -147,6 +147,8 @@ export function findQuotes(text: string, indexStart: number): FoundQuotes | unde
                 continue;
             } else {
                 index += 2;
+
+                continue;
             }
         }
 
@@ -184,6 +186,7 @@ export function newlineKindAt(text: string, index: number): NewlineKind | undefi
         case `\u2028`:
             return NewlineKind.SingleCharacter;
 
+        case undefined:
         default:
             return undefined;
     }
