@@ -21,8 +21,10 @@ export class OrderedMap<K, V> implements Map<K, V> {
                 this.order = [...entries.keys()];
                 this.size = entries.size;
             } else {
-                this.order = entries.map((pair: readonly [K, V]) => pair[0]);
-                this.size = entries.length;
+                // Derive order and size from the deduplicated map, not the raw input,
+                // because the input array may contain duplicate keys.
+                this.order = [...this.map.keys()];
+                this.size = this.map.size;
             }
         }
     }

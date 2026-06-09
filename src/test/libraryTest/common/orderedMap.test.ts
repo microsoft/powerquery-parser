@@ -37,6 +37,25 @@ describe("OrderedMap", () => {
             expect(map.get("y")).to.equal(20);
         });
 
+        it("deduplicates when array entries contain duplicate keys", () => {
+            const map: OrderedMap<string, number> = new OrderedMap([
+                ["a", 1],
+                ["b", 2],
+                ["a", 99],
+            ]);
+
+            // Map deduplicates: last value wins, size should reflect actual unique keys
+            expect(map.size).to.equal(2);
+            expect(map.get("a")).to.equal(99);
+            expect(map.get("b")).to.equal(2);
+            expect([...map.keys()]).to.deep.equal(["a", "b"]);
+
+            expect([...map.entries()]).to.deep.equal([
+                ["a", 99],
+                ["b", 2],
+            ]);
+        });
+
         it("from null", () => {
             const map: OrderedMap<string, number> = new OrderedMap(null);
             expect(map.size).to.equal(0);
