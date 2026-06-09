@@ -90,7 +90,9 @@ export class OrderedMap<K, V> implements Map<K, V> {
         return this;
     }
 
-    public values(): IterableIterator<V> {
-        return this.map.values();
+    public *values(): IterableIterator<V> {
+        for (const key of this.order) {
+            yield Assert.asDefined(this.map.get(key));
+        }
     }
 }

@@ -201,6 +201,17 @@ describe("OrderedMap", () => {
             const map: OrderedMap<string, number> = new OrderedMap();
             expect([...map.values()]).to.deep.equal([]);
         });
+
+        it("respects reordering from set", () => {
+            const map: OrderedMap<string, number> = new OrderedMap();
+            map.set("a", 1);
+            map.set("b", 2);
+            map.set("c", 3);
+            // Move "a" to end with new value
+            map.set("a", 99);
+            // keys() order is ["b", "c", "a"], so values() must be [2, 3, 99]
+            expect([...map.values()]).to.deep.equal([2, 3, 99]);
+        });
     });
 
     describe("entries", () => {
