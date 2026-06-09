@@ -178,17 +178,23 @@ function isCompatibleWithAnyUnion(
         correlationId,
     );
 
+    let foundUndefined: boolean = false;
+
     for (const subtype of right.unionedTypePairs) {
-        if (isCompatible(left, subtype, traceManager, trace.id)) {
+        const result: boolean | undefined = isCompatible(left, subtype, traceManager, trace.id);
+
+        if (result === true) {
             trace.exit();
 
             return true;
+        } else if (result === undefined) {
+            foundUndefined = true;
         }
     }
 
     trace.exit();
 
-    return false;
+    return foundUndefined ? undefined : false;
 }
 
 function isCompatibleWithDefinedList(

@@ -104,6 +104,32 @@ describe(`TypeUtils.isCompatible`, () => {
 
             expect(actual).to.equal(true, undefined);
         });
+
+        it(`AnyUnion, indeterminate member propagates undefined`, () => {
+            // left=Text, right=Union(Unknown, Number)
+            // isCompatible(Text, Unknown) => undefined (indeterminate)
+            // isCompatible(Text, Number) => false
+            // Result should be undefined, not false — indeterminate takes precedence
+            const actual: boolean | undefined = noopIsCompatible(
+                Type.TextInstance,
+                noopCreateAnyUnion([Type.UnknownInstance, Type.NumberInstance]),
+            );
+
+            expect(actual).to.equal(undefined, undefined);
+        });
+
+        it(`AnyUnion, all members incompatible returns false`, () => {
+            // left=Text, right=Union(Number, Logical)
+            // isCompatible(Text, Number) => false
+            // isCompatible(Text, Logical) => false
+            // Result should be false — definitively incompatible
+            const actual: boolean | undefined = noopIsCompatible(
+                Type.TextInstance,
+                noopCreateAnyUnion([Type.NumberInstance, Type.LogicalInstance]),
+            );
+
+            expect(actual).to.equal(false, undefined);
+        });
     });
 
     describe(`${Type.ExtendedTypeKind.DefinedList}`, () => {
