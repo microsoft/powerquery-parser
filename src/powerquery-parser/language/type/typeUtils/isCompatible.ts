@@ -880,8 +880,8 @@ function isDefinedListTypeCompatibleWithListType(
         (itemType: Type.TPowerQueryType) => isCompatible(itemType, listType.itemType, traceManager, trace.id),
     );
 
-    const result: boolean = Boolean(
-        itemTypeCompatabilities.find((value: boolean | undefined) => value === undefined || value === false),
+    const result: boolean = itemTypeCompatabilities.every(
+        (value: boolean | undefined) => value === true,
     );
 
     trace.exit();

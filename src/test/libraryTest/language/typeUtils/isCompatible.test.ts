@@ -379,6 +379,28 @@ describe(`TypeUtils.isCompatible`, () => {
         });
     });
 
+    describe(`${Type.ExtendedTypeKind.DefinedListType} compatible with ${Type.ExtendedTypeKind.ListType}`, () => {
+        it(`{number, number} is compatible with list type {number}`, () => {
+            const definedListType: Type.DefinedListType = TypeUtils.definedListType(false, [
+                Type.NumberInstance,
+                Type.NumberInstance,
+            ]);
+
+            const listTypeInstance: Type.ListType = TypeUtils.listType(false, Type.NumberInstance);
+            expect(noopIsCompatible(definedListType, listTypeInstance)).to.equal(true, undefined);
+        });
+
+        it(`{text, number} is not compatible with list type {number}`, () => {
+            const definedListType: Type.DefinedListType = TypeUtils.definedListType(false, [
+                Type.TextInstance,
+                Type.NumberInstance,
+            ]);
+
+            const listTypeInstance: Type.ListType = TypeUtils.listType(false, Type.NumberInstance);
+            expect(noopIsCompatible(definedListType, listTypeInstance)).to.equal(false, undefined);
+        });
+    });
+
     describe(`literals are compatible with literals`, () => {
         it(`1`, () => {
             expect(noopIsCompatible(TypeUtils.numberLiteral(false, `1`), TypeUtils.numberLiteral(false, `1`))).to.equal(

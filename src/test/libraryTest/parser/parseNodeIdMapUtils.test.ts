@@ -22,6 +22,31 @@ import {
 import { AssertTestUtils } from "../../testUtils";
 import { Ast } from "../../../powerquery-parser/language";
 
+describe("nthSiblingXor", () => {
+    it(`nextSiblingXor should return the next sibling`, async () => {
+        // Parse "1 + 2" — the arithmetic expression has children: left(1), operator(+), right(2)
+        const text: string = `1 + 2`;
+        const parseOk: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(DefaultSettings, text);
+
+        // Find the NumericLiteral nodes — there should be at least one
+        const numericLiteralIds: Set<number> | undefined = parseOk.nodeIdMapCollection.idsByNodeKind.get(
+            Ast.NodeKind.LiteralExpression,
+        );
+
+        expect(numericLiteralIds).to.not.equal(undefined);
+        expect(numericLiteralIds!.size).to.be.greaterThan(0);
+
+        // Get the first literal expression (the "1") — it should have a next sibling (the operator)
+        const firstLiteralId: number = ArrayUtils.assertGet([...numericLiteralIds!.values()], 0);
+        const nextSibling: TXorNode | undefined = NodeIdMapIterator.nextSiblingXor(
+            parseOk.nodeIdMapCollection,
+            firstLiteralId,
+        );
+
+        expect(nextSibling).to.not.equal(undefined, "nextSiblingXor should find the next sibling");
+    });
+});
+
 describe("nodeIdMapIterator", () => {
     it(`iterFieldSpecficationList`, async () => {
         const text: string = `type [foo = number, optional bar = logical]`;
@@ -53,6 +78,35 @@ describe("nodeIdMapIterator", () => {
         const secondKeyValuePair: FieldSpecificationKeyValuePair = ArrayUtils.assertGet(fieldSpecificationKeyValuePairs, 1);
         expect(Boolean(secondKeyValuePair.optional)).to.equal(true);
         expect(secondKeyValuePair.normalizedKeyLiteral).to.equal("bar");
+    });
+
+    it(`iterFieldSpecificationList should include type annotations in value`, async () => {
+        const text: string = `type [foo = number]`;
+        const parseOk: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(DefaultSettings, text);
+
+        const fieldSpecificationListIds: Set<number> = MapUtils.assertGet(
+            parseOk.nodeIdMapCollection.idsByNodeKind,
+            Ast.NodeKind.FieldSpecificationList,
+        );
+
+        const fieldSpecificationListId: number = ArrayUtils.assertGet([...fieldSpecificationListIds.values()], 0);
+
+        const fieldSpecificationList: TXorNode = NodeIdMapUtils.assertXor(
+            parseOk.nodeIdMapCollection,
+            fieldSpecificationListId,
+        );
+
+        const fieldSpecificationKeyValuePairs: ReadonlyArray<FieldSpecificationKeyValuePair> =
+            NodeIdMapIterator.iterFieldSpecificationList(parseOk.nodeIdMapCollection, fieldSpecificationList);
+
+        expect(fieldSpecificationKeyValuePairs.length).to.equal(1);
+
+        const firstKeyValuePair: FieldSpecificationKeyValuePair = ArrayUtils.assertGet(fieldSpecificationKeyValuePairs, 0);
+        expect(firstKeyValuePair.normalizedKeyLiteral).to.equal("foo");
+        expect(firstKeyValuePair.value).to.not.equal(
+            undefined,
+            "value (type annotation) should be populated for `foo = number`",
+        );
     });
 
     describe(`iterFunctionExpressionParameters`, () => {

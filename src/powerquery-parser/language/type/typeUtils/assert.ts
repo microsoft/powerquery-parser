@@ -540,7 +540,7 @@ export function assertIsNumber(type: Type.TPowerQueryType): asserts type is Type
 }
 
 export function assertIsNumberLiteral(type: Type.TPowerQueryType): asserts type is Type.NumberLiteral {
-    if (!isType.isNumber(type)) {
+    if (!isType.isNumberLiteral(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
             givenExtendedTypeKind: type.extendedKind,

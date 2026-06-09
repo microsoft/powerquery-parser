@@ -53,7 +53,7 @@ export class LexError extends Error {
     constructor(innerError: TInnerLexError) {
         super(innerError.message);
         this.innerError = innerError;
-        Object.setPrototypeOf(this, LexError);
+        Object.setPrototypeOf(this, LexError.prototype);
     }
 }
 

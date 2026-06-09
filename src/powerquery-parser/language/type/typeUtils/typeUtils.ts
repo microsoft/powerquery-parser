@@ -90,7 +90,7 @@ export function isValidInvocation(
     const parameters: ReadonlyArray<Type.FunctionParameter> = functionType.parameters;
     const numParameters: number = parameters.length;
 
-    for (let index: number = 1; index < numParameters; index += 1) {
+    for (let index: number = 0; index < numParameters; index += 1) {
         const parameter: Type.FunctionParameter = ArrayUtils.assertGet(parameters, index);
         const argType: Type.TPowerQueryType | undefined = args[index];
 
@@ -105,9 +105,7 @@ export function isValidInvocation(
 
                 return false;
             }
-        }
-
-        if (!parameter.isOptional) {
+        } else if (!parameter.isOptional) {
             trace.exit();
 
             return false;

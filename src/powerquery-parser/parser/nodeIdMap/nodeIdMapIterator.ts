@@ -124,7 +124,7 @@ export function nthSiblingXor(
         parentXorNode.node.id,
     );
 
-    if (childIds.length >= attributeIndex) {
+    if (childIds.length <= attributeIndex) {
         return undefined;
     }
 
@@ -327,12 +327,12 @@ export function iterFieldSpecificationList(
                 Ast.NodeKind.Constant,
             );
 
-        const value: XorNode<Ast.FieldSpecification> | undefined =
-            NodeIdMapUtils.nthChildXorChecked<Ast.FieldSpecification>(
+        const value: XorNode<Ast.FieldTypeSpecification> | undefined =
+            NodeIdMapUtils.nthChildXorChecked<Ast.FieldTypeSpecification>(
                 nodeIdMapCollection,
                 fieldSpecification.node.id,
                 2,
-                Ast.NodeKind.FieldSpecification,
+                Ast.NodeKind.FieldTypeSpecification,
             );
 
         const keyLiteral: string = key.literal;

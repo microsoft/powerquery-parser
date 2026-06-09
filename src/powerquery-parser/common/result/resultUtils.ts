@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError } from "..";
+import { CommonError } from "..";
 import { ErrorResult, OkResult, Result, ResultKind } from "./result";
 
 export function assertIsOk<T, E>(result: Result<T, E>): asserts result is OkResult<T> {
@@ -48,9 +48,9 @@ export function ensureResult<T>(callback: () => T, locale: string): Result<T, Co
     try {
         return ok(callback());
     } catch (caught: unknown) {
-        Assert.isInstanceofError(caught);
+        const normalizedError: Error = caught instanceof Error ? caught : new Error(`Non-Error value was thrown: ${caught}`);
 
-        return error(CommonError.ensureCommonError(caught, locale));
+        return error(CommonError.ensureCommonError(normalizedError, locale));
     }
 }
 
@@ -61,9 +61,9 @@ export async function ensureResultAsync<T>(
     try {
         return ok(await callback());
     } catch (caught: unknown) {
-        Assert.isInstanceofError(caught);
+        const normalizedError: Error = caught instanceof Error ? caught : new Error(`Non-Error value was thrown: ${caught}`);
 
-        return error(CommonError.ensureCommonError(caught, locale));
+        return error(CommonError.ensureCommonError(normalizedError, locale));
     }
 }
 

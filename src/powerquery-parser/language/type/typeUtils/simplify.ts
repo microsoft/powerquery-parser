@@ -122,7 +122,20 @@ function simplifyLogicalCategory(category: LogicalCategory | undefined): Readonl
     } else {
         const type: Type.Logical | undefined = firstNullableElseFirst(category.primitives);
 
-        return type ? [type] : [];
+        if (type) {
+            return [type];
+        }
+
+        // A solo literal exists without a corresponding primitive — preserve it.
+        const isNullable: boolean = category.hasTruthyNullableLiteral || category.hasFalsyNullableLiteral;
+
+        if (category.hasTruthyNullableLiteral || category.hasTruthyNonNullableLiteral) {
+            return [{ kind: Type.TypeKind.Logical, extendedKind: Type.ExtendedTypeKind.LogicalLiteral, isNullable, literal: "true", normalizedLiteral: true }];
+        } else if (category.hasFalsyNullableLiteral || category.hasFalsyNonNullableLiteral) {
+            return [{ kind: Type.TypeKind.Logical, extendedKind: Type.ExtendedTypeKind.LogicalLiteral, isNullable, literal: "false", normalizedLiteral: false }];
+        }
+
+        return [];
     }
 }
 

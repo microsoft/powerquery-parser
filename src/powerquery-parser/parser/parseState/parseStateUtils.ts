@@ -164,7 +164,7 @@ export function isOnConstantKind(state: ParseState, constantKind: Constant.TCons
     if (isOnTokenKind(state, Token.TokenKind.Identifier)) {
         const currentToken: Token.Token = ArrayUtils.assertGet(state.lexerSnapshot.tokens, state.tokenIndex);
 
-        if (currentToken?.data === undefined) {
+        if (currentToken.data === undefined) {
             const details: { currentToken: Token.Token } = { currentToken };
             throw new CommonError.InvariantError(`expected data on Token`, details);
         }

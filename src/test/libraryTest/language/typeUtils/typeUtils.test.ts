@@ -108,6 +108,22 @@ describe(`TypeUtils`, () => {
             expect(actual).deep.equal(expected);
         });
 
+        it(`a solo LogicalLiteral(true) should not be dropped`, () => {
+            const simplified: ReadonlyArray<Type.TPowerQueryType> = noopSimplify([
+                TypeUtils.logicalLiteral(false, true),
+            ]);
+
+            expect(simplified.length).to.be.greaterThan(0, "simplify should not drop a solo LogicalLiteral(true)");
+        });
+
+        it(`a solo LogicalLiteral(false) should not be dropped`, () => {
+            const simplified: ReadonlyArray<Type.TPowerQueryType> = noopSimplify([
+                TypeUtils.logicalLiteral(false, false),
+            ]);
+
+            expect(simplified.length).to.be.greaterThan(0, "simplify should not drop a solo LogicalLiteral(false)");
+        });
+
         it(`prefer nullable in boolean simplification`, () => {
             const actual: ReadonlyArray<AbridgedType> = noopSimplify([
                 Type.FalseInstance,
@@ -802,6 +818,127 @@ describe(`TypeUtils`, () => {
                     expect(actual).to.equal(`type table text`);
                 });
             });
+        });
+    });
+
+    describe(`assertIsNumberLiteral`, () => {
+        it(`should pass for a NumberLiteral`, () => {
+            const numberLiteral: Type.NumberLiteral = TypeUtils.numberLiteral(false, "42");
+            expect(() => TypeUtils.assertIsNumberLiteral(numberLiteral)).to.not.throw();
+        });
+
+        it(`should throw for a plain Number (not a literal)`, () => {
+            expect(() => TypeUtils.assertIsNumberLiteral(Type.NumberInstance)).to.throw();
+        });
+    });
+
+    describe(`isValidInvocation`, () => {
+        it(`should return true when a required first parameter receives a compatible argument`, () => {
+            const fn: Type.DefinedFunction = TypeUtils.definedFunction(
+                false,
+                [
+                    {
+                        nameLiteral: "x",
+                        isOptional: false,
+                        isNullable: false,
+                        type: Type.TypeKind.Number,
+                    },
+                ],
+                Type.NumberInstance,
+            );
+
+            const result: boolean = TypeUtils.isValidInvocation(
+                fn,
+                [Type.NumberInstance],
+                NoOpTraceManagerInstance,
+                undefined,
+            );
+
+            expect(result).to.equal(true, "a required first param with a compatible arg should be valid");
+        });
+
+        it(`should return false when a required first parameter receives an incompatible argument`, () => {
+            const fn: Type.DefinedFunction = TypeUtils.definedFunction(
+                false,
+                [
+                    {
+                        nameLiteral: "x",
+                        isOptional: false,
+                        isNullable: false,
+                        type: Type.TypeKind.Number,
+                    },
+                ],
+                Type.NumberInstance,
+            );
+
+            const result: boolean = TypeUtils.isValidInvocation(
+                fn,
+                [Type.TextInstance],
+                NoOpTraceManagerInstance,
+                undefined,
+            );
+
+            expect(result).to.equal(false, "a text arg for a number param should be invalid");
+        });
+
+        it(`should return true when multiple required parameters all receive compatible arguments`, () => {
+            const fn: Type.DefinedFunction = TypeUtils.definedFunction(
+                false,
+                [
+                    {
+                        nameLiteral: "x",
+                        isOptional: false,
+                        isNullable: false,
+                        type: Type.TypeKind.Number,
+                    },
+                    {
+                        nameLiteral: "y",
+                        isOptional: false,
+                        isNullable: false,
+                        type: Type.TypeKind.Text,
+                    },
+                ],
+                Type.NumberInstance,
+            );
+
+            const result: boolean = TypeUtils.isValidInvocation(
+                fn,
+                [Type.NumberInstance, Type.TextInstance],
+                NoOpTraceManagerInstance,
+                undefined,
+            );
+
+            expect(result).to.equal(true, "all required params with compatible args should be valid");
+        });
+
+        it(`should return false when a required parameter is missing an argument`, () => {
+            const fn: Type.DefinedFunction = TypeUtils.definedFunction(
+                false,
+                [
+                    {
+                        nameLiteral: "x",
+                        isOptional: false,
+                        isNullable: false,
+                        type: Type.TypeKind.Number,
+                    },
+                    {
+                        nameLiteral: "y",
+                        isOptional: false,
+                        isNullable: false,
+                        type: Type.TypeKind.Text,
+                    },
+                ],
+                Type.NumberInstance,
+            );
+
+            const result: boolean = TypeUtils.isValidInvocation(
+                fn,
+                [Type.NumberInstance],
+                NoOpTraceManagerInstance,
+                undefined,
+            );
+
+            expect(result).to.equal(false, "missing a required param should be invalid");
         });
     });
 });
