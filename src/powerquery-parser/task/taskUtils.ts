@@ -33,7 +33,7 @@ export function assertIsLexStage(task: TTask): asserts task is TriedLexTask {
     if (!isLexStage(task)) {
         throw new CommonError.InvariantError(`assert failed, expected a different task stage kind`, {
             expected: TaskStage.Lex,
-            actual: task.resultKind,
+            actual: task.stage,
         });
     }
 }
