@@ -399,7 +399,7 @@ describe(`Lexer.Incremental`, () => {
         });
     });
 
-    describe(`retokenizeLines does not drop lines (Bug 6)`, () => {
+    describe(`retokenizeLines does not drop lines`, () => {
         it(`changing block comment start preserves subsequent lines`, () => {
             // Original: 4 lines — block comment on lines 0-1, then "beta" and "charlie"
             // Line 0: /* → Default→Comment
@@ -418,7 +418,7 @@ describe(`Lexer.Incremental`, () => {
             // Change line 0 from "/*" to "alpha" — removes the comment context
             // retokenizeLines retokenizes line 1 ("*/" in Default mode → Default→Default)
             // then hits line 2 which already starts in Default → early exit
-            // Bug 6: lines.slice(lineNumber + 1) drops line 2 ("beta")
+            // lines.slice(lineNumber + 1) drops line 2 ("beta")
             const state: Lexer.State = assertGetLexerUpdateLine(originalText, originalExpected, 0, `alpha`, [
                 [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
                 [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `*/`],

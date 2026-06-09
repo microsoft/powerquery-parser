@@ -132,8 +132,8 @@ describe("ParseBehavior", () => {
         });
     });
 
-    it(`invalid parseBehavior throws InvariantError (Bug 18)`, async () => {
-        // Bug 18: missing `throw` before Assert.isNever means TypeScript
+    it(`invalid parseBehavior throws InvariantError`, async () => {
+        // Missing `throw` before Assert.isNever means TypeScript
         // doesn't guarantee the default branch is recognized as unreachable.
         // Verify the default branch actually throws for invalid enum values.
         const invalidBehavior: ParseBehavior = "InvalidBehavior" as unknown as ParseBehavior;

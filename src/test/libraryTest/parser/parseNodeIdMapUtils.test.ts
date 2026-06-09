@@ -336,7 +336,7 @@ describe(`nodeIdMapUtils`, () => {
         });
     });
 
-    describe("copyState - currentContextNode isolation (Bug 11)", () => {
+    describe("copyState - currentContextNode isolation", () => {
         it("mutating currentContextNode on copy should not affect original", async () => {
             const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, `let x =`);
 

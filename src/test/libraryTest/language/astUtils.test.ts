@@ -58,7 +58,7 @@ describe(`AstUtils`, () => {
         });
     });
 
-    describe("Type predicates for validator operands (Bug 15)", () => {
+    describe("Type predicates for validator operands", () => {
         it("isTAsExpression should accept AsExpression nodes", async () => {
             // Parse "1 as number as text" — the outer AsExpression's left child is itself an AsExpression.
             // The validator's type predicate for left must accept TAsExpression (which includes AsExpression).

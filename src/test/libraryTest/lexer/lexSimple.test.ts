@@ -137,7 +137,7 @@ type
     });
 
     it(`NumericLiteral - backslash in exponent is not valid`, () => {
-        // Bug 5: The old Pattern.Numeric regex used [\\+\\-] which included literal backslash.
+        // The old Pattern.Numeric regex used [\\+\\-] which included literal backslash.
         // This meant "1e\\3" would incorrectly match as a valid numeric literal.
         // After the fix, only + and - are valid exponent signs.
         expect(StringUtils.isNumeric(`1e\\3`)).to.equal(false, `"1e\\3" should not be a valid numeric literal`);
@@ -147,7 +147,7 @@ type
     });
 
     it(`DotDot at end of input`, () => {
-        // Bug 10: chr3 was typed as `string` but text[positionStart + 2] can be undefined
+        // chr3 was typed as `string` but text[positionStart + 2] can be undefined
         // when ".." appears at end-of-input. Ensure it correctly lexes as DotDot.
         const text: string = `..`;
 
@@ -320,9 +320,9 @@ describe(`Lexer.Simple.Whitespace`, () => {
     });
 });
 
-describe(`Lexer.Simple.Whitespace Pattern (Bug 19)`, () => {
+describe(`Lexer.Simple.Whitespace Pattern`, () => {
     it(`should not match colon followed by whitespace char as a single whitespace token`, () => {
-        // Bug 19: (:?[\u000b-\u000c\u2000-\u200a]) is a CAPTURING group with optional ':'
+        // (:?[\u000b-\u000c\u2000-\u200a]) is a CAPTURING group with optional ':'
         // This means ":" + VT (vertical tab) matches as "whitespace", consuming the colon.
         // The correct syntax (?:[...]) is a non-capturing group that only matches the whitespace chars.
         const regex: RegExp = Pattern.Whitespace;

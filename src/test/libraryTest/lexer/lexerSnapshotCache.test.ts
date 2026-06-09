@@ -124,7 +124,7 @@ describe("LexerSnapshot.graphemePositionStartFrom cache", () => {
     });
 
     describe("codeUnit correctness", () => {
-        it("codeUnit should reflect the token start position, not end (bug 21)", () => {
+        it("codeUnit should reflect the token start position, not end", () => {
             const snapshot: Lexer.LexerSnapshot = assertGetLexerSnapshot("let x = 1");
 
             for (const token of snapshot.tokens) {
@@ -138,7 +138,7 @@ describe("LexerSnapshot.graphemePositionStartFrom cache", () => {
             }
         });
 
-        it("static graphemePositionStartFrom returns start codeUnit (bug 21)", () => {
+        it("static graphemePositionStartFrom returns start codeUnit", () => {
             const snapshot: Lexer.LexerSnapshot = assertGetLexerSnapshot("let x = 1");
 
             for (const token of snapshot.tokens) {

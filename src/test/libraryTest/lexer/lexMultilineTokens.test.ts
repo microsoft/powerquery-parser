@@ -130,9 +130,9 @@ describe(`Lexer`, () => {
             });
         });
 
-        describe(`LineTokenKindAdditions enum values match member names (Bug 23)`, () => {
+        describe(`LineTokenKindAdditions enum values match member names`, () => {
             it(`TextLiteralContent value should equal "TextLiteralContent"`, () => {
-                // Bug 23: TextLiteralContent = "TextContent" (missing "Literal" in value)
+                // TextLiteralContent = "TextContent" (missing "Literal" in value)
                 // All other members have values matching their names exactly
                 const expected: string = "TextLiteralContent";
                 const actual: string = Language.Token.LineTokenKind.TextLiteralContent;
