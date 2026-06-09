@@ -2898,7 +2898,7 @@ export async function readIdentifierPairedExpressions(
 ): Promise<Ast.ICsvArray<Ast.IdentifierPairedExpression>> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
-        readIdentifierPairedExpression.name,
+        readIdentifierPairedExpressions.name,
         correlationId,
         { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
     );
