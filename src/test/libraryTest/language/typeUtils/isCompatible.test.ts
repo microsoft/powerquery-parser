@@ -253,6 +253,50 @@ describe(`TypeUtils.isCompatible`, () => {
         });
     });
 
+    describe(`${Type.ExtendedTypeKind.DefinedRecord} isOpen`, () => {
+        it(`closed left with extra fields is compatible with open right`, () => {
+            // left: [a = number, b = text] (closed)
+            const left: Type.DefinedRecord = TypeUtils.definedRecord(
+                false,
+                new Map<string, Type.TPowerQueryType>([
+                    ["a", Type.NumberInstance],
+                    ["b", Type.TextInstance],
+                ]),
+                false,
+            );
+
+            // right: [a = number, ...] (open — allows extra fields)
+            const right: Type.DefinedRecord = TypeUtils.definedRecord(
+                false,
+                new Map<string, Type.TPowerQueryType>([["a", Type.NumberInstance]]),
+                true,
+            );
+
+            expect(noopIsCompatible(left, right)).to.equal(true, undefined);
+        });
+
+        it(`closed left with extra fields is NOT compatible with closed right`, () => {
+            // left: [a = number, b = text] (closed)
+            const left: Type.DefinedRecord = TypeUtils.definedRecord(
+                false,
+                new Map<string, Type.TPowerQueryType>([
+                    ["a", Type.NumberInstance],
+                    ["b", Type.TextInstance],
+                ]),
+                false,
+            );
+
+            // right: [a = number] (closed — does NOT allow extra fields)
+            const right: Type.DefinedRecord = TypeUtils.definedRecord(
+                false,
+                new Map<string, Type.TPowerQueryType>([["a", Type.NumberInstance]]),
+                false,
+            );
+
+            expect(noopIsCompatible(left, right)).to.equal(false, undefined);
+        });
+    });
+
     describe(`${Type.ExtendedTypeKind.DefinedTable}`, () => {
         describe(`identity`, () => {
             it(`empty`, () => {

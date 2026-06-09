@@ -363,7 +363,28 @@ function isCompatibleWithFieldSpecificationList(
 
     if (!isFieldSpecificationList(left)) {
         result = false;
+    } else if (!right.isOpen && left.fields.size > right.fields.size) {
+        // If right is closed and left has more fields, left can't be a subset
+        result = false;
+    } else if (right.isOpen) {
+        // Right is open — extra fields in left are allowed.
+        // Only check that shared fields are compatible.
+        result = true;
+
+        for (const [key, leftType] of left.fields.entries()) {
+            const rightType: Type.TPowerQueryType | undefined = right.fields.get(key);
+
+            if (rightType !== undefined) {
+                const fieldResult: boolean | undefined = isCompatible(leftType, rightType, traceManager, trace.id);
+
+                if (fieldResult !== undefined && !fieldResult) {
+                    result = false;
+                    break;
+                }
+            }
+        }
     } else {
+        // Right is closed — left must be a strict subset of right's fields.
         result = MapUtils.isSubsetMap(
             left.fields,
             right.fields,
