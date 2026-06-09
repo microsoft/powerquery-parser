@@ -904,4 +904,35 @@ describe(`TypeUtils.typeCheck`, () => {
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
     });
+
+    describe(`typeCheckListWithListType`, () => {
+        it(`reports itemType (not ListType) as expected in mismatch`, () => {
+            // Schema: list type expecting Number items
+            const schemaItemType: Type.TPowerQueryType = Language.Type.NumberInstance;
+
+            const schemaType: Type.ListType = {
+                kind: Type.TypeKind.Type,
+                extendedKind: Type.ExtendedTypeKind.ListType,
+                isNullable: false,
+                itemType: schemaItemType,
+            };
+
+            // Value: a DefinedList with one Text element (incompatible with Number)
+            const valueType: Type.DefinedList = {
+                kind: Type.TypeKind.List,
+                extendedKind: Type.ExtendedTypeKind.DefinedList,
+                isNullable: false,
+                elements: [Language.Type.TextInstance],
+            };
+
+            const actual: CheckedDefinedList = noopTypeCheckListWithListType(valueType, schemaType);
+
+            // The mismatch should report the itemType (Number) as expected, not the whole ListType
+            expect(actual.invalid.size).to.equal(1);
+
+            const mismatch: TypeUtils.DefinedListMismatch | undefined = actual.invalid.get(0);
+            expect(mismatch).to.not.equal(undefined);
+            expect(mismatch!.expected).to.equal(schemaItemType, "expected should be the itemType, not the ListType");
+        });
+    });
 });

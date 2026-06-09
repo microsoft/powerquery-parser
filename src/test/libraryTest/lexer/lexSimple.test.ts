@@ -361,5 +361,4 @@ describe(`Lexer.Simple.Whitespace Pattern`, () => {
         expect(match).to.not.equal(null, "should match whitespace run");
         expect(match![0].length).to.equal(6, "should match the entire whitespace run in one match");
     });
-
 });

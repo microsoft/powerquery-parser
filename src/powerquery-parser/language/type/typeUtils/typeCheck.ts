@@ -175,7 +175,7 @@ export function typeCheckListWithListType(
             validArgs.push(index);
         } else {
             invalidArgs.set(index, {
-                expected: schemaType,
+                expected: schemaItemType,
                 actual: element,
             });
         }
