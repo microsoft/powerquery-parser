@@ -51,9 +51,13 @@ export function isEqualMap<K, V>(
     }
 
     for (const [leftKey, leftValue] of left.entries()) {
-        const value: V | undefined = right.get(leftKey);
+        if (!right.has(leftKey)) {
+            return false;
+        }
 
-        if (value === undefined || !comparer(leftValue, value)) {
+        const value: V = right.get(leftKey) as V;
+
+        if (!comparer(leftValue, value)) {
             return false;
         }
     }
@@ -71,9 +75,13 @@ export function isSubsetMap<K, V>(
     }
 
     for (const [key, leftType] of left.entries()) {
-        const rightType: V | undefined = right.get(key);
+        if (!right.has(key)) {
+            return false;
+        }
 
-        if (rightType === undefined || !comparer(leftType, rightType)) {
+        const rightType: V = right.get(key) as V;
+
+        if (!comparer(leftType, rightType)) {
             return false;
         }
     }
