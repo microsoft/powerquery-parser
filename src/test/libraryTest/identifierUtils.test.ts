@@ -196,6 +196,20 @@ describe("IdentifierUtils", () => {
             });
         });
 
+        it("pipe character should not be valid in identifier", () => {
+            runGetIdentifierKindTest({
+                text: "foo|bar",
+                expected: IdentifierKind.Invalid,
+            });
+        });
+
+        it("standalone pipe should be invalid", () => {
+            runGetIdentifierKindTest({
+                text: "|",
+                expected: IdentifierKind.Invalid,
+            });
+        });
+
         it("foo.bar.baz.green.eggs.and.ham", () => {
             runGetIdentifierKindTest({
                 text: "foo.bar.baz.green.eggs.and.ham",

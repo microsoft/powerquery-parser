@@ -2,10 +2,10 @@
 // Licensed under the MIT license.
 
 export const IdentifierStartCharacter: RegExp =
-    /(?:[\p{Uppercase_Letter}|\p{Lowercase_Letter}|\p{Titlecase_Letter}|\p{Modifier_Letter}|\p{Other_Letter}|\p{Letter_Number}|\u{5F}]+)/gu;
+    /(?:[\p{Uppercase_Letter}\p{Lowercase_Letter}\p{Titlecase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Letter_Number}\u{5F}]+)/gu;
 
 export const IdentifierPartCharacters: RegExp =
-    /(?:[\p{Uppercase_Letter}|\p{Lowercase_Letter}|\p{Titlecase_Letter}|\p{Modifier_Letter}|\p{Other_Letter}|\p{Letter_Number}|\p{Decimal_Number}|\p{Connector_Punctuation}|\p{Spacing_Mark}|\p{Nonspacing_Mark}|\p{Format}]+)/gu;
+    /(?:[\p{Uppercase_Letter}\p{Lowercase_Letter}\p{Titlecase_Letter}\p{Modifier_Letter}\p{Other_Letter}\p{Letter_Number}\p{Decimal_Number}\p{Connector_Punctuation}\p{Spacing_Mark}\p{Nonspacing_Mark}\p{Format}]+)/gu;
 
 export const Whitespace: RegExp =
     // eslint-disable-next-line no-control-regex
