@@ -4,7 +4,7 @@
 import "mocha";
 import { expect } from "chai";
 
-import { ArrayUtils, Assert, Language, MapUtils, Parser } from "../../../powerquery-parser";
+import { ArrayUtils, Assert, Language, MapUtils, Parser, TaskUtils } from "../../../powerquery-parser";
 import { DefaultSettings, Task } from "../../..";
 import {
     FieldSpecificationKeyValuePair,
@@ -38,6 +38,7 @@ describe("nthSiblingXor", () => {
 
         // Get the first literal expression (the "1") — it should have a next sibling (the operator)
         const firstLiteralId: number = ArrayUtils.assertGet([...numericLiteralIds!.values()], 0);
+
         const nextSibling: TXorNode | undefined = NodeIdMapIterator.nextSiblingXor(
             parseOk.nodeIdMapCollection,
             firstLiteralId,
@@ -71,11 +72,19 @@ describe("nodeIdMapIterator", () => {
 
         expect(fieldSpecificationKeyValuePairs.length).to.equal(2);
 
-        const firstKeyValuePair: FieldSpecificationKeyValuePair = ArrayUtils.assertGet(fieldSpecificationKeyValuePairs, 0);
+        const firstKeyValuePair: FieldSpecificationKeyValuePair = ArrayUtils.assertGet(
+            fieldSpecificationKeyValuePairs,
+            0,
+        );
+
         expect(firstKeyValuePair.optional).to.equal(undefined);
         expect(firstKeyValuePair.normalizedKeyLiteral).to.equal("foo");
 
-        const secondKeyValuePair: FieldSpecificationKeyValuePair = ArrayUtils.assertGet(fieldSpecificationKeyValuePairs, 1);
+        const secondKeyValuePair: FieldSpecificationKeyValuePair = ArrayUtils.assertGet(
+            fieldSpecificationKeyValuePairs,
+            1,
+        );
+
         expect(Boolean(secondKeyValuePair.optional)).to.equal(true);
         expect(secondKeyValuePair.normalizedKeyLiteral).to.equal("bar");
     });
@@ -101,8 +110,13 @@ describe("nodeIdMapIterator", () => {
 
         expect(fieldSpecificationKeyValuePairs.length).to.equal(1);
 
-        const firstKeyValuePair: FieldSpecificationKeyValuePair = ArrayUtils.assertGet(fieldSpecificationKeyValuePairs, 0);
+        const firstKeyValuePair: FieldSpecificationKeyValuePair = ArrayUtils.assertGet(
+            fieldSpecificationKeyValuePairs,
+            0,
+        );
+
         expect(firstKeyValuePair.normalizedKeyLiteral).to.equal("foo");
+
         expect(firstKeyValuePair.value).to.not.equal(
             undefined,
             "value (type annotation) should be populated for `foo = number`",
@@ -289,11 +303,19 @@ describe("nodeIdMapIterator", () => {
 
         expect(fieldSpecificationKeyValuePairs.length).to.equal(2);
 
-        const firstKeyValuePair: FieldSpecificationKeyValuePair = ArrayUtils.assertGet(fieldSpecificationKeyValuePairs, 0);
+        const firstKeyValuePair: FieldSpecificationKeyValuePair = ArrayUtils.assertGet(
+            fieldSpecificationKeyValuePairs,
+            0,
+        );
+
         expect(firstKeyValuePair.optional).to.equal(undefined);
         expect(firstKeyValuePair.normalizedKeyLiteral).to.equal("foo");
 
-        const secondKeyValuePair: FieldSpecificationKeyValuePair = ArrayUtils.assertGet(fieldSpecificationKeyValuePairs, 1);
+        const secondKeyValuePair: FieldSpecificationKeyValuePair = ArrayUtils.assertGet(
+            fieldSpecificationKeyValuePairs,
+            1,
+        );
+
         expect(Boolean(secondKeyValuePair.optional)).to.equal(true);
         expect(secondKeyValuePair.normalizedKeyLiteral).to.equal("bar");
     });
@@ -387,6 +409,50 @@ describe(`nodeIdMapUtils`, () => {
                 Assert.asDefined(NodeIdMapUtils.wrappedContentXor(nodeIdMapCollection, recordExpressionNodeId)),
                 Ast.NodeKind.ArrayWrapper,
             );
+        });
+    });
+
+    describe("copyState - currentContextNode isolation", () => {
+        it("mutating currentContextNode on copy should not affect original", async () => {
+            const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, `let x =`);
+
+            TaskUtils.assertIsParseStageParseError(triedLexParseTask);
+            const originalState: Parser.ParseState = triedLexParseTask.parseState;
+
+            expect(originalState.currentContextNode).to.not.be.undefined;
+            const originalAttributeCounter: number = originalState.currentContextNode!.attributeCounter;
+
+            const copiedState: Parser.ParseState = await Parser.ParseStateUtils.copyState(originalState);
+
+            expect(copiedState.currentContextNode).to.not.be.undefined;
+            copiedState.currentContextNode!.attributeCounter += 1;
+
+            expect(originalState.currentContextNode!.attributeCounter).to.equal(
+                originalAttributeCounter,
+                "Mutating currentContextNode on copied state should not affect the original state",
+            );
+        });
+
+        it("copied currentContextNode should have same values but different reference", async () => {
+            const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, `let x =`);
+
+            TaskUtils.assertIsParseStageParseError(triedLexParseTask);
+            const originalState: Parser.ParseState = triedLexParseTask.parseState;
+            expect(originalState.currentContextNode).to.not.be.undefined;
+
+            const copiedState: Parser.ParseState = await Parser.ParseStateUtils.copyState(originalState);
+            expect(copiedState.currentContextNode).to.not.be.undefined;
+
+            expect(copiedState.currentContextNode!.id).to.equal(originalState.currentContextNode!.id);
+            expect(copiedState.currentContextNode!.kind).to.equal(originalState.currentContextNode!.kind);
+
+            expect(copiedState.currentContextNode!.attributeCounter).to.equal(
+                originalState.currentContextNode!.attributeCounter,
+            );
+
+            expect(copiedState.currentContextNode!.isClosed).to.equal(originalState.currentContextNode!.isClosed);
+
+            expect(copiedState.currentContextNode).to.not.equal(originalState.currentContextNode);
         });
     });
 });

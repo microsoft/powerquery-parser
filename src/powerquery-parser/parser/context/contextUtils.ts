@@ -58,7 +58,7 @@ export function isNodeKind<T extends Ast.TNode>(
     node: ParseContext.TNode,
     expectedNodeKinds: ReadonlyArray<T["kind"]> | T["kind"],
 ): node is ParseContext.Node<T> {
-    return node.kind === expectedNodeKinds || expectedNodeKinds.includes(node.kind);
+    return Array.isArray(expectedNodeKinds) ? expectedNodeKinds.includes(node.kind) : node.kind === expectedNodeKinds;
 }
 
 export function nextId(state: ParseContext.State): number {

@@ -9,8 +9,8 @@ export const IdentifierPartCharacters: RegExp =
 
 export const Whitespace: RegExp =
     // eslint-disable-next-line no-control-regex
-    /(:?[\u000b-\u000c\u2000-\u200a])|(?:\u0009)|(?:\u0020)|(?:\u00a0)|(?:\u1680)|(?:\u202f)|(?:\u205f)|(?:\u3000)/g;
+    /(?:[\u000b-\u000c\u2000-\u200a])|(?:\u0009)|(?:\u0020)|(?:\u00a0)|(?:\u1680)|(?:\u202f)|(?:\u205f)|(?:\u3000)/g;
 
 export const Hex: RegExp = /0[xX][a-fA-F0-9]+/g;
 
-export const Numeric: RegExp = /(([0-9]*\.[0-9]+)|([0-9]+))([eE][\\+\\-]?[0-9]+)?/g;
+export const Numeric: RegExp = /(([0-9]*\.[0-9]+)|([0-9]+))([eE][+-]?[0-9]+)?/g;

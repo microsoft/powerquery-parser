@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { ArrayUtils, Assert } from "../../../common";
 import { AstNodeById, Collection } from "../nodeIdMap";
 import { NodeIdMap, XorNodeUtils } from "..";
-import { ArrayUtils, Assert } from "../../../common";
 import { Ast } from "../../../language";
 import { TXorNode } from "../xorNode";
 import { xor } from "./commonSelectors";

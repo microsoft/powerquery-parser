@@ -5,8 +5,8 @@ import "mocha";
 import { expect } from "chai";
 
 import { DefaultSettings, Lexer, ResultUtils } from "../../..";
-import { ArrayUtils } from "../../../powerquery-parser/common";
 import { ILineTokens, IState, IToken, Tokenizer } from "../../testUtils/tokenizerTestUtils";
+import { ArrayUtils } from "../../../powerquery-parser/common";
 
 const tokenizer: Tokenizer = new Tokenizer("\n");
 
@@ -184,7 +184,7 @@ describe("Incremental updates", () => {
             const lineTokens: ReadonlyArray<IToken> = ArrayUtils.assertGet(document.lineTokens, index);
 
             lineTokens.forEach((token: IToken) => {
-                expect(token.scopes).equals("TextContent", "expecting remaining tokens to be strings");
+                expect(token.scopes).equals("TextLiteralContent", "expecting remaining tokens to be strings");
             });
         }
     });
@@ -192,7 +192,12 @@ describe("Incremental updates", () => {
     it("Re-parse with unterminated block comment", () => {
         const lineNumber: number = 3;
         const document: MockDocument = new MockDocument(ORIGINAL_QUERY);
-        const modified: string = ArrayUtils.assertGet(document.lines, lineNumber).replace(`rce),`, `rce), /* my open comment`);
+
+        const modified: string = ArrayUtils.assertGet(document.lines, lineNumber).replace(
+            `rce),`,
+            `rce), /* my open comment`,
+        );
+
         const count: number = document.applyChangeAndTokenize(modified, lineNumber);
         expect(count).equals(document.lines.length - lineNumber, "remaining lines should have been tokenized");
 

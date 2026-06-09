@@ -130,9 +130,25 @@ function simplifyLogicalCategory(category: LogicalCategory | undefined): Readonl
         const isNullable: boolean = category.hasTruthyNullableLiteral || category.hasFalsyNullableLiteral;
 
         if (category.hasTruthyNullableLiteral || category.hasTruthyNonNullableLiteral) {
-            return [{ kind: Type.TypeKind.Logical, extendedKind: Type.ExtendedTypeKind.LogicalLiteral, isNullable, literal: "true", normalizedLiteral: true }];
+            return [
+                {
+                    kind: Type.TypeKind.Logical,
+                    extendedKind: Type.ExtendedTypeKind.LogicalLiteral,
+                    isNullable,
+                    literal: "true",
+                    normalizedLiteral: true,
+                },
+            ];
         } else if (category.hasFalsyNullableLiteral || category.hasFalsyNonNullableLiteral) {
-            return [{ kind: Type.TypeKind.Logical, extendedKind: Type.ExtendedTypeKind.LogicalLiteral, isNullable, literal: "false", normalizedLiteral: false }];
+            return [
+                {
+                    kind: Type.TypeKind.Logical,
+                    extendedKind: Type.ExtendedTypeKind.LogicalLiteral,
+                    isNullable,
+                    literal: "false",
+                    normalizedLiteral: false,
+                },
+            ];
         }
 
         return [];

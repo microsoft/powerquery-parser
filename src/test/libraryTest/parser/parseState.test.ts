@@ -5,10 +5,10 @@ import "mocha";
 import { expect } from "chai";
 
 import { DefaultSettings, Task } from "../../..";
+import { AssertTestUtils } from "../../testUtils";
 import { Constant } from "../../../powerquery-parser/language";
 import { ParseState } from "../../../powerquery-parser/parser/parseState/parseState";
 import { ParseStateUtils } from "../../../powerquery-parser/parser";
-import { AssertTestUtils } from "../../testUtils";
 
 describe("ParseStateUtils", () => {
     describe(`isOnConstantKind`, () => {

@@ -24,7 +24,6 @@ describe("ResultUtils", () => {
 
         it(`should return an Error result when callback throws a string`, () => {
             const result: Result<never, CommonError.CommonError> = ResultUtils.ensureResult(() => {
-                // eslint-disable-next-line no-throw-literal
                 throw "a string throwable";
             }, "en-US");
 
@@ -33,7 +32,6 @@ describe("ResultUtils", () => {
 
         it(`should return an Error result when callback throws a number`, () => {
             const result: Result<never, CommonError.CommonError> = ResultUtils.ensureResult(() => {
-                // eslint-disable-next-line no-throw-literal
                 throw 42;
             }, "en-US");
 
@@ -53,7 +51,6 @@ describe("ResultUtils", () => {
 
         it(`should return an Error result when async callback throws a string`, async () => {
             const result: Result<never, CommonError.CommonError> = await ResultUtils.ensureResultAsync(async () => {
-                // eslint-disable-next-line no-throw-literal
                 throw "async string throwable";
             }, "en-US");
 

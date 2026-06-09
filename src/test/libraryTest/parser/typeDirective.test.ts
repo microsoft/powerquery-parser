@@ -22,7 +22,11 @@ in
         );
 
         const letExpression: Language.Ast.LetExpression = parseOk.ast as Language.Ast.LetExpression;
-        const variable: Language.Ast.IdentifierPairedExpression = ArrayUtils.assertGet(letExpression.variableList.elements, 0).node;
+
+        const variable: Language.Ast.IdentifierPairedExpression = ArrayUtils.assertGet(
+            letExpression.variableList.elements,
+            0,
+        ).node;
 
         expect(variable.precedingDirectives).to.equal(undefined);
     });
@@ -41,7 +45,11 @@ in
         );
 
         const letExpression: Language.Ast.LetExpression = parseOk.ast as Language.Ast.LetExpression;
-        const variable: Language.Ast.IdentifierPairedExpression = ArrayUtils.assertGet(letExpression.variableList.elements, 0).node;
+
+        const variable: Language.Ast.IdentifierPairedExpression = ArrayUtils.assertGet(
+            letExpression.variableList.elements,
+            0,
+        ).node;
 
         expect(variable.precedingDirectives).to.not.equal(undefined);
 
@@ -83,7 +91,11 @@ in
         );
 
         const letExpression: Language.Ast.LetExpression = parseOk.ast as Language.Ast.LetExpression;
-        const variable: Language.Ast.IdentifierPairedExpression = ArrayUtils.assertGet(letExpression.variableList.elements, 0).node;
+
+        const variable: Language.Ast.IdentifierPairedExpression = ArrayUtils.assertGet(
+            letExpression.variableList.elements,
+            0,
+        ).node;
 
         expect(
             variable.precedingDirectives?.map((directive: Language.Comment.TDirective) => directive.value),
@@ -105,7 +117,11 @@ in
         );
 
         const letExpression: Language.Ast.LetExpression = parseOk.ast as Language.Ast.LetExpression;
-        const variable: Language.Ast.IdentifierPairedExpression = ArrayUtils.assertGet(letExpression.variableList.elements, 0).node;
+
+        const variable: Language.Ast.IdentifierPairedExpression = ArrayUtils.assertGet(
+            letExpression.variableList.elements,
+            0,
+        ).node;
 
         expect(variable.precedingDirectives).to.equal(undefined);
     });
