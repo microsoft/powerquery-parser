@@ -271,7 +271,7 @@ function getGeneralizedIdentifierLength(text: string, index: number): number | u
     let continueMatching: boolean = true;
 
     while (continueMatching) {
-        const currentChr: string = text[index];
+        const currentChr: string | undefined = text[index];
 
         if (currentChr === " ") {
             index += 1;

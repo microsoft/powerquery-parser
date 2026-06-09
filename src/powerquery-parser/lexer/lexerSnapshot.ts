@@ -135,7 +135,7 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
     while (flatIndex < numFlatTokens) {
         state.cancellationToken?.throwIfCancelled();
 
-        const flatToken: FlatLineToken = flatTokens[flatIndex];
+        const flatToken: FlatLineToken = ArrayUtils.assertGet(flatTokens, flatIndex);
         const lineTokenKind: Token.LineTokenKind = flatToken.kind;
 
         switch (lineTokenKind) {
@@ -553,7 +553,7 @@ function collectWhileContent<KindVariant extends Token.LineTokenKind>(
     while (flatIndex < numTokens) {
         cancellationToken?.throwIfCancelled();
 
-        const token: FlatLineToken = flatTokens[flatIndex];
+        const token: FlatLineToken = ArrayUtils.assertGet(flatTokens, flatIndex);
 
         if (token.kind !== contentKind) {
             break;

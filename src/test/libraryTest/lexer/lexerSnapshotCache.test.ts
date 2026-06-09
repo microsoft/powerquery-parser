@@ -5,6 +5,7 @@ import "mocha";
 import { expect } from "chai";
 
 import { DefaultSettings, Language, Lexer, ResultUtils, StringUtils } from "../../..";
+import { ArrayUtils } from "../../../powerquery-parser/common";
 
 function assertGetLexerSnapshot(text: string): Lexer.LexerSnapshot {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
@@ -80,7 +81,7 @@ describe("LexerSnapshot.graphemePositionStartFrom cache", () => {
     describe("cache hit consistency", () => {
         it("repeated calls return identical results", () => {
             const snapshot: Lexer.LexerSnapshot = assertGetLexerSnapshot("let x = 1");
-            const token: Language.Token.Token = snapshot.tokens[0];
+            const token: Language.Token.Token = ArrayUtils.assertGet(snapshot.tokens, 0);
 
             const first: StringUtils.GraphemePosition = snapshot.graphemePositionStartFrom(token);
             const second: StringUtils.GraphemePosition = snapshot.graphemePositionStartFrom(token);
@@ -104,7 +105,9 @@ describe("LexerSnapshot.graphemePositionStartFrom cache", () => {
 
             // Column numbers should be increasing
             for (let i: number = 1; i < positions.length; i += 1) {
-                expect(positions[i].columnNumber).to.be.greaterThan(positions[i - 1].columnNumber);
+                expect(ArrayUtils.assertGet(positions, i).columnNumber).to.be.greaterThan(
+                    ArrayUtils.assertGet(positions, i - 1).columnNumber,
+                );
             }
         });
 
@@ -116,10 +119,10 @@ describe("LexerSnapshot.graphemePositionStartFrom cache", () => {
                 snapshot.graphemePositionStartFrom(token),
             );
 
-            expect(positions[0].lineNumber).to.equal(0);
-            expect(positions[1].lineNumber).to.equal(1);
-            expect(positions[2].lineNumber).to.equal(2);
-            expect(positions[3].lineNumber).to.equal(2);
+            expect(ArrayUtils.assertGet(positions, 0).lineNumber).to.equal(0);
+            expect(ArrayUtils.assertGet(positions, 1).lineNumber).to.equal(1);
+            expect(ArrayUtils.assertGet(positions, 2).lineNumber).to.equal(2);
+            expect(ArrayUtils.assertGet(positions, 3).lineNumber).to.equal(2);
         });
     });
 

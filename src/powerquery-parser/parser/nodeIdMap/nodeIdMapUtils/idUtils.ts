@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { MapUtils, TypeScriptUtils } from "../../../common";
+import { ArrayUtils, MapUtils, TypeScriptUtils } from "../../../common";
 import { Trace, TraceConstant, TraceManager } from "../../../common/trace";
 import { Ast } from "../../../language";
 import { Collection } from "../nodeIdMap";
@@ -63,8 +63,8 @@ export function recalculateIds(
     const newIdByOldId: Map<number, number> = new Map();
 
     for (let index: number = 0; index < numIds; index += 1) {
-        const oldId: number = encounteredIds[index];
-        const newId: number = sortedIds[index];
+        const oldId: number = ArrayUtils.assertGet(encounteredIds, index);
+        const newId: number = ArrayUtils.assertGet(sortedIds, index);
 
         if (oldId !== newId) {
             newIdByOldId.set(oldId, newId);

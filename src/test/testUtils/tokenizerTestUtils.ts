@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { DefaultLocale, Language, ResultUtils } from "../../powerquery-parser";
+import { ArrayUtils } from "../../powerquery-parser/common";
 import { Lexer } from "../..";
 
 export class Tokenizer implements TokensProvider {
@@ -49,7 +50,9 @@ export class Tokenizer implements TokensProvider {
         const newLexerState: Lexer.State = triedLex.value;
 
         return {
-            tokens: newLexerState.lines[newLexerState.lines.length - 1].tokens.map(Tokenizer.ITokenFrom),
+            tokens: ArrayUtils.assertGet(newLexerState.lines, newLexerState.lines.length - 1).tokens.map(
+                Tokenizer.ITokenFrom,
+            ),
             endState: new TokenizerState(newLexerState),
         };
     }
@@ -82,8 +85,12 @@ export class TokenizerState implements IState {
         }
 
         // Compare last line state.
-        const leftLastLine: Lexer.TLine = this.lexerState.lines[this.lexerState.lines.length - 1];
-        const rightLastLine: Lexer.TLine = rightLexerState.lines[rightLexerState.lines.length - 1];
+        const leftLastLine: Lexer.TLine = ArrayUtils.assertGet(this.lexerState.lines, this.lexerState.lines.length - 1);
+
+        const rightLastLine: Lexer.TLine = ArrayUtils.assertGet(
+            rightLexerState.lines,
+            rightLexerState.lines.length - 1,
+        );
 
         return leftLastLine.lineModeEnd === rightLastLine.lineModeEnd;
     }

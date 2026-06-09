@@ -213,7 +213,7 @@ export async function disambiguateParenthesis(
     let offsetTokenIndex: number = initialTokenIndex + 1;
 
     while (offsetTokenIndex < totalTokens) {
-        const offsetTokenKind: Token.TokenKind = tokens[offsetTokenIndex].kind;
+        const offsetTokenKind: Token.TokenKind = ArrayUtils.assertGet(tokens, offsetTokenIndex).kind;
 
         if (offsetTokenKind === Token.TokenKind.LeftParenthesis) {
             nestedDepth += 1;
@@ -308,7 +308,7 @@ export function disambiguateBracket(
         offsetTokenIndex += 1;
 
         while (offsetTokenIndex < totalTokens) {
-            offsetTokenKind = tokens[offsetTokenIndex].kind;
+            offsetTokenKind = ArrayUtils.assertGet(tokens, offsetTokenIndex).kind;
 
             if (offsetTokenKind === Token.TokenKind.Equal) {
                 result = BracketDisambiguation.RecordExpression;
@@ -475,7 +475,7 @@ function unsafeMoveTo(state: ParseState, tokenIndex: number): void {
     state.tokenIndex = tokenIndex;
 
     if (tokenIndex < tokens.length) {
-        state.currentToken = tokens[tokenIndex];
+        state.currentToken = ArrayUtils.assertGet(tokens, tokenIndex);
         state.currentTokenKind = state.currentToken.kind;
     } else {
         state.currentToken = undefined;

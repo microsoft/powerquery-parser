@@ -17,7 +17,11 @@ export function all<T>(
 }
 
 export function assertGet<T>(collection: ReadonlyArray<T>, index: number, message?: string, details?: object): T {
-    return Assert.asDefined(collection[index], message, details);
+    return Assert.asDefined(
+        collection[index],
+        message ?? "index out of bounds",
+        details ?? { index, collectionLength: collection.length },
+    );
 }
 
 export function assertIncludes<T>(collection: ReadonlyArray<T>, element: T, message?: string, details?: object): void {

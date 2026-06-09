@@ -6,6 +6,7 @@ import { expect } from "chai";
 
 import * as AssertTestUtils from "../../testUtils/assertTestUtils";
 import { DefaultSettings, Language } from "../../../powerquery-parser";
+import { ArrayUtils } from "../../../powerquery-parser/common";
 
 type ParseOk = Awaited<ReturnType<typeof AssertTestUtils.assertGetLexParseOk>>;
 
@@ -21,7 +22,11 @@ in
         );
 
         const letExpression: Language.Ast.LetExpression = parseOk.ast as Language.Ast.LetExpression;
-        const variable: Language.Ast.IdentifierPairedExpression = letExpression.variableList.elements[0].node;
+
+        const variable: Language.Ast.IdentifierPairedExpression = ArrayUtils.assertGet(
+            letExpression.variableList.elements,
+            0,
+        ).node;
 
         expect(variable.precedingDirectives).to.equal(undefined);
     });
@@ -40,7 +45,11 @@ in
         );
 
         const letExpression: Language.Ast.LetExpression = parseOk.ast as Language.Ast.LetExpression;
-        const variable: Language.Ast.IdentifierPairedExpression = letExpression.variableList.elements[0].node;
+
+        const variable: Language.Ast.IdentifierPairedExpression = ArrayUtils.assertGet(
+            letExpression.variableList.elements,
+            0,
+        ).node;
 
         expect(variable.precedingDirectives).to.not.equal(undefined);
 
@@ -61,7 +70,7 @@ shared Value = [];`,
         );
 
         const section: Language.Ast.Section = parseOk.ast as Language.Ast.Section;
-        const sectionMember: Language.Ast.SectionMember = section.sectionMembers.elements[0];
+        const sectionMember: Language.Ast.SectionMember = ArrayUtils.assertGet(section.sectionMembers.elements, 0);
 
         expect(
             sectionMember.precedingDirectives?.map((directive: Language.Comment.TDirective) => directive.value),
@@ -82,7 +91,11 @@ in
         );
 
         const letExpression: Language.Ast.LetExpression = parseOk.ast as Language.Ast.LetExpression;
-        const variable: Language.Ast.IdentifierPairedExpression = letExpression.variableList.elements[0].node;
+
+        const variable: Language.Ast.IdentifierPairedExpression = ArrayUtils.assertGet(
+            letExpression.variableList.elements,
+            0,
+        ).node;
 
         expect(
             variable.precedingDirectives?.map((directive: Language.Comment.TDirective) => directive.value),
@@ -104,7 +117,11 @@ in
         );
 
         const letExpression: Language.Ast.LetExpression = parseOk.ast as Language.Ast.LetExpression;
-        const variable: Language.Ast.IdentifierPairedExpression = letExpression.variableList.elements[0].node;
+
+        const variable: Language.Ast.IdentifierPairedExpression = ArrayUtils.assertGet(
+            letExpression.variableList.elements,
+            0,
+        ).node;
 
         expect(variable.precedingDirectives).to.equal(undefined);
     });
