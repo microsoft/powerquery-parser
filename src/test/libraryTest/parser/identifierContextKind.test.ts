@@ -4,8 +4,8 @@
 import "mocha";
 import { expect } from "chai";
 
-import { ArrayUtils } from "../../../powerquery-parser/common";
 import { NodeIdMap, NodeIdMapUtils, ParseOk } from "../../../powerquery-parser/parser";
+import { ArrayUtils } from "../../../powerquery-parser/common";
 import { AssertTestUtils } from "../../testUtils";
 import { Ast } from "../../../powerquery-parser/language";
 import { DefaultSettings } from "../../..";

@@ -31,9 +31,20 @@ describe("Lexer.retokenizeLines line numbers", () => {
         expect(updated.lines.length).to.equal(3, "expected 3 lines after update");
 
         // All lines should now be in Default mode since line 0 is a complete string
-        expect(ArrayUtils.assertGet(updated.lines, 0).lineModeEnd).to.equal(Lexer.LineMode.Default, "line 0 should end in Default mode");
-        expect(ArrayUtils.assertGet(updated.lines, 1).lineModeStart).to.equal(Lexer.LineMode.Default, "line 1 should start in Default mode");
-        expect(ArrayUtils.assertGet(updated.lines, 2).lineModeStart).to.equal(Lexer.LineMode.Default, "line 2 should start in Default mode");
+        expect(ArrayUtils.assertGet(updated.lines, 0).lineModeEnd).to.equal(
+            Lexer.LineMode.Default,
+            "line 0 should end in Default mode",
+        );
+
+        expect(ArrayUtils.assertGet(updated.lines, 1).lineModeStart).to.equal(
+            Lexer.LineMode.Default,
+            "line 1 should start in Default mode",
+        );
+
+        expect(ArrayUtils.assertGet(updated.lines, 2).lineModeStart).to.equal(
+            Lexer.LineMode.Default,
+            "line 2 should start in Default mode",
+        );
 
         // Now snapshot to get token positions and verify line numbers are correct.
         const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(updated);

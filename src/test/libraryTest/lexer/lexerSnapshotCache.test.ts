@@ -105,7 +105,9 @@ describe("LexerSnapshot.graphemePositionStartFrom cache", () => {
 
             // Column numbers should be increasing
             for (let i: number = 1; i < positions.length; i += 1) {
-                expect(ArrayUtils.assertGet(positions, i).columnNumber).to.be.greaterThan(ArrayUtils.assertGet(positions, i - 1).columnNumber);
+                expect(ArrayUtils.assertGet(positions, i).columnNumber).to.be.greaterThan(
+                    ArrayUtils.assertGet(positions, i - 1).columnNumber,
+                );
             }
         });
 
@@ -121,6 +123,40 @@ describe("LexerSnapshot.graphemePositionStartFrom cache", () => {
             expect(ArrayUtils.assertGet(positions, 1).lineNumber).to.equal(1);
             expect(ArrayUtils.assertGet(positions, 2).lineNumber).to.equal(2);
             expect(ArrayUtils.assertGet(positions, 3).lineNumber).to.equal(2);
+        });
+    });
+
+    describe("codeUnit correctness", () => {
+        it("codeUnit should reflect the token start position, not end", () => {
+            const snapshot: Lexer.LexerSnapshot = assertGetLexerSnapshot("let x = 1");
+
+            for (const token of snapshot.tokens) {
+                const position: StringUtils.GraphemePosition = snapshot.graphemePositionStartFrom(token);
+
+                expect(position.codeUnit).to.equal(
+                    token.positionStart.codeUnit,
+                    `graphemePositionStartFrom("${token.data}") returned codeUnit ${position.codeUnit} ` +
+                        `but token.positionStart.codeUnit is ${token.positionStart.codeUnit}`,
+                );
+            }
+        });
+
+        it("static graphemePositionStartFrom returns start codeUnit", () => {
+            const snapshot: Lexer.LexerSnapshot = assertGetLexerSnapshot("let x = 1");
+
+            for (const token of snapshot.tokens) {
+                const position: StringUtils.GraphemePosition = Lexer.LexerSnapshot.graphemePositionStartFrom(
+                    snapshot.text,
+                    snapshot.lineTerminators,
+                    token,
+                );
+
+                expect(position.codeUnit).to.equal(
+                    token.positionStart.codeUnit,
+                    `static graphemePositionStartFrom("${token.data}") returned codeUnit ${position.codeUnit} ` +
+                        `but token.positionStart.codeUnit is ${token.positionStart.codeUnit}`,
+                );
+            }
         });
     });
 });

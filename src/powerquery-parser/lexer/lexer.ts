@@ -168,7 +168,12 @@ export function equalLines(leftLines: ReadonlyArray<TLine>, rightLines: Readonly
         const numTokens: number = leftTokens.length;
 
         for (let tokenIndex: number = 0; tokenIndex < numTokens; tokenIndex += 1) {
-            if (!equalTokens(ArrayUtils.assertGet(leftTokens, tokenIndex), ArrayUtils.assertGet(rightTokens, tokenIndex))) {
+            if (
+                !equalTokens(
+                    ArrayUtils.assertGet(leftTokens, tokenIndex),
+                    ArrayUtils.assertGet(rightTokens, tokenIndex),
+                )
+            ) {
                 return false;
             }
         }
@@ -400,7 +405,11 @@ function updateRange(state: State, range: Range, text: string): State {
     const lines: ReadonlyArray<TLine> = [
         ...state.lines.slice(0, rangeStart.lineNumber),
         ...newLines,
-        ...retokenizeLines(state, rangeEnd.lineNumber + 1, ArrayUtils.assertGet(newLines, newLines.length - 1).lineModeEnd),
+        ...retokenizeLines(
+            state,
+            rangeEnd.lineNumber + 1,
+            ArrayUtils.assertGet(newLines, newLines.length - 1).lineModeEnd,
+        ),
     ];
 
     return {
@@ -506,7 +515,7 @@ function retokenizeLines(state: State, lineNumber: number, previousLineModeEnd: 
                 lineNumber += 1;
                 currentLine = lines[lineNumber];
             } else {
-                return [...retokenizedLines, ...lines.slice(lineNumber + 1)];
+                return [...retokenizedLines, ...lines.slice(lineNumber)];
             }
         }
 

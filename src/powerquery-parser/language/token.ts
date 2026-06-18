@@ -7,7 +7,7 @@ export enum LineTokenKindAdditions {
     MultilineCommentContent = "MultilineCommentContent",
     MultilineCommentEnd = "MultilineCommentEnd",
     MultilineCommentStart = "MultilineCommentStart",
-    TextLiteralContent = "TextContent",
+    TextLiteralContent = "TextLiteralContent",
     TextLiteralEnd = "TextLiteralEnd",
     TextLiteralStart = "TextLiteralStart",
     QuotedIdentifierContent = "QuotedIdentifierContent",

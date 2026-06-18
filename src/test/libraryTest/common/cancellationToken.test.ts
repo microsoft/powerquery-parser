@@ -3,8 +3,11 @@
 
 import "mocha";
 
+import { expect } from "chai";
+
 import {
     CommonError,
+    CounterCancellationToken,
     DefaultSettings,
     Lexer,
     Result,
@@ -47,6 +50,36 @@ function defaultSettingsWithExpiredCancellationToken(): Settings {
 }
 
 describe("CancellationToken", () => {
+    describe(`CounterCancellationToken`, () => {
+        it(`throwIfCancelled should consume exactly 1 count`, () => {
+            // With threshold of 3, we should be able to call throwIfCancelled 2 times
+            // without throwing (counts 1 and 2), then the 3rd should throw (count 3).
+            const token: CounterCancellationToken = new CounterCancellationToken(3);
+
+            // First call: counter goes to 1, threshold is 3, no throw
+            token.throwIfCancelled();
+
+            // Second call: counter goes to 2, threshold is 3, no throw
+            token.throwIfCancelled();
+
+            // Third call: counter goes to 3, threshold is 3, should throw
+            expect(() => token.throwIfCancelled()).to.throw(CommonError.CancellationError);
+        });
+
+        it(`isCancelled should consume exactly 1 count`, () => {
+            const token: CounterCancellationToken = new CounterCancellationToken(3);
+
+            // First call: counter goes to 1, not cancelled
+            expect(token.isCancelled()).to.be.false;
+
+            // Second call: counter goes to 2, not cancelled
+            expect(token.isCancelled()).to.be.false;
+
+            // Third call: counter goes to 3, cancelled
+            expect(token.isCancelled()).to.be.true;
+        });
+    });
+
     describe(`lexer`, () => {
         it(`Lexer.tryLex`, () => {
             const triedLex: Lexer.TriedLex = Lexer.tryLex(defaultSettingsWithExpiredCancellationToken(), "foo");

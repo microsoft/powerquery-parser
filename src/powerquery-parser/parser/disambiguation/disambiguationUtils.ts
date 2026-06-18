@@ -234,7 +234,10 @@ export async function disambiguateParenthesis(
                 try {
                     // eslint-disable-next-line no-await-in-loop
                     await parser.readNullablePrimitiveType(state, parser, trace.id);
-                } catch {
+                } catch (error: unknown) {
+                    Assert.isInstanceofError(error);
+                    CommonError.throwIfCancellationError(error);
+
                     // eslint-disable-next-line no-await-in-loop
                     await parser.restoreCheckpoint(state, checkpoint);
 

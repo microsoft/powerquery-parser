@@ -122,8 +122,13 @@ export async function readGeneralizedIdentifier(
 
     const lexerSnapshot: LexerSnapshot = state.lexerSnapshot;
     const tokens: ReadonlyArray<Token.Token> = lexerSnapshot.tokens;
-    const contiguousIdentifierStartIndex: number = ArrayUtils.assertGet(tokens, tokenRangeStartIndex).positionStart.codeUnit;
-    const contiguousIdentifierEndIndex: number = ArrayUtils.assertGet(tokens, tokenRangeEndIndex - 1).positionEnd.codeUnit;
+
+    const contiguousIdentifierStartIndex: number = ArrayUtils.assertGet(tokens, tokenRangeStartIndex).positionStart
+        .codeUnit;
+
+    const contiguousIdentifierEndIndex: number = ArrayUtils.assertGet(tokens, tokenRangeEndIndex - 1).positionEnd
+        .codeUnit;
+
     const literal: string = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
 
     const literalKind: IdentifierUtils.IdentifierKind = IdentifierUtils.getIdentifierKind(literal, {

@@ -5,9 +5,9 @@ import "mocha";
 import { expect } from "chai";
 
 import { Type, TypeUtils } from "../../../../powerquery-parser/language";
+import { ArrayUtils } from "../../../../powerquery-parser/common";
 import { NoOpTraceManagerInstance } from "../../../../powerquery-parser/common/trace";
 import { OrderedMap } from "../../../../powerquery-parser";
-import { ArrayUtils } from "../../../../powerquery-parser/common";
 
 interface AbridgedType {
     readonly kind: Type.TypeKind;

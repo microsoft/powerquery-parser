@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { ArrayUtils, Assert } from "../../../common";
 import { Ast, AstUtils } from "../..";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, XorNode, XorNodeKind } from "../../../parser";
 import { Trace, TraceManager } from "../../../common/trace";
-import { ArrayUtils, Assert } from "../../../common";
 import { isCompatible } from "./isCompatible";
 import { isEqualType } from "./isEqualType";
 import { primitiveType } from "./factories";

@@ -91,6 +91,33 @@ describe("StringUtils", () => {
 
             expect(actual).to.deep.equal(expected);
         });
+
+        it(`"a""""b" - consecutive escaped quotes`, () => {
+            // Content represents: a""b (two escaped quotes then 'b')
+            // The "" escape at index 2-3 must not cause index 4 to be skipped
+            const actual: StringUtils.FoundQuotes | undefined = StringUtils.findQuotes(`"a""""b"`, 0);
+
+            const expected: StringUtils.FoundQuotes = {
+                indexStart: 0,
+                indexEnd: 8,
+                quoteLength: 8,
+            };
+
+            expect(actual).to.deep.equal(expected);
+        });
+
+        it(`"x""y""z" - multiple escaped quotes`, () => {
+            // Content represents: x"y"z
+            const actual: StringUtils.FoundQuotes | undefined = StringUtils.findQuotes(`"x""y""z"`, 0);
+
+            const expected: StringUtils.FoundQuotes = {
+                indexStart: 0,
+                indexEnd: 9,
+                quoteLength: 9,
+            };
+
+            expect(actual).to.deep.equal(expected);
+        });
     });
 
     describe(`normalizeNumber`, () => {

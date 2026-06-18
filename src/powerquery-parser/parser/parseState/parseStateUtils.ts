@@ -37,7 +37,7 @@ export function newState(lexerSnapshot: LexerSnapshot, overrides?: Partial<Parse
         locale: overrides?.locale ?? DefaultLocale,
         cancellationToken: overrides?.cancellationToken,
         traceManager: overrides?.traceManager ?? NoOpTraceManagerInstance,
-        contextState: overrides?.contextState ?? ParseContextUtils.newState(),
+        contextState,
         currentToken,
         currentContextNode,
         currentTokenKind,
@@ -58,9 +58,15 @@ export async function applyState(state: ParseState, update: ParseState): Promise
 // If you have a custom parser + parser state, then you'll have to create your own copyState/applyState functions.
 // eslint-disable-next-line require-await
 export async function copyState(state: ParseState): Promise<ParseState> {
+    const contextState: ParseContext.State = ParseContextUtils.copyState(state.contextState);
+
     return {
         ...state,
-        contextState: ParseContextUtils.copyState(state.contextState),
+        contextState,
+        currentContextNode:
+            state.currentContextNode !== undefined
+                ? MapUtils.assertGet(contextState.nodeIdMapCollection.contextNodeById, state.currentContextNode.id)
+                : undefined,
     };
 }
 
