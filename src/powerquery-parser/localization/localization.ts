@@ -3,7 +3,7 @@
 
 import { Assert, StringUtils } from "../common";
 import { SequenceKind, TokenWithColumnNumber } from "../parser/error";
-import { ILocalizationTemplates } from "./templates";
+import type { ILocalizationTemplates } from "./templates";
 import { Lexer } from "..";
 import { LexError } from "../lexer";
 import { ParseError } from "../parser";

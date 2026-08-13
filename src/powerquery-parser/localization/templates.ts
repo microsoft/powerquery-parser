@@ -7,7 +7,6 @@ import * as cs_CZ from "./templates/template.cs-CZ.json";
 import * as da_DK from "./templates/template.da-DK.json";
 import * as de_DE from "./templates/template.de-DE.json";
 import * as el_GR from "./templates/template.el-GR.json";
-import * as en_US from "./templates/template.json";
 import * as es_ES from "./templates/template.es-ES.json";
 import * as et_EE from "./templates/template.et-EE.json";
 import * as eu_ES from "./templates/template.eu-ES.json";
@@ -43,6 +42,8 @@ import * as uk_UA from "./templates/template.uk-UA.json";
 import * as vi_VN from "./templates/template.vi-VN.json";
 import * as zh_CN from "./templates/template.zh-CN.json";
 import * as zh_TW from "./templates/template.zh-TW.json";
+import { registerLocalizationTemplates, TemplatesByLocale } from "./localizationUtils";
+import { DefaultTemplates } from "./defaultTemplates";
 import { Locale } from "./locale";
 
 export {
@@ -52,7 +53,6 @@ export {
     da_DK,
     de_DE,
     el_GR,
-    en_US,
     es_ES,
     et_EE,
     eu_ES,
@@ -88,16 +88,18 @@ export {
     vi_VN,
     zh_CN,
     zh_TW,
+    DefaultTemplates as en_US,
+    TemplatesByLocale,
 };
 
-export const TemplatesByLocale: Map<string, ILocalizationTemplates> = new Map([
+const templatesByLocaleEntries: ReadonlyArray<readonly [string, ILocalizationTemplates]> = [
     [Locale.bg_BG.toLowerCase(), bg_BG],
     [Locale.ca_EZ.toLowerCase(), ca_ES],
     [Locale.cs_CZ.toLowerCase(), cs_CZ],
     [Locale.da_DK.toLowerCase(), da_DK],
     [Locale.de_DE.toLowerCase(), de_DE],
     [Locale.el_GR.toLowerCase(), el_GR],
-    [Locale.en_US.toLowerCase(), en_US],
+    [Locale.en_US.toLowerCase(), DefaultTemplates],
     [Locale.es_ES.toLowerCase(), es_ES],
     [Locale.et_EE.toLowerCase(), et_EE],
     [Locale.eu_ES.toLowerCase(), eu_ES],
@@ -133,7 +135,11 @@ export const TemplatesByLocale: Map<string, ILocalizationTemplates> = new Map([
     [Locale.vi_VN.toLowerCase(), vi_VN],
     [Locale.zh_CN.toLowerCase(), zh_CN],
     [Locale.zh_TW.toLowerCase(), zh_TW],
-]);
+];
+
+for (const [locale, templates] of templatesByLocaleEntries) {
+    registerLocalizationTemplates(locale, templates);
+}
 
 export interface ILocalizationTemplates {
     readonly error_common_cancellationError: string;
@@ -239,4 +245,4 @@ export interface ILocalizationTemplates {
     readonly tokenKind_textLiteral: string;
 }
 
-export const DefaultTemplates: ILocalizationTemplates = en_US;
+export { DefaultTemplates };

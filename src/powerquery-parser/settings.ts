@@ -3,7 +3,7 @@
 
 import { CombinatorialParserV2, ParseSettings, ParseState, ParseStateUtils } from "./parser";
 import { LexerSnapshot, LexSettings } from "./lexer";
-import { DefaultLocale } from "./localization";
+import { DefaultLocale } from "./localization/locale";
 import { NoOpTraceManagerInstance } from "./common/trace";
 
 export type Settings = LexSettings & ParseSettings;

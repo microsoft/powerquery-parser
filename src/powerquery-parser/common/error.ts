@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Localization, LocalizationUtils, Templates } from "../localization";
+import * as LocalizationUtils from "../localization/localizationUtils";
 import { Assert } from ".";
+import { DefaultTemplates } from "../localization/defaultTemplates";
 import { ICancellationToken } from "./cancellationToken/ICancellationToken";
+import { Localization } from "../localization/localization";
 
 export type TInnerCommonError = CancellationError | InvariantError | UnknownError;
 
@@ -16,14 +18,14 @@ export class CommonError extends Error {
 
 export class CancellationError extends Error {
     constructor(readonly cancellationToken: ICancellationToken, readonly reason: string) {
-        super(Localization.error_common_cancellationError(Templates.DefaultTemplates, reason));
+        super(Localization.error_common_cancellationError(DefaultTemplates, reason));
         Object.setPrototypeOf(this, CancellationError.prototype);
     }
 }
 
 export class InvariantError extends Error {
     constructor(readonly invariantBroken: string, readonly details?: object) {
-        super(Localization.error_common_invariantError(Templates.DefaultTemplates, invariantBroken, details));
+        super(Localization.error_common_invariantError(DefaultTemplates, invariantBroken, details));
         Object.setPrototypeOf(this, InvariantError.prototype);
     }
 }

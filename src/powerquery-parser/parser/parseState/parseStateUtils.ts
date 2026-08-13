@@ -5,7 +5,7 @@ import { ArrayUtils, Assert, CommonError, MapUtils } from "../../common";
 import { Ast, Constant, Token } from "../../language";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, ParseContextUtils, ParseError, TXorNode, XorNodeUtils } from "..";
 import { NoOpTraceManagerInstance, Trace } from "../../common/trace";
-import { DefaultLocale } from "../../localization";
+import { DefaultLocale } from "../../localization/locale";
 import { Disambiguation } from "../disambiguation";
 import { LexerSnapshot } from "../../lexer";
 import { ParseState } from "./parseState";

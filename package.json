@@ -9,7 +9,7 @@
         "power bi"
     ],
     "scripts": {
-        "build": "node_modules\\.bin\\tsc",
+        "build": "node_modules\\.bin\\tsc && node scripts\\createPackageEntrypoints.js",
         "test": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -r ts-node/register src/test/libraryTest/**/*.ts",
         "test:resources": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -r ts-node/register src/test/resourceTest/**/*.ts",
         "script:benchmark": "npx ts-node src/test/scripts/createBenchmark.ts",
@@ -55,6 +55,9 @@
         "typescript": "^4.5.4"
     },
     "files": [
-        "lib/powerquery-parser/**/*"
+        "lib/powerquery-parser/**/*",
+        "core.js",
+        "core.d.ts",
+        "locales/**/*"
     ]
 }

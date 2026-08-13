@@ -8,6 +8,19 @@ A parser for the [Power Query/M](https://docs.microsoft.com/en-us/power-query/) 
 
 The most common way to consume the project is to interact with the helper functions found in [taskUtils.ts](src/powerquery-parser/task/taskUtils.ts). There are all-in-one functions, such as `tryLexParse`, which does a full pass on a given document. There are also incremental functions, such as `tryLex` and `tryParse`, which perform one step at a time. Minimal code samples can be found in [example.ts](src/example.ts).
 
+### Localization and bundle size
+
+The package root includes every supported localization template for backwards compatibility. Applications that want a smaller bundle can import the English-only core entrypoint and register only the locales they use:
+
+```ts
+import { LocalizationUtils } from "@microsoft/powerquery-parser/core";
+import { templates as frFR } from "@microsoft/powerquery-parser/locales/fr-FR";
+
+LocalizationUtils.registerLocalizationTemplates("fr-FR", frFR);
+```
+
+An unregistered locale falls back to `en-US`. Import `@microsoft/powerquery-parser/locales/all` to register every supported locale while using the core entrypoint.
+
 ## Related projects
 
 - [powerquery-formatter](https://github.com/microsoft/powerquery-formatter): A code formatter for Power Query which is bundled in the VSCode extension.

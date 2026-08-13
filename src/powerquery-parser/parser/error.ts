@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import * as LocalizationUtils from "../localization/localizationUtils";
 import { Assert, CommonError, StringUtils } from "../common";
-import { Localization, LocalizationUtils } from "../localization";
+import { Localization } from "../localization/localization";
 import { ParseState } from "./parseState";
 import { Token } from "../language";
 

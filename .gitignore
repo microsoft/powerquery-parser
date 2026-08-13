@@ -263,6 +263,9 @@ FakesAssemblies/
 .ntvs_analysis.dat
 lib/
 node_modules/
+/core.d.ts
+/core.js
+/locales/
 
 # Visual Studio 6 build log
 *.plg

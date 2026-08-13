@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import * as Lexer from "../lexer";
+import * as Parser from "../parser";
 import { CommonError, ResultKind, ResultUtils } from "../common";
-import { Lexer, Parser } from "..";
 import {
     LexTaskError,
     LexTaskOk,
