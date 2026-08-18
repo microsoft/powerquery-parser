@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, Assert, MapUtils } from "../../../common";
+import { ArrayUtils, Assert } from "../../../common";
 import { isTypeInArray } from "./typeUtils";
 import { Type } from "..";
 
@@ -166,18 +166,32 @@ export function isEqualDefinedListType(left: Type.DefinedListType, right: Type.D
 }
 
 export function isEqualDefinedRecord(left: Type.DefinedRecord, right: Type.DefinedRecord): boolean {
-    return (
-        left === right ||
-        (left.isNullable === right.isNullable &&
-            MapUtils.isEqualMap<string, Type.TPowerQueryType>(left.fields, right.fields, isEqualType))
-    );
+    return left === right || (left.isNullable === right.isNullable && isEqualFieldSpecificationList(left, right));
 }
 
 export function isEqualDefinedTable(left: Type.DefinedTable, right: Type.DefinedTable): boolean {
     return (
         left === right ||
         (left.isNullable === right.isNullable &&
-            MapUtils.isEqualMap<string, Type.TPowerQueryType>(left.fields, right.fields, isEqualType))
+            isEqualFieldSpecificationList(left, right) &&
+            isEqualDefinedTableRows(left.rows, right.rows))
+    );
+}
+
+function isEqualDefinedTableRows(
+    left: ReadonlyArray<Type.DefinedRecord> | undefined,
+    right: ReadonlyArray<Type.DefinedRecord> | undefined,
+): boolean {
+    if (left === right) {
+        return true;
+    } else if (left === undefined || right === undefined || left.length !== right.length) {
+        return false;
+    }
+
+    return ArrayUtils.all(
+        left.map((leftRow: Type.DefinedRecord, index: number) =>
+            isEqualDefinedRecord(leftRow, ArrayUtils.assertGet(right, index)),
+        ),
     );
 }
 

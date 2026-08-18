@@ -95,13 +95,19 @@ export function definedRecord(
     };
 }
 
-export function definedTable(isNullable: boolean, fields: Type.OrderedFields, isOpen: boolean): Type.DefinedTable {
+export function definedTable(
+    isNullable: boolean,
+    fields: Type.OrderedFields,
+    isOpen: boolean,
+    rows?: ReadonlyArray<Type.DefinedRecord>,
+): Type.DefinedTable {
     return {
         kind: Type.TypeKind.Table,
         extendedKind: Type.ExtendedTypeKind.DefinedTable,
         isNullable,
         fields,
         isOpen,
+        ...(rows === undefined ? {} : { rows }),
     };
 }
 
