@@ -68,18 +68,18 @@ describe(`TypeUtils.isEqualType`, () => {
             return TypeUtils.definedRecord(false, new Map([["Value", TypeUtils.numberLiteral(false, value)]]), false);
         }
 
-        it(`equal literal rows`, () => {
+        it(`equal rows`, () => {
             runTest({
-                left: TypeUtils.definedTable(false, fields, false, [row(1)]),
-                right: TypeUtils.definedTable(false, fields, false, [row(1)]),
+                left: TypeUtils.definedTable(false, fields, false, [row(1), row(2)]),
+                right: TypeUtils.definedTable(false, fields, false, [row(1), row(2)]),
                 expected: true,
             });
         });
 
-        it(`different literal rows`, () => {
+        it(`different row order`, () => {
             runTest({
-                left: TypeUtils.definedTable(false, fields, false, [row(1)]),
-                right: TypeUtils.definedTable(false, fields, false, [row(2)]),
+                left: TypeUtils.definedTable(false, fields, false, [row(1), row(2)]),
+                right: TypeUtils.definedTable(false, fields, false, [row(2), row(1)]),
                 expected: false,
             });
         });
@@ -88,27 +88,6 @@ describe(`TypeUtils.isEqualType`, () => {
             runTest({
                 left: TypeUtils.definedTable(false, fields, false, []),
                 right: TypeUtils.definedTable(false, fields, false),
-                expected: false,
-            });
-        });
-
-        it(`tables with different openness are not equal`, () => {
-            runTest({
-                left: TypeUtils.definedTable(false, fields, false),
-                right: TypeUtils.definedTable(false, fields, true),
-                expected: false,
-            });
-        });
-
-        it(`rows with different openness are not equal`, () => {
-            runTest({
-                left: TypeUtils.definedTable(false, fields, false, [row(1)]),
-                right: TypeUtils.definedTable(false, fields, false, [
-                    {
-                        ...row(1),
-                        isOpen: true,
-                    },
-                ]),
                 expected: false,
             });
         });

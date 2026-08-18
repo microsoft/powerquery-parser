@@ -107,7 +107,7 @@ export function definedTable(
         isNullable,
         fields,
         isOpen,
-        ...(rows === undefined ? {} : { rows }),
+        rows,
     };
 }
 

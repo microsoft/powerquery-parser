@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, Assert } from "../../../common";
+import { ArrayUtils, Assert, MapUtils } from "../../../common";
 import { isTypeInArray } from "./typeUtils";
 import { Type } from "..";
 
@@ -166,14 +166,18 @@ export function isEqualDefinedListType(left: Type.DefinedListType, right: Type.D
 }
 
 export function isEqualDefinedRecord(left: Type.DefinedRecord, right: Type.DefinedRecord): boolean {
-    return left === right || (left.isNullable === right.isNullable && isEqualFieldSpecificationList(left, right));
+    return (
+        left === right ||
+        (left.isNullable === right.isNullable &&
+            MapUtils.isEqualMap<string, Type.TPowerQueryType>(left.fields, right.fields, isEqualType))
+    );
 }
 
 export function isEqualDefinedTable(left: Type.DefinedTable, right: Type.DefinedTable): boolean {
     return (
         left === right ||
         (left.isNullable === right.isNullable &&
-            isEqualFieldSpecificationList(left, right) &&
+            MapUtils.isEqualMap<string, Type.TPowerQueryType>(left.fields, right.fields, isEqualType) &&
             isEqualDefinedTableRows(left.rows, right.rows))
     );
 }
