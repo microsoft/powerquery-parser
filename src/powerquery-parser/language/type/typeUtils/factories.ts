@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, Assert, CommonError, StringUtils } from "../../../common";
+import { ArrayUtils, Assert, CommonError, MapUtils, StringUtils } from "../../../common";
+import { NoOpTraceManagerInstance, Trace, TraceManager } from "../../../common/trace";
 import { PrimitiveTypeConstantMap, primitiveTypeMapKey } from "./primitive";
-import { Trace, TraceManager } from "../../../common/trace";
+import { isCompatible } from "./isCompatible";
 import { simplify } from "./simplify";
 import { Type } from "..";
 import { TypeUtilsTraceConstant } from "./typeTraceConstant";
@@ -95,12 +96,47 @@ export function definedRecord(
     };
 }
 
+/**
+ * Creates a defined table with exact rows.
+ *
+ * Each row is asserted to have exactly the declared fields and field types compatible with the table definition.
+ * @throws CommonError.InvariantError if a row does not satisfy those requirements.
+ */
 export function definedTable(
     isNullable: boolean,
     fields: Type.OrderedFields,
     isOpen: boolean,
-    rows?: ReadonlyArray<Type.DefinedRecord>,
+    rows: ReadonlyArray<Type.UnorderedFields>,
 ): Type.DefinedTable {
+    const fieldNames: ReadonlyArray<string> = [...fields.keys()];
+
+    rows.forEach((row: Type.UnorderedFields, rowIndex: number) => {
+        Assert.isTrue(
+            row.size === fields.size && MapUtils.hasKeys(row, fieldNames),
+            `row fields do not match table fields`,
+            {
+                rowIndex,
+                fieldNames,
+                rowFieldNames: [...row.keys()],
+            },
+        );
+
+        fields.forEach((fieldType: Type.TPowerQueryType, fieldName: string) => {
+            const rowType: Type.TPowerQueryType = MapUtils.assertGet(row, fieldName);
+
+            Assert.isTrue(
+                isCompatible(rowType, fieldType, NoOpTraceManagerInstance, undefined) === true,
+                `row field type is incompatible with table field type`,
+                {
+                    rowIndex,
+                    fieldName,
+                    rowType,
+                    fieldType,
+                },
+            );
+        });
+    });
+
     return {
         kind: Type.TypeKind.Table,
         extendedKind: Type.ExtendedTypeKind.DefinedTable,

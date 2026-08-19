@@ -64,8 +64,8 @@ describe(`TypeUtils.isEqualType`, () => {
     describe(`${Type.ExtendedTypeKind.DefinedTable}`, () => {
         const fields: Type.OrderedFields = new OrderedMap([["Value", Type.NumberInstance]]);
 
-        function row(value: number): Type.DefinedRecord {
-            return TypeUtils.definedRecord(false, new Map([["Value", TypeUtils.numberLiteral(false, value)]]), false);
+        function row(value: number): Type.UnorderedFields {
+            return new Map<string, Type.TPowerQueryType>([["Value", TypeUtils.numberLiteral(false, value)]]);
         }
 
         it(`equal rows`, () => {
@@ -84,10 +84,18 @@ describe(`TypeUtils.isEqualType`, () => {
             });
         });
 
-        it(`known rows differ from unknown rows`, () => {
+        it(`different row values`, () => {
+            runTest({
+                left: TypeUtils.definedTable(false, fields, false, [row(1)]),
+                right: TypeUtils.definedTable(false, fields, false, [row(2)]),
+                expected: false,
+            });
+        });
+
+        it(`empty rows differ from non-empty rows`, () => {
             runTest({
                 left: TypeUtils.definedTable(false, fields, false, []),
-                right: TypeUtils.definedTable(false, fields, false),
+                right: TypeUtils.definedTable(false, fields, false, [row(1)]),
                 expected: false,
             });
         });

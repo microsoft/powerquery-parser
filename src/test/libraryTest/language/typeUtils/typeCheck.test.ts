@@ -875,6 +875,7 @@ describe(`TypeUtils.typeCheck`, () => {
                     ["table", Language.Type.TableInstance],
                 ]),
                 false,
+                [],
             );
 
             const schemaType: Language.Type.TableType = TypeUtils.tableType(

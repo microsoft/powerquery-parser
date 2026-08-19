@@ -216,6 +216,84 @@ describe(`TypeUtils`, () => {
         });
     });
 
+    describe(`definedTable`, () => {
+        const fields: Type.OrderedFields = new OrderedMap<string, Type.TPowerQueryType>([
+            ["Name", Type.TextInstance],
+            ["Value", Type.NumberInstance],
+        ]);
+
+        function row(entries: ReadonlyArray<[string, Type.TPowerQueryType]>): Type.UnorderedFields {
+            return new Map<string, Type.TPowerQueryType>(entries);
+        }
+
+        it(`retains valid rows`, () => {
+            const rows: ReadonlyArray<Type.UnorderedFields> = [
+                row([
+                    ["Name", TypeUtils.textLiteral(false, `"A"`)],
+                    ["Value", TypeUtils.numberLiteral(false, 1)],
+                ]),
+            ];
+
+            const type: Type.DefinedTable = TypeUtils.definedTable(false, fields, false, rows);
+
+            expect(type.rows).to.equal(rows);
+        });
+
+        it(`retains exact empty rows`, () => {
+            const rows: ReadonlyArray<Type.UnorderedFields> = [];
+            const type: Type.DefinedTable = TypeUtils.definedTable(false, fields, false, rows);
+
+            expect(type.rows).to.equal(rows);
+        });
+
+        it(`accepts null for a nullable column`, () => {
+            const nullableFields: Type.OrderedFields = new OrderedMap([["Value", Type.NullableNumberInstance]]);
+
+            expect(() =>
+                TypeUtils.definedTable(false, nullableFields, false, [row([["Value", Type.NullInstance]])]),
+            ).not.to.throw();
+        });
+
+        it(`rejects a row with a missing column`, () => {
+            expect(() =>
+                TypeUtils.definedTable(false, fields, false, [row([["Name", TypeUtils.textLiteral(false, `"A"`)]])]),
+            ).to.throw(`row fields do not match table fields`);
+        });
+
+        it(`rejects a row with the wrong column name`, () => {
+            expect(() =>
+                TypeUtils.definedTable(false, fields, false, [
+                    row([
+                        ["Name", TypeUtils.textLiteral(false, `"A"`)],
+                        ["Other", TypeUtils.numberLiteral(false, 1)],
+                    ]),
+                ]),
+            ).to.throw(`row fields do not match table fields`);
+        });
+
+        it(`rejects an incompatible field type`, () => {
+            expect(() =>
+                TypeUtils.definedTable(false, fields, false, [
+                    row([
+                        ["Name", TypeUtils.textLiteral(false, `"A"`)],
+                        ["Value", TypeUtils.textLiteral(false, `"B"`)],
+                    ]),
+                ]),
+            ).to.throw(`row field type is incompatible with table field type`);
+        });
+
+        it(`rejects null for a non-nullable column`, () => {
+            expect(() =>
+                TypeUtils.definedTable(false, fields, false, [
+                    row([
+                        ["Name", TypeUtils.textLiteral(false, `"A"`)],
+                        ["Value", Type.NullInstance],
+                    ]),
+                ]),
+            ).to.throw(`row field type is incompatible with table field type`);
+        });
+    });
+
     describe(`nameOf`, () => {
         describe(`non extended`, () => {
             describe("non-nullable", () => {
@@ -426,7 +504,7 @@ describe(`TypeUtils`, () => {
                     const type: Type.TPowerQueryType = noopCreateAnyUnion([
                         TypeUtils.definedRecord(false, new Map([["foo", Type.NumberInstance]]), false),
                         TypeUtils.definedList(false, [Type.TextInstance]),
-                        TypeUtils.definedTable(false, new OrderedMap([["bar", Type.TextInstance]]), true),
+                        TypeUtils.definedTable(false, new OrderedMap([["bar", Type.TextInstance]]), true, []),
                     ]);
 
                     const actual: string = noopNameOf(type);
@@ -588,13 +666,13 @@ describe(`TypeUtils`, () => {
 
             describe(`${Type.ExtendedTypeKind.DefinedTable}`, () => {
                 it(`table []`, () => {
-                    const type: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), false);
+                    const type: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), false, []);
                     const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`table []`);
                 });
 
                 it(`table [...]`, () => {
-                    const type: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), true);
+                    const type: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), true, []);
                     const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`table [...]`);
                 });
@@ -607,6 +685,7 @@ describe(`TypeUtils`, () => {
                             ["bar", Type.NullableTextInstance],
                         ]),
                         false,
+                        [],
                     );
 
                     const actual: string = noopNameOf(type);
@@ -622,6 +701,7 @@ describe(`TypeUtils`, () => {
                             ["bar", Type.NullableTextInstance],
                         ]),
                         true,
+                        [],
                     );
 
                     const actual: string = noopNameOf(type);

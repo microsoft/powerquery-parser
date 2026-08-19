@@ -183,18 +183,18 @@ export function isEqualDefinedTable(left: Type.DefinedTable, right: Type.Defined
 }
 
 function isEqualDefinedTableRows(
-    left: ReadonlyArray<Type.DefinedRecord> | undefined,
-    right: ReadonlyArray<Type.DefinedRecord> | undefined,
+    left: ReadonlyArray<Type.UnorderedFields>,
+    right: ReadonlyArray<Type.UnorderedFields>,
 ): boolean {
     if (left === right) {
         return true;
-    } else if (left === undefined || right === undefined || left.length !== right.length) {
+    } else if (left.length !== right.length) {
         return false;
     }
 
     return ArrayUtils.all(
-        left.map((leftRow: Type.DefinedRecord, index: number) =>
-            isEqualDefinedRecord(leftRow, ArrayUtils.assertGet(right, index)),
+        left.map((leftRow: Type.UnorderedFields, index: number) =>
+            MapUtils.isEqualMap<string, Type.TPowerQueryType>(leftRow, ArrayUtils.assertGet(right, index), isEqualType),
         ),
     );
 }

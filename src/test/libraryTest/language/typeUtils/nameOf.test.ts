@@ -240,7 +240,7 @@ describe(`TypeUtils.nameOf`, () => {
                     [
                         TypeUtils.definedRecord(false, new Map([[`foo`, Type.NumberInstance]]), false),
                         TypeUtils.definedList(false, [Type.TextInstance]),
-                        TypeUtils.definedTable(false, new OrderedMap([[`bar`, Type.TextInstance]]), true),
+                        TypeUtils.definedTable(false, new OrderedMap([[`bar`, Type.TextInstance]]), true, []),
                     ],
                     NoOpTraceManagerInstance,
                     undefined,
@@ -429,13 +429,13 @@ describe(`TypeUtils.nameOf`, () => {
 
         describe(`${Type.ExtendedTypeKind.DefinedTable}`, () => {
             it(`table []`, () => {
-                const type: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), false);
+                const type: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), false, []);
                 const actual: string = noopNameOf(type);
                 expect(actual).to.equal(`table []`);
             });
 
             it(`table [...]`, () => {
-                const type: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), true);
+                const type: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), true, []);
                 const actual: string = noopNameOf(type);
                 expect(actual).to.equal(`table [...]`);
             });
@@ -448,6 +448,7 @@ describe(`TypeUtils.nameOf`, () => {
                         [`bar`, Type.NullableTextInstance],
                     ]),
                     false,
+                    [],
                 );
 
                 const actual: string = noopNameOf(type);
@@ -463,6 +464,7 @@ describe(`TypeUtils.nameOf`, () => {
                         [`bar`, Type.NullableTextInstance],
                     ]),
                     true,
+                    [],
                 );
 
                 const actual: string = noopNameOf(type);
@@ -478,6 +480,7 @@ describe(`TypeUtils.nameOf`, () => {
                         [`#"space space"`, Type.NullableTextInstance],
                     ]),
                     false,
+                    [],
                 );
 
                 const actual: string = noopNameOf(type);

@@ -307,7 +307,7 @@ export type DefinedTable = IExtendedType &
     FieldSpecificationList<OrderedFields> & {
         readonly kind: TypeKind.Table;
         readonly extendedKind: ExtendedTypeKind.DefinedTable;
-        readonly rows?: ReadonlyArray<DefinedRecord>;
+        readonly rows: ReadonlyArray<UnorderedFields>;
     };
 
 export type FunctionType = IExtendedType &
