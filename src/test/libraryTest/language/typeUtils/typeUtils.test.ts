@@ -271,6 +271,41 @@ describe(`TypeUtils`, () => {
             ).to.throw(`row fields do not match table fields`);
         });
 
+        it(`rejects an extra field in a closed table`, () => {
+            expect(() =>
+                TypeUtils.definedTable(false, fields, false, [
+                    row([
+                        ["Name", TypeUtils.textLiteral(false, `"A"`)],
+                        ["Value", TypeUtils.numberLiteral(false, 1)],
+                        ["Extra", Type.AnyInstance],
+                    ]),
+                ]),
+            ).to.throw(`row fields do not match table fields`);
+        });
+
+        it(`accepts an extra field in an open table`, () => {
+            expect(() =>
+                TypeUtils.definedTable(false, fields, true, [
+                    row([
+                        ["Name", TypeUtils.textLiteral(false, `"A"`)],
+                        ["Value", TypeUtils.numberLiteral(false, 1)],
+                        ["Extra", Type.AnyInstance],
+                    ]),
+                ]),
+            ).not.to.throw();
+        });
+
+        it(`rejects a missing declared field in an open table`, () => {
+            expect(() =>
+                TypeUtils.definedTable(false, fields, true, [
+                    row([
+                        ["Name", TypeUtils.textLiteral(false, `"A"`)],
+                        ["Extra", Type.AnyInstance],
+                    ]),
+                ]),
+            ).to.throw(`row fields do not match table fields`);
+        });
+
         it(`rejects an incompatible field type`, () => {
             expect(() =>
                 TypeUtils.definedTable(false, fields, false, [

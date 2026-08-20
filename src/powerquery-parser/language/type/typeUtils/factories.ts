@@ -99,7 +99,8 @@ export function definedRecord(
 /**
  * Creates a defined table with exact rows.
  *
- * Each row is asserted to have exactly the declared fields and field types compatible with the table definition.
+ * Each row is asserted to contain all declared fields and field types compatible with the table definition.
+ * Rows may contain undeclared fields only when the table is open.
  * @throws CommonError.InvariantError if a row does not satisfy those requirements.
  */
 export function definedTable(
@@ -110,9 +111,9 @@ export function definedTable(
 ): Type.DefinedTable {
     const fieldNames: ReadonlyArray<string> = [...fields.keys()];
 
-    rows.forEach((row: Type.UnorderedFields, rowIndex: number) => {
+    for (const [rowIndex, row] of rows.entries()) {
         Assert.isTrue(
-            row.size === fields.size && MapUtils.hasKeys(row, fieldNames),
+            MapUtils.hasKeys(row, fieldNames) && (isOpen || row.size === fields.size),
             `row fields do not match table fields`,
             {
                 rowIndex,
@@ -121,7 +122,7 @@ export function definedTable(
             },
         );
 
-        fields.forEach((fieldType: Type.TPowerQueryType, fieldName: string) => {
+        for (const [fieldName, fieldType] of fields.entries()) {
             const rowType: Type.TPowerQueryType = MapUtils.assertGet(row, fieldName);
 
             Assert.isTrue(
@@ -134,8 +135,8 @@ export function definedTable(
                     fieldType,
                 },
             );
-        });
-    });
+        }
+    }
 
     return {
         kind: Type.TypeKind.Table,
