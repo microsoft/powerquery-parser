@@ -240,14 +240,14 @@ describe(`TypeUtils.nameOf`, () => {
                     [
                         TypeUtils.definedRecord(false, new Map([[`foo`, Type.NumberInstance]]), false),
                         TypeUtils.definedList(false, [Type.TextInstance]),
-                        TypeUtils.definedTable(false, new OrderedMap([[`bar`, Type.TextInstance]]), true, []),
+                        TypeUtils.definedTable(false, new OrderedMap([[`bar`, Type.TextInstance]]), []),
                     ],
                     NoOpTraceManagerInstance,
                     undefined,
                 );
 
                 const actual: string = noopNameOf(type);
-                expect(actual).to.equal(`{text} | [foo: number] | table [bar: text, ...]`);
+                expect(actual).to.equal(`{text} | [foo: number] | table [bar: text]`);
             });
         });
 
@@ -429,15 +429,9 @@ describe(`TypeUtils.nameOf`, () => {
 
         describe(`${Type.ExtendedTypeKind.DefinedTable}`, () => {
             it(`table []`, () => {
-                const type: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), false, []);
+                const type: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), []);
                 const actual: string = noopNameOf(type);
                 expect(actual).to.equal(`table []`);
-            });
-
-            it(`table [...]`, () => {
-                const type: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), true, []);
-                const actual: string = noopNameOf(type);
-                expect(actual).to.equal(`table [...]`);
             });
 
             it(`table [foo = number, bar = nullable text]`, () => {
@@ -447,29 +441,12 @@ describe(`TypeUtils.nameOf`, () => {
                         [`foo`, Type.NumberInstance],
                         [`bar`, Type.NullableTextInstance],
                     ]),
-                    false,
                     [],
                 );
 
                 const actual: string = noopNameOf(type);
 
                 expect(actual).to.equal(`table [foo: number, bar: nullable text]`, undefined);
-            });
-
-            it(`table [foo = number, bar = nullable text, ...]`, () => {
-                const type: Type.DefinedTable = TypeUtils.definedTable(
-                    false,
-                    new OrderedMap<string, Type.TPowerQueryType>([
-                        [`foo`, Type.NumberInstance],
-                        [`bar`, Type.NullableTextInstance],
-                    ]),
-                    true,
-                    [],
-                );
-
-                const actual: string = noopNameOf(type);
-
-                expect(actual).to.equal(`table [foo: number, bar: nullable text, ...]`, undefined);
             });
 
             it(`table [#"foo" = number, #"space space"]`, () => {
@@ -479,7 +456,6 @@ describe(`TypeUtils.nameOf`, () => {
                         [`foo`, Type.NumberInstance],
                         [`#"space space"`, Type.NullableTextInstance],
                     ]),
-                    false,
                     [],
                 );
 

@@ -99,21 +99,19 @@ export function definedRecord(
 /**
  * Creates a defined table with exact rows.
  *
- * Each row is asserted to contain all declared fields and field types compatible with the table definition.
- * Rows may contain undeclared fields only when the table is open.
+ * Each row is asserted to contain exactly the declared fields and field types compatible with the table definition.
  * @throws CommonError.InvariantError if a row does not satisfy those requirements.
  */
 export function definedTable(
     isNullable: boolean,
     fields: Type.OrderedFields,
-    isOpen: boolean,
     rows: ReadonlyArray<Type.UnorderedFields>,
 ): Type.DefinedTable {
     const fieldNames: ReadonlyArray<string> = [...fields.keys()];
 
     for (const [rowIndex, row] of rows.entries()) {
         Assert.isTrue(
-            MapUtils.hasKeys(row, fieldNames) && (isOpen || row.size === fields.size),
+            MapUtils.hasKeys(row, fieldNames) && row.size === fields.size,
             `row fields do not match table fields`,
             {
                 rowIndex,
@@ -143,7 +141,7 @@ export function definedTable(
         extendedKind: Type.ExtendedTypeKind.DefinedTable,
         isNullable,
         fields,
-        isOpen,
+        isOpen: false,
         rows,
     };
 }

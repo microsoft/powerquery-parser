@@ -874,7 +874,6 @@ describe(`TypeUtils.typeCheck`, () => {
                     ["nullableNumber", Language.Type.NullableNumberInstance],
                     ["table", Language.Type.TableInstance],
                 ]),
-                false,
                 [],
             );
 

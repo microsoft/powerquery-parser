@@ -70,32 +70,32 @@ describe(`TypeUtils.isEqualType`, () => {
 
         it(`equal rows`, () => {
             runTest({
-                left: TypeUtils.definedTable(false, fields, false, [row(1), row(2)]),
-                right: TypeUtils.definedTable(false, fields, false, [row(1), row(2)]),
+                left: TypeUtils.definedTable(false, fields, [row(1), row(2)]),
+                right: TypeUtils.definedTable(false, fields, [row(1), row(2)]),
                 expected: true,
             });
         });
 
         it(`different row order`, () => {
             runTest({
-                left: TypeUtils.definedTable(false, fields, false, [row(1), row(2)]),
-                right: TypeUtils.definedTable(false, fields, false, [row(2), row(1)]),
+                left: TypeUtils.definedTable(false, fields, [row(1), row(2)]),
+                right: TypeUtils.definedTable(false, fields, [row(2), row(1)]),
                 expected: false,
             });
         });
 
         it(`different row values`, () => {
             runTest({
-                left: TypeUtils.definedTable(false, fields, false, [row(1)]),
-                right: TypeUtils.definedTable(false, fields, false, [row(2)]),
+                left: TypeUtils.definedTable(false, fields, [row(1)]),
+                right: TypeUtils.definedTable(false, fields, [row(2)]),
                 expected: false,
             });
         });
 
         it(`empty rows differ from non-empty rows`, () => {
             runTest({
-                left: TypeUtils.definedTable(false, fields, false, []),
-                right: TypeUtils.definedTable(false, fields, false, [row(1)]),
+                left: TypeUtils.definedTable(false, fields, []),
+                right: TypeUtils.definedTable(false, fields, [row(1)]),
                 expected: false,
             });
         });

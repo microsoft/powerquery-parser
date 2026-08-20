@@ -234,14 +234,15 @@ describe(`TypeUtils`, () => {
                 ]),
             ];
 
-            const type: Type.DefinedTable = TypeUtils.definedTable(false, fields, false, rows);
+            const type: Type.DefinedTable = TypeUtils.definedTable(false, fields, rows);
 
             expect(type.rows).to.equal(rows);
+            expect(type.isOpen).to.equal(false);
         });
 
         it(`retains exact empty rows`, () => {
             const rows: ReadonlyArray<Type.UnorderedFields> = [];
-            const type: Type.DefinedTable = TypeUtils.definedTable(false, fields, false, rows);
+            const type: Type.DefinedTable = TypeUtils.definedTable(false, fields, rows);
 
             expect(type.rows).to.equal(rows);
         });
@@ -250,19 +251,19 @@ describe(`TypeUtils`, () => {
             const nullableFields: Type.OrderedFields = new OrderedMap([["Value", Type.NullableNumberInstance]]);
 
             expect(() =>
-                TypeUtils.definedTable(false, nullableFields, false, [row([["Value", Type.NullInstance]])]),
+                TypeUtils.definedTable(false, nullableFields, [row([["Value", Type.NullInstance]])]),
             ).not.to.throw();
         });
 
         it(`rejects a row with a missing column`, () => {
             expect(() =>
-                TypeUtils.definedTable(false, fields, false, [row([["Name", TypeUtils.textLiteral(false, `"A"`)]])]),
+                TypeUtils.definedTable(false, fields, [row([["Name", TypeUtils.textLiteral(false, `"A"`)]])]),
             ).to.throw(`row fields do not match table fields`);
         });
 
         it(`rejects a row with the wrong column name`, () => {
             expect(() =>
-                TypeUtils.definedTable(false, fields, false, [
+                TypeUtils.definedTable(false, fields, [
                     row([
                         ["Name", TypeUtils.textLiteral(false, `"A"`)],
                         ["Other", TypeUtils.numberLiteral(false, 1)],
@@ -271,35 +272,12 @@ describe(`TypeUtils`, () => {
             ).to.throw(`row fields do not match table fields`);
         });
 
-        it(`rejects an extra field in a closed table`, () => {
+        it(`rejects an extra field`, () => {
             expect(() =>
-                TypeUtils.definedTable(false, fields, false, [
+                TypeUtils.definedTable(false, fields, [
                     row([
                         ["Name", TypeUtils.textLiteral(false, `"A"`)],
                         ["Value", TypeUtils.numberLiteral(false, 1)],
-                        ["Extra", Type.AnyInstance],
-                    ]),
-                ]),
-            ).to.throw(`row fields do not match table fields`);
-        });
-
-        it(`accepts an extra field in an open table`, () => {
-            expect(() =>
-                TypeUtils.definedTable(false, fields, true, [
-                    row([
-                        ["Name", TypeUtils.textLiteral(false, `"A"`)],
-                        ["Value", TypeUtils.numberLiteral(false, 1)],
-                        ["Extra", Type.AnyInstance],
-                    ]),
-                ]),
-            ).not.to.throw();
-        });
-
-        it(`rejects a missing declared field in an open table`, () => {
-            expect(() =>
-                TypeUtils.definedTable(false, fields, true, [
-                    row([
-                        ["Name", TypeUtils.textLiteral(false, `"A"`)],
                         ["Extra", Type.AnyInstance],
                     ]),
                 ]),
@@ -308,7 +286,7 @@ describe(`TypeUtils`, () => {
 
         it(`rejects an incompatible field type`, () => {
             expect(() =>
-                TypeUtils.definedTable(false, fields, false, [
+                TypeUtils.definedTable(false, fields, [
                     row([
                         ["Name", TypeUtils.textLiteral(false, `"A"`)],
                         ["Value", TypeUtils.textLiteral(false, `"B"`)],
@@ -319,7 +297,7 @@ describe(`TypeUtils`, () => {
 
         it(`rejects null for a non-nullable column`, () => {
             expect(() =>
-                TypeUtils.definedTable(false, fields, false, [
+                TypeUtils.definedTable(false, fields, [
                     row([
                         ["Name", TypeUtils.textLiteral(false, `"A"`)],
                         ["Value", Type.NullInstance],
@@ -539,11 +517,11 @@ describe(`TypeUtils`, () => {
                     const type: Type.TPowerQueryType = noopCreateAnyUnion([
                         TypeUtils.definedRecord(false, new Map([["foo", Type.NumberInstance]]), false),
                         TypeUtils.definedList(false, [Type.TextInstance]),
-                        TypeUtils.definedTable(false, new OrderedMap([["bar", Type.TextInstance]]), true, []),
+                        TypeUtils.definedTable(false, new OrderedMap([["bar", Type.TextInstance]]), []),
                     ]);
 
                     const actual: string = noopNameOf(type);
-                    expect(actual).to.equal(`{text} | [foo: number] | table [bar: text, ...]`);
+                    expect(actual).to.equal(`{text} | [foo: number] | table [bar: text]`);
                 });
             });
 
@@ -701,15 +679,9 @@ describe(`TypeUtils`, () => {
 
             describe(`${Type.ExtendedTypeKind.DefinedTable}`, () => {
                 it(`table []`, () => {
-                    const type: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), false, []);
+                    const type: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), []);
                     const actual: string = noopNameOf(type);
                     expect(actual).to.equal(`table []`);
-                });
-
-                it(`table [...]`, () => {
-                    const type: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), true, []);
-                    const actual: string = noopNameOf(type);
-                    expect(actual).to.equal(`table [...]`);
                 });
 
                 it(`table [foo = number, bar = nullable text]`, () => {
@@ -719,29 +691,12 @@ describe(`TypeUtils`, () => {
                             ["foo", Type.NumberInstance],
                             ["bar", Type.NullableTextInstance],
                         ]),
-                        false,
                         [],
                     );
 
                     const actual: string = noopNameOf(type);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(`table [foo: number, bar: nullable text]`);
-                });
-
-                it(`table [foo = number, bar = nullable text, ...]`, () => {
-                    const type: Type.DefinedTable = TypeUtils.definedTable(
-                        false,
-                        new OrderedMap<string, Type.TPowerQueryType>([
-                            ["foo", Type.NumberInstance],
-                            ["bar", Type.NullableTextInstance],
-                        ]),
-                        true,
-                        [],
-                    );
-
-                    const actual: string = noopNameOf(type);
-                    // tslint:disable-next-line: chai-vague-errors
-                    expect(actual).to.equal(`table [foo: number, bar: nullable text, ...]`);
                 });
             });
 
