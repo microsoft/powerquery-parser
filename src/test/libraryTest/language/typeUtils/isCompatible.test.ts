@@ -264,7 +264,7 @@ describe(`TypeUtils.isCompatible`, () => {
     describe(`${Type.ExtendedTypeKind.DefinedTable}`, () => {
         describe(`identity`, () => {
             it(`empty`, () => {
-                const definedTable: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), false);
+                const definedTable: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), []);
                 expect(noopIsCompatible(definedTable, definedTable)).to.equal(true, undefined);
             });
 
@@ -272,7 +272,7 @@ describe(`TypeUtils.isCompatible`, () => {
                 const definedTable: Type.DefinedTable = TypeUtils.definedTable(
                     false,
                     new OrderedMap([["number", Type.NumberInstance]]),
-                    false,
+                    [],
                 );
 
                 expect(noopIsCompatible(definedTable, definedTable)).to.equal(true, undefined);
@@ -284,13 +284,13 @@ describe(`TypeUtils.isCompatible`, () => {
                 const left: Type.DefinedTable = TypeUtils.definedTable(
                     false,
                     new OrderedMap([["logical", TypeUtils.logicalLiteral(false, true)]]),
-                    false,
+                    [],
                 );
 
                 const right: Type.DefinedTable = TypeUtils.definedTable(
                     false,
                     new OrderedMap([["logical", Type.LogicalInstance]]),
-                    false,
+                    [],
                 );
 
                 expect(noopIsCompatible(left, right)).to.equal(true, undefined);
@@ -300,13 +300,13 @@ describe(`TypeUtils.isCompatible`, () => {
                 const left: Type.DefinedTable = TypeUtils.definedTable(
                     false,
                     new OrderedMap([["number", TypeUtils.numberLiteral(false, 1)]]),
-                    false,
+                    [],
                 );
 
                 const right: Type.DefinedTable = TypeUtils.definedTable(
                     false,
                     new OrderedMap([["number", Type.NumberInstance]]),
-                    false,
+                    [],
                 );
 
                 expect(noopIsCompatible(left, right)).to.equal(true, undefined);
@@ -316,13 +316,13 @@ describe(`TypeUtils.isCompatible`, () => {
                 const left: Type.DefinedTable = TypeUtils.definedTable(
                     false,
                     new OrderedMap([["text", TypeUtils.textLiteral(false, `""`)]]),
-                    false,
+                    [],
                 );
 
                 const right: Type.DefinedTable = TypeUtils.definedTable(
                     false,
                     new OrderedMap([["text", Type.TextInstance]]),
-                    false,
+                    [],
                 );
 
                 expect(noopIsCompatible(left, right)).to.equal(true, undefined);
@@ -331,17 +331,17 @@ describe(`TypeUtils.isCompatible`, () => {
 
         describe(`null`, () => {
             it(`null is not compatible with non-nullable`, () => {
-                const definedTable: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), false);
+                const definedTable: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), []);
                 expect(noopIsCompatible(Type.NullInstance, definedTable)).to.equal(false, undefined);
             });
 
             it(`non-nullable is not compatible with null`, () => {
-                const definedTable: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), false);
+                const definedTable: Type.DefinedTable = TypeUtils.definedTable(false, new OrderedMap(), []);
                 expect(noopIsCompatible(definedTable, Type.NullInstance)).to.equal(false, undefined);
             });
 
             it(`null is compatible with nullable`, () => {
-                const definedTable: Type.DefinedTable = TypeUtils.definedTable(true, new OrderedMap(), false);
+                const definedTable: Type.DefinedTable = TypeUtils.definedTable(true, new OrderedMap(), []);
                 expect(noopIsCompatible(Type.NullInstance, definedTable)).to.equal(true, undefined);
             });
         });

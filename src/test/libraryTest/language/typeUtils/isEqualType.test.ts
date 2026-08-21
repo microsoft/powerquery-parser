@@ -6,6 +6,7 @@ import { expect } from "chai";
 
 import { Type, TypeUtils } from "../../../../powerquery-parser/language";
 import { NoOpTraceManagerInstance } from "../../../../powerquery-parser/common/trace";
+import { OrderedMap } from "../../../../powerquery-parser/common";
 import { TPowerQueryType } from "../../../../powerquery-parser/language/type/type";
 
 describe(`TypeUtils.isEqualType`, () => {
@@ -56,6 +57,46 @@ describe(`TypeUtils.isEqualType`, () => {
                 left: type,
                 right: type,
                 expected: true,
+            });
+        });
+    });
+
+    describe(`${Type.ExtendedTypeKind.DefinedTable}`, () => {
+        const fields: Type.OrderedFields = new OrderedMap([["Value", Type.NumberInstance]]);
+
+        function row(value: number): Type.UnorderedFields {
+            return new Map<string, Type.TPowerQueryType>([["Value", TypeUtils.numberLiteral(false, value)]]);
+        }
+
+        it(`equal rows`, () => {
+            runTest({
+                left: TypeUtils.definedTable(false, fields, [row(1), row(2)]),
+                right: TypeUtils.definedTable(false, fields, [row(1), row(2)]),
+                expected: true,
+            });
+        });
+
+        it(`different row order`, () => {
+            runTest({
+                left: TypeUtils.definedTable(false, fields, [row(1), row(2)]),
+                right: TypeUtils.definedTable(false, fields, [row(2), row(1)]),
+                expected: false,
+            });
+        });
+
+        it(`different row values`, () => {
+            runTest({
+                left: TypeUtils.definedTable(false, fields, [row(1)]),
+                right: TypeUtils.definedTable(false, fields, [row(2)]),
+                expected: false,
+            });
+        });
+
+        it(`empty rows differ from non-empty rows`, () => {
+            runTest({
+                left: TypeUtils.definedTable(false, fields, []),
+                right: TypeUtils.definedTable(false, fields, [row(1)]),
+                expected: false,
             });
         });
     });

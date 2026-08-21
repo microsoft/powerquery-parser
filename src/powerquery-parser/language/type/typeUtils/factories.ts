@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, Assert, CommonError, StringUtils } from "../../../common";
+import { ArrayUtils, Assert, CommonError, MapUtils, StringUtils } from "../../../common";
+import { NoOpTraceManagerInstance, Trace, TraceManager } from "../../../common/trace";
 import { PrimitiveTypeConstantMap, primitiveTypeMapKey } from "./primitive";
-import { Trace, TraceManager } from "../../../common/trace";
+import { isCompatible } from "./isCompatible";
 import { simplify } from "./simplify";
 import { Type } from "..";
 import { TypeUtilsTraceConstant } from "./typeTraceConstant";
@@ -95,13 +96,53 @@ export function definedRecord(
     };
 }
 
-export function definedTable(isNullable: boolean, fields: Type.OrderedFields, isOpen: boolean): Type.DefinedTable {
+/**
+ * Creates a defined table with exact rows.
+ *
+ * Each row is asserted to contain exactly the declared fields and field types compatible with the table definition.
+ * @throws CommonError.InvariantError if a row does not satisfy those requirements.
+ */
+export function definedTable(
+    isNullable: boolean,
+    fields: Type.OrderedFields,
+    rows: ReadonlyArray<Type.UnorderedFields>,
+): Type.DefinedTable {
+    const fieldNames: ReadonlyArray<string> = [...fields.keys()];
+
+    for (const [rowIndex, row] of rows.entries()) {
+        Assert.isTrue(
+            MapUtils.hasKeys(row, fieldNames) && row.size === fields.size,
+            `row fields do not match table fields`,
+            {
+                rowIndex,
+                fieldNames,
+                rowFieldNames: [...row.keys()],
+            },
+        );
+
+        for (const [fieldName, fieldType] of fields.entries()) {
+            const rowType: Type.TPowerQueryType = MapUtils.assertGet(row, fieldName);
+
+            Assert.isTrue(
+                isCompatible(rowType, fieldType, NoOpTraceManagerInstance, undefined) === true,
+                `row field type is incompatible with table field type`,
+                {
+                    rowIndex,
+                    fieldName,
+                    rowType,
+                    fieldType,
+                },
+            );
+        }
+    }
+
     return {
         kind: Type.TypeKind.Table,
         extendedKind: Type.ExtendedTypeKind.DefinedTable,
         isNullable,
         fields,
-        isOpen,
+        isOpen: false,
+        rows,
     };
 }
 

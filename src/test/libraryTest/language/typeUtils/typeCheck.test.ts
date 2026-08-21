@@ -874,7 +874,7 @@ describe(`TypeUtils.typeCheck`, () => {
                     ["nullableNumber", Language.Type.NullableNumberInstance],
                     ["table", Language.Type.TableInstance],
                 ]),
-                false,
+                [],
             );
 
             const schemaType: Language.Type.TableType = TypeUtils.tableType(

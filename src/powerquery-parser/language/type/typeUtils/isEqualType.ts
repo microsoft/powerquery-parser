@@ -177,7 +177,25 @@ export function isEqualDefinedTable(left: Type.DefinedTable, right: Type.Defined
     return (
         left === right ||
         (left.isNullable === right.isNullable &&
-            MapUtils.isEqualMap<string, Type.TPowerQueryType>(left.fields, right.fields, isEqualType))
+            MapUtils.isEqualMap<string, Type.TPowerQueryType>(left.fields, right.fields, isEqualType) &&
+            isEqualDefinedTableRows(left.rows, right.rows))
+    );
+}
+
+function isEqualDefinedTableRows(
+    left: ReadonlyArray<Type.UnorderedFields>,
+    right: ReadonlyArray<Type.UnorderedFields>,
+): boolean {
+    if (left === right) {
+        return true;
+    } else if (left.length !== right.length) {
+        return false;
+    }
+
+    return ArrayUtils.all(
+        left.map((leftRow: Type.UnorderedFields, index: number) =>
+            MapUtils.isEqualMap<string, Type.TPowerQueryType>(leftRow, ArrayUtils.assertGet(right, index), isEqualType),
+        ),
     );
 }
 
