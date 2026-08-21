@@ -30,11 +30,11 @@ export function isCompatible(
         right.kind === Type.TypeKind.Unknown
     ) {
         result = undefined;
-    } else if (
-        left.kind === Type.TypeKind.None ||
-        right.kind === Type.TypeKind.None ||
-        (left.isNullable && !right.isNullable)
-    ) {
+    } else if (left.kind === Type.TypeKind.None || right.kind === Type.TypeKind.None) {
+        result = false;
+    } else if (right.kind === Type.TypeKind.Any && right.extendedKind === undefined) {
+        result = true;
+    } else if (left.isNullable && !right.isNullable) {
         result = false;
     } else if (left.kind === Type.TypeKind.Null && right.isNullable) {
         result = true;

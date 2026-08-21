@@ -87,6 +87,14 @@ describe(`TypeUtils.isCompatible`, () => {
             expect(actual).to.equal(false, undefined);
         });
 
+        it(`null compatible with any`, () => {
+            expect(noopIsCompatible(Type.NullInstance, Type.AnyInstance)).to.equal(true, undefined);
+        });
+
+        it(`nullable type compatible with any`, () => {
+            expect(noopIsCompatible(Type.NullableTextInstance, Type.AnyInstance)).to.equal(true, undefined);
+        });
+
         it(`AnyUnion, basic`, () => {
             const actual: boolean | undefined = noopIsCompatible(
                 Type.TextInstance,
