@@ -184,9 +184,9 @@ describe(`TypeUtils.typeCheck`, () => {
             expect(actual).to.deep.equal(expected);
         });
 
-        // D1 canary: this used to be (incorrectly) `valid`. A bare `any` argument is unconstrained,
+        // Canary: this used to be (incorrectly) `valid`. A bare `any` argument is unconstrained,
         // not proven-compatible, so per the tri-state contract it must land in `indeterminate`
-        // rather than `valid` or `invalid`. This is the exact bug the north star fixed.
+        // rather than `valid` or `invalid`.
         it(`an any argument is indeterminate for non-any parameters`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.AnyInstance];
 

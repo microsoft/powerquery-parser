@@ -51,11 +51,19 @@ export function isCompatible(
     } else if (left.kind === Type.TypeKind.Null && right.isNullable) {
         result = true;
     } else if (left.kind === Type.TypeKind.Any) {
-        result =
-            left.extendedKind === Type.ExtendedTypeKind.AnyUnion
-                ? isAnyUnionCompatibleWith(left, right, traceManager, trace.id)
-                : // Bare `Any` is top: no enumerated evidence of a mismatch, so no hard claim.
-                  undefined;
+        if (left.extendedKind === Type.ExtendedTypeKind.AnyUnion) {
+            result = isAnyUnionCompatibleWith(left, right, traceManager, trace.id);
+        } else if (right.kind === Type.TypeKind.AnyNonNull) {
+            // Bare `Any` reaching here is already known non-nullable (see the nullability
+            // check above), so it trivially satisfies "anything but null."
+            result = true;
+        } else if (right.kind === Type.TypeKind.Null) {
+            // Bare `Any` is never exactly `Null` regardless of its concrete kind.
+            result = false;
+        } else {
+            // Bare `Any` is top: no enumerated evidence of a mismatch, so no hard claim.
+            result = undefined;
+        }
     } else {
         switch (right.kind) {
             case Type.TypeKind.Action:
@@ -180,17 +188,23 @@ function isRightAnyUnionCompatible(
         correlationId,
     );
 
+    let sawIndeterminate: boolean = false;
+
     for (const subtype of right.unionedTypePairs) {
-        if (isCompatible(left, subtype, traceManager, trace.id)) {
+        const memberResult: boolean | undefined = isCompatible(left, subtype, traceManager, trace.id);
+
+        if (memberResult === true) {
             trace.exit();
 
             return true;
+        } else if (memberResult === undefined) {
+            sawIndeterminate = true;
         }
     }
 
     trace.exit();
 
-    return false;
+    return sawIndeterminate ? undefined : false;
 }
 
 // `all`-semantics: is every member of the union on the *left* compatible with `right`?
@@ -924,9 +938,11 @@ function isDefinedListTypeCompatibleWithListType(
         (itemType: Type.TPowerQueryType) => isCompatible(itemType, listType.itemType, traceManager, trace.id),
     );
 
-    const result: boolean = Boolean(
-        itemTypeCompatabilities.find((value: boolean | undefined) => value === undefined || value === false),
-    );
+    // Every item's type must be a definite (`true`) compatibility match for the defined list to
+    // be compatible with the list type. An indeterminate (`undefined`) member is not proof of
+    // compatibility, so it's treated the same as a definite mismatch here (this function's
+    // callers only deal in `boolean`, not the tri-state result).
+    const result: boolean = itemTypeCompatabilities.every((value: boolean | undefined) => value === true);
 
     trace.exit();
 

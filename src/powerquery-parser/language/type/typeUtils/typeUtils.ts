@@ -109,7 +109,7 @@ function inspectAstParameter(node: Ast.TParameter): Type.FunctionParameter {
                 throw Assert.isNever(parameterType);
         }
 
-        // D2: an omitted optional argument is equivalent to passing `null`, so `isOptional`
+        // An omitted optional argument is equivalent to passing `null`, so `isOptional`
         // implies nullable regardless of how the parameter was ascribed in source.
         type = primitiveType(
             simplified.isNullable || isOptional,
@@ -162,7 +162,7 @@ function inspectContextParameter(
     if (parameterType !== undefined) {
         const simplified: AstUtils.SimplifiedType = AstUtils.simplifyAsNullablePrimitiveType(parameterType);
 
-        // D2: an omitted optional argument is equivalent to passing `null`, so `isOptional`
+        // An omitted optional argument is equivalent to passing `null`, so `isOptional`
         // implies nullable regardless of how the parameter was ascribed in source.
         type = primitiveType(
             simplified.isNullable || isOptional,
