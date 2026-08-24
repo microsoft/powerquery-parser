@@ -13,6 +13,18 @@ import { TypeUtilsTraceConstant } from "./typeTraceConstant";
 // `Type.AnyInstance is compatible with Type.TextInstance` -> false
 // `Type.NullInstance is compatible with Type.AnyNonNull` -> false
 // `Type.TextInstance is compatible with Type.AnyUnion([Type.TextInstance, Type.NumberInstance])` -> true
+//
+// Tri-state contract:
+//   `true`      left is definitely compatible with right.
+//   `false`     left is definitely NOT compatible with right. This is a hard claim and requires
+//               enumerated evidence of a mismatch (eg. a concrete kind, or every member of a union).
+//   `undefined` indeterminate. There isn't enough information to make a hard claim either way.
+//               `Unknown` on either side means insufficient information was gathered.
+//               `Any` on the left means the value is unconstrained (top type), not undetermined:
+//               there is no enumerated evidence that a mismatch exists, so a hard `false` would be
+//               an unsupported claim. This is why bare `Any` and `Unknown` both resolve to
+//               `undefined` on the left despite meaning different things: `Any` accepts everything
+//               on the right (`right.kind === Any` -> `true`), `Unknown` still doesn't.
 export function isCompatible(
     left: Type.TPowerQueryType,
     right: Type.TPowerQueryType,
@@ -38,6 +50,12 @@ export function isCompatible(
         result = false;
     } else if (left.kind === Type.TypeKind.Null && right.isNullable) {
         result = true;
+    } else if (left.kind === Type.TypeKind.Any) {
+        result =
+            left.extendedKind === Type.ExtendedTypeKind.AnyUnion
+                ? isAnyUnionCompatibleWith(left, right, traceManager, trace.id)
+                : // Bare `Any` is top: no enumerated evidence of a mismatch, so no hard claim.
+                  undefined;
     } else {
         switch (right.kind) {
             case Type.TypeKind.Action:
@@ -115,25 +133,6 @@ export function isCompatibleWithFunctionSignature(
     return isEqualFunctionSignature(left, right);
 }
 
-export function isCompatibleWithFunctionParameter(
-    left: Type.TPowerQueryType | undefined,
-    right: Type.FunctionParameter,
-): boolean {
-    if (left === undefined) {
-        return right.isOptional;
-    } else if (left.isNullable && !right.isNullable) {
-        return false;
-    } else {
-        return (
-            !right.type ||
-            right.type === Type.TypeKind.Any ||
-            left.kind === Type.TypeKind.Any ||
-            (left.kind === Type.TypeKind.Null && right.isNullable) ||
-            left.kind === right.type
-        );
-    }
-}
-
 function isCompatibleWithAny(
     left: Type.TPowerQueryType,
     right: Type.TAny,
@@ -154,7 +153,7 @@ function isCompatibleWithAny(
             break;
 
         case Type.ExtendedTypeKind.AnyUnion:
-            result = isCompatibleWithAnyUnion(left, right, traceManager, trace.id);
+            result = isRightAnyUnionCompatible(left, right, traceManager, trace.id);
             break;
 
         default:
@@ -166,7 +165,10 @@ function isCompatibleWithAny(
     return result;
 }
 
-function isCompatibleWithAnyUnion(
+// `some`-semantics: is `left` compatible with at least one member of the union on the *right*?
+// This is the mirror image of `isAnyUnionCompatibleWith`, which handles a union on the *left*
+// with `all`-semantics. Do not merge the two; they answer different questions.
+function isRightAnyUnionCompatible(
     left: Type.TPowerQueryType,
     right: Type.AnyUnion,
     traceManager: TraceManager,
@@ -174,7 +176,7 @@ function isCompatibleWithAnyUnion(
 ): boolean | undefined {
     const trace: Trace = traceManager.entry(
         TypeUtilsTraceConstant.IsCompatible,
-        isCompatibleWithAnyUnion.name,
+        isRightAnyUnionCompatible.name,
         correlationId,
     );
 
@@ -189,6 +191,41 @@ function isCompatibleWithAnyUnion(
     trace.exit();
 
     return false;
+}
+
+// `all`-semantics: is every member of the union on the *left* compatible with `right`?
+// A single definite incompatibility (`false`) makes the whole union incompatible. A member that
+// is merely indeterminate (`undefined`) downgrades the result to indeterminate rather than
+// invalidating it outright, per the tri-state contract above.
+function isAnyUnionCompatibleWith(
+    left: Type.AnyUnion,
+    right: Type.TPowerQueryType,
+    traceManager: TraceManager,
+    correlationId: number,
+): boolean | undefined {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isAnyUnionCompatibleWith.name,
+        correlationId,
+    );
+
+    let sawIndeterminate: boolean = false;
+
+    for (const member of left.unionedTypePairs) {
+        const memberResult: boolean | undefined = isCompatible(member, right, traceManager, trace.id);
+
+        if (memberResult === false) {
+            trace.exit();
+
+            return false;
+        } else if (memberResult === undefined) {
+            sawIndeterminate = true;
+        }
+    }
+
+    trace.exit();
+
+    return sawIndeterminate ? undefined : true;
 }
 
 function isCompatibleWithDefinedList(

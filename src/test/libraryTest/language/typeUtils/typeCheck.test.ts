@@ -66,6 +66,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 invalid: new Map(),
                 extraneous: [0],
                 missing: [],
+                indeterminate: [],
             };
 
             expect(actual).to.deep.equal(expected);
@@ -78,9 +79,8 @@ describe(`TypeUtils.typeCheck`, () => {
                 false,
                 [
                     {
-                        isNullable: false,
                         isOptional: false,
-                        type: Language.Type.TypeKind.Number,
+                        type: Language.Type.NumberInstance,
                         nameLiteral: "foo",
                     },
                 ],
@@ -94,6 +94,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 invalid: new Map(),
                 extraneous: [],
                 missing: [0],
+                indeterminate: [],
             };
 
             expect(actual).to.deep.equal(expected);
@@ -106,9 +107,8 @@ describe(`TypeUtils.typeCheck`, () => {
                 false,
                 [
                     {
-                        isNullable: false,
                         isOptional: true,
-                        type: Language.Type.TypeKind.Number,
+                        type: Language.Type.NumberInstance,
                         nameLiteral: "foo",
                     },
                 ],
@@ -122,19 +122,19 @@ describe(`TypeUtils.typeCheck`, () => {
                 invalid: new Map(),
                 extraneous: [],
                 missing: [],
+                indeterminate: [],
             };
 
             expect(actual).to.deep.equal(expected);
         });
 
-        it(`type === null translates to any`, () => {
+        it(`an un-ascribed parameter accepts any argument`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.NumberInstance];
 
             const definedFunction: Language.Type.DefinedFunction = TypeUtils.definedFunction(
                 false,
                 [
                     {
-                        isNullable: true,
                         isOptional: false,
                         type: undefined,
                         nameLiteral: "foo",
@@ -150,6 +150,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 invalid: new Map(),
                 extraneous: [],
                 missing: [],
+                indeterminate: [],
             };
 
             expect(actual).to.deep.equal(expected);
@@ -162,9 +163,8 @@ describe(`TypeUtils.typeCheck`, () => {
                 false,
                 [
                     {
-                        isNullable: false,
                         isOptional: false,
-                        type: Language.Type.TypeKind.Any,
+                        type: Language.Type.AnyInstance,
                         nameLiteral: "foo",
                     },
                 ],
@@ -178,21 +178,24 @@ describe(`TypeUtils.typeCheck`, () => {
                 invalid: new Map(),
                 extraneous: [],
                 missing: [],
+                indeterminate: [],
             };
 
             expect(actual).to.deep.equal(expected);
         });
 
-        it(`an any argument allowed for non-any parameters`, () => {
+        // D1 canary: this used to be (incorrectly) `valid`. A bare `any` argument is unconstrained,
+        // not proven-compatible, so per the tri-state contract it must land in `indeterminate`
+        // rather than `valid` or `invalid`. This is the exact bug the north star fixed.
+        it(`an any argument is indeterminate for non-any parameters`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.AnyInstance];
 
             const definedFunction: Language.Type.DefinedFunction = TypeUtils.definedFunction(
                 false,
                 [
                     {
-                        isNullable: false,
                         isOptional: false,
-                        type: Language.Type.TypeKind.Text,
+                        type: Language.Type.TextInstance,
                         nameLiteral: "foo",
                     },
                 ],
@@ -202,10 +205,11 @@ describe(`TypeUtils.typeCheck`, () => {
             const actual: TypeUtils.CheckedInvocation = noopTypeCheckInvocation(args, definedFunction);
 
             const expected: TypeUtils.CheckedInvocation = {
-                valid: [0],
+                valid: [],
                 invalid: new Map(),
                 extraneous: [],
                 missing: [],
+                indeterminate: [0],
             };
 
             expect(actual).to.deep.equal(expected);
@@ -218,9 +222,8 @@ describe(`TypeUtils.typeCheck`, () => {
                 false,
                 [
                     {
-                        isNullable: false,
                         isOptional: false,
-                        type: Language.Type.TypeKind.Number,
+                        type: Language.Type.NumberInstance,
                         nameLiteral: "foo",
                     },
                 ],
@@ -234,6 +237,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 invalid: new Map(),
                 extraneous: [],
                 missing: [],
+                indeterminate: [],
             };
 
             expect(actual).to.deep.equal(expected);
@@ -249,15 +253,13 @@ describe(`TypeUtils.typeCheck`, () => {
                 false,
                 [
                     {
-                        isNullable: false,
                         isOptional: false,
-                        type: Language.Type.TypeKind.Number,
+                        type: Language.Type.NumberInstance,
                         nameLiteral: "foo",
                     },
                     {
-                        isNullable: false,
                         isOptional: false,
-                        type: Language.Type.TypeKind.Text,
+                        type: Language.Type.TextInstance,
                         nameLiteral: "bar",
                     },
                 ],
@@ -271,6 +273,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 invalid: new Map(),
                 extraneous: [],
                 missing: [],
+                indeterminate: [],
             };
 
             expect(actual).to.deep.equal(expected);
@@ -283,9 +286,8 @@ describe(`TypeUtils.typeCheck`, () => {
                 false,
                 [
                     {
-                        isNullable: false,
                         isOptional: false,
-                        type: Language.Type.TypeKind.Number,
+                        type: Language.Type.NumberInstance,
                         nameLiteral: "foo",
                     },
                 ],
@@ -307,6 +309,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 ]),
                 extraneous: [],
                 missing: [],
+                indeterminate: [],
             };
 
             expect(actual).to.deep.equal(expected);
@@ -319,9 +322,8 @@ describe(`TypeUtils.typeCheck`, () => {
                 false,
                 [
                     {
-                        isNullable: true,
                         isOptional: false,
-                        type: Language.Type.TypeKind.Number,
+                        type: Language.Type.NullableNumberInstance,
                         nameLiteral: "foo",
                     },
                 ],
@@ -335,6 +337,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 invalid: new Map(),
                 extraneous: [],
                 missing: [],
+                indeterminate: [],
             };
 
             expect(actual).to.deep.equal(expected);
@@ -347,9 +350,8 @@ describe(`TypeUtils.typeCheck`, () => {
                 false,
                 [
                     {
-                        isNullable: false,
                         isOptional: false,
-                        type: Language.Type.TypeKind.Number,
+                        type: Language.Type.NumberInstance,
                         nameLiteral: "foo",
                     },
                 ],
@@ -365,6 +367,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 ]),
                 extraneous: [],
                 missing: [],
+                indeterminate: [],
             };
 
             expect(actual).to.deep.equal(expected);
@@ -377,9 +380,8 @@ describe(`TypeUtils.typeCheck`, () => {
                 false,
                 [
                     {
-                        isNullable: false,
                         isOptional: false,
-                        type: Language.Type.TypeKind.Number,
+                        type: Language.Type.NumberInstance,
                         nameLiteral: "foo",
                     },
                 ],
@@ -395,6 +397,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 ]),
                 extraneous: [],
                 missing: [],
+                indeterminate: [],
             };
 
             expect(actual).to.deep.equal(expected);
@@ -410,15 +413,13 @@ describe(`TypeUtils.typeCheck`, () => {
                 false,
                 [
                     {
-                        isNullable: false,
                         isOptional: false,
-                        type: Language.Type.TypeKind.Number,
+                        type: Language.Type.NumberInstance,
                         nameLiteral: "foo",
                     },
                     {
-                        isNullable: false,
                         isOptional: false,
-                        type: Language.Type.TypeKind.Text,
+                        type: Language.Type.TextInstance,
                         nameLiteral: "bar",
                     },
                 ],
@@ -447,6 +448,7 @@ describe(`TypeUtils.typeCheck`, () => {
                 ]),
                 extraneous: [],
                 missing: [],
+                indeterminate: [],
             };
 
             expect(actual).to.deep.equal(expected);

@@ -1,16 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, Assert } from "../../../common";
 import { Ast, AstUtils } from "../..";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, XorNode, XorNodeKind } from "../../../parser";
-import { Trace, TraceManager } from "../../../common/trace";
-import { isCompatible } from "./isCompatible";
+import { Assert } from "../../../common";
 import { isEqualType } from "./isEqualType";
 import { primitiveType } from "./factories";
 import { Type } from "..";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";
-import { TypeUtilsTraceConstant } from "./typeTraceConstant";
 
 export function typeKindFromLiteralKind(literalKind: Ast.LiteralKind): Type.TypeKind {
     switch (literalKind) {
@@ -74,51 +71,6 @@ export function isTypeKind(text: string): text is Type.TypeKind {
     }
 }
 
-export function isValidInvocation(
-    functionType: Type.DefinedFunction,
-    args: ReadonlyArray<Type.TPowerQueryType>,
-    traceManager: TraceManager,
-    correlationId: number | undefined,
-): boolean {
-    const trace: Trace = traceManager.entry(TypeUtilsTraceConstant.TypeUtils, isValidInvocation.name, correlationId);
-
-    // You can't provide more arguments than are on the function signature.
-    if (args.length > functionType.parameters.length) {
-        return false;
-    }
-
-    const parameters: ReadonlyArray<Type.FunctionParameter> = functionType.parameters;
-    const numParameters: number = parameters.length;
-
-    for (let index: number = 1; index < numParameters; index += 1) {
-        const parameter: Type.FunctionParameter = ArrayUtils.assertGet(parameters, index);
-        const argType: Type.TPowerQueryType | undefined = args[index];
-
-        if (argType !== undefined) {
-            const parameterType: Type.TPowerQueryType = primitiveType(
-                parameter.isNullable,
-                Assert.asDefined(parameter.type),
-            );
-
-            if (!isCompatible(argType, parameterType, traceManager, trace.id)) {
-                trace.exit();
-
-                return false;
-            }
-        }
-
-        if (!parameter.isOptional) {
-            trace.exit();
-
-            return false;
-        }
-    }
-
-    trace.exit();
-
-    return true;
-}
-
 export function inspectParameter(
     nodeIdMapCollection: NodeIdMap.Collection,
     parameter: XorNode<Ast.TParameter>,
@@ -136,39 +88,40 @@ export function inspectParameter(
 }
 
 function inspectAstParameter(node: Ast.TParameter): Type.FunctionParameter {
-    let isNullable: boolean;
-    let type: Type.TypeKind | undefined;
+    const isOptional: boolean = node.optionalConstant !== undefined;
+    let type: Type.TPowerQueryType | undefined;
 
     const parameterType: Ast.TParameterType | undefined = node.parameterType;
 
     if (parameterType !== undefined) {
-        switch (parameterType.kind) {
-            case Ast.NodeKind.AsNullablePrimitiveType: {
-                const simplified: AstUtils.SimplifiedType = AstUtils.simplifyAsNullablePrimitiveType(parameterType);
-                isNullable = simplified.isNullable;
-                type = typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind);
-                break;
-            }
+        let simplified: AstUtils.SimplifiedType;
 
-            case Ast.NodeKind.AsType: {
-                const simplified: AstUtils.SimplifiedType = AstUtils.simplifyType(parameterType.paired);
-                isNullable = simplified.isNullable;
-                type = typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind);
+        switch (parameterType.kind) {
+            case Ast.NodeKind.AsNullablePrimitiveType:
+                simplified = AstUtils.simplifyAsNullablePrimitiveType(parameterType);
                 break;
-            }
+
+            case Ast.NodeKind.AsType:
+                simplified = AstUtils.simplifyType(parameterType.paired);
+                break;
 
             default:
                 throw Assert.isNever(parameterType);
         }
+
+        // D2: an omitted optional argument is equivalent to passing `null`, so `isOptional`
+        // implies nullable regardless of how the parameter was ascribed in source.
+        type = primitiveType(
+            simplified.isNullable || isOptional,
+            typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind),
+        );
     } else {
-        isNullable = true;
         type = undefined;
     }
 
     return {
         nameLiteral: node.name.literal,
-        isNullable,
-        isOptional: node.optionalConstant !== undefined,
+        isOptional,
         type,
     };
 }
@@ -177,8 +130,7 @@ function inspectContextParameter(
     nodeIdMapCollection: NodeIdMap.Collection,
     parameter: ParseContext.Node<Ast.TParameter>,
 ): Type.FunctionParameter | undefined {
-    let isNullable: boolean;
-    let type: Type.TypeKind | undefined;
+    let type: Type.TPowerQueryType | undefined;
 
     const name: Ast.Identifier | undefined = NodeIdMapUtils.nthChildAstChecked(
         nodeIdMapCollection,
@@ -209,17 +161,20 @@ function inspectContextParameter(
 
     if (parameterType !== undefined) {
         const simplified: AstUtils.SimplifiedType = AstUtils.simplifyAsNullablePrimitiveType(parameterType);
-        isNullable = simplified.isNullable;
-        type = typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind);
+
+        // D2: an omitted optional argument is equivalent to passing `null`, so `isOptional`
+        // implies nullable regardless of how the parameter was ascribed in source.
+        type = primitiveType(
+            simplified.isNullable || isOptional,
+            typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind),
+        );
     } else {
-        isNullable = true;
         type = undefined;
     }
 
     return {
         nameLiteral: name.literal,
         isOptional,
-        isNullable,
         type,
     };
 }

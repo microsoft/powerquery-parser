@@ -545,27 +545,23 @@ describe(`TypeUtils`, () => {
                         false,
                         [
                             {
-                                isNullable: false,
                                 isOptional: false,
-                                type: Type.TypeKind.Number,
+                                type: Type.NumberInstance,
                                 nameLiteral: "param1",
                             },
                             {
-                                isNullable: true,
                                 isOptional: false,
-                                type: Type.TypeKind.Number,
+                                type: Type.NullableNumberInstance,
                                 nameLiteral: "param2",
                             },
                             {
-                                isNullable: false,
                                 isOptional: true,
-                                type: Type.TypeKind.Number,
+                                type: Type.NumberInstance,
                                 nameLiteral: "param3",
                             },
                             {
-                                isNullable: true,
                                 isOptional: true,
-                                type: Type.TypeKind.Number,
+                                type: Type.NullableNumberInstance,
                                 nameLiteral: "param4",
                             },
                         ],
@@ -712,27 +708,23 @@ describe(`TypeUtils`, () => {
                         false,
                         [
                             {
-                                isNullable: false,
                                 isOptional: false,
-                                type: Type.TypeKind.Number,
+                                type: Type.NumberInstance,
                                 nameLiteral: "param1",
                             },
                             {
-                                isNullable: true,
                                 isOptional: false,
-                                type: Type.TypeKind.Number,
+                                type: Type.NullableNumberInstance,
                                 nameLiteral: "param2",
                             },
                             {
-                                isNullable: false,
                                 isOptional: true,
-                                type: Type.TypeKind.Number,
+                                type: Type.NumberInstance,
                                 nameLiteral: "param3",
                             },
                             {
-                                isNullable: true,
                                 isOptional: true,
-                                type: Type.TypeKind.Number,
+                                type: Type.NullableNumberInstance,
                                 nameLiteral: "param4",
                             },
                         ],
