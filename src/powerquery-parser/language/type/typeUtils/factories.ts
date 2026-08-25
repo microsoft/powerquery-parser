@@ -99,14 +99,14 @@ export function definedRecord(
 /**
  * Creates a defined table with known fields and optional exact rows.
  *
- * Undefined rows indicate that the table's rows are unknown, while an empty array represents an exact empty table.
+ * Omitted rows indicate that the table's rows are unknown, while an empty array represents an exact empty table.
  * Each supplied row is asserted to contain exactly the declared fields and field types compatible with the table definition.
  * @throws CommonError.InvariantError if a row does not satisfy those requirements.
  */
 export function definedTable(
     isNullable: boolean,
     fields: Type.OrderedFields,
-    rows: ReadonlyArray<Type.UnorderedFields> | undefined,
+    rows?: ReadonlyArray<Type.UnorderedFields>,
 ): Type.DefinedTable {
     const fieldNames: ReadonlyArray<string> = [...fields.keys()];
 
@@ -143,7 +143,7 @@ export function definedTable(
         isNullable,
         fields,
         isOpen: false,
-        rows,
+        ...(rows === undefined ? {} : { rows }),
     };
 }
 

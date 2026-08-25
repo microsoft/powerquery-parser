@@ -102,15 +102,15 @@ describe(`TypeUtils.isEqualType`, () => {
 
         it(`unknown rows equal unknown rows`, () => {
             runTest({
-                left: TypeUtils.definedTable(false, fields, undefined),
-                right: TypeUtils.definedTable(false, fields, undefined),
+                left: TypeUtils.definedTable(false, fields),
+                right: TypeUtils.definedTable(false, fields),
                 expected: true,
             });
         });
 
         it(`unknown rows differ from exact empty rows`, () => {
             runTest({
-                left: TypeUtils.definedTable(false, fields, undefined),
+                left: TypeUtils.definedTable(false, fields),
                 right: TypeUtils.definedTable(false, fields, []),
                 expected: false,
             });
