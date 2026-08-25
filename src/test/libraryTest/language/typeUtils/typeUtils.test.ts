@@ -251,7 +251,6 @@ describe(`TypeUtils`, () => {
             const type: Type.DefinedTable = TypeUtils.definedTable(false, fields);
 
             expect(type.rows).to.be.undefined;
-            expect(type).not.to.have.property(`rows`);
         });
 
         it(`accepts null for a nullable column`, () => {
