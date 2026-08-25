@@ -97,19 +97,20 @@ export function definedRecord(
 }
 
 /**
- * Creates a defined table with exact rows.
+ * Creates a defined table with known fields and optional exact rows.
  *
- * Each row is asserted to contain exactly the declared fields and field types compatible with the table definition.
+ * Undefined rows indicate that the table's rows are unknown, while an empty array represents an exact empty table.
+ * Each supplied row is asserted to contain exactly the declared fields and field types compatible with the table definition.
  * @throws CommonError.InvariantError if a row does not satisfy those requirements.
  */
 export function definedTable(
     isNullable: boolean,
     fields: Type.OrderedFields,
-    rows: ReadonlyArray<Type.UnorderedFields>,
+    rows: ReadonlyArray<Type.UnorderedFields> | undefined,
 ): Type.DefinedTable {
     const fieldNames: ReadonlyArray<string> = [...fields.keys()];
 
-    for (const [rowIndex, row] of rows.entries()) {
+    for (const [rowIndex, row] of rows?.entries() ?? []) {
         Assert.isTrue(
             MapUtils.hasKeys(row, fieldNames) && row.size === fields.size,
             `row fields do not match table fields`,

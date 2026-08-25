@@ -99,5 +99,21 @@ describe(`TypeUtils.isEqualType`, () => {
                 expected: false,
             });
         });
+
+        it(`unknown rows equal unknown rows`, () => {
+            runTest({
+                left: TypeUtils.definedTable(false, fields, undefined),
+                right: TypeUtils.definedTable(false, fields, undefined),
+                expected: true,
+            });
+        });
+
+        it(`unknown rows differ from exact empty rows`, () => {
+            runTest({
+                left: TypeUtils.definedTable(false, fields, undefined),
+                right: TypeUtils.definedTable(false, fields, []),
+                expected: false,
+            });
+        });
     });
 });
