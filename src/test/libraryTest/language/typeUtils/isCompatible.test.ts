@@ -112,6 +112,105 @@ describe(`TypeUtils.isCompatible`, () => {
 
             expect(actual).to.equal(true, undefined);
         });
+
+        it(`AnyUnion on the right, no member is true but one is indeterminate -> undefined`, () => {
+            const actual: boolean | undefined = noopIsCompatible(
+                Type.NumberInstance,
+                noopCreateAnyUnion([Type.UnknownInstance, Type.TextInstance]),
+            );
+
+            expect(actual).to.equal(undefined, undefined);
+        });
+
+        it(`AnyUnion on the right, no member is true or indeterminate -> false`, () => {
+            const actual: boolean | undefined = noopIsCompatible(
+                Type.NumberInstance,
+                noopCreateAnyUnion([Type.TextInstance, Type.TextInstance]),
+            );
+
+            expect(actual).to.equal(false, undefined);
+        });
+    });
+
+    // Left-side `Any` / `AnyUnion` handling. See the tri-state contract documented above
+    // `isCompatible` in isCompatible.ts.
+    describe(`AnyUnion on the left`, () => {
+        it(`all members compatible -> true`, () => {
+            const left: Type.TPowerQueryType = noopCreateAnyUnion([
+                TypeUtils.numberLiteral(false, `1`),
+                TypeUtils.numberLiteral(false, `2`),
+            ]);
+
+            expect(noopIsCompatible(left, Type.NumberInstance)).to.equal(true, undefined);
+        });
+
+        it(`one member incompatible -> false`, () => {
+            const left: Type.TPowerQueryType = noopCreateAnyUnion([
+                TypeUtils.textLiteral(false, `"x"`),
+                TypeUtils.numberLiteral(false, `1`),
+            ]);
+
+            expect(noopIsCompatible(left, Type.NumberInstance)).to.equal(false, undefined);
+        });
+
+        it(`one member indeterminate, rest compatible -> undefined`, () => {
+            const left: Type.TPowerQueryType = noopCreateAnyUnion([
+                Type.UnknownInstance,
+                TypeUtils.numberLiteral(false, `1`),
+            ]);
+
+            expect(noopIsCompatible(left, Type.NumberInstance)).to.equal(undefined, undefined);
+        });
+
+        it(`right is bare any -> true (right fast path wins)`, () => {
+            const left: Type.TPowerQueryType = noopCreateAnyUnion([Type.TextInstance, Type.NumberInstance]);
+            expect(noopIsCompatible(left, Type.AnyInstance)).to.equal(true, undefined);
+        });
+
+        it(`nullable member against non-nullable right -> false`, () => {
+            const left: Type.TPowerQueryType = noopCreateAnyUnion([Type.NullInstance, Type.NumberInstance]);
+            expect(noopIsCompatible(left, Type.NumberInstance)).to.equal(false, undefined);
+        });
+
+        it(`nullable member against nullable right -> true`, () => {
+            const left: Type.TPowerQueryType = noopCreateAnyUnion([Type.NullInstance, Type.NumberInstance]);
+            expect(noopIsCompatible(left, Type.NullableNumberInstance)).to.equal(true, undefined);
+        });
+
+        it(`${Type.TypeKind.None} member is a hard mismatch even against a required parameter`, () => {
+            const left: Type.TPowerQueryType = noopCreateAnyUnion([
+                TypeUtils.primitiveType(false, Type.TypeKind.None),
+                Type.NumberInstance,
+            ]);
+
+            expect(noopIsCompatible(left, Type.NumberInstance)).to.equal(false, undefined);
+        });
+    });
+
+    describe(`bare any on the left`, () => {
+        it(`any -> number is undefined (absence of constraint, not a hard mismatch)`, () => {
+            expect(noopIsCompatible(Type.AnyInstance, Type.NumberInstance)).to.equal(undefined, undefined);
+        });
+
+        it(`any -> any is true (right-side fast path wins)`, () => {
+            expect(noopIsCompatible(Type.AnyInstance, Type.AnyInstance)).to.equal(true, undefined);
+        });
+
+        it(`number -> any is true (unchanged)`, () => {
+            expect(noopIsCompatible(Type.NumberInstance, Type.AnyInstance)).to.equal(true, undefined);
+        });
+
+        it(`any -> anynonnull is true (non-nullable any trivially satisfies anything-but-null)`, () => {
+            expect(noopIsCompatible(Type.AnyInstance, Type.AnyNonNullInstance)).to.equal(true, undefined);
+        });
+
+        it(`nullable any -> anynonnull is false (unchanged, caught by the nullability check)`, () => {
+            expect(noopIsCompatible(Type.NullableAnyInstance, Type.AnyNonNullInstance)).to.equal(false, undefined);
+        });
+
+        it(`any -> null is false (bare any can never be exactly null)`, () => {
+            expect(noopIsCompatible(Type.AnyInstance, Type.NullInstance)).to.equal(false, undefined);
+        });
     });
 
     describe(`${Type.ExtendedTypeKind.DefinedList}`, () => {
@@ -172,6 +271,41 @@ describe(`TypeUtils.isCompatible`, () => {
                 const definedList: Type.DefinedList = TypeUtils.definedList(true, []);
                 expect(noopIsCompatible(Type.NullInstance, definedList)).to.equal(true, undefined);
             });
+        });
+    });
+
+    describe(`${Type.ExtendedTypeKind.DefinedListType}`, () => {
+        it(`compatible with a list type of matching item type`, () => {
+            const definedListType: Type.DefinedListType = TypeUtils.definedListType(false, [
+                Type.NumberInstance,
+                Type.NumberInstance,
+            ]);
+
+            const listType: Type.ListType = TypeUtils.listType(false, Type.NumberInstance);
+
+            expect(noopIsCompatible(definedListType, listType)).to.equal(true, undefined);
+        });
+
+        it(`not compatible with a list type of mismatched item type`, () => {
+            const definedListType: Type.DefinedListType = TypeUtils.definedListType(false, [
+                Type.NumberInstance,
+                Type.NumberInstance,
+            ]);
+
+            const listType: Type.ListType = TypeUtils.listType(false, Type.TextInstance);
+
+            expect(noopIsCompatible(definedListType, listType)).to.equal(false, undefined);
+        });
+
+        it(`not compatible with a list type if any item type mismatches`, () => {
+            const definedListType: Type.DefinedListType = TypeUtils.definedListType(false, [
+                Type.NumberInstance,
+                Type.TextInstance,
+            ]);
+
+            const listType: Type.ListType = TypeUtils.listType(false, Type.NumberInstance);
+
+            expect(noopIsCompatible(definedListType, listType)).to.equal(false, undefined);
         });
     });
 

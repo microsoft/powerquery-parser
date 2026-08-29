@@ -25,9 +25,8 @@ describe(`TypeUtils.isEqualType`, () => {
                 false,
                 [
                     {
-                        isNullable: false,
                         isOptional: true,
-                        type: Type.TypeKind.Text,
+                        type: Type.TextInstance,
                         nameLiteral: `x`,
                     },
                 ],

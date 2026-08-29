@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { isCompatible, isCompatibleWithFunctionParameter } from "./isCompatible";
 import { Trace, TraceManager } from "../../../common/trace";
 import { ArrayUtils } from "../../../common";
+import { isCompatible } from "./isCompatible";
 import { isEqualFunctionParameter } from "./isEqualType";
 import { Type } from "..";
 import { TypeUtilsTraceConstant } from "./typeTraceConstant";
@@ -35,7 +35,13 @@ export type CheckedDefinedTable = IChecked<string, DefinedTableMismatch>;
 
 export type CheckedFunctionSignature = IChecked<number, FunctionSignatureMismatch>;
 
-export type CheckedInvocation = IChecked<number, InvocationMismatch>;
+export interface CheckedInvocation extends IChecked<number, InvocationMismatch> {
+    // Arguments whose compatibility with the parameter could not be determined (`isCompatible`
+    // returned `undefined`). Per the tri-state contract, indeterminate is not grounds for
+    // treating the invocation as invalid — callers that only care about hard failures can
+    // continue to read `.invalid` and get that behaviour for free.
+    readonly indeterminate: ReadonlyArray<number>;
+}
 
 export type TMismatch =
     | DefinedFunctionMismatch
@@ -123,21 +129,35 @@ export function typeCheckInvocation(
 
     const validArgs: number[] = [];
     const missingArgs: number[] = [];
+    const indeterminateArgs: number[] = [];
     const invalidArgs: Map<number, InvocationMismatch> = new Map();
 
     for (let index: number = 0; index < numParameters; index += 1) {
         const arg: Type.TPowerQueryType | undefined = args[index];
         const parameter: Type.FunctionParameter = ArrayUtils.assertGet(parameters, index);
 
-        if (isCompatibleWithFunctionParameter(arg, parameter)) {
+        if (arg === undefined) {
+            if (parameter.isOptional) {
+                validArgs.push(index);
+            } else {
+                missingArgs.push(index);
+            }
+        } else if (parameter.type === undefined) {
+            // A parameter without an ascription accepts any argument.
             validArgs.push(index);
-        } else if (arg !== undefined) {
-            invalidArgs.set(index, {
-                expected: parameter,
-                actual: arg,
-            });
         } else {
-            missingArgs.push(index);
+            const compatibility: boolean | undefined = isCompatible(arg, parameter.type, traceManager, trace.id);
+
+            if (compatibility === true) {
+                validArgs.push(index);
+            } else if (compatibility === false) {
+                invalidArgs.set(index, {
+                    expected: parameter,
+                    actual: arg,
+                });
+            } else {
+                indeterminateArgs.push(index);
+            }
         }
     }
 
@@ -146,6 +166,7 @@ export function typeCheckInvocation(
         invalid: invalidArgs,
         extraneous: extraneousArgs,
         missing: missingArgs,
+        indeterminate: indeterminateArgs,
     };
 
     trace.exit();
@@ -171,7 +192,7 @@ export function typeCheckListWithListType(
     const valueElements: ReadonlyArray<Type.TPowerQueryType> = valueType.elements;
 
     for (const [element, index] of ArrayUtils.enumerate(valueElements)) {
-        if (isCompatible(element, schemaItemType, traceManager, trace.id)) {
+        if (isCompatible(element, schemaItemType, traceManager, trace.id) === true) {
             validArgs.push(index);
         } else {
             invalidArgs.set(index, {
@@ -307,7 +328,7 @@ function typeCheckRecordOrTable(
         const schemaValueType: Type.TPowerQueryType | undefined = schemaFields.get(key);
 
         if (schemaValueType !== undefined) {
-            if (isCompatible(type, schemaValueType, traceManager, trace.id)) {
+            if (isCompatible(type, schemaValueType, traceManager, trace.id) === true) {
                 validFields.push(key);
             } else {
                 mismatches.set(key, {

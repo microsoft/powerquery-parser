@@ -263,8 +263,12 @@ export interface FunctionParameter {
     // but it's useful to have when inspecting parameters.
     readonly nameLiteral: string;
     readonly isOptional: boolean;
-    readonly isNullable: boolean;
-    readonly type: TypeKind | undefined;
+    // `undefined` means the parameter was written without an ascription (eg. `(x) => ...`),
+    // and should be treated as accepting any argument. When present, nullability is already
+    // baked into the type itself (`type.isNullable`) rather than tracked as a sibling flag —
+    // this includes the case where `isOptional` is true, since omitting an optional argument
+    // is equivalent to passing `null`.
+    readonly type: TPowerQueryType | undefined;
 }
 
 // -------------------------------------------

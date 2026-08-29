@@ -131,12 +131,10 @@ export function nameOfFunctionParameter(
         partial += " optional";
     }
 
-    if (parameter.isNullable) {
-        partial += " nullable";
-    }
-
+    // Nullability is already baked into `parameter.type` (see the FunctionParameter doc comment),
+    // so `nameOf` below applies the `nullable` prefix on its own when required.
     if (parameter.type !== undefined) {
-        partial += ` ${nameOfTypeKind(parameter.type)}`;
+        partial += ` ${nameOf(parameter.type, traceManager, trace.id)}`;
     } else {
         partial += ` ${nameOfTypeKind(Type.TypeKind.Any)}`;
     }

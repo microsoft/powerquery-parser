@@ -22,12 +22,13 @@ export function isEqualType(left: Type.TPowerQueryType, right: Type.TPowerQueryT
 }
 
 export function isEqualFunctionParameter(left: Type.FunctionParameter, right: Type.FunctionParameter): boolean {
-    return (
-        left.nameLiteral === right.nameLiteral &&
-        left.isNullable === right.isNullable &&
-        left.isOptional === right.isOptional &&
-        left.type === right.type
-    );
+    if (left.nameLiteral !== right.nameLiteral || left.isOptional !== right.isOptional) {
+        return false;
+    } else if (left.type === undefined || right.type === undefined) {
+        return left.type === right.type;
+    } else {
+        return isEqualType(left.type, right.type);
+    }
 }
 
 export function isEqualFunctionSignature(
