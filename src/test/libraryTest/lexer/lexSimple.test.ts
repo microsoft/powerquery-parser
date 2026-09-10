@@ -156,6 +156,43 @@ type
         assertGetSnapshotAbridgedTokens(text, expected, false);
     });
 
+    it(`digit-leading identifier segment followed by "." and more identifier characters`, () => {
+        // `123.` can't be a numeric literal as a decimal point is always followed by more digits,
+        // eg. the `<query name>.<column>` names Table.ExpandTableColumn generates.
+        const text: string = `123.Bar`;
+
+        const expected: ReadonlyArray<[Language.Token.TokenKind, string]> = [
+            [Language.Token.TokenKind.Identifier, `123.Bar`],
+        ];
+
+        assertGetSnapshotAbridgedTokens(text, expected, false);
+    });
+
+    it(`digit-leading identifier segment inside a field selector, alongside a genuine numeric literal`, () => {
+        const text: string = `[a] = 123.Bar`;
+
+        const expected: ReadonlyArray<[Language.Token.TokenKind, string]> = [
+            [Language.Token.TokenKind.LeftBracket, `[`],
+            [Language.Token.TokenKind.Identifier, `a`],
+            [Language.Token.TokenKind.RightBracket, `]`],
+            [Language.Token.TokenKind.Equal, `=`],
+            [Language.Token.TokenKind.Identifier, `123.Bar`],
+        ];
+
+        assertGetSnapshotAbridgedTokens(text, expected, false);
+    });
+
+    it(`digit run still lexes as NumericLiteral when not followed by a dotted identifier continuation`, () => {
+        const text: string = `123 456.789`;
+
+        const expected: ReadonlyArray<[Language.Token.TokenKind, string]> = [
+            [Language.Token.TokenKind.NumericLiteral, `123`],
+            [Language.Token.TokenKind.NumericLiteral, `456.789`],
+        ];
+
+        assertGetSnapshotAbridgedTokens(text, expected, false);
+    });
+
     it(`operator-or-punctuation`, () => {
         const text: string = `
 ,
