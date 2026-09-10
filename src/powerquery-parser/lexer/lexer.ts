@@ -852,16 +852,18 @@ function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number,
         if (chr2 === "x" || chr2 === "X") {
             token = readHexLiteral(text, lineNumber, positionStart, locale);
         } else {
-            token = readNumericLiteral(text, lineNumber, positionStart, locale);
+            token = readNumericLiteralOrDigitLeadingIdentifier(text, lineNumber, positionStart, locale);
         }
     } else if ("1" <= chr1 && chr1 <= "9") {
-        token = readNumericLiteral(text, lineNumber, positionStart, locale);
+        token = readNumericLiteralOrDigitLeadingIdentifier(text, lineNumber, positionStart, locale);
     } else if (chr1 === ".") {
         const chr2: string | undefined = text[positionStart + 1];
 
         if (chr2 === undefined) {
             throw new LexError.UnexpectedEofError(graphemePositionFrom(text, lineNumber, positionStart), locale);
         } else if ("1" <= chr2 && chr2 <= "9") {
+            // Unlike the digit-first branches above there's no ambiguity here,
+            // as an identifier can't start with `.`
             token = readNumericLiteral(text, lineNumber, positionStart, locale);
         } else if (chr2 === ".") {
             const chr3: string | undefined = text[positionStart + 2];
@@ -991,6 +993,84 @@ function readNumericLiteral(text: string, lineNumber: number, positionStart: num
     }
 
     return readTokenFrom(Token.LineTokenKind.NumericLiteral, text, positionStart, positionEnd);
+}
+
+// A run of digits is ambiguous with the start of a generalized identifier, eg. `123.Bar`.
+// The two are distinguished by what follows the digit run:
+//  * A numeric literal's digits are followed by whitespace, punctuation, or eof.
+//  * An identifier's digits are followed by `.` then a non-digit identifier part character,
+//    which a numeric literal can't produce as a decimal point is always followed by more digits.
+function readNumericLiteralOrDigitLeadingIdentifier(
+    text: string,
+    lineNumber: number,
+    positionStart: number,
+    locale: string,
+): Token.LineToken {
+    const numericPositionEnd: number | undefined = indexOfRegexEnd(Pattern.Numeric, text, positionStart);
+
+    if (numericPositionEnd === undefined) {
+        throw new LexError.ExpectedError(
+            graphemePositionFrom(text, lineNumber, positionStart),
+            LexError.ExpectedKind.Numeric,
+            locale,
+        );
+    }
+
+    if (text[numericPositionEnd] === ".") {
+        const chrAfterDot: string | undefined = text[numericPositionEnd + 1];
+
+        const isDotLeadingIdentifierContinuation: boolean =
+            chrAfterDot !== undefined &&
+            chrAfterDot !== "." &&
+            StringUtils.regexMatchLength(Pattern.IdentifierPartCharacters, text, numericPositionEnd + 1) !== undefined;
+
+        if (isDotLeadingIdentifierContinuation) {
+            const identifierPositionEnd: number | undefined = indexOfDigitLeadingIdentifierEnd(text, positionStart);
+
+            if (identifierPositionEnd !== undefined) {
+                return readTokenFrom(Token.LineTokenKind.Identifier, text, positionStart, identifierPositionEnd);
+            }
+        }
+    }
+
+    return readTokenFrom(Token.LineTokenKind.NumericLiteral, text, positionStart, numericPositionEnd);
+}
+
+// Mirrors IdentifierUtils.getIdentifierLength's continuation loop,
+// minus the identifier start character check which would reject a leading digit.
+function indexOfDigitLeadingIdentifierEnd(text: string, positionStart: number): number | undefined {
+    const textLength: number = text.length;
+    let index: number = positionStart;
+
+    while (index < textLength) {
+        const currentChr: string = StringUtils.assertGet(text, index);
+
+        if (currentChr === ".") {
+            const nextChr: string | undefined = text[index + 1];
+
+            if (nextChr === undefined || nextChr === ".") {
+                break;
+            }
+
+            index += 1;
+
+            continue;
+        }
+
+        const matchLength: number | undefined = StringUtils.regexMatchLength(
+            Pattern.IdentifierPartCharacters,
+            text,
+            index,
+        );
+
+        if (matchLength === undefined) {
+            break;
+        }
+
+        index += matchLength;
+    }
+
+    return index !== positionStart ? index : undefined;
 }
 
 function readLineComment(text: string, positionStart: number): Token.LineToken {
