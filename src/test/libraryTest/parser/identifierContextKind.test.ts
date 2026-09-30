@@ -68,4 +68,11 @@ describe("Parser.IdentifierContextKind", () => {
         assertIdentifierIsInContext(parseOk, "foo", Ast.IdentifierContextKind.Key);
         assertIdentifierIsInContext(parseOk, "#date", Ast.IdentifierContextKind.Keyword);
     });
+
+    it("Section1!Query1", async () => {
+        const parseOk: ParseOk = await AssertTestUtils.assertGetParseOk(DefaultSettings, "Section1!Query1");
+
+        assertIdentifierIsInContext(parseOk, "Section1", Ast.IdentifierContextKind.Value);
+        assertIdentifierIsInContext(parseOk, "Query1", Ast.IdentifierContextKind.Value);
+    });
 });

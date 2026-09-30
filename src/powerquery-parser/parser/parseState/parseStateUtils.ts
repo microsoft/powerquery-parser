@@ -262,6 +262,14 @@ export function isOnGeneralizedIdentifierStart(state: ParseState, tokenIndex: nu
     }
 }
 
+// section-access-expression: identifier ! identifier
+export function isSectionAccessExpressionNext(state: ParseState, tokenIndexStart: number = state.tokenIndex): boolean {
+    return (
+        isTokenKind(state, Token.TokenKind.Identifier, tokenIndexStart) &&
+        isTokenKind(state, Token.TokenKind.Bang, tokenIndexStart + 1)
+    );
+}
+
 // Assumes a call to readPrimaryExpression has already happened.
 export function isRecursivePrimaryExpressionNext(
     state: ParseState,
@@ -269,7 +277,8 @@ export function isRecursivePrimaryExpressionNext(
 ): boolean {
     return (
         // section-access-expression
-        // this.isOnTokenKind(TokenKind.Bang)
+        // is detected up front by isSectionAccessExpressionNext instead of here
+        // because its `identifier ! identifier` rather than a suffix on an arbitrary primary-expression
         // field-access-expression
         isTokenKind(state, Token.TokenKind.LeftBrace, tokenIndexStart) ||
         // item-access-expression

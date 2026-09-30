@@ -309,6 +309,80 @@ describe(`nodeIdMapUtils`, () => {
         });
     });
 
+    describe(`invokeExpressionIdentifierLiteral`, () => {
+        it(`Ast`, async () => {
+            const text: string = `Foo(1)`;
+
+            const parseOk: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(
+                DefaultSettings,
+                text
+            );
+
+            const nodeIdMapCollection: NodeIdMap.Collection = parseOk.nodeIdMapCollection;
+
+            const invokeExpressionNodeIds: Set<number> = Assert.asDefined(
+                nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.InvokeExpression),
+            );
+
+            expect(invokeExpressionNodeIds.size).to.equal(1);
+            const invokeExpressionNodeId: number = Assert.asDefined(invokeExpressionNodeIds.values().next().value);
+
+            const invokeExpressionIdentifierLiteral: string = Assert.asDefined(
+                NodeIdMapUtils.invokeExpressionIdentifierLiteral(nodeIdMapCollection, invokeExpressionNodeId),
+            );
+
+            expect(invokeExpressionIdentifierLiteral).to.equal("Foo");
+        });
+
+        it(`Ast - section access`, async () => {
+            const text: string = `Section1!Foo(1)`;
+
+            const parseOk: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(
+                DefaultSettings,
+                text
+            );
+
+            const nodeIdMapCollection: NodeIdMap.Collection = parseOk.nodeIdMapCollection;
+
+            const invokeExpressionNodeIds: Set<number> = Assert.asDefined(
+                nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.InvokeExpression),
+            );
+
+            expect(invokeExpressionNodeIds.size).to.equal(1);
+            const invokeExpressionNodeId: number = Assert.asDefined(invokeExpressionNodeIds.values().next().value);
+
+            const invokeExpressionIdentifierLiteral: string = Assert.asDefined(
+                NodeIdMapUtils.invokeExpressionIdentifierLiteral(nodeIdMapCollection, invokeExpressionNodeId),
+            );
+
+            expect(invokeExpressionIdentifierLiteral).to.equal("Section1!Foo");
+        });
+
+        it(`Context - section access`, async () => {
+            const text: string = `Section1!Foo(1, `;
+
+            const parseError: Task.ParseTaskParseError = await AssertTestUtils.assertGetLexParseError(
+                DefaultSettings,
+                text,
+            );
+
+            const nodeIdMapCollection: NodeIdMap.Collection = parseError.error.state.contextState.nodeIdMapCollection;
+
+            const invokeExpressionNodeIds: Set<number> = Assert.asDefined(
+                nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.InvokeExpression),
+            );
+
+            expect(invokeExpressionNodeIds.size).to.equal(1);
+            const invokeExpressionNodeId: number = Assert.asDefined(invokeExpressionNodeIds.values().next().value);
+
+            const invokeExpressionIdentifierLiteral: string = Assert.asDefined(
+                NodeIdMapUtils.invokeExpressionIdentifierLiteral(nodeIdMapCollection, invokeExpressionNodeId),
+            );
+
+            expect(invokeExpressionIdentifierLiteral).to.equal("Section1!Foo");
+        });
+    });
+
     describe("wrappedContentXor", () => {
         it("Ast", async () => {
             const text: string = `[a = 1]`;

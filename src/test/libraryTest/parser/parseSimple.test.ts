@@ -1544,6 +1544,173 @@ describe("Parser.AbridgedNode", () => {
         });
     });
 
+    describe(`${Ast.NodeKind.SectionAccessExpression}`, () => {
+        it(`Section1!Query1`, async () => {
+            await ParserTestUtils.runAbridgedNodeTest(`Section1!Query1`, [
+                [Ast.NodeKind.SectionAccessExpression, undefined],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Identifier, 2],
+            ]);
+        });
+
+        it(`Section1 ! Query1`, async () => {
+            await ParserTestUtils.runAbridgedNodeTest(`Section1 ! Query1`, [
+                [Ast.NodeKind.SectionAccessExpression, undefined],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Identifier, 2],
+            ]);
+        });
+
+        it(`#"Section 1"!#"Query 1"`, async () => {
+            await ParserTestUtils.runAbridgedNodeTest(`#"Section 1"!#"Query 1"`, [
+                [Ast.NodeKind.SectionAccessExpression, undefined],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Identifier, 2],
+            ]);
+        });
+
+        it(`Section1!Query1 + 1`, async () => {
+            await ParserTestUtils.runAbridgedNodeTest(`Section1!Query1 + 1`, [
+                [Ast.NodeKind.ArithmeticExpression, undefined],
+                [Ast.NodeKind.SectionAccessExpression, 0],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Identifier, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+            ]);
+        });
+
+        it(`Section1!Query1[Column]`, async () => {
+            await ParserTestUtils.runAbridgedNodeTest(`Section1!Query1[Column]`, [
+                [Ast.NodeKind.RecursivePrimaryExpression, undefined],
+                [Ast.NodeKind.SectionAccessExpression, 0],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Identifier, 2],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.FieldSelector, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.Constant, 2],
+            ]);
+        });
+
+        it(`Section1!Function1(1)`, async () => {
+            await ParserTestUtils.runAbridgedNodeTest(`Section1!Function1(1)`, [
+                [Ast.NodeKind.RecursivePrimaryExpression, undefined],
+                [Ast.NodeKind.SectionAccessExpression, 0],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Identifier, 2],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.InvokeExpression, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 2],
+            ]);
+        });
+
+        it(`Section1!Query1{0}`, async () => {
+            await ParserTestUtils.runAbridgedNodeTest(`Section1!Query1{0}`, [
+                [Ast.NodeKind.RecursivePrimaryExpression, undefined],
+                [Ast.NodeKind.SectionAccessExpression, 0],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Identifier, 2],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.ItemAccessExpression, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 2],
+            ]);
+        });
+
+        it(`(Section1!Query1)`, async () => {
+            await ParserTestUtils.runAbridgedNodeTest(`(Section1!Query1)`, [
+                [Ast.NodeKind.ParenthesizedExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.SectionAccessExpression, 1],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Identifier, 2],
+                [Ast.NodeKind.Constant, 2],
+            ]);
+        });
+
+        it(`let x = Section1!Query1 in x`, async () => {
+            await ParserTestUtils.runAbridgedNodeTest(`let x = Section1!Query1 in x`, [
+                [Ast.NodeKind.LetExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.IdentifierPairedExpression, 0],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.SectionAccessExpression, 2],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Identifier, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.IdentifierExpression, 3],
+                [Ast.NodeKind.Identifier, 1],
+            ]);
+        });
+
+        it(`type table Section1!Row`, async () => {
+            await ParserTestUtils.runAbridgedNodeTest(`type table Section1!Row`, [
+                [Ast.NodeKind.TypePrimaryType, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.TableType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.SectionAccessExpression, 1],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Identifier, 2],
+            ]);
+        });
+
+        it(`section Section1; x = 1; y = Section1!x;`, async () => {
+            await ParserTestUtils.runAbridgedNodeTest(`section Section1; x = 1; y = Section1!x;`, [
+                [Ast.NodeKind.Section, undefined],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Identifier, 2],
+                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.ArrayWrapper, 4],
+                [Ast.NodeKind.SectionMember, 0],
+                [Ast.NodeKind.IdentifierPairedExpression, 2],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.SectionMember, 1],
+                [Ast.NodeKind.IdentifierPairedExpression, 2],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.SectionAccessExpression, 2],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Identifier, 2],
+                [Ast.NodeKind.Constant, 3],
+            ]);
+        });
+
+        it(`Section1!`, async () => {
+            await ParserTestUtils.runAbridgedNodeTest(`Section1!`, [
+                [Ast.NodeKind.LogicalExpression, undefined],
+                [Ast.NodeKind.SectionAccessExpression, 0],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Identifier, 2],
+            ]);
+        });
+    });
+
     describe(`${Ast.NodeKind.SectionMember}`, () => {
         it(`section; x = 1;`, async () => {
             await ParserTestUtils.runAbridgedNodeTest(`section; x = 1;`, [

@@ -898,7 +898,9 @@ export async function readPrimaryExpression(
     const isIdentifierExpressionNext: boolean =
         currentTokenKind === TokenKind.AtSign || currentTokenKind === TokenKind.Identifier;
 
-    if (isIdentifierExpressionNext) {
+    if (ParseStateUtils.isSectionAccessExpressionNext(state)) {
+        primaryExpression = parser.readSectionAccessExpression(state, parser, trace.id);
+    } else if (isIdentifierExpressionNext) {
         primaryExpression = parser.readIdentifierExpression(state, parser, trace.id);
     } else {
         switch (currentTokenKind) {
@@ -1199,6 +1201,63 @@ export function readIdentifierExpression(
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return identifierExpression;
+}
+
+// ---------------------------------------------------------
+// ---------- 12.2.3.13 Section-access expression ----------
+// ---------------------------------------------------------
+
+export function readSectionAccessExpression(
+    state: ParseState,
+    parser: Parser,
+    correlationId: number | undefined,
+): Ast.SectionAccessExpression {
+    const nodeKind: Ast.NodeKind.SectionAccessExpression = Ast.NodeKind.SectionAccessExpression;
+
+    const trace: Trace = state.traceManager.entry(
+        NaiveTraceConstant.Parse,
+        readSectionAccessExpression.name,
+        correlationId,
+        { [NaiveTraceConstant.TokenIndex]: state.tokenIndex },
+    );
+
+    state.cancellationToken?.throwIfCancelled();
+    ParseStateUtils.startContext(state, nodeKind);
+
+    const sectionIdentifier: Ast.Identifier = parser.readIdentifier(
+        state,
+        parser,
+        Ast.IdentifierContextKind.Value,
+        trace.id,
+    );
+
+    const bangConstant: Ast.IConstant<Constant.MiscConstant.Bang> = readTokenKindAsConstant(
+        state,
+        TokenKind.Bang,
+        Constant.MiscConstant.Bang,
+        trace.id,
+    );
+
+    const memberIdentifier: Ast.Identifier = parser.readIdentifier(
+        state,
+        parser,
+        Ast.IdentifierContextKind.Value,
+        trace.id,
+    );
+
+    const sectionAccessExpression: Ast.SectionAccessExpression = {
+        ...ParseStateUtils.assertGetContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        sectionIdentifier,
+        bangConstant,
+        memberIdentifier,
+    };
+
+    ParseStateUtils.endContext(state, sectionAccessExpression);
+    trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
+
+    return sectionAccessExpression;
 }
 
 // --------------------------------------------------------

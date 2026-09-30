@@ -46,6 +46,8 @@ export const RecursiveDescentParser: Parser = {
 
     readIdentifierExpression: NaiveParseSteps.readIdentifierExpression,
 
+    readSectionAccessExpression: NaiveParseSteps.readSectionAccessExpression,
+
     readParenthesizedExpression: NaiveParseSteps.readParenthesizedExpression,
 
     readNotImplementedExpression: NaiveParseSteps.readNotImplementedExpression,
