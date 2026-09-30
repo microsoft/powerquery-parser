@@ -115,6 +115,61 @@ describe("Parser.Error", () => {
         });
     });
 
+    describe(`${Ast.NodeKind.SectionAccessExpression}`, () => {
+        it("ExpectedTokenKindError: Section1!", async () => {
+            const text: string = "Section1!";
+
+            const innerError: ParseError.TInnerParseError = (
+                await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+            ).innerError;
+
+            expect(innerError instanceof ParseError.ExpectedTokenKindError).to.equal(true, innerError.message);
+        });
+
+        it("ExpectedTokenKindError: Section1!1", async () => {
+            const text: string = "Section1!1";
+
+            const innerError: ParseError.TInnerParseError = (
+                await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+            ).innerError;
+
+            expect(innerError instanceof ParseError.ExpectedTokenKindError).to.equal(true, innerError.message);
+        });
+
+        // section-access-expression is `identifier ! identifier`, so it can't be chained...
+        it("UnusedTokensRemainError: Section1!Query1!Query2", async () => {
+            const text: string = "Section1!Query1!Query2";
+
+            const innerError: ParseError.TInnerParseError = (
+                await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+            ).innerError;
+
+            expect(innerError instanceof ParseError.UnusedTokensRemainError).to.equal(true, innerError.message);
+        });
+
+        // ...nor does it accept an inclusive identifier reference on either the section name...
+        it("UnusedTokensRemainError: @Section1!Query1", async () => {
+            const text: string = "@Section1!Query1";
+
+            const innerError: ParseError.TInnerParseError = (
+                await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+            ).innerError;
+
+            expect(innerError instanceof ParseError.UnusedTokensRemainError).to.equal(true, innerError.message);
+        });
+
+        // ...or the section member name.
+        it("ExpectedTokenKindError: Section1!@Query1", async () => {
+            const text: string = "Section1!@Query1";
+
+            const innerError: ParseError.TInnerParseError = (
+                await AssertTestUtils.assertGetParseError(DefaultSettingsWithStrict, text)
+            ).innerError;
+
+            expect(innerError instanceof ParseError.ExpectedTokenKindError).to.equal(true, innerError.message);
+        });
+    });
+
     describe(`Dangling comma`, () => {
         it(`LetExpression`, async () => {
             const text: string = "let a = 1, in 1";

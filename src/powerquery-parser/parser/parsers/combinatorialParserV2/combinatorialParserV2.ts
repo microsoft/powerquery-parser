@@ -92,6 +92,8 @@ export const CombinatorialParserV2: Parser = {
 
     readIdentifierExpression: NaiveParseSteps.readIdentifierExpression,
 
+    readSectionAccessExpression: NaiveParseSteps.readSectionAccessExpression,
+
     readParenthesizedExpression: NaiveParseSteps.readParenthesizedExpression,
 
     readNotImplementedExpression: NaiveParseSteps.readNotImplementedExpression,
@@ -205,7 +207,10 @@ async function readUnaryExpression(
         // PrimaryExpression
         case Token.TokenKind.AtSign:
         case Token.TokenKind.Identifier:
-            primaryExpression = NaiveParseSteps.readIdentifierExpression(state, parser, trace.id);
+            primaryExpression = ParseStateUtils.isSectionAccessExpressionNext(state)
+                ? NaiveParseSteps.readSectionAccessExpression(state, parser, trace.id)
+                : NaiveParseSteps.readIdentifierExpression(state, parser, trace.id);
+
             break;
 
         case Token.TokenKind.LeftParenthesis:

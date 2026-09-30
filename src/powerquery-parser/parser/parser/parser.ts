@@ -167,6 +167,13 @@ export interface Parser {
         correlationId: number | undefined,
     ) => Ast.IdentifierExpression;
 
+    // 12.2.3.13 Section-access expression
+    readonly readSectionAccessExpression: (
+        state: ParseState,
+        parser: Parser,
+        correlationId: number | undefined,
+    ) => Ast.SectionAccessExpression;
+
     // 12.2.3.14 Parenthesized expression
     readonly readParenthesizedExpression: (
         state: ParseState,

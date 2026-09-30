@@ -265,6 +265,7 @@ export function simplifyType(type: Ast.TType): SimplifiedType {
         case Ast.NodeKind.RecordExpression:
         case Ast.NodeKind.RecursivePrimaryExpression:
         case Ast.NodeKind.RelationalExpression:
+        case Ast.NodeKind.SectionAccessExpression:
         case Ast.NodeKind.TypePrimaryType:
         case Ast.NodeKind.UnaryExpression:
             throw new CommonError.InvariantError("this should never be reached", {

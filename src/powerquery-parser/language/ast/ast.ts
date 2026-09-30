@@ -58,6 +58,7 @@ export enum NodeKind {
     RecursivePrimaryExpression = "RecursivePrimaryExpression",
     RelationalExpression = "RelationalExpression",
     Section = "Section",
+    SectionAccessExpression = "SectionAccessExpression",
     SectionMember = "SectionMember",
     TableType = "TableType",
     TypePrimaryType = "TypePrimaryType",
@@ -346,7 +347,7 @@ export type TPrimaryExpression =
     | ListExpression
     | RecordExpression
     | IdentifierExpression
-    // SectionAccessExpression
+    | SectionAccessExpression
     | ParenthesizedExpression
     | TFieldAccessExpression
     | TRecursivePrimaryExpression
@@ -381,6 +382,18 @@ export interface IdentifierExpression extends INode {
     readonly isLeaf: false;
     readonly inclusiveConstant: IConstant<Constant.MiscConstant.AtSign> | undefined;
     readonly identifier: Identifier;
+}
+
+// ---------------------------------------------------------
+// ---------- 12.2.3.13 Section-access expression ----------
+// ---------------------------------------------------------
+
+export interface SectionAccessExpression extends INode {
+    readonly kind: NodeKind.SectionAccessExpression;
+    readonly isLeaf: false;
+    readonly sectionIdentifier: Identifier;
+    readonly bangConstant: IConstant<Constant.MiscConstant.Bang>;
+    readonly memberIdentifier: Identifier;
 }
 
 // --------------------------------------------------------
@@ -919,6 +932,7 @@ export const NodeKindsForTPrimaryExpression: Set<NodeKind> = new Set([
     NodeKind.ListExpression,
     NodeKind.RecordExpression,
     NodeKind.IdentifierExpression,
+    NodeKind.SectionAccessExpression,
     NodeKind.ParenthesizedExpression,
     NodeKind.InvokeExpression,
     NodeKind.RecursivePrimaryExpression,

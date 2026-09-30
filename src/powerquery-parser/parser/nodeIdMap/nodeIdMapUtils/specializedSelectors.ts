@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { assertNthChildXor, assertNthChildXorChecked, nthChildAstChecked, nthChildXorChecked } from "./childSelectors";
+import { assertNthChildXor, assertNthChildXorChecked, nthChildAstChecked, nthChildXor } from "./childSelectors";
 import { assertParentXor, assertParentXorChecked } from "./parentSelectors";
 import { assertXor, assertXorChecked } from "./commonSelectors";
 import { NodeIdMap, NodeIdMapUtils, XorNodeUtils } from "..";
-import { TXorNode, XorNode } from "../xorNode";
+import { AstXorNode, TXorNode, XorNode } from "../xorNode";
 import { Ast } from "../../../language";
 import { CommonError } from "../../../common";
 
@@ -49,11 +49,11 @@ export function assertRecursiveExpressionPreviousSibling<T extends Ast.TNode>(
 
         return expectedNodeKinds
             ? assertNthChildXorChecked(
-                  nodeIdMapCollection,
-                  arrayWrapper.node.id,
-                  indexOfPrimaryExpressionId - 1,
-                  expectedNodeKinds,
-              )
+                nodeIdMapCollection,
+                arrayWrapper.node.id,
+                indexOfPrimaryExpressionId - 1,
+                expectedNodeKinds,
+            )
             : assertNthChildXor(nodeIdMapCollection, arrayWrapper.node.id, indexOfPrimaryExpressionId - 1);
     }
     // It's the first element in ArrayWrapper, meaning we must grab RecursivePrimaryExpression.head
@@ -73,32 +73,42 @@ export function invokeExpressionIdentifier(
     nodeId: number,
 ): XorNode<Ast.IdentifierExpression> | undefined {
     const invokeExprXorNode: TXorNode = assertXorChecked(nodeIdMapCollection, nodeId, Ast.NodeKind.InvokeExpression);
+    const headXorNode: TXorNode | undefined = invokeExpressionHead(nodeIdMapCollection, invokeExprXorNode);
 
-    // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
-    // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
+    return headXorNode ? identifierExpressionHead(invokeExprXorNode, headXorNode) : undefined;
+}
+
+// The only place for a name in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
+// only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
+function invokeExpressionHead(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    invokeExprXorNode: TXorNode,
+): TXorNode | undefined {
     if (invokeExprXorNode.node.attributeIndex !== 0) {
         return undefined;
     }
 
-    // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
     const recursiveArrayXorNode: TXorNode = assertParentXor(nodeIdMapCollection, invokeExprXorNode.node.id);
     const recursiveExprXorNode: TXorNode = assertParentXor(nodeIdMapCollection, recursiveArrayXorNode.node.id);
 
-    const headXorNode: XorNode<Ast.IdentifierExpression> | undefined = nthChildXorChecked<Ast.IdentifierExpression>(
+    return nthChildXor(
         nodeIdMapCollection,
         recursiveExprXorNode.node.id,
-        0,
-        Ast.NodeKind.IdentifierExpression,
+        0
     );
+}
 
+// Throws if the IdentifierExpression hasn't finished parsing.
+function identifierExpressionHead(
+    invokeExprXorNode: TXorNode,
+    headXorNode: TXorNode,
+): AstXorNode<Ast.IdentifierExpression> | undefined {
     // It's not an identifier expression so there's nothing we can do.
-    if (headXorNode === undefined) {
+    if (!XorNodeUtils.isNodeKind<Ast.IdentifierExpression>(headXorNode, Ast.NodeKind.IdentifierExpression)) {
         return undefined;
     }
 
-    // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
-    // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
-    if (XorNodeUtils.isContext(headXorNode)) {
+    if (!XorNodeUtils.isAstChecked<Ast.IdentifierExpression>(headXorNode, Ast.NodeKind.IdentifierExpression)) {
         const details: {
             identifierExpressionNodeId: number;
             invokeExpressionNodeId: number;
@@ -117,26 +127,43 @@ export function invokeExpressionIdentifier(
 }
 
 // Unboxes the identifier literal for function name if it exists.
+// A section-access head (eg. `Section1!Foo(1)`) is returned as `Section1!Foo`.
 export function invokeExpressionIdentifierLiteral(
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
 ): string | undefined {
-    assertXorChecked(nodeIdMapCollection, nodeId, Ast.NodeKind.InvokeExpression);
+    const invokeExprXorNode: TXorNode = assertXorChecked(nodeIdMapCollection, nodeId, Ast.NodeKind.InvokeExpression);
+    const headXorNode: TXorNode | undefined = invokeExpressionHead(nodeIdMapCollection, invokeExprXorNode);
 
-    const identifierExpressionXorNode: XorNode<Ast.IdentifierExpression> | undefined = invokeExpressionIdentifier(
-        nodeIdMapCollection,
-        nodeId,
-    );
-
-    if (identifierExpressionXorNode === undefined || XorNodeUtils.isContext(identifierExpressionXorNode)) {
+    if (headXorNode === undefined) {
         return undefined;
     }
 
-    const identifierExpression: Ast.IdentifierExpression = identifierExpressionXorNode.node;
+    const identifierExpressionXorNode: AstXorNode<Ast.IdentifierExpression> | undefined = identifierExpressionHead(
+        invokeExprXorNode,
+        headXorNode,
+    );
 
-    return identifierExpression.inclusiveConstant === undefined
-        ? identifierExpression.identifier.literal
-        : identifierExpression.inclusiveConstant.constantKind + identifierExpression.identifier.literal;
+    if (identifierExpressionXorNode !== undefined) {
+        const identifierExpression: Ast.IdentifierExpression = identifierExpressionXorNode.node;
+
+        return identifierExpression.inclusiveConstant === undefined
+            ? identifierExpression.identifier.literal
+            : identifierExpression.inclusiveConstant.constantKind + identifierExpression.identifier.literal;
+    }
+
+    // A SectionAccessExpression head which is still being parsed is treated as having no name.
+    if (!XorNodeUtils.isAstChecked<Ast.SectionAccessExpression>(headXorNode, Ast.NodeKind.SectionAccessExpression)) {
+        return undefined;
+    }
+
+    const sectionAccessExpression: Ast.SectionAccessExpression = headXorNode.node;
+
+    return (
+        sectionAccessExpression.sectionIdentifier.literal +
+        sectionAccessExpression.bangConstant.constantKind +
+        sectionAccessExpression.memberIdentifier.literal
+    );
 }
 
 // Unboxes the node if it's a identifier
