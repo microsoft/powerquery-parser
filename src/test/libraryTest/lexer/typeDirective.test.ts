@@ -7,13 +7,10 @@ import { expect } from "chai";
 import { DefaultSettings, Language, Lexer, ResultUtils } from "../../..";
 
 function assertGetLexerSnapshot(settings: typeof DefaultSettings, text: string): Lexer.LexerSnapshot {
-    const triedLex: Lexer.TriedLex = Lexer.tryLex(settings, text);
+    const triedLex: Lexer.TriedLexSnapshot = Lexer.tryLexSnapshot(settings, text);
     ResultUtils.assertIsOk(triedLex);
 
-    const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(triedLex.value);
-    ResultUtils.assertIsOk(triedSnapshot);
-
-    return triedSnapshot.value;
+    return triedLex.value;
 }
 
 describe("Lexer type directives", () => {

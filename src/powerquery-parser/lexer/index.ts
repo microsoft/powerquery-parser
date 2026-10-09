@@ -4,6 +4,7 @@
 import * as LexError from "./error";
 
 export { LexError };
+export * from "./directLexer";
 export * from "./lexer";
 export * from "./lexerSnapshot";
 export * from "./lexSettings";

@@ -37,13 +37,12 @@ export class LexerSnapshot {
         tokens: ReadonlyArray<Token.Token>,
         comments: ReadonlyArray<Comment.TComment>,
         lineTerminators: ReadonlyArray<LineTerminator>,
-        precedingDirectivesByLineNumber: ReadonlyMap<number, ReadonlyArray<Comment.TDirective>>,
     ) {
         this.text = text;
         this.tokens = tokens;
         this.comments = comments;
         this.lineTerminators = lineTerminators;
-        this.precedingDirectivesByLineNumber = precedingDirectivesByLineNumber;
+        this.precedingDirectivesByLineNumber = createPrecedingDirectivesByLineNumber(comments);
     }
 
     public static graphemePositionStartFrom(
@@ -275,13 +274,7 @@ function createSnapshot(state: Lexer.State): LexerSnapshot {
         flatIndex += 1;
     }
 
-    return new LexerSnapshot(
-        text,
-        tokens,
-        comments,
-        flattenedLines.lineTerminators,
-        createPrecedingDirectivesByLineNumber(comments),
-    );
+    return new LexerSnapshot(text, tokens, comments, flattenedLines.lineTerminators);
 }
 
 function createPrecedingDirectivesByLineNumber(
@@ -650,7 +643,7 @@ interface FlatLineCollection {
     readonly tokenEnd: FlatLineToken | undefined;
 }
 
-interface LineTerminator {
+export interface LineTerminator {
     readonly codeUnit: number;
     readonly text: string;
 }
