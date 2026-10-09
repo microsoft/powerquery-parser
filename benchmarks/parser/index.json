@@ -1,0 +1,645 @@
+{
+  "baselineRevision": "99b7fd7",
+  "scope": "CPU-bound parsing optimization; direct lexer from baseline is unchanged",
+  "recordedAt": "2026-10-09T01:47:52.403Z",
+  "retainedChanges": [
+    "Bounded checkpoint rollback",
+    "Indexed diagnostic line bounds",
+    "Direct construction of successful non-root identifier, literal and constant leaves"
+  ],
+  "method": {
+    "runtime": "v22.22.0",
+    "cpu": "AMD EPYC 7763 64-Core Processor                ",
+    "platform": "Windows_NT 10.0.26200",
+    "files": 7,
+    "warmupsPerFile": 2,
+    "samplesPerPhasePerFile": 12,
+    "outliers": "Drop one minimum and maximum, average remaining 10",
+    "modes": [
+      "Repeated parsing of one snapshot (cache may be warm)",
+      "Fresh snapshot per parse, lexing excluded from parse timer"
+    ],
+    "timers": "process.hrtime.bigint; natural garbage collection; sequential runs, no parallel benchmark processes",
+    "reproduction": "npm run build; node lib\\test\\scripts\\benchmarkLexParse.js Q:\\src\\DataConnectors 7 12 > results.json"
+  },
+  "attempts": [
+    {
+      "file": "00-baseline.json",
+      "name": "Baseline",
+      "description": "Parser implementation at 99b7fd7; updated measurement harness only.",
+      "aggregateLexMs": 347.39288,
+      "aggregateReusedParseMs": 4113.313340000001,
+      "aggregateFreshParseMs": 4340.969580000001,
+      "allParsesSucceeded": true
+    },
+    {
+      "file": "01-bounded-rollback.json",
+      "name": "Attempt 1: bounded checkpoint rollback",
+      "description": "Iterate only IDs allocated after the checkpoint; preserve AST-before-context deletion order. No full-map scans or sorting.",
+      "aggregateLexMs": 325.52425,
+      "aggregateReusedParseMs": 2185.2207499999995,
+      "aggregateFreshParseMs": 2441.85392,
+      "allParsesSucceeded": true
+    },
+    {
+      "file": "02-bounded-rollback-indexed-lines.json",
+      "name": "Attempt 2: add indexed line bounds",
+      "description": "Attempt 1 plus O(1) diagnostic line bounds using token start/end line numbers instead of a document-prefix scan.",
+      "aggregateLexMs": 327.71439,
+      "aggregateReusedParseMs": 2060.14971,
+      "aggregateFreshParseMs": 2326.76002,
+      "allParsesSucceeded": true
+    },
+    {
+      "file": "04-candidate-isolated-repeat.json",
+      "name": "Candidate separate-process repeat",
+      "description": "Same candidate as attempt 2, no additional optimization.",
+      "aggregateLexMs": 329.46899999999994,
+      "aggregateReusedParseMs": 2154.15507,
+      "aggregateFreshParseMs": 2328.7978500000004,
+      "allParsesSucceeded": true
+    },
+    {
+      "file": "05-baseline-isolated-repeat.json",
+      "name": "Baseline separate-process repeat",
+      "description": "Saved compiled 99b7fd7 library, same updated compiled harness, run after candidate to reverse initial execution order.",
+      "aggregateLexMs": 330.63596,
+      "aggregateReusedParseMs": 4066.4824300000005,
+      "aggregateFreshParseMs": 4351.874929999999,
+      "allParsesSucceeded": true
+    },
+    {
+      "file": "06-before-child-lists.json",
+      "name": "Round 2 baseline",
+      "status": "baseline",
+      "description": "Bounded rollback and indexed diagnostic lines; no child-list or leaf changes.",
+      "aggregateLexMs": 332.05573,
+      "aggregateReusedParseMs": 2111.04785,
+      "aggregateFreshParseMs": 2353.1536499999993,
+      "allParsesSucceeded": true
+    },
+    {
+      "file": "07-child-lists.json",
+      "name": "Owned mutable child lists",
+      "status": "rejected",
+      "description": "WeakMap tracks ownership of appendable child arrays, invalidated on collection copy to preserve shared-array isolation. Overhead outweighed saved copying; implementation removed.",
+      "aggregateLexMs": 340.68598,
+      "aggregateReusedParseMs": 3535.05492,
+      "aggregateFreshParseMs": 3206.6341199999997,
+      "allParsesSucceeded": true
+    },
+    {
+      "file": "08-wide-child-lists.json",
+      "name": "Owned mutable child lists only above 32 children",
+      "status": "rejected",
+      "description": "Limit WeakMap ownership and mutable appends to wide lists. Still slower than round 2 baseline; implementation removed.",
+      "aggregateLexMs": 324.91621,
+      "aggregateReusedParseMs": 2211.29439,
+      "aggregateFreshParseMs": 2385.4491599999997,
+      "allParsesSucceeded": true
+    },
+    {
+      "file": "09-direct-leaves.json",
+      "name": "Direct identifier and literal leaves",
+      "status": "superseded",
+      "description": "Register successful non-root single-token identifiers and literals directly as AST nodes, without transient context objects or context-map insert/delete.",
+      "aggregateLexMs": 332.22231000000005,
+      "aggregateReusedParseMs": 2036.4047899999998,
+      "aggregateFreshParseMs": 2268.27288,
+      "allParsesSucceeded": true
+    },
+    {
+      "file": "10-direct-leaves-constants.json",
+      "name": "Extend direct leaves to constants",
+      "status": "retained",
+      "description": "Attempt 09 plus required, optional, closing, and text-matched constants. Roots, token mismatches and constant-text mismatches retain normal contexts; token-consumption failures reconstruct the pending context before rethrowing.",
+      "aggregateLexMs": 330.24776999999995,
+      "aggregateReusedParseMs": 1957.11342,
+      "aggregateFreshParseMs": 2238.26199,
+      "allParsesSucceeded": true
+    },
+    {
+      "file": "11-direct-leaves-constants-repeat.json",
+      "name": "Direct leaf separate-process repeat",
+      "status": "confirmation",
+      "description": "Same production implementation as attempt 10, measured before baseline to reverse initial execution order.",
+      "aggregateLexMs": 341.56921,
+      "aggregateReusedParseMs": 1990.4360100000001,
+      "aggregateFreshParseMs": 2290.13859,
+      "allParsesSucceeded": true
+    },
+    {
+      "file": "12-before-child-lists-repeat.json",
+      "name": "Round 2 baseline separate-process repeat",
+      "status": "confirmation",
+      "description": "Saved compiled pre-child-list implementation (attempt 06), same compiled harness, measured after candidate.",
+      "aggregateLexMs": 349.21563,
+      "aggregateReusedParseMs": 2200.10357,
+      "aggregateFreshParseMs": 2467.0960299999997,
+      "allParsesSucceeded": true
+    },
+    {
+      "file": "14-before-primitive-types.json",
+      "name": "Round 3 baseline",
+      "status": "baseline",
+      "description": "Bounded rollback, indexed lines and direct identifier/literal/constant leaves; no type-lookahead bypass.",
+      "aggregateLexMs": 331.13795999999996,
+      "aggregateReusedParseMs": 2011.4524600000002,
+      "aggregateFreshParseMs": 2250.44099,
+      "allParsesSucceeded": true
+    },
+    {
+      "file": "15-skip-type-speculation.json",
+      "name": "Skip impossible primary-type attempts",
+      "status": "removed",
+      "description": "Non-mutating token/text classification in readType avoids failed primitive contexts, checkpoints and discarded diagnostics. Required types, root reads, EOF, overridden checkpoint/restore hooks and enabled tracing retain the original path.",
+      "aggregateLexMs": 353.4779299999999,
+      "aggregateReusedParseMs": 1970.50218,
+      "aggregateFreshParseMs": 2017.2736599999998,
+      "allParsesSucceeded": true
+    },
+    {
+      "file": "16-skip-type-speculation-repeat.json",
+      "name": "Type-lookahead separate-process repeat",
+      "status": "historical-confirmation",
+      "description": "Same optimization as attempt 15, with the classifier's partial switch rewritten as conditionals to satisfy exhaustive-switch lint. Run before baseline to reverse initial execution order.",
+      "aggregateLexMs": 355.43408999999997,
+      "aggregateReusedParseMs": 1975.5020100000002,
+      "aggregateFreshParseMs": 2012.5298699999998,
+      "allParsesSucceeded": true
+    },
+    {
+      "file": "17-before-primitive-types-repeat.json",
+      "name": "Round 3 baseline separate-process repeat",
+      "status": "confirmation",
+      "description": "Saved compiled attempt-14 parser, same compiled harness, measured after the candidate.",
+      "aggregateLexMs": 352.98923,
+      "aggregateReusedParseMs": 2025.37666,
+      "aggregateFreshParseMs": 2336.60597,
+      "allParsesSucceeded": true
+    }
+  ],
+  "profiles": {
+    "method": "Node inspector CPU profiler; 2 warmups then 4 reused-snapshot parses of Siteimprove; lexing and module startup excluded; self-sample percentages, not wall-time attribution",
+    "baseline": "00-profile-summary.json",
+    "candidate": "02-profile-summary.json",
+    "baselineRollbackSelfPercent": 51.36804942630185,
+    "candidateRollbackSelfPercent": 0.32916392363396973
+  },
+  "isolatedRepeat": {
+    "reusedParseReductionPercent": 47.02657377521241,
+    "freshParseReductionPercent": 46.48748212072352,
+    "files": [
+      {
+        "file": "Siteimprove.pq",
+        "reusedBeforeMs": 2645.7955200000006,
+        "reusedAfterMs": 1246.85375,
+        "reusedReductionPercent": 52.874145391250806,
+        "freshBeforeMs": 2834.6307699999998,
+        "freshAfterMs": 1350.6537,
+        "freshReductionPercent": 52.35168847052344
+      },
+      {
+        "file": "CCHTagetik.pq",
+        "reusedBeforeMs": 878.7762399999999,
+        "reusedAfterMs": 360.29097,
+        "reusedReductionPercent": 59.000829380639594,
+        "freshBeforeMs": 969.76906,
+        "freshAfterMs": 432.30393999999995,
+        "freshReductionPercent": 55.4219702575374
+      },
+      {
+        "file": "CapacityMetricsCES.pq",
+        "reusedBeforeMs": 166.38546000000002,
+        "reusedAfterMs": 181.29784,
+        "reusedReductionPercent": -8.962549972816113,
+        "freshBeforeMs": 167.64802000000003,
+        "freshAfterMs": 170.87971,
+        "freshReductionPercent": -1.9276636849036244
+      },
+      {
+        "file": "Kusto.pq",
+        "reusedBeforeMs": 108.70773999999999,
+        "reusedAfterMs": 90.25147,
+        "reusedReductionPercent": 16.977880323884932,
+        "freshBeforeMs": 109.66821999999999,
+        "freshAfterMs": 94.59973,
+        "freshReductionPercent": 13.740069821503443
+      },
+      {
+        "file": "Databricks.pq",
+        "reusedBeforeMs": 92.25926999999999,
+        "reusedAfterMs": 88.66592,
+        "reusedReductionPercent": 3.8948389684852147,
+        "freshBeforeMs": 95.73828999999999,
+        "freshAfterMs": 95.92724000000001,
+        "freshReductionPercent": -0.1973609514020147
+      },
+      {
+        "file": "LakeHouse.pq",
+        "reusedBeforeMs": 79.12237,
+        "reusedAfterMs": 77.47176999999999,
+        "reusedReductionPercent": 2.086135690829294,
+        "freshBeforeMs": 74.67938000000001,
+        "freshAfterMs": 80.52984,
+        "freshReductionPercent": -7.834103603966702
+      },
+      {
+        "file": "BQECore.pq",
+        "reusedBeforeMs": 95.43583,
+        "reusedAfterMs": 109.32335,
+        "reusedReductionPercent": -14.551683576283668,
+        "freshBeforeMs": 99.74118999999999,
+        "freshAfterMs": 103.90368999999998,
+        "freshReductionPercent": -4.173300920111345
+      }
+    ]
+  },
+  "alternatingConfirmation": {
+    "file": "03-alternating-confirmation.json",
+    "method": "Baseline and candidate in same process; alternate execution order each round; fresh lexing outside timer",
+    "aggregate": {
+      "baseline": {
+        "reusedMs": 4010.79135,
+        "freshMs": 4210.399740000001
+      },
+      "candidate": {
+        "reusedMs": 2377.4788199999994,
+        "freshMs": 2616.7441000000003
+      }
+    },
+    "reusedParseReductionPercent": 40.72294935013263,
+    "freshParseReductionPercent": 37.85045930104489,
+    "caveat": "Both libraries loaded together. Confirms large-file gains but reports smaller-file regressions; module coexistence/JIT/GC effects were not isolated. Retained, not discarded."
+  },
+  "validation": {
+    "differentialComparison": "02-equivalence.json",
+    "cases": 283,
+    "scope": "7 production connectors with CombinatorialParserV2; 51 resource files, 12 additional valid/invalid expressions, and all prefixes of a typed-function section with both built-in parsers.",
+    "preserved": [
+      "ASTs including IDs",
+      "All node maps and sets",
+      "Current parse state and context",
+      "Error kinds, messages and positions"
+    ],
+    "regressionTests": [
+      "checkpoint.test.ts: no full-map keys scan, no-op rollback, gaps, AST/context cleanup, nested rollback and ID reuse",
+      "lexerSnapshotCache.test.ts: indexed versus scanned bounds for mixed newline forms, multiline literals, quoted identifiers, combining characters",
+      "directLeaf.test.ts: no transient leaf contexts on success; IDs, attributes, ranges, parent/child/kind maps and rightmost leaf; root fallback; cancellation at token consumption; missing optional/required/closing constants; constant-text invariant failures."
+    ],
+    "finalDifferentialComparison": "20-retained-selection-equivalence.json"
+  },
+  "interpretation": [
+    "Aggregate benefit is dominated by Siteimprove and CCHTagetik; no universal small-file improvement is claimed.",
+    "Bounded rollback accounts for most of the improvement. The incremental wall-time gain from indexed bounds is smaller and not isolated from run-to-run variance.",
+    "CPU sampling after the changes points to context creation/finalization, node-kind maps and allocation/GC as the next investigation targets.",
+    "No synchronous-parser rewrite, AST shape change, reduced validation, or disabled node maps was introduced."
+  ],
+  "leafInvestigation": {
+    "baseline": "Attempt 06 already includes bounded rollback and indexed line bounds. Percentages below are incremental, not relative to 99b7fd7.",
+    "initialComparison": {
+      "before": "06-before-child-lists.json",
+      "after": "10-direct-leaves-constants.json",
+      "reusedParseReductionPercent": 7.291849400760861,
+      "freshParseReductionPercent": 4.882454658241265,
+      "files": [
+        {
+          "file": "Siteimprove.pq",
+          "reusedBeforeMs": 1223.53773,
+          "reusedAfterMs": 1145.6307700000002,
+          "reusedReductionPercent": 6.367352480417567,
+          "freshBeforeMs": 1379.54182,
+          "freshAfterMs": 1316.0113199999998,
+          "freshReductionPercent": 4.605188409583704
+        },
+        {
+          "file": "CCHTagetik.pq",
+          "reusedBeforeMs": 360.75718000000006,
+          "reusedAfterMs": 315.93251999999995,
+          "reusedReductionPercent": 12.425160879680927,
+          "freshBeforeMs": 440.76705999999996,
+          "freshAfterMs": 412.89223000000004,
+          "freshReductionPercent": 6.3241636069628075
+        },
+        {
+          "file": "CapacityMetricsCES.pq",
+          "reusedBeforeMs": 170.00595,
+          "reusedAfterMs": 160.89872,
+          "reusedReductionPercent": 5.357006622415283,
+          "freshBeforeMs": 176.64628,
+          "freshAfterMs": 163.84517,
+          "freshReductionPercent": 7.246747568077853
+        },
+        {
+          "file": "Kusto.pq",
+          "reusedBeforeMs": 88.68875,
+          "reusedAfterMs": 89.65744000000001,
+          "reusedReductionPercent": -1.0922354864624988,
+          "freshBeforeMs": 94.39525,
+          "freshAfterMs": 93.48035,
+          "freshReductionPercent": 0.9692224979540844
+        },
+        {
+          "file": "Databricks.pq",
+          "reusedBeforeMs": 90.38060000000002,
+          "reusedAfterMs": 81.03441999999998,
+          "reusedReductionPercent": 10.340913868684243,
+          "freshBeforeMs": 89.18127,
+          "freshAfterMs": 84.37386,
+          "freshReductionPercent": 5.3906050003549
+        },
+        {
+          "file": "LakeHouse.pq",
+          "reusedBeforeMs": 75.79891,
+          "reusedAfterMs": 70.01933000000001,
+          "reusedReductionPercent": 7.624885371042929,
+          "freshBeforeMs": 75.86797,
+          "freshAfterMs": 69.81304,
+          "freshReductionPercent": 7.980877832898388
+        },
+        {
+          "file": "BQECore.pq",
+          "reusedBeforeMs": 101.87872999999999,
+          "reusedAfterMs": 93.94022000000002,
+          "reusedReductionPercent": 7.7921171573300585,
+          "freshBeforeMs": 96.754,
+          "freshAfterMs": 97.84602000000001,
+          "freshReductionPercent": -1.1286561795894796
+        }
+      ]
+    },
+    "isolatedRepeat": {
+      "before": "12-before-child-lists-repeat.json",
+      "after": "11-direct-leaves-constants-repeat.json",
+      "reusedParseReductionPercent": 9.529894994897901,
+      "freshParseReductionPercent": 7.172701745217421,
+      "files": [
+        {
+          "file": "Siteimprove.pq",
+          "reusedBeforeMs": 1290.14346,
+          "reusedAfterMs": 1164.8552300000001,
+          "reusedReductionPercent": 9.711185917262247,
+          "freshBeforeMs": 1472.5655500000003,
+          "freshAfterMs": 1333.90384,
+          "freshReductionPercent": 9.41633532035299
+        },
+        {
+          "file": "CCHTagetik.pq",
+          "reusedBeforeMs": 361.0714,
+          "reusedAfterMs": 312.40302,
+          "reusedReductionPercent": 13.47887980050482,
+          "freshBeforeMs": 438.45463,
+          "freshAfterMs": 423.87567,
+          "freshReductionPercent": 3.3250783553135235
+        },
+        {
+          "file": "CapacityMetricsCES.pq",
+          "reusedBeforeMs": 174.55264999999997,
+          "reusedAfterMs": 166.69127,
+          "reusedReductionPercent": 4.503729963423626,
+          "freshBeforeMs": 180.33498,
+          "freshAfterMs": 169.32727,
+          "freshReductionPercent": 6.104034835615365
+        },
+        {
+          "file": "Kusto.pq",
+          "reusedBeforeMs": 100.96544,
+          "reusedAfterMs": 92.03181,
+          "reusedReductionPercent": 8.84820588114112,
+          "freshBeforeMs": 97.89214000000001,
+          "freshAfterMs": 94.96184,
+          "freshReductionPercent": 2.993396609778902
+        },
+        {
+          "file": "Databricks.pq",
+          "reusedBeforeMs": 92.43235999999999,
+          "reusedAfterMs": 86.78204,
+          "reusedReductionPercent": 6.112924088490216,
+          "freshBeforeMs": 94.98058,
+          "freshAfterMs": 92.31319,
+          "freshReductionPercent": 2.8083530338517595
+        },
+        {
+          "file": "LakeHouse.pq",
+          "reusedBeforeMs": 75.20127999999998,
+          "reusedAfterMs": 69.33562,
+          "reusedReductionPercent": 7.799947022178318,
+          "freshBeforeMs": 77.87896,
+          "freshAfterMs": 77.1359,
+          "freshReductionPercent": 0.954121626688389
+        },
+        {
+          "file": "BQECore.pq",
+          "reusedBeforeMs": 105.73697999999999,
+          "reusedAfterMs": 98.33702,
+          "reusedReductionPercent": 6.998459763083828,
+          "freshBeforeMs": 104.98918999999998,
+          "freshAfterMs": 98.62088,
+          "freshReductionPercent": 6.065681619221922
+        }
+      ]
+    },
+    "rejected": [
+      "07-child-lists.json",
+      "08-wide-child-lists.json"
+    ],
+    "equivalenceResults": [
+      "07-child-lists-equivalence.json",
+      "09-direct-leaves-equivalence.json",
+      "10-direct-leaves-constants-equivalence.json"
+    ],
+    "interpretation": [
+      "Both leaf runs show an aggregate improvement in both snapshot modes; no universal per-file speedup is claimed.",
+      "WeakMap bookkeeping for mutable child-list ownership regressed the corpus and was removed, even though broad-list differential checks passed.",
+      "Direct leaves preserve final AST/state/error results. Successful leaves no longer have a transient context visible during tracing or cancellation callbacks; those intermediate callback observations are not claimed equivalent.",
+      "Natural GC, machine load and process allocation history still affect the modest incremental gains; these repeats are not a statistical confidence interval."
+    ]
+  },
+  "typeLookaheadInvestigation": {
+    "status": "removed",
+    "selectionDecision": "User retained the direct lexer, algorithmic efficiency and bookkeeping reductions, and removed type-lookahead speculation. Its implementation and optimization-specific test file were removed; all measurements, profiling and differential results below are historical.",
+    "retainedImplementationMeasurements": [
+      "14-before-primitive-types.json",
+      "17-before-primitive-types-repeat.json"
+    ],
+    "baseline": "Attempt 14 includes all prior retained improvements. Percentages here are incremental, not relative to 99b7fd7.",
+    "initialComparison": {
+      "before": "14-before-primitive-types.json",
+      "after": "15-skip-type-speculation.json",
+      "reusedParseReductionPercent": 2.0358562190428424,
+      "freshParseReductionPercent": 10.360961741991742,
+      "files": [
+        {
+          "file": "Siteimprove.pq",
+          "reusedBeforeMs": 1183.39464,
+          "reusedAfterMs": 1119.82329,
+          "reusedReductionPercent": 5.371948448237009,
+          "freshBeforeMs": 1349.01804,
+          "freshAfterMs": 1184.4076400000001,
+          "freshReductionPercent": 12.202238600159847
+        },
+        {
+          "file": "CCHTagetik.pq",
+          "reusedBeforeMs": 325.57218,
+          "reusedAfterMs": 305.92260999999996,
+          "reusedReductionPercent": 6.035395898998508,
+          "freshBeforeMs": 404.62321,
+          "freshAfterMs": 290.48849,
+          "freshReductionPercent": 28.20765521582412
+        },
+        {
+          "file": "CapacityMetricsCES.pq",
+          "reusedBeforeMs": 167.43208999999996,
+          "reusedAfterMs": 174.59041,
+          "reusedReductionPercent": -4.275357250811378,
+          "freshBeforeMs": 162.26898,
+          "freshAfterMs": 181.25472999999997,
+          "freshReductionPercent": -11.700172146272175
+        },
+        {
+          "file": "Kusto.pq",
+          "reusedBeforeMs": 85.81249,
+          "reusedAfterMs": 98.13395,
+          "reusedReductionPercent": -14.358585795610875,
+          "freshBeforeMs": 87.60696,
+          "freshAfterMs": 91.85411,
+          "freshReductionPercent": -4.847959568509174
+        },
+        {
+          "file": "Databricks.pq",
+          "reusedBeforeMs": 87.26430000000002,
+          "reusedAfterMs": 96.69079000000002,
+          "reusedReductionPercent": -10.80222954862412,
+          "freshBeforeMs": 84.39476,
+          "freshAfterMs": 92.01927000000002,
+          "freshReductionPercent": -9.034340520667413
+        },
+        {
+          "file": "LakeHouse.pq",
+          "reusedBeforeMs": 72.94521,
+          "reusedAfterMs": 73.39714999999998,
+          "reusedReductionPercent": -0.6195609005717841,
+          "freshBeforeMs": 70.43753999999998,
+          "freshAfterMs": 77.37612999999999,
+          "freshReductionPercent": -9.85069893128012
+        },
+        {
+          "file": "BQECore.pq",
+          "reusedBeforeMs": 89.03155000000001,
+          "reusedAfterMs": 101.94398000000001,
+          "reusedReductionPercent": -14.503207009200668,
+          "freshBeforeMs": 92.09149999999998,
+          "freshAfterMs": 99.87329,
+          "freshReductionPercent": -8.450063252308862
+        }
+      ]
+    },
+    "isolatedRepeat": {
+      "before": "17-before-primitive-types-repeat.json",
+      "after": "16-skip-type-speculation-repeat.json",
+      "reusedParseReductionPercent": 2.4624876441500887,
+      "freshParseReductionPercent": 13.86952289606622,
+      "files": [
+        {
+          "file": "Siteimprove.pq",
+          "reusedBeforeMs": 1191.06243,
+          "reusedAfterMs": 1104.73487,
+          "reusedReductionPercent": 7.2479458528466845,
+          "freshBeforeMs": 1369.0310299999999,
+          "freshAfterMs": 1187.0239699999997,
+          "freshReductionPercent": 13.294589823869817
+        },
+        {
+          "file": "CCHTagetik.pq",
+          "reusedBeforeMs": 320.3494,
+          "reusedAfterMs": 322.64245,
+          "reusedReductionPercent": -0.7157965646259971,
+          "freshBeforeMs": 438.8095,
+          "freshAfterMs": 291.34789,
+          "freshReductionPercent": 33.604926511390474
+        },
+        {
+          "file": "CapacityMetricsCES.pq",
+          "reusedBeforeMs": 159.37972999999997,
+          "reusedAfterMs": 175.44780999999998,
+          "reusedReductionPercent": -10.081633341956353,
+          "freshBeforeMs": 166.68648000000002,
+          "freshAfterMs": 172.73618000000002,
+          "freshReductionPercent": -3.6293885382905686
+        },
+        {
+          "file": "Kusto.pq",
+          "reusedBeforeMs": 86.95058,
+          "reusedAfterMs": 94.21270999999999,
+          "reusedReductionPercent": -8.352020193539808,
+          "freshBeforeMs": 98.00003,
+          "freshAfterMs": 87.98088000000001,
+          "freshReductionPercent": 10.22361931930019
+        },
+        {
+          "file": "Databricks.pq",
+          "reusedBeforeMs": 98.08709999999999,
+          "reusedAfterMs": 103.63903,
+          "reusedReductionPercent": -5.660204043141263,
+          "freshBeforeMs": 91.17977,
+          "freshAfterMs": 94.10801,
+          "freshReductionPercent": -3.2115018495878944
+        },
+        {
+          "file": "LakeHouse.pq",
+          "reusedBeforeMs": 75.07166,
+          "reusedAfterMs": 73.61415,
+          "reusedReductionPercent": 1.9414916361247365,
+          "freshBeforeMs": 74.69503999999999,
+          "freshAfterMs": 73.83444,
+          "freshReductionPercent": 1.1521514681563743
+        },
+        {
+          "file": "BQECore.pq",
+          "reusedBeforeMs": 94.47576000000001,
+          "reusedAfterMs": 101.21099000000001,
+          "reusedReductionPercent": -7.129056172715626,
+          "freshBeforeMs": 98.20412,
+          "freshAfterMs": 105.49849999999999,
+          "freshReductionPercent": -7.427773906023484
+        }
+      ]
+    },
+    "profiles": {
+      "method": "Node inspector CPU profiler; 2 warmups then 4 reused-snapshot parses of Siteimprove; lexing and module startup excluded; self-sample percentages, not wall-time attribution",
+      "beforeSummary": "14-before-primitive-types-profile.json",
+      "afterSummary": "18-skip-type-speculation-profile.json",
+      "before": {
+        "samples": 2929,
+        "expectedAnyTokenKindErrorSelfSamples": 90,
+        "expectedAnyTokenKindErrorSelfPercent": 3.0727210652099695
+      },
+      "after": {
+        "samples": 2556,
+        "expectedAnyTokenKindErrorSelfSamples": 0,
+        "expectedAnyTokenKindErrorSelfPercent": 0
+      }
+    },
+    "validation": {
+      "incrementalEquivalence": "15-skip-type-speculation-equivalence.json",
+      "originalBaselineEquivalence": "19-type-lookahead-final-equivalence.json",
+      "casesPerDifferentialRun": 283,
+      "historicalRegressionTest": "typeLookahead.test.ts (removed with the optimization)",
+      "coverage": "Both built-in parsers; primitive and structured types, literal/identifier expressions, quoted/case-sensitive names, malformed inputs, root/non-root and required/fallback reads; complete context state compared with the speculative path forced through a forwarding checkpoint hook; custom hooks, enabled tracing, and pre-cancelled reads."
+    },
+    "developmentFindings": [
+      {
+        "input": "type [a =",
+        "finding": "The first untimed differential check found an EOF-state mismatch. readToken leaves currentToken on the last token at EOF, but checkpoint restoration clears it. Skipping that restoration changed pending-context tokenStart.",
+        "resolution": "Exclude EOF from the bypass instead of changing normalization semantics. Add a focused EOF regression. Timings 15 and 16 include this correction."
+      }
+    ],
+    "interpretation": [
+      "Both runs improve both aggregate parse modes, but reused-snapshot gains are modest (about 2-2.5 percent) and per-file results vary.",
+      "CapacityMetricsCES, Databricks and BQECore are slower in both modes on both runs. The repeat shows approximately 10.1/5.7/7.1 percent reused-snapshot regressions respectively. Initially retained for the aggregate workload benefit, especially fresh parses of Siteimprove and CCHTagetik, then removed by user choice.",
+      "Fresh snapshots benefit more, consistent with avoiding discarded diagnostics and their position/cache work. This is a plausible explanation, not an isolated attribution of all saved wall time.",
+      "Profiles are sampled on Siteimprove only. A zero observed diagnostic self-sample count is not proof that all diagnostic construction has been eliminated.",
+      "No primitive-type leaf expansion, synchronous-parser rewrite, binary-reduction rewrite or tracing API change is included in this attempt."
+    ]
+  }
+}

@@ -63,33 +63,23 @@ export async function restoreCheckpoint(state: ParseState, checkpoint: ParseStat
     const contextState: ParseContext.State = state.contextState;
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
     const backupIdCounter: number = checkpoint.contextStateIdCounter;
+    const latestIdCounter: number = contextState.idCounter;
     contextState.idCounter = backupIdCounter;
 
-    const newContextNodeIds: number[] = [];
-    const newAstNodeIds: number[] = [];
-
-    for (const nodeId of nodeIdMapCollection.astNodeById.keys()) {
-        if (nodeId > backupIdCounter) {
-            newAstNodeIds.push(nodeId);
+    // IDs are allocated monotonically. Visit only the speculative range, preserving
+    // the AST-before-context deletion order and skipping already deleted nodes.
+    for (let nodeId: number = latestIdCounter; nodeId > backupIdCounter; nodeId -= 1) {
+        if (nodeIdMapCollection.astNodeById.has(nodeId)) {
+            const parentId: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
+            const parentWillBeDeleted: boolean = parentId !== undefined && parentId >= backupIdCounter;
+            ParseContextUtils.deleteAst(state.contextState, nodeId, parentWillBeDeleted);
         }
     }
 
-    for (const nodeId of nodeIdMapCollection.contextNodeById.keys()) {
-        if (nodeId > backupIdCounter) {
-            newContextNodeIds.push(nodeId);
+    for (let nodeId: number = latestIdCounter; nodeId > backupIdCounter; nodeId -= 1) {
+        if (nodeIdMapCollection.contextNodeById.has(nodeId)) {
+            ParseContextUtils.deleteContext(state.contextState, nodeId);
         }
-    }
-
-    const reverseNumberSort: (left: number, right: number) => number = (left: number, right: number) => right - left;
-
-    for (const nodeId of newAstNodeIds.sort(reverseNumberSort)) {
-        const parentId: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
-        const parentWillBeDeleted: boolean = parentId !== undefined && parentId >= backupIdCounter;
-        ParseContextUtils.deleteAst(state.contextState, nodeId, parentWillBeDeleted);
-    }
-
-    for (const nodeId of newContextNodeIds.sort(reverseNumberSort)) {
-        ParseContextUtils.deleteContext(state.contextState, nodeId);
     }
 
     if (checkpoint.contextNodeId) {

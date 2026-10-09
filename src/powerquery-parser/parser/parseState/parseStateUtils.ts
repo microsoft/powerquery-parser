@@ -299,6 +299,29 @@ export function assertGetContextNodeMetadata(state: ParseState): ContextNodeMeta
     };
 }
 
+// A successful single-token leaf can be registered without a temporary context.
+// Root nodes and failing reads still use the normal context lifecycle.
+export function assertGetLeafMetadata(state: ParseState): ContextNodeMetadata {
+    const parent: ParseContext.TNode = Assert.asDefined(state.currentContextNode);
+    const tokenIndex: number = state.tokenIndex - 1;
+    const token: Token.Token = assertGetTokenAt(state, tokenIndex);
+
+    return {
+        id: ParseContextUtils.nextId(state.contextState),
+        attributeIndex: ParseContextUtils.nextAttributeIndex(parent),
+        tokenRange: {
+            tokenIndexStart: tokenIndex,
+            tokenIndexEnd: tokenIndex,
+            positionStart: token.positionStart,
+            positionEnd: token.positionEnd,
+        },
+    };
+}
+
+export function addLeaf(state: ParseState, astNode: Ast.TNode): void {
+    ParseContextUtils.addLeaf(state.contextState, Assert.asDefined(state.currentContextNode), astNode);
+}
+
 export function assertGetTokenAt(state: ParseState, tokenIndex: number): Token.Token {
     const lexerSnapshot: LexerSnapshot = state.lexerSnapshot;
     const token: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];

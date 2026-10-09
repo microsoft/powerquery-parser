@@ -662,7 +662,7 @@ interface LineBounds {
     readonly substringPositionEnd: number;
 }
 
-// Finds the line boundaries for a token by scanning lineTerminators.
+// Token positions already identify the relevant entries in lineTerminators.
 // substringPositionStart: first character of the line containing positionStart.
 // substringPositionEnd: end of the line terminator at or after positionEnd (or text.length for the last line).
 function findLineBounds(
@@ -670,22 +670,13 @@ function findLineBounds(
     lineTerminators: ReadonlyArray<LineTerminator>,
     token: Token.Token | FlatLineToken,
 ): LineBounds {
-    const positionStart: Token.TokenPosition = token.positionStart;
-    const positionEnd: Token.TokenPosition = token.positionEnd;
+    const precedingTerminator: LineTerminator | undefined = lineTerminators[token.positionStart.lineNumber - 1];
+    const endingTerminator: LineTerminator | undefined = lineTerminators[token.positionEnd.lineNumber];
 
-    let substringPositionStart: number = 0;
-    let substringPositionEnd: number = text.length;
-
-    for (const lineTerminator of lineTerminators) {
-        if (lineTerminator.codeUnit < positionStart.codeUnit) {
-            substringPositionStart = lineTerminator.codeUnit + lineTerminator.text.length;
-        }
-
-        if (lineTerminator.codeUnit >= positionEnd.codeUnit) {
-            substringPositionEnd = lineTerminator.codeUnit + lineTerminator.text.length;
-            break;
-        }
-    }
+    const substringPositionStart: number =
+        precedingTerminator === undefined ? 0 : precedingTerminator.codeUnit + precedingTerminator.text.length;
+    const substringPositionEnd: number =
+        endingTerminator === undefined ? text.length : endingTerminator.codeUnit + endingTerminator.text.length;
 
     return { substringPositionStart, substringPositionEnd };
 }

@@ -1,0 +1,130 @@
+{
+  "samples": 2556,
+  "summary": [
+    {
+      "frame": "linkChild (contextUtils.js:175)",
+      "hits": 403,
+      "selfSamplePercent": 15.77
+    },
+    {
+      "frame": "trackNodeIdByNodeKind (contextUtils.js:269)",
+      "hits": 357,
+      "selfSamplePercent": 13.97
+    },
+    {
+      "frame": "(garbage collector) (:0)",
+      "hits": 263,
+      "selfSamplePercent": 10.29
+    },
+    {
+      "frame": "addLeaf (contextUtils.js:166)",
+      "hits": 143,
+      "selfSamplePercent": 5.59
+    },
+    {
+      "frame": "endContext (contextUtils.js:145)",
+      "hits": 125,
+      "selfSamplePercent": 4.89
+    },
+    {
+      "frame": "(program) (:0)",
+      "hits": 116,
+      "selfSamplePercent": 4.54
+    },
+    {
+      "frame": "deleteContext (contextUtils.js:221)",
+      "hits": 57,
+      "selfSamplePercent": 2.23
+    },
+    {
+      "frame": "readExpression (naiveParseSteps.js:292)",
+      "hits": 48,
+      "selfSamplePercent": 1.88
+    },
+    {
+      "frame": "startContext (contextUtils.js:68)",
+      "hits": 44,
+      "selfSamplePercent": 1.72
+    },
+    {
+      "frame": "addLeaf (parseStateUtils.js:270)",
+      "hits": 44,
+      "selfSamplePercent": 1.72
+    },
+    {
+      "frame": "readOperatorsAndOperands (readOperatorsAndOperands.js:19)",
+      "hits": 43,
+      "selfSamplePercent": 1.68
+    },
+    {
+      "frame": "readUnaryExpression (combinatorialParserV2.js:112)",
+      "hits": 40,
+      "selfSamplePercent": 1.56
+    },
+    {
+      "frame": "readCsvArray (naiveParseSteps.js:1765)",
+      "hits": 38,
+      "selfSamplePercent": 1.49
+    },
+    {
+      "frame": "readTokenKindAsConstant (naiveParseSteps.js:2031)",
+      "hits": 37,
+      "selfSamplePercent": 1.45
+    },
+    {
+      "frame": "startContext (parseStateUtils.js:87)",
+      "hits": 35,
+      "selfSamplePercent": 1.37
+    },
+    {
+      "frame": "readKeyValuePair (naiveParseSteps.js:1810)",
+      "hits": 34,
+      "selfSamplePercent": 1.33
+    },
+    {
+      "frame": "readBinOpExpression (combinatorialParserV2.js:89)",
+      "hits": 33,
+      "selfSamplePercent": 1.29
+    },
+    {
+      "frame": "readTokenKindAsConstantInternal (naiveParseSteps.js:2044)",
+      "hits": 32,
+      "selfSamplePercent": 1.25
+    },
+    {
+      "frame": "readWrapped (naiveParseSteps.js:1948)",
+      "hits": 27,
+      "selfSamplePercent": 1.06
+    },
+    {
+      "frame": "deleteFromKindMap (contextUtils.js:278)",
+      "hits": 25,
+      "selfSamplePercent": 0.98
+    },
+    {
+      "frame": "readTokenKindAsConstantOrUndefined (naiveParseSteps.js:2076)",
+      "hits": 25,
+      "selfSamplePercent": 0.98
+    },
+    {
+      "frame": "endContext (parseStateUtils.js:106)",
+      "hits": 24,
+      "selfSamplePercent": 0.94
+    },
+    {
+      "frame": "readNullCoalescingExpression (naiveParseSteps.js:285)",
+      "hits": 23,
+      "selfSamplePercent": 0.9
+    },
+    {
+      "frame": "combineOperatorsAndOperands (combineOperatorsAndOperands.js:15)",
+      "hits": 22,
+      "selfSamplePercent": 0.86
+    },
+    {
+      "frame": "readRecursivePrimaryExpression (naiveParseSteps.js:660)",
+      "hits": 20,
+      "selfSamplePercent": 0.78
+    }
+  ]
+}

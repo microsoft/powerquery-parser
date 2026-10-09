@@ -41,6 +41,39 @@ function assertCachedMatchesUncached(text: string): Lexer.LexerSnapshot {
 }
 
 describe("LexerSnapshot.graphemePositionStartFrom cache", () => {
+    it("matches scanned line bounds across mixed newlines and multiline tokens", () => {
+        const text: string = 'let\n\n  n\u0303 = "\u4e16\r\n\u754c",\u2028  #"multi\u2029line" = 1\r\nin n\u0303';
+        const snapshot: Lexer.LexerSnapshot = assertGetLexerSnapshot(text);
+
+        for (const token of snapshot.tokens) {
+            let start: number = 0;
+            let end: number = text.length;
+
+            for (const terminator of snapshot.lineTerminators) {
+                if (terminator.codeUnit < token.positionStart.codeUnit) {
+                    start = terminator.codeUnit + terminator.text.length;
+                }
+
+                if (terminator.codeUnit >= token.positionEnd.codeUnit) {
+                    end = terminator.codeUnit + terminator.text.length;
+                    break;
+                }
+            }
+
+            const expected: StringUtils.GraphemePosition = StringUtils.graphemePositionFrom(
+                text.substring(start, end),
+                token.positionStart.lineCodeUnit,
+                token.positionStart.lineNumber,
+                token.positionEnd.codeUnit,
+            );
+
+            expect(Lexer.LexerSnapshot.graphemePositionStartFrom(text, snapshot.lineTerminators, token)).to.deep.equal(
+                expected,
+            );
+            expect(snapshot.graphemePositionStartFrom(token)).to.deep.equal(expected);
+        }
+    });
+
     describe("cached matches uncached", () => {
         it("ASCII single line", () => {
             assertCachedMatchesUncached("let x = 1");

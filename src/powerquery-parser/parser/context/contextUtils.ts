@@ -88,19 +88,8 @@ export function startContext<T extends Ast.TNode>(
 
     // If a parent context Node exists, update the parent/child mapping attributes and attributeCounter.
     if (parentNode) {
-        const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
-        const parentId: number = parentNode.id;
-
         attributeIndex = nextAttributeIndex(parentNode);
-        nodeIdMapCollection.parentIdById.set(nodeId, parentId);
-
-        const existingChildren: ReadonlyArray<number> | undefined = childIdsById.get(parentId);
-
-        if (existingChildren) {
-            childIdsById.set(parentId, [...existingChildren, nodeId]);
-        } else {
-            childIdsById.set(parentId, [nodeId]);
-        }
+        linkChild(nodeIdMapCollection, parentNode.id, nodeId);
     }
 
     const contextNode: ParseContext.Node<T> = {
@@ -241,16 +230,36 @@ export function endContext<T extends Ast.TNode>(
 
     // Update rightMostLeaf when applicable
     if (astNode.isLeaf) {
-        if (
-            nodeIdMapCollection.rightMostLeaf === undefined ||
-            nodeIdMapCollection.rightMostLeaf.tokenRange.tokenIndexStart < astNode.tokenRange.tokenIndexStart
-        ) {
-            const unsafeNodeIdMapCollection: TypeScriptUtils.StripReadonly<NodeIdMap.Collection> = nodeIdMapCollection;
-            unsafeNodeIdMapCollection.rightMostLeaf = astNode;
-        }
+        updateRightMostLeaf(nodeIdMapCollection, astNode);
     }
 
     return parentNode;
+}
+
+export function addLeaf(state: ParseContext.State, parent: ParseContext.TNode, astNode: Ast.TNode): void {
+    Assert.isTrue(astNode.isLeaf, "expected a leaf node");
+    const collection: NodeIdMap.Collection = state.nodeIdMapCollection;
+    linkChild(collection, parent.id, astNode.id);
+    trackNodeIdByNodeKind(collection.idsByNodeKind, astNode.kind, astNode.id);
+    SetUtils.assertAddUnique(collection.leafIds, astNode.id);
+    collection.astNodeById.set(astNode.id, astNode);
+    updateRightMostLeaf(collection, astNode);
+}
+
+function linkChild(collection: NodeIdMap.Collection, parentId: number, childId: number): void {
+    collection.parentIdById.set(childId, parentId);
+    const existing: ReadonlyArray<number> | undefined = collection.childIdsById.get(parentId);
+    collection.childIdsById.set(parentId, existing === undefined ? [childId] : [...existing, childId]);
+}
+
+function updateRightMostLeaf(collection: NodeIdMap.Collection, astNode: Ast.TNode): void {
+    if (
+        collection.rightMostLeaf === undefined ||
+        collection.rightMostLeaf.tokenRange.tokenIndexStart < astNode.tokenRange.tokenIndexStart
+    ) {
+        const mutable: TypeScriptUtils.StripReadonly<NodeIdMap.Collection> = collection;
+        mutable.rightMostLeaf = astNode;
+    }
 }
 
 export function deleteAst(state: ParseContext.State, nodeId: number, parentWillBeDeleted: boolean): void {

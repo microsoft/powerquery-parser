@@ -64,19 +64,30 @@ export function readIdentifier(
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
     });
 
-    ParseStateUtils.startContext(state, nodeKind);
+    const directLeaf: boolean =
+        state.currentContextNode !== undefined && ParseStateUtils.isOnTokenKind(state, TokenKind.Identifier);
 
-    const literal: string = readTokenKind(state, TokenKind.Identifier);
+    if (!directLeaf) {
+        ParseStateUtils.startContext(state, nodeKind);
+    }
+
+    const literal: string = directLeaf ? readLeafToken(state, nodeKind) : readTokenKind(state, TokenKind.Identifier);
 
     const identifier: Ast.Identifier = {
-        ...ParseStateUtils.assertGetContextNodeMetadata(state),
+        ...(directLeaf
+            ? ParseStateUtils.assertGetLeafMetadata(state)
+            : ParseStateUtils.assertGetContextNodeMetadata(state)),
         kind: nodeKind,
         isLeaf: true,
         identifierContextKind,
         literal,
     };
 
-    ParseStateUtils.endContext(state, identifier);
+    if (directLeaf) {
+        ParseStateUtils.addLeaf(state, identifier);
+    } else {
+        ParseStateUtils.endContext(state, identifier);
+    }
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return identifier;
@@ -1103,7 +1114,13 @@ export function readLiteralExpression(
     });
 
     state.cancellationToken?.throwIfCancelled();
-    ParseStateUtils.startContext(state, nodeKind);
+
+    const directLiteralKind: Ast.LiteralKind | undefined = AstUtils.literalKindFrom(state.currentTokenKind);
+    const directLeaf: boolean = state.currentContextNode !== undefined && directLiteralKind !== undefined;
+
+    if (!directLeaf) {
+        ParseStateUtils.startContext(state, nodeKind);
+    }
 
     const expectedTokenKinds: ReadonlyArray<TokenKind> = [
         TokenKind.HexLiteral,
@@ -1131,22 +1148,28 @@ export function readLiteralExpression(
     }
 
     const literalKind: Ast.LiteralKind = Assert.asDefined(
-        AstUtils.literalKindFrom(state.currentTokenKind),
+        directLiteralKind,
         `couldn't convert TokenKind into LiteralKind`,
         { currentTokenKind: state.currentTokenKind },
     );
 
-    const literal: string = readToken(state);
+    const literal: string = directLeaf ? readLeafToken(state, nodeKind) : readToken(state);
 
     const literalExpression: Ast.LiteralExpression = {
-        ...ParseStateUtils.assertGetContextNodeMetadata(state),
+        ...(directLeaf
+            ? ParseStateUtils.assertGetLeafMetadata(state)
+            : ParseStateUtils.assertGetContextNodeMetadata(state)),
         kind: nodeKind,
         isLeaf: true,
         literal,
         literalKind,
     };
 
-    ParseStateUtils.endContext(state, literalExpression);
+    if (directLeaf) {
+        ParseStateUtils.addLeaf(state, literalExpression);
+    } else {
+        ParseStateUtils.endContext(state, literalExpression);
+    }
 
     trace.exit({
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
@@ -3592,6 +3615,17 @@ async function readWrapped<
 // ---------- Helper functions (read) ----------
 // ---------------------------------------------
 
+function readLeafToken(state: ParseState, nodeKind: Ast.NodeKind): string {
+    try {
+        return readToken(state);
+    } catch (caught: unknown) {
+        // readToken checks cancellation and bounds before advancing. Preserve the
+        // pending leaf context when a validated read nevertheless fails.
+        ParseStateUtils.startContext(state, nodeKind);
+        throw caught;
+    }
+}
+
 export function readToken(state: ParseState): string {
     state.cancellationToken?.throwIfCancelled();
 
@@ -3629,7 +3663,11 @@ export function readClosingTokenKindAsConstant<C extends Constant.TConstant>(
     correlationId: number | undefined,
 ): Ast.TConstant & Ast.IConstant<C> {
     state.cancellationToken?.throwIfCancelled();
-    ParseStateUtils.startContext(state, Ast.NodeKind.Constant);
+    const directLeaf: boolean = canReadConstantAsLeaf(state, tokenKind, constantKind);
+
+    if (!directLeaf) {
+        ParseStateUtils.startContext(state, Ast.NodeKind.Constant);
+    }
 
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
@@ -3657,6 +3695,7 @@ export function readClosingTokenKindAsConstant<C extends Constant.TConstant>(
         tokenKind,
         constantKind,
         trace.id,
+        directLeaf,
     );
 
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
@@ -3678,13 +3717,18 @@ export function readTokenKindAsConstant<C extends Constant.TConstant>(
     );
 
     state.cancellationToken?.throwIfCancelled();
-    ParseStateUtils.startContext(state, Ast.NodeKind.Constant);
+    const directLeaf: boolean = canReadConstantAsLeaf(state, tokenKind, constantKind);
+
+    if (!directLeaf) {
+        ParseStateUtils.startContext(state, Ast.NodeKind.Constant);
+    }
 
     const result: Ast.TConstant & Ast.IConstant<C> = readTokenKindAsConstantInternal(
         state,
         tokenKind,
         constantKind,
         trace.id,
+        directLeaf,
     );
 
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
@@ -3693,12 +3737,13 @@ export function readTokenKindAsConstant<C extends Constant.TConstant>(
 }
 
 // Shares logic common to readTokenKindAsConstant and readClosingTokenKindAsConstant.
-// Assumes the caller started a context for `Ast.NodeKInd.Constant`.
+// Failed or root reads retain the normal context lifecycle.
 function readTokenKindAsConstantInternal<C extends Constant.TConstant>(
     state: ParseState,
     tokenKind: TokenKind,
     constantKind: C,
     correlationId: number,
+    directLeaf: boolean,
 ): Ast.TConstant & Ast.IConstant<C> {
     const trace: Trace = state.traceManager.entry(
         NaiveTraceConstant.Parse,
@@ -3718,17 +3763,23 @@ function readTokenKindAsConstantInternal<C extends Constant.TConstant>(
         throw error;
     }
 
-    const tokenData: string = readToken(state);
+    const tokenData: string = directLeaf ? readLeafToken(state, Ast.NodeKind.Constant) : readToken(state);
     Assert.isTrue(tokenData === constantKind, `expected tokenData to equal constantKind`, { tokenData, constantKind });
 
     const constant: Ast.TConstant & Ast.IConstant<C> = {
-        ...ParseStateUtils.assertGetContextNodeMetadata(state),
+        ...(directLeaf
+            ? ParseStateUtils.assertGetLeafMetadata(state)
+            : ParseStateUtils.assertGetContextNodeMetadata(state)),
         kind: Ast.NodeKind.Constant,
         isLeaf: true,
         constantKind,
     };
 
-    ParseStateUtils.endContext(state, constant);
+    if (directLeaf) {
+        ParseStateUtils.addLeaf(state, constant);
+    } else {
+        ParseStateUtils.endContext(state, constant);
+    }
 
     trace.exit({
         [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
@@ -3747,9 +3798,13 @@ export function readTokenKindAsConstantOrUndefined<ConstantKind extends Constant
 
     if (ParseStateUtils.isOnTokenKind(state, tokenKind)) {
         const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
-        ParseStateUtils.startContext(state, nodeKind);
+        const directLeaf: boolean = canReadConstantAsLeaf(state, tokenKind, constantKind);
 
-        const tokenData: string = readToken(state);
+        if (!directLeaf) {
+            ParseStateUtils.startContext(state, nodeKind);
+        }
+
+        const tokenData: string = directLeaf ? readLeafToken(state, nodeKind) : readToken(state);
 
         Assert.isTrue(tokenData === constantKind, `expected tokenData to equal constantKind`, {
             tokenData,
@@ -3757,13 +3812,19 @@ export function readTokenKindAsConstantOrUndefined<ConstantKind extends Constant
         });
 
         const constant: Ast.TConstant & Ast.IConstant<ConstantKind> = {
-            ...ParseStateUtils.assertGetContextNodeMetadata(state),
+            ...(directLeaf
+                ? ParseStateUtils.assertGetLeafMetadata(state)
+                : ParseStateUtils.assertGetContextNodeMetadata(state)),
             kind: nodeKind,
             isLeaf: true,
             constantKind,
         };
 
-        ParseStateUtils.endContext(state, constant);
+        if (directLeaf) {
+            ParseStateUtils.addLeaf(state, constant);
+        } else {
+            ParseStateUtils.endContext(state, constant);
+        }
 
         return constant;
     } else {
@@ -3798,18 +3859,29 @@ function readConstantKindOrUndefined<ConstantKind extends Constant.TConstant>(
 ): (Ast.TConstant & Ast.IConstant<ConstantKind>) | undefined {
     if (ParseStateUtils.isOnConstantKind(state, constantKind)) {
         const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
-        ParseStateUtils.startContext(state, nodeKind);
+        const directLeaf: boolean = state.currentContextNode !== undefined;
 
-        readToken(state);
+        if (directLeaf) {
+            readLeafToken(state, nodeKind);
+        } else {
+            ParseStateUtils.startContext(state, nodeKind);
+            readToken(state);
+        }
 
         const constant: Ast.TConstant & Ast.IConstant<ConstantKind> = {
-            ...ParseStateUtils.assertGetContextNodeMetadata(state),
+            ...(directLeaf
+                ? ParseStateUtils.assertGetLeafMetadata(state)
+                : ParseStateUtils.assertGetContextNodeMetadata(state)),
             kind: nodeKind,
             isLeaf: true,
             constantKind,
         };
 
-        ParseStateUtils.endContext(state, constant);
+        if (directLeaf) {
+            ParseStateUtils.addLeaf(state, constant);
+        } else {
+            ParseStateUtils.endContext(state, constant);
+        }
 
         return constant;
     } else {
@@ -3817,6 +3889,14 @@ function readConstantKindOrUndefined<ConstantKind extends Constant.TConstant>(
 
         return undefined;
     }
+}
+
+function canReadConstantAsLeaf(state: ParseState, tokenKind: TokenKind, constantKind: Constant.TConstant): boolean {
+    return (
+        state.currentContextNode !== undefined &&
+        ParseStateUtils.isOnTokenKind(state, tokenKind) &&
+        state.lexerSnapshot.tokens[state.tokenIndex].data === constantKind
+    );
 }
 
 function readLiteralAttributes(

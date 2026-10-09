@@ -1,0 +1,10 @@
+{
+  "comparedCases": 283,
+  "equal": true,
+  "compared": [
+    "AST including node IDs",
+    "all node-ID maps and sets",
+    "parse position and context",
+    "error kind, message and positions"
+  ]
+}
