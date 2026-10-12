@@ -21,6 +21,8 @@ The most common way to consume the project is to interact with the helper functi
 
 The parser started off as a naive recursive descent parser with limited backtracking. It mostly followed the [official specification](https://docs.microsoft.com/en-us/powerquery-m/power-query-m-language-specification) released in October 2016. Deviations from the specification should be marked down in [specification.md](specification.md). A combinatorial parser has since been added which uses the naive parser as its base.
 
+The default checkpoint restore visits only node IDs allocated since the checkpoint rather than scanning previously parsed nodes. It preserves the existing deletion order and restores the token position and current context even when no nodes were allocated.
+
 ### Style
 
 This project uses [prettier](https://github.com/prettier/prettier) as the primary source of style enforcement. Additional style requirements are located in [style.md](style.md).
