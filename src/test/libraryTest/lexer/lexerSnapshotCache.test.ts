@@ -10,12 +10,8 @@ import { ArrayUtils } from "../../../powerquery-parser/common";
 function assertGetLexerSnapshot(text: string): Lexer.LexerSnapshot {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
     ResultUtils.assertIsOk(triedLex);
-    const state: Lexer.State = triedLex.value;
 
-    const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(state);
-    ResultUtils.assertIsOk(triedSnapshot);
-
-    return triedSnapshot.value;
+    return triedLex.value;
 }
 
 // Asserts that for every token in the snapshot, the cached instance method produces

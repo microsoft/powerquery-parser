@@ -6,7 +6,34 @@ A parser for the [Power Query/M](https://docs.microsoft.com/en-us/power-query/) 
 
 ## How to use
 
-The most common way to consume the project is to interact with the helper functions found in [taskUtils.ts](src/powerquery-parser/task/taskUtils.ts). There are all-in-one functions, such as `tryLexParse`, which does a full pass on a given document. There are also incremental functions, such as `tryLex` and `tryParse`, which perform one step at a time. Minimal code samples can be found in [example.ts](src/example.ts).
+The most common way to consume the project is to interact with the helper functions found in [taskUtils.ts](src/powerquery-parser/task/taskUtils.ts). There are all-in-one functions, such as `tryLexParse`, which does a full pass on a given document. There are also separate lexing and parsing steps, `tryLex` and `tryParse`. Minimal code samples can be found in [example.ts](src/example.ts).
+
+### Lexing
+
+`Lexer.tryLex(settings, text)` scans the complete document directly into a `LexerSnapshot`, emitting final tokens, comments, and optional type directives. `TaskUtils.tryLex` and `TaskUtils.tryLexParse` use this same lexer. Task success objects and parser APIs are unchanged.
+
+Comments remain separate from grammar tokens. Snapshots derive directive associations from the comments unless an explicit map is supplied. Comment text, source positions, directive-to-comment references, and existing directive attachment rules are preserved.
+
+**Breaking migration:** `Lexer.TriedLex` now contains a `LexerSnapshot`, not a line-state object. Apply edits to your document text and call `Lexer.tryLex` again with the complete updated text:
+
+```typescript
+import { DefaultSettings, Lexer, ResultUtils } from "@microsoft/powerquery-parser";
+
+const updatedDocumentText = "let x = 2 in x";
+const result = Lexer.tryLex(DefaultSettings, updatedDocumentText);
+if (ResultUtils.isOk(result)) {
+    const snapshot = result.value;
+    console.log(snapshot.tokens, snapshot.comments);
+} else {
+    console.error(result.error.message);
+}
+```
+
+The incremental APIs (`tryAppendLine`, `tryUpdateLine`, `tryUpdateRange`, `tryDeleteLine`), line-state types (`TLine` and its variants, `LineKind`, `LineMode`, `Range`, `RangePosition`), state/line/token equality helpers, and line-error predicates/maps are removed. The exported `State` interface now describes document-scanning state rather than editable lines. `Lexer.trySnapshot` and `TriedLexerSnapshot` are also removed: there is no intermediate line-token flattening or multiline-token collapse. The `LineToken`, `LineTokenKind`, and `LineTokenKindAdditions` types are removed in favor of final `Token` values and the separate comments collection. There is no separate direct lexer or `tryLexSnapshot` API.
+
+Malformed input returns the **first lexical diagnostic directly**, wrapped in `LexError`, using `ExpectedError`, `UnexpectedReadError`, `UnexpectedEofError`, or `UnterminatedMultilineTokenError`. It does not return partial state, collect later line errors, or re-lex for diagnostics. The incremental-only `BadLineNumberError`, `BadRangeError`, `BadStateError`, `EndOfStreamError`, and `ErrorLineMapError` types (and their associated enums/localization helpers) are removed. Diagnostic messages remain localized; positions are zero-based and now always include the absolute UTF-16 `codeUnit` offset, along with line offsets and grapheme columns. An invalid code unit inside a grapheme reports its containing column rather than an invariant failure. Unterminated-token errors point to the opening delimiter.
+
+Cancellation remains supported and returns `CommonError` wrapping `CancellationError`. It is checked at entry and during scanning, including multiline tokens; polling granularity and check counts differ from the retired incremental pipeline. Other unexpected exceptions remain common errors.
 
 ## Related projects
 

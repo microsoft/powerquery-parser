@@ -4,252 +4,193 @@
 import "mocha";
 import { expect } from "chai";
 
-import { DefaultSettings, Lexer, ResultUtils } from "../../..";
-import { ArrayUtils } from "../../../powerquery-parser/common";
+import { DefaultSettings, Lexer, ResultUtils, StringUtils, Task, TaskUtils } from "../../..";
 
-function assertBadLineNumberKind(lineNumber: number, expectedKind: Lexer.LexError.BadLineNumberKind): void {
-    const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, `foo`);
-    ResultUtils.assertIsOk(triedLex);
+function assertGetLexError(text: string, locale: string = DefaultSettings.locale): Lexer.LexError.LexError {
+    const triedLex: Lexer.TriedLex = Lexer.tryLex({ ...DefaultSettings, locale }, text);
+    ResultUtils.assertIsError(triedLex);
+    expect(triedLex.error).to.be.instanceOf(Error);
+    expect(Lexer.LexError.isLexError(triedLex.error)).to.equal(true);
 
-    const triedUpdate: Lexer.TriedLex = Lexer.tryUpdateLine(triedLex.value, lineNumber, `bar`);
-    ResultUtils.assertIsError(triedUpdate);
-
-    const error: Lexer.LexError.LexError = triedUpdate.error;
-
-    if (!(error.innerError instanceof Lexer.LexError.BadLineNumberError)) {
-        throw new Error(`AssertFailed: error.innerError instanceof LexError.BadLineNumber: ${JSON.stringify(error)}`);
+    if (!Lexer.LexError.isLexError(triedLex.error)) {
+        throw new Error("Expected a lexical diagnostic, not a common error");
     }
 
-    const innerError: Lexer.LexError.BadLineNumberError = error.innerError;
+    expect(Lexer.LexError.isTLexError(triedLex.error)).to.equal(true);
+    expect(Lexer.LexError.isTInnerLexError(triedLex.error.innerError)).to.equal(true);
+    expect(triedLex.error.message).to.equal(triedLex.error.innerError.message);
 
-    if (!(innerError.kind === expectedKind)) {
-        throw new Error(`AssertFailed: innerError.kind === kind: ${JSON.stringify({ error, kind: expectedKind })}`);
-    }
+    return triedLex.error;
 }
 
-function assertExpectedKind(text: string, expectedKind: Lexer.LexError.ExpectedKind): void {
-    const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
+describe("Lexer.Error", () => {
+    describe(Lexer.LexError.ExpectedError.name, () => {
+        const cases: ReadonlyArray<[string, Lexer.LexError.ExpectedKind]> = [
+            ["0x", Lexer.LexError.ExpectedKind.HexLiteral],
+            ["^", Lexer.LexError.ExpectedKind.KeywordOrIdentifier],
+        ];
 
-    if (ResultUtils.isError(triedLex)) {
-        throw new Error(`AssertFailed: ResultUtils.isError(triedLex)`);
-    }
+        for (const [text, kind] of cases) {
+            it(kind, () => {
+                const error: Lexer.LexError.TInnerLexError = assertGetLexError(text).innerError;
+                expect(error).to.be.instanceOf(Lexer.LexError.ExpectedError);
+                expect((error as Lexer.LexError.ExpectedError).kind).to.equal(kind);
+            });
+        }
+    });
 
-    const state: Lexer.State = triedLex.value;
-    expect(state.lines.length).to.equal(1);
+    describe(Lexer.LexError.UnterminatedMultilineTokenError.name, () => {
+        const cases: ReadonlyArray<[string, Lexer.LexError.UnterminatedMultilineTokenKind]> = [
+            ["/*", Lexer.LexError.UnterminatedMultilineTokenKind.MultilineComment],
+            ['"', Lexer.LexError.UnterminatedMultilineTokenKind.Text],
+            ['#"', Lexer.LexError.UnterminatedMultilineTokenKind.QuotedIdentifier],
+        ];
 
-    const line: Lexer.TLine = ArrayUtils.assertGet(state.lines, 0);
+        for (const [text, kind] of cases) {
+            it(kind, () => {
+                const error: Lexer.LexError.TInnerLexError = assertGetLexError(text).innerError;
+                expect(error).to.be.instanceOf(Lexer.LexError.UnterminatedMultilineTokenError);
+                expect((error as Lexer.LexError.UnterminatedMultilineTokenError).kind).to.equal(kind);
+            });
 
-    if (!Lexer.isErrorLine(line)) {
-        throw new Error(`AssertFailed: Lexer.isErrorLine(line): ${JSON.stringify(line)}`);
-    }
+            it(`${kind} reports the opening position across mixed newlines`, () => {
+                const input: string = `// heading\r\nA\u0301 ${text}\r\n\n\u2028unfinished`;
+                const error: Lexer.LexError.TInnerLexError = assertGetLexError(input).innerError;
+                expect(error).to.be.instanceOf(Lexer.LexError.UnterminatedMultilineTokenError);
 
-    const error: Lexer.LexError.TLexError = line.error;
+                expect(error.graphemePosition).to.deep.equal({
+                    lineNumber: 1,
+                    lineCodeUnit: 3,
+                    columnNumber: 2,
+                    codeUnit: 15,
+                });
+            });
+        }
+    });
 
-    if (!(error.innerError instanceof Lexer.LexError.ExpectedError)) {
-        throw new Error(`AssertFailed: error.innerError instanceof LexError.ExpectedError: ${JSON.stringify(line)}`);
-    }
+    it("returns the first lexical failure directly, without line-state aggregation", () => {
+        const task: Task.TriedLexTask = TaskUtils.tryLex(DefaultSettings, "good\n0x\n#bad\n$");
+        TaskUtils.assertIsLexStageError(task);
+        expect(Object.keys(task).sort()).to.deep.equal(["error", "resultKind", "stage"]);
+        expect(task.error).to.be.instanceOf(Lexer.LexError.LexError);
+        expect(task.error.innerError).to.be.instanceOf(Lexer.LexError.ExpectedError);
 
-    const innerError: Lexer.LexError.ExpectedError = error.innerError;
+        const error: Lexer.LexError.ExpectedError = task.error.innerError as Lexer.LexError.ExpectedError;
+        expect(error.kind).to.equal(Lexer.LexError.ExpectedKind.HexLiteral);
 
-    if (!(innerError.kind === expectedKind)) {
-        throw new Error(`AssertFailed: innerError.kind === kind: ${JSON.stringify({ error, kind: expectedKind })}`);
-    }
-}
-
-function assertBadRangeKind(range: Lexer.Range, expectedKind: Lexer.LexError.BadRangeKind): void {
-    const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, `foo`);
-
-    if (ResultUtils.isError(triedLex)) {
-        throw new Error(`AssertFailed: ResultUtils.isError(triedLex)`);
-    }
-
-    const state: Lexer.State = triedLex.value;
-
-    const TriedLex: Lexer.TriedLex = Lexer.tryUpdateRange(state, range, `bar`);
-    ResultUtils.assertIsError(TriedLex);
-
-    const error: Lexer.LexError.LexError = TriedLex.error;
-
-    if (!(error.innerError instanceof Lexer.LexError.BadRangeError)) {
-        throw new Error(`AssertFailed: error.innerError instanceof LexError.BadRangeError: ${JSON.stringify(error)}`);
-    }
-
-    const innerError: Lexer.LexError.BadRangeError = error.innerError;
-
-    if (!(innerError.kind === expectedKind)) {
-        throw new Error(`AssertFailed: innerError.kind === kind: ${JSON.stringify({ error, kind: expectedKind })}`);
-    }
-}
-
-function assertUnterminatedMultilineTokenKind(
-    text: string,
-    expectedKind: Lexer.LexError.UnterminatedMultilineTokenKind,
-): void {
-    const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
-    ResultUtils.assertIsOk(triedLex);
-    const lexerState: Lexer.State = triedLex.value;
-    const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(lexerState);
-    ResultUtils.assertIsError(triedSnapshot);
-
-    const error: Lexer.LexError.TLexError = triedSnapshot.error;
-
-    if (!(error.innerError instanceof Lexer.LexError.UnterminatedMultilineTokenError)) {
-        throw new Error(
-            `AssertFailed: error.innerError instanceof LexError.UnterminatedMultilineTokenError: ${JSON.stringify(
-                error,
-            )}`,
-        );
-    }
-
-    const innerError: Lexer.LexError.UnterminatedMultilineTokenError = error.innerError;
-
-    if (!(innerError.kind === expectedKind)) {
-        throw new Error(`AssertFailed: innerError.kind === kind: ${JSON.stringify({ error, kind: expectedKind })}`);
-    }
-}
-
-describe(`Lexer.Error`, () => {
-    describe(`${Lexer.LexError.BadLineNumberError.name}`, () => {
-        it(`${Lexer.LexError.BadLineNumberKind.LessThanZero}`, () => {
-            assertBadLineNumberKind(-1, Lexer.LexError.BadLineNumberKind.LessThanZero);
+        expect(error.graphemePosition).to.deep.equal({
+            lineNumber: 1,
+            lineCodeUnit: 0,
+            columnNumber: 0,
+            codeUnit: 5,
         });
 
-        it(`${Lexer.LexError.BadLineNumberKind.GreaterThanNumLines}`, () => {
-            assertBadLineNumberKind(1, Lexer.LexError.BadLineNumberKind.GreaterThanNumLines);
+        expect(error).not.to.have.property("errorLineMap");
+    });
+
+    it("does not scan later malformed lines or give them priority over an earlier error", () => {
+        const error: Lexer.LexError.TInnerLexError = assertGetLexError('0x\n"unfinished').innerError;
+        expect(error).to.be.instanceOf(Lexer.LexError.ExpectedError);
+        expect(error.graphemePosition.codeUnit).to.equal(0);
+    });
+
+    for (const newline of ["\n", "\r\n", "\u2028", "\u2029"]) {
+        it(`locates a diagnostic after multiline comments and text with ${JSON.stringify(newline)}`, () => {
+            const prefix: string = `/*first${newline}second*/${newline}"line${newline}text" `;
+            const error: Lexer.LexError.TInnerLexError = assertGetLexError(`${prefix}A\u0301 ^`).innerError;
+
+            expect(error).to.be.instanceOf(Lexer.LexError.ExpectedError);
+
+            expect(error.graphemePosition).to.deep.equal({
+                lineNumber: 3,
+                lineCodeUnit: 9,
+                columnNumber: 8,
+                codeUnit: prefix.length + 3,
+            });
+        });
+
+        it(`preserves diagnostic columns after a long comment and ${JSON.stringify(newline)}`, () => {
+            const prefix: string = `//${"x".repeat(32768)}\rbare${newline}`;
+            const error: Lexer.LexError.TInnerLexError = assertGetLexError(`${prefix}A\u0301 ^`).innerError;
+
+            expect(error).to.be.instanceOf(Lexer.LexError.ExpectedError);
+
+            expect(error.graphemePosition).to.deep.equal({
+                lineNumber: 1,
+                lineCodeUnit: 3,
+                columnNumber: 2,
+                codeUnit: prefix.length + 3,
+            });
+        });
+    }
+
+    for (const text of [".", ".\r\n1", ".\u2028"]) {
+        it(`reports unexpected end of line for ${JSON.stringify(text)}`, () => {
+            const error: Lexer.LexError.TInnerLexError = assertGetLexError(text).innerError;
+            expect(error).to.be.instanceOf(Lexer.LexError.UnexpectedEofError);
+            expect(error.graphemePosition.codeUnit).to.equal(0);
+        });
+    }
+
+    for (const text of [".0", "#", "#unknown"]) {
+        it(`reports an unexpected read for ${JSON.stringify(text)}`, () => {
+            expect(assertGetLexError(text).innerError).to.be.instanceOf(Lexer.LexError.UnexpectedReadError);
+        });
+    }
+
+    it("reports the containing grapheme when an invalid character follows a hex literal", () => {
+        const error: Lexer.LexError.TInnerLexError = assertGetLexError("0xA\u0301").innerError;
+        expect(error).to.be.instanceOf(Lexer.LexError.ExpectedError);
+
+        expect(error.graphemePosition).to.deep.equal({
+            lineNumber: 0,
+            lineCodeUnit: 3,
+            columnNumber: 2,
+            codeUnit: 3,
         });
     });
 
-    describe(`${Lexer.LexError.ExpectedError.name}`, () => {
-        it(`${Lexer.LexError.ExpectedKind.HexLiteral}`, () => {
-            assertExpectedKind(`0x`, Lexer.LexError.ExpectedKind.HexLiteral);
-        });
+    it("reports UTF-16 offsets and grapheme columns independently", () => {
+        const error: Lexer.LexError.TInnerLexError = assertGetLexError("//x\r\n\u{10400} A\u0301 $").innerError;
 
-        it(`${Lexer.LexError.ExpectedKind.KeywordOrIdentifier}`, () => {
-            assertExpectedKind(`^`, Lexer.LexError.ExpectedKind.KeywordOrIdentifier);
-        });
-
-        // LexError.ExpectedKind.Numeric only throws if the regex is incorrect,
-        // meaning there's no good way to test it.
-    });
-
-    describe(`${Lexer.LexError.BadRangeError.name}`, () => {
-        it(`${Lexer.LexError.BadRangeKind.SameLine_LineCodeUnitStart_Higher}`, () => {
-            const range: Lexer.Range = {
-                start: {
-                    lineNumber: 0,
-                    lineCodeUnit: 1,
-                },
-                end: {
-                    lineNumber: 0,
-                    lineCodeUnit: 0,
-                },
-            };
-
-            assertBadRangeKind(range, Lexer.LexError.BadRangeKind.SameLine_LineCodeUnitStart_Higher);
-        });
-
-        it(`${Lexer.LexError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd}`, () => {
-            const range: Lexer.Range = {
-                start: {
-                    lineNumber: 1,
-                    lineCodeUnit: 0,
-                },
-                end: {
-                    lineNumber: 0,
-                    lineCodeUnit: 0,
-                },
-            };
-
-            assertBadRangeKind(range, Lexer.LexError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd);
-        });
-
-        it(`${Lexer.LexError.BadRangeKind.LineNumberStart_LessThan_Zero}`, () => {
-            const range: Lexer.Range = {
-                start: {
-                    lineNumber: -1,
-                    lineCodeUnit: 0,
-                },
-                end: {
-                    lineNumber: 0,
-                    lineCodeUnit: 0,
-                },
-            };
-
-            assertBadRangeKind(range, Lexer.LexError.BadRangeKind.LineNumberStart_LessThan_Zero);
-        });
-
-        it(`${Lexer.LexError.BadRangeKind.LineNumberStart_GreaterThan_NumLines}`, () => {
-            const range: Lexer.Range = {
-                start: {
-                    lineNumber: 1,
-                    lineCodeUnit: 0,
-                },
-                end: {
-                    lineNumber: 1,
-                    lineCodeUnit: 0,
-                },
-            };
-
-            assertBadRangeKind(range, Lexer.LexError.BadRangeKind.LineNumberStart_GreaterThan_NumLines);
-        });
-
-        it(`${Lexer.LexError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines}`, () => {
-            const range: Lexer.Range = {
-                start: {
-                    lineNumber: 0,
-                    lineCodeUnit: 0,
-                },
-                end: {
-                    lineNumber: 1,
-                    lineCodeUnit: 0,
-                },
-            };
-
-            assertBadRangeKind(range, Lexer.LexError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines);
-        });
-
-        it(`${Lexer.LexError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength}`, () => {
-            const range: Lexer.Range = {
-                start: {
-                    lineNumber: 0,
-                    lineCodeUnit: 100,
-                },
-                end: {
-                    lineNumber: 0,
-                    lineCodeUnit: 200,
-                },
-            };
-
-            assertBadRangeKind(range, Lexer.LexError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength);
-        });
-
-        it(`${Lexer.LexError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength}`, () => {
-            const range: Lexer.Range = {
-                start: {
-                    lineNumber: 0,
-                    lineCodeUnit: 0,
-                },
-                end: {
-                    lineNumber: 0,
-                    lineCodeUnit: 200,
-                },
-            };
-
-            assertBadRangeKind(range, Lexer.LexError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength);
+        expect(error.graphemePosition).to.deep.equal({
+            lineNumber: 1,
+            lineCodeUnit: 6,
+            columnNumber: 4,
+            codeUnit: 11,
         });
     });
 
-    describe(`${Lexer.LexError.UnterminatedMultilineTokenError.name}`, () => {
-        it(`${Lexer.LexError.UnterminatedMultilineTokenKind.MultilineComment}`, () => {
-            assertUnterminatedMultilineTokenKind(`/*`, Lexer.LexError.UnterminatedMultilineTokenKind.MultilineComment);
-        });
+    it("uses requested locale templates for every retained diagnostic", () => {
+        const position: StringUtils.GraphemePosition = {
+            lineNumber: 0,
+            lineCodeUnit: 0,
+            columnNumber: 0,
+            codeUnit: 0,
+        };
 
-        it(`${Lexer.LexError.UnterminatedMultilineTokenKind.Text}`, () => {
-            assertUnterminatedMultilineTokenKind(`"`, Lexer.LexError.UnterminatedMultilineTokenKind.Text);
-        });
+        for (const locale of ["en-US", "fr-FR", "de-DE", "ja-JP", "unknown-locale"]) {
+            const cases: ReadonlyArray<[string, Lexer.LexError.TInnerLexError]> = [
+                ["0x", new Lexer.LexError.ExpectedError(position, Lexer.LexError.ExpectedKind.HexLiteral, locale)],
+                [
+                    "^",
+                    new Lexer.LexError.ExpectedError(position, Lexer.LexError.ExpectedKind.KeywordOrIdentifier, locale),
+                ],
+                [".", new Lexer.LexError.UnexpectedEofError(position, locale)],
+                ["#", new Lexer.LexError.UnexpectedReadError(position, locale)],
+                [
+                    '"',
+                    new Lexer.LexError.UnterminatedMultilineTokenError(
+                        locale,
+                        position,
+                        Lexer.LexError.UnterminatedMultilineTokenKind.Text,
+                    ),
+                ],
+            ];
 
-        it(`${Lexer.LexError.UnterminatedMultilineTokenKind.QuotedIdentifier}`, () => {
-            assertUnterminatedMultilineTokenKind(`#"`, Lexer.LexError.UnterminatedMultilineTokenKind.QuotedIdentifier);
-        });
+            for (const [text, expected] of cases) {
+                expect(assertGetLexError(text, locale).message).to.equal(expected.message);
+            }
+        }
     });
 });

@@ -3,7 +3,7 @@
 
 import "mocha";
 
-import { Assert, Lexer, Parser, Task } from "../..";
+import { Lexer, Parser, Task } from "../..";
 import { ResultUtils, TaskUtils } from "../../powerquery-parser";
 import { LexSettings } from "../../powerquery-parser/lexer";
 import { ParseSettings } from "../../powerquery-parser/parser";
@@ -54,12 +54,6 @@ export async function assertGetParseOk(settings: LexSettings & ParseSettings, te
 function assertGetTriedParse(settings: LexSettings & ParseSettings, text: string): Promise<Parser.TriedParse> {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(settings, text);
     ResultUtils.assertIsOk(triedLex);
-    const lexerState: Lexer.State = triedLex.value;
-    Assert.isUndefined(Lexer.errorLineMap(lexerState));
 
-    const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(lexerState);
-    ResultUtils.assertIsOk(triedSnapshot);
-    const lexerSnapshot: Lexer.LexerSnapshot = triedSnapshot.value;
-
-    return Parser.ParserUtils.tryParse(settings, lexerSnapshot);
+    return Parser.ParserUtils.tryParse(settings, triedLex.value);
 }

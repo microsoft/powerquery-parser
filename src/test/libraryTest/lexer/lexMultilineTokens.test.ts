@@ -5,11 +5,9 @@ import "mocha";
 
 import {
     AbridgedComments,
-    AbridgedLineTokens,
     AbridgedSnapshot,
     AbridgedTokens,
     assertGetAbridgedSnapshotMatch,
-    assertGetLineTokenMatch,
     assertGetSnapshotAbridgedComments,
     assertGetSnapshotAbridgedTokens,
 } from "../../testUtils/lexTestUtils";
@@ -18,132 +16,22 @@ import { Language } from "../../..";
 const LINE_TERMINATOR: string = "\n";
 
 describe(`Lexer`, () => {
-    describe(`MultilineTokens Abridged LineToken`, () => {
-        describe(`MultilineComment`, () => {
-            it(`/**/`, () => {
-                const text: string = `/**/`;
-                const expected: AbridgedLineTokens = [[Language.Token.LineTokenKind.MultilineComment, `/**/`]];
-                assertGetLineTokenMatch(text, expected, true);
+    describe("Complete multiline token emission", () => {
+        for (const text of ["/**/", "/*/*/", "/*\n*/", "/*\nfoobar\n*/", "/*\n\nfoobar\n\n*/"]) {
+            it(JSON.stringify(text), () => {
+                assertGetSnapshotAbridgedComments(text, [[Language.Comment.CommentKind.Multiline, text]], true);
             });
+        }
 
-            it(`/*/*/`, () => {
-                const text: string = `/*/*/`;
-                const expected: AbridgedLineTokens = [[Language.Token.LineTokenKind.MultilineComment, `/*/*/`]];
-                assertGetLineTokenMatch(text, expected, true);
+        for (const text of ['""', '"\n"', '"\nfoobar\n"', '#""', '#"\n"', '#"\nfoobar\n"']) {
+            it(JSON.stringify(text), () => {
+                const kind: Language.Token.TokenKind = text.startsWith("#")
+                    ? Language.Token.TokenKind.Identifier
+                    : Language.Token.TokenKind.TextLiteral;
+
+                assertGetSnapshotAbridgedTokens(text, [[kind, text]], true);
             });
-
-            it(`/*\\n*/`, () => {
-                const text: string = `/*${LINE_TERMINATOR}*/`;
-
-                const expected: AbridgedLineTokens = [
-                    [Language.Token.LineTokenKind.MultilineCommentStart, `/*`],
-                    [Language.Token.LineTokenKind.MultilineCommentEnd, `*/`],
-                ];
-
-                assertGetLineTokenMatch(text, expected, true);
-            });
-
-            it(`/*\\nfoobar\\n*/`, () => {
-                const text: string = `/*${LINE_TERMINATOR}foobar${LINE_TERMINATOR}*/`;
-
-                const expected: AbridgedLineTokens = [
-                    [Language.Token.LineTokenKind.MultilineCommentStart, `/*`],
-                    [Language.Token.LineTokenKind.MultilineCommentContent, `foobar`],
-                    [Language.Token.LineTokenKind.MultilineCommentEnd, `*/`],
-                ];
-
-                assertGetLineTokenMatch(text, expected, true);
-            });
-
-            it(`/*\\n\nfoobar\\n\\n*/`, () => {
-                const text: string = `/*${LINE_TERMINATOR}${LINE_TERMINATOR}foobar${LINE_TERMINATOR}${LINE_TERMINATOR}*/`;
-
-                const expected: AbridgedLineTokens = [
-                    [Language.Token.LineTokenKind.MultilineCommentStart, `/*`],
-                    [Language.Token.LineTokenKind.MultilineCommentContent, `foobar`],
-                    [Language.Token.LineTokenKind.MultilineCommentEnd, `*/`],
-                ];
-
-                assertGetLineTokenMatch(text, expected, true);
-            });
-        });
-
-        describe(`TextLiteral`, () => {
-            it(`""`, () => {
-                const text: string = `""`;
-                const expected: AbridgedLineTokens = [[Language.Token.LineTokenKind.TextLiteral, `""`]];
-                assertGetLineTokenMatch(text, expected, true);
-            });
-
-            it(`"\\n"`, () => {
-                const text: string = `"${LINE_TERMINATOR}"`;
-
-                const expected: AbridgedLineTokens = [
-                    [Language.Token.LineTokenKind.TextLiteralStart, `"`],
-                    [Language.Token.LineTokenKind.TextLiteralEnd, `"`],
-                ];
-
-                assertGetLineTokenMatch(text, expected, true);
-            });
-
-            it(`"\\nfoobar\\n"`, () => {
-                const text: string = `"${LINE_TERMINATOR}foobar${LINE_TERMINATOR}"`;
-
-                const expected: AbridgedLineTokens = [
-                    [Language.Token.LineTokenKind.TextLiteralStart, `"`],
-                    [Language.Token.LineTokenKind.TextLiteralContent, `foobar`],
-                    [Language.Token.LineTokenKind.TextLiteralEnd, `"`],
-                ];
-
-                assertGetLineTokenMatch(text, expected, true);
-            });
-        });
-
-        describe(`QuotedIdentifer`, () => {
-            it(`""`, () => {
-                const text: string = `#""`;
-                const expected: AbridgedLineTokens = [[Language.Token.LineTokenKind.Identifier, `#""`]];
-                assertGetLineTokenMatch(text, expected, true);
-            });
-
-            it(`#"\\n"`, () => {
-                const text: string = `#"${LINE_TERMINATOR}"`;
-
-                const expected: AbridgedLineTokens = [
-                    [Language.Token.LineTokenKind.QuotedIdentifierStart, `#"`],
-                    [Language.Token.LineTokenKind.QuotedIdentifierEnd, `"`],
-                ];
-
-                assertGetLineTokenMatch(text, expected, true);
-            });
-
-            it(`#"\\nfoobar\\n"`, () => {
-                const text: string = `#"${LINE_TERMINATOR}foobar${LINE_TERMINATOR}"`;
-
-                const expected: AbridgedLineTokens = [
-                    [Language.Token.LineTokenKind.QuotedIdentifierStart, `#"`],
-                    [Language.Token.LineTokenKind.QuotedIdentifierContent, `foobar`],
-                    [Language.Token.LineTokenKind.QuotedIdentifierEnd, `"`],
-                ];
-
-                assertGetLineTokenMatch(text, expected, true);
-            });
-        });
-
-        describe(`LineTokenKindAdditions enum values match member names`, () => {
-            it(`TextLiteralContent value should equal "TextLiteralContent"`, () => {
-                // TextLiteralContent = "TextContent" (missing "Literal" in value)
-                // All other members have values matching their names exactly
-                const expected: string = "TextLiteralContent";
-                const actual: string = Language.Token.LineTokenKind.TextLiteralContent;
-
-                if (actual !== expected) {
-                    throw new Error(
-                        `LineTokenKindAdditions.TextLiteralContent has value "${actual}" but should be "${expected}"`,
-                    );
-                }
-            });
-        });
+        }
     });
 
     describe(`MultilineTokens Abridged LexerSnapshot`, () => {

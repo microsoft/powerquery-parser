@@ -173,22 +173,7 @@ export function tryLex(settings: LexSettings, text: string): TriedLexTask {
         return createLexTaskError(triedLex.error);
     }
 
-    const state: Lexer.State = triedLex.value;
-    const errorLineMap: Lexer.ErrorLineMap | undefined = Lexer.errorLineMap(state);
-
-    if (errorLineMap) {
-        return createLexTaskError(
-            new Lexer.LexError.LexError(new Lexer.LexError.ErrorLineMapError(errorLineMap, settings.locale)),
-        );
-    }
-
-    const triedLexerSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(state);
-
-    if (ResultUtils.isOk(triedLexerSnapshot)) {
-        return createLexTaskOk(triedLexerSnapshot.value);
-    } else {
-        return createLexTaskError(triedLexerSnapshot.error);
-    }
+    return createLexTaskOk(triedLex.value);
 }
 
 export async function tryParse(settings: ParseSettings, lexerSnapshot: Lexer.LexerSnapshot): Promise<TriedParseTask> {
