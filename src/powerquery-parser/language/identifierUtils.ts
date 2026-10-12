@@ -1,8 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, Pattern, StringUtils } from "../common";
+import * as Pattern from "../common/patterns";
+
+import { Assert, StringUtils } from "../common";
 import { KeywordKind } from "./keyword/keyword";
+
+const IdentifierStartAtPosition: RegExp = new RegExp(
+    Pattern.IdentifierStartCharacter.source,
+    `${Pattern.IdentifierStartCharacter.flags}y`,
+);
+
+const IdentifierPartAtPosition: RegExp = new RegExp(
+    Pattern.IdentifierPartCharacters.source,
+    `${Pattern.IdentifierPartCharacters.flags}y`,
+);
 
 export enum IdentifierKind {
     Generalized = "Generalized",
@@ -135,7 +147,7 @@ export function getIdentifierLength(
 
         switch (state) {
             case IdentifierRegexpState.Start:
-                matchLength = StringUtils.regexMatchLength(Pattern.IdentifierStartCharacter, text, index);
+                matchLength = StringUtils.regexMatchLength(IdentifierStartAtPosition, text, index);
 
                 if (matchLength === undefined) {
                     state = IdentifierRegexpState.Done;
@@ -166,7 +178,7 @@ export function getIdentifierLength(
                         state = IdentifierRegexpState.Done;
                     }
                 } else {
-                    matchLength = StringUtils.regexMatchLength(Pattern.IdentifierPartCharacters, text, index);
+                    matchLength = StringUtils.regexMatchLength(IdentifierPartAtPosition, text, index);
 
                     if (matchLength === undefined) {
                         state = IdentifierRegexpState.Done;

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import * as Pattern from "../common/patterns";
+
 import {
     ArrayUtils,
     Assert,
@@ -9,7 +11,6 @@ import {
     PartialResult,
     PartialResultKind,
     PartialResultUtils,
-    Pattern,
     Result,
     ResultUtils,
     StringUtils,
@@ -17,6 +18,8 @@ import {
 import { IdentifierUtils, Keyword, Token } from "../language";
 import { LexError } from ".";
 import { LexSettings } from "./lexSettings";
+
+const WhitespaceAtPosition: RegExp = new RegExp(Pattern.Whitespace.source, `${Pattern.Whitespace.flags}y`);
 
 // Call Lexer.stateFrom to instantiate a new State instance.
 // Lexer functions will return a new state object.
@@ -937,7 +940,7 @@ function drainWhitespace(text: string, position: number): number {
     let continueDraining: boolean = text[position] !== undefined;
 
     while (continueDraining) {
-        const length: number | undefined = StringUtils.regexMatchLength(Pattern.Whitespace, text, position);
+        const length: number | undefined = StringUtils.regexMatchLength(WhitespaceAtPosition, text, position);
 
         if (length) {
             position += length;
