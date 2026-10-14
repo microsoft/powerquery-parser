@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 
-import { Assert, DefaultSettings, Language, Lexer, ResultUtils } from "../..";
+import { DefaultSettings, Language, Lexer, ResultUtils } from "../..";
 
 export type AbridgedComments = ReadonlyArray<[Language.Comment.CommentKind, string]>;
 
@@ -13,8 +13,6 @@ export interface AbridgedSnapshot {
     readonly tokens: AbridgedTokens;
     readonly comments: AbridgedComments;
 }
-
-export type AbridgedLineTokens = ReadonlyArray<[Language.Token.LineTokenKind, string]>;
 
 export function assertGetAbridgedSnapshotMatch(
     text: string,
@@ -52,44 +50,6 @@ export function assertGetAbridgedSnapshotMatch(
     return snapshot;
 }
 
-export function assertGetLineTokenMatch(text: string, expected: AbridgedLineTokens, wrapped: boolean): Lexer.State {
-    if (wrapped) {
-        const wrappedText: string = `wrapperOpen\n${text}\nwrapperClose`;
-
-        const wrappedExpected: AbridgedLineTokens = [
-            [Language.Token.LineTokenKind.Identifier, "wrapperOpen"],
-            ...expected,
-            [Language.Token.LineTokenKind.Identifier, "wrapperClose"],
-        ];
-
-        assertGetLineTokenMatch(wrappedText, wrappedExpected, false);
-    }
-
-    const state: Lexer.State = assertGetLexOk(text);
-
-    const tmp: [Language.Token.LineTokenKind, string][] = [];
-
-    for (const line of state.lines) {
-        for (const token of line.tokens) {
-            tmp.push([token.kind, token.data]);
-        }
-    }
-
-    const actual: AbridgedLineTokens = tmp;
-
-    const tokenDetails: {
-        actual: AbridgedLineTokens;
-        expected: AbridgedLineTokens;
-    } = {
-        actual,
-        expected,
-    };
-
-    expect(actual).deep.equal(expected, JSON.stringify(tokenDetails));
-
-    return state;
-}
-
 export function assertGetSnapshotAbridgedTokens(
     text: string,
     expected: AbridgedTokens,
@@ -120,26 +80,9 @@ export function assertGetSnapshotAbridgedComments(
     );
 }
 
-export function assertGetLexOk(text: string): Lexer.State {
+export function assertGetLexerSnapshot(text: string): Lexer.LexerSnapshot {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
     ResultUtils.assertIsOk(triedLex);
-    const lexerState: Lexer.State = triedLex.value;
 
-    if (Lexer.isErrorState(lexerState)) {
-        const errorLineMap: Lexer.ErrorLineMap = Assert.asDefined(Lexer.errorLineMap(lexerState));
-        const errorLines: ReadonlyArray<number> = [...errorLineMap.keys()];
-
-        const details: { errorLines: ReadonlyArray<number> } = { errorLines };
-        throw new Error(`AssertFailed: Lexer.isErrorState(state) ${JSON.stringify(details, undefined, 4)}`);
-    }
-
-    return lexerState;
-}
-
-export function assertGetLexerSnapshot(text: string): Lexer.LexerSnapshot {
-    const state: Lexer.State = assertGetLexOk(text);
-    const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(state);
-    ResultUtils.assertIsOk(triedSnapshot);
-
-    return triedSnapshot.value;
+    return triedLex.value;
 }
