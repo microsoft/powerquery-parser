@@ -397,6 +397,18 @@ describe(`nodeIdMapUtils`, () => {
     });
 
     describe("Checkpoint delta rollback", () => {
+        function assertAllocationBound(state: Parser.ParseState): void {
+            const { idCounter, nodeIdMapCollection }: Parser.ParseContext.State = state.contextState;
+            expect(Number.isSafeInteger(idCounter)).to.equal(true);
+            expect(idCounter).to.be.at.least(0);
+
+            for (const nodes of [nodeIdMapCollection.astNodeById, nodeIdMapCollection.contextNodeById]) {
+                for (const [nodeId] of nodes) {
+                    expect(nodeId).to.be.at.most(idCounter);
+                }
+            }
+        }
+
         class NoScanMap<K, V> extends Map<K, V> {
             public override keys(): MapIterator<K> {
                 throw new Error("Rollback must not scan accumulated nodes");
@@ -417,6 +429,69 @@ describe(`nodeIdMapUtils`, () => {
                         contextNodeById: new NoScanMap(),
                     },
                 },
+            });
+        }
+
+        for (const parser of [Parser.CombinatorialParserV2, Parser.RecursiveDescentParser]) {
+            describe(parser === Parser.CombinatorialParserV2 ? "Combinatorial" : "Recursive descent", () => {
+                it("bounds IDs after allocation, completion, inserted parents, and deletion", async () => {
+                    const state: Parser.ParseState = newState();
+                    assertAllocationBound(state);
+                    Parser.ParseStateUtils.startContext(state, Ast.NodeKind.ListType);
+                    assertAllocationBound(state);
+                    const leaf: Ast.PrimitiveType = await parser.readPrimitiveType(state, parser, undefined);
+                    assertAllocationBound(state);
+
+                    const wrapper: Parser.ParseContext.TNode = Parser.ParseStateUtils.startContextAsParent(
+                        state,
+                        Ast.NodeKind.NullablePrimitiveType,
+                        leaf.id,
+                        undefined,
+                    );
+
+                    expect(wrapper.id).to.equal(leaf.id + 1);
+                    assertAllocationBound(state);
+                    Parser.ParseContextUtils.deleteContext(state.contextState, wrapper.id);
+                    expect(state.contextState.idCounter).to.equal(wrapper.id);
+                    assertAllocationBound(state);
+
+                    const next: Parser.ParseContext.TNode = Parser.ParseStateUtils.startContext(
+                        state,
+                        Ast.NodeKind.ListType,
+                    );
+
+                    expect(next.id).to.equal(wrapper.id + 1);
+                    assertAllocationBound(state);
+                });
+
+                it("copies and applies the allocation bound with its node maps", async () => {
+                    const state: Parser.ParseState = newState();
+                    Parser.ParseStateUtils.startContext(state, Ast.NodeKind.ListType);
+                    await parser.readPrimitiveType(state, parser, undefined);
+                    assertAllocationBound(state);
+                    const originalCounter: number = state.contextState.idCounter;
+                    const copied: Parser.ParseState = await parser.copyState(state);
+                    expect(copied.contextState.idCounter).to.equal(originalCounter);
+                    assertAllocationBound(copied);
+                    const checkpoint: Parser.ParseStateCheckpoint = await parser.checkpoint(copied);
+                    await parser.readPrimitiveType(copied, parser, undefined);
+                    Parser.ParseStateUtils.startContext(copied, Ast.NodeKind.ListType);
+                    assertAllocationBound(copied);
+                    expect(state.contextState.idCounter).to.equal(originalCounter);
+                    assertAllocationBound(state);
+
+                    await parser.applyState(state, copied);
+                    expect(state.contextState.idCounter).to.equal(copied.contextState.idCounter);
+                    expect(state.contextState.idCounter).to.be.greaterThan(originalCounter);
+                    assertAllocationBound(state);
+
+                    await parser.restoreCheckpoint(state, checkpoint);
+                    expect(state.contextState.idCounter).to.equal(originalCounter);
+                    assertAllocationBound(state);
+                    const reused: Ast.PrimitiveType = await parser.readPrimitiveType(state, parser, undefined);
+                    expect(reused.id).to.equal(originalCounter + 1);
+                    assertAllocationBound(state);
+                });
             });
         }
 
@@ -524,13 +599,19 @@ describe(`nodeIdMapUtils`, () => {
             Parser.ParseStateUtils.startContext(state, Ast.NodeKind.ListType);
             const outer: Parser.ParseStateCheckpoint = await parser.checkpoint(state);
             const first: Ast.PrimitiveType = await parser.readPrimitiveType(state, parser, undefined);
+            assertAllocationBound(state);
             const inner: Parser.ParseStateCheckpoint = await parser.checkpoint(state);
             const second: Ast.PrimitiveType = await parser.readPrimitiveType(state, parser, undefined);
+            assertAllocationBound(state);
             await parser.restoreCheckpoint(state, inner);
+            assertAllocationBound(state);
             expect(await parser.readPrimitiveType(state, parser, undefined)).to.deep.equal(second);
+            assertAllocationBound(state);
             await parser.restoreCheckpoint(state, outer);
+            assertAllocationBound(state);
             expect(state.contextState.nodeIdMapCollection.astNodeById.size).to.equal(0);
             expect(await parser.readPrimitiveType(state, parser, undefined)).to.deep.equal(first);
+            assertAllocationBound(state);
         });
     });
 });

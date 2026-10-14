@@ -42,6 +42,9 @@ export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: Lexe
 // Therefore we only care about the delta between before and after the try/catch block.
 // Thanks to the invariants above and the fact the ids for nodes are an auto-incrementing integer
 // we can easily delete all context nodes past the id of when the backup was created.
+// A checkpoint belongs to this state's allocation history (or a copy preserving that history),
+// not an unrelated state or a discarded speculative branch. Every live AST/context node ID
+// must be <= contextState.idCounter; custom implementations must preserve this or supply their own handlers.
 // eslint-disable-next-line require-await
 export async function checkpoint(state: ParseState): Promise<ParseStateCheckpoint> {
     return {
@@ -53,7 +56,9 @@ export async function checkpoint(state: ParseState): Promise<ParseStateCheckpoin
 
 // If you have a custom parser + parser state,
 // then you'll have to create your own (create|restore)Checkpoint functions.
-// See createCheckpoint above for more information.
+// See checkpoint above for the allocation and state-lineage contract.
+// Visit only newly allocated IDs, deleting AST nodes before contexts, each in descending order.
+// Restore the cursor and current context even when no IDs were allocated.
 // eslint-disable-next-line require-await
 export async function restoreCheckpoint(state: ParseState, checkpoint: ParseStateCheckpoint): Promise<void> {
     state.tokenIndex = checkpoint.tokenIndex;
