@@ -1,308 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import {
-    ArrayUtils,
-    Assert,
-    CommonError,
-    ICancellationToken,
-    PartialResult,
-    PartialResultKind,
-    PartialResultUtils,
-    Pattern,
-    Result,
-    ResultUtils,
-    StringUtils,
-} from "../common";
-import { IdentifierUtils, Keyword, Token } from "../language";
+import * as Pattern from "../common/patterns";
+import { Assert, CommonError, Result, ResultUtils, StringUtils, TypeScriptUtils } from "../common";
+import { Comment, IdentifierUtils, Keyword, Token } from "../language";
+import { LexerSnapshot, LineTerminator } from "./lexerSnapshot";
 import { LexError } from ".";
 import { LexSettings } from "./lexSettings";
 
-// Call Lexer.stateFrom to instantiate a new State instance.
-// Lexer functions will return a new state object.
-// Call LexerSnapshot.tryFrom to perform a final validation pass before freezing the State.
+export type TriedLex = Result<LexerSnapshot, LexError.TLexError>;
 
-// The lexer is mostly functional in nature with a few throws to make error propagation easier.
-//
-// To accommodate being consumed by a VSCode extension the lexer is designed to be line aware.
-// Users who don't care about line awareness and simply want a complete lex pass
-// can call Lexer.stateFrom using a multiline blob.
-//
-// The lexer will split it on any valid Power Query newline character.
-// Users who want incremental control can instantiate a lexer in the same way,
-// then call either appendLine/tryDeleteLine/tryUpdateLine/tryUpdateRange.
-
-export type TriedLex = Result<State, LexError.TLexError>;
-
-export type ErrorLineMap = Map<number, TErrorLine>;
-
-export type TLine = TouchedLine | UntouchedLine | TouchedWithErrorLine | ErrorLine;
-
-export type TErrorLine = ErrorLine | TouchedWithErrorLine;
-
-export enum LineKind {
-    Error = "Error",
-    Touched = "Touched",
-    TouchedWithError = "TouchedWithError",
-    Untouched = "Untouched",
-}
-
-// A line's LineMode determines how its tokenized.
-// There are two broad categories for a LineMode:
-//  * Atomic (single) line tokenization (default)
-//  * Continuation of a multiline token (eg. multiline comment)
-//
-// All LineModes other than Default are a type of multiline tokenization.
-export enum LineMode {
-    Comment = "Comment",
-    Default = "Default",
-    QuotedIdentifier = "QuotedIdentifier",
-    Text = "Text",
-}
-
-export interface State {
-    readonly lines: ReadonlyArray<TLine>;
-    readonly locale: string;
-    readonly cancellationToken: ICancellationToken | undefined;
-    readonly isTypeDirectiveAllowed: boolean;
-}
-
-export interface ILexerLine {
-    readonly kind: LineKind;
-    readonly text: string;
-    readonly lineTerminator: string; // must be a valid Power Query newline character
-    readonly lineModeStart: LineMode; // (the previous TLine's lineModeEnd) || LineMode.Default
-    readonly lineModeEnd: LineMode;
-    readonly tokens: ReadonlyArray<Token.LineToken>;
-}
-
-// An error was thrown before anything could be tokenized.
-export interface ErrorLine extends ILexerLine {
-    readonly kind: LineKind.Error;
-    readonly error: LexError.TLexError;
-}
-
-// The line was tokenized without issue.
-export interface TouchedLine extends ILexerLine {
-    readonly kind: LineKind.Touched;
-}
-
-// Some tokens were read before an error was thrown.
-export interface TouchedWithErrorLine extends ILexerLine {
-    readonly kind: LineKind.TouchedWithError;
-    readonly error: LexError.TLexError;
-}
-
-// The line hasn't been lexed yet.
-export interface UntouchedLine extends ILexerLine {
-    readonly kind: LineKind.Untouched;
-}
-
-export interface Range {
-    readonly start: RangePosition;
-    readonly end: RangePosition;
-}
-
-export interface RangePosition {
-    readonly lineNumber: number;
-    readonly lineCodeUnit: number;
-}
-
-// This export is a Result ensuring wrapper around the un-exported implementation.
 export function tryLex(settings: LexSettings, text: string): TriedLex {
-    return ensureCommonOrLexerResult(() => lex(settings, text), settings.locale);
-}
+    const locale: string = settings.locale;
 
-// This export is a Result ensuring wrapper around the un-exported implementation.
-export function tryAppendLine(state: State, text: string, lineTerminator: string): TriedLex {
-    return ensureCommonOrLexerResult(() => appendLine(state, text, lineTerminator), state.locale);
-}
-
-// This export is a Result ensuring wrapper around the un-exported implementation.
-export function tryUpdateLine(state: State, lineNumber: number, text: string): TriedLex {
-    return ensureCommonOrLexerResult(() => updateLine(state, lineNumber, text), state.locale);
-}
-
-// This export is a Result ensuring wrapper around the un-exported implementation.
-export function tryUpdateRange(state: State, range: Range, text: string): TriedLex {
-    return ensureCommonOrLexerResult(() => updateRange(state, range, text), state.locale);
-}
-
-// This export is a Result ensuring wrapper around the un-exported implementation.
-export function tryDeleteLine(state: State, lineNumber: number): TriedLex {
-    return ensureCommonOrLexerResult(() => deleteLine(state, lineNumber), state.locale);
-}
-
-// deep state comparison
-export function equalStates(leftState: State, rightState: State): boolean {
-    return equalLines(leftState.lines, rightState.lines);
-}
-
-// deep line comparison
-// partial equality as ILine.text is ignored
-export function equalLines(leftLines: ReadonlyArray<TLine>, rightLines: ReadonlyArray<TLine>): boolean {
-    if (leftLines.length !== rightLines.length) {
-        return false;
-    }
-
-    const numLines: number = leftLines.length;
-
-    for (let lineIndex: number = 0; lineIndex < numLines; lineIndex += 1) {
-        const left: TLine = ArrayUtils.assertGet(leftLines, lineIndex);
-        const right: TLine = ArrayUtils.assertGet(rightLines, lineIndex);
-        const leftTokens: ReadonlyArray<Token.LineToken> = left.tokens;
-        const rightTokens: ReadonlyArray<Token.LineToken> = right.tokens;
-
-        const isEqualQuickCheck: boolean =
-            left.kind === right.kind &&
-            left.lineTerminator === right.lineTerminator &&
-            left.lineModeStart === right.lineModeStart &&
-            left.lineModeEnd === right.lineModeEnd &&
-            leftTokens.length === rightTokens.length;
-
-        if (!isEqualQuickCheck) {
-            return false;
-        }
-
-        // isEqualQuickCheck ensures tokens.length is the same
-        const numTokens: number = leftTokens.length;
-
-        for (let tokenIndex: number = 0; tokenIndex < numTokens; tokenIndex += 1) {
-            if (
-                !equalTokens(
-                    ArrayUtils.assertGet(leftTokens, tokenIndex),
-                    ArrayUtils.assertGet(rightTokens, tokenIndex),
-                )
-            ) {
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
-
-// deep token comparison
-export function equalTokens(leftToken: Token.LineToken, rightToken: Token.LineToken): boolean {
-    return (
-        leftToken.kind === rightToken.kind &&
-        leftToken.data === rightToken.data &&
-        leftToken.positionStart === rightToken.positionStart &&
-        leftToken.positionEnd === rightToken.positionEnd
-    );
-}
-
-export function isErrorState(state: State): boolean {
-    const linesWithErrors: ReadonlyArray<ErrorLine | TouchedWithErrorLine> = state.lines.filter(isErrorLine);
-
-    return linesWithErrors.length !== 0;
-}
-
-export function isErrorLine(line: TLine): line is TErrorLine {
-    switch (line.kind) {
-        case LineKind.Error:
-        case LineKind.TouchedWithError:
-            return true;
-
-        case LineKind.Touched:
-        case LineKind.Untouched:
-            return false;
-
-        default:
-            throw Assert.isNever(line);
-    }
-}
-
-export function errorLineMap(state: State): ErrorLineMap | undefined {
-    const errorLines: ErrorLineMap = state.lines.reduce((errorLineMap: ErrorLineMap, line: TLine, index: number) => {
-        if (isErrorLine(line)) {
-            errorLineMap.set(index, line);
-        }
-
-        return errorLineMap;
-    }, new Map());
-
-    return errorLines.size !== 0 ? errorLines : undefined;
-}
-
-type PartialLexResult = PartialResult<TokenizeChanges, PartialLex, LexError.TLexError>;
-
-interface PartialLex {
-    readonly tokenizeChanges: TokenizeChanges;
-    readonly error: LexError.TLexError;
-}
-
-interface TokenizeChanges {
-    readonly tokens: ReadonlyArray<Token.LineToken>;
-    readonly lineModeEnd: LineMode;
-}
-
-interface LineModeAlteringRead {
-    readonly token: Token.LineToken;
-    readonly lineMode: LineMode;
-}
-
-// Attributes can't be readOnly.
-// In `updateRange` text is updated by adding existing lines as a suffix/prefix.
-// In `splitOnLineTerminators` lineTerminator is updated as the last must have no terminator, eg. ""
-interface SplitLine {
-    text: string;
-    lineTerminator: string;
-}
-
-// Takes a string and splits it on all valid Power Query terminators.
-// The split lines retain what newline was used to create the split.
-function splitOnLineTerminators(startingText: string): SplitLine[] {
-    let lines: SplitLine[] = startingText.split("\r\n").map((lineText: string) => ({
-        text: lineText,
-        lineTerminator: "\r\n",
-    }));
-
-    const lineTerminators: ReadonlyArray<string> = [
-        "\n",
-        "\u2028", // LINE SEPARATOR
-        "\u2029", // PARAGRAPH SEPARATOR
-    ];
-
-    let index: number = 0;
-
-    while (index < lines.length) {
-        let indexWasExpanded: boolean = false;
-
-        for (const lineTerminator of lineTerminators) {
-            const splitLine: SplitLine = ArrayUtils.assertGet(lines, index);
-            const text: string = splitLine.text;
-
-            if (text.indexOf(lineTerminator) !== -1) {
-                indexWasExpanded = true;
-
-                const split: ReadonlyArray<SplitLine> = text.split(lineTerminator).map((lineText: string) => ({
-                    text: lineText,
-                    lineTerminator,
-                }));
-
-                ArrayUtils.assertGet(split, split.length - 1).lineTerminator = splitLine.lineTerminator;
-
-                lines = [...lines.slice(0, index), ...split, ...lines.slice(index + 1)];
-            }
-        }
-
-        if (!indexWasExpanded) {
-            index += 1;
-        }
-    }
-
-    ArrayUtils.assertGet(lines, lines.length - 1).lineTerminator = "";
-
-    return lines;
-}
-
-function ensureCommonOrLexerResult<T>(
-    functionToWrap: () => T,
-    locale: string,
-): Result<T, CommonError.CommonError | LexError.LexError> {
     try {
-        return ResultUtils.ok(functionToWrap());
+        return ResultUtils.ok(lex(settings, text));
     } catch (caught: unknown) {
         Assert.isInstanceofError(caught);
 
@@ -318,534 +30,175 @@ function ensureCommonOrLexerResult<T>(
     }
 }
 
-function lex(settings: LexSettings, text: string): State {
-    const splitLines: ReadonlyArray<SplitLine> = splitOnLineTerminators(text);
+type ReadToken<Kind extends Token.TokenKind | Comment.CommentKind = Token.TokenKind> = Pick<
+    Token.IToken<Kind, number>,
+    "kind" | "positionEnd" | "data"
+>;
 
-    const tokenizedLines: ReadonlyArray<TLine> = tokenizedLinesFrom(
-        splitLines,
-        LineMode.Default,
-        settings.locale,
-        settings.cancellationToken,
-    );
+const TripleSlashPrefix: string = "///";
+const TypeDirectiveKeyword: string = "@type";
+// A failed whitespace match must not search the rest of the document at every token.
+const WhitespacePattern: RegExp = new RegExp(Pattern.Whitespace.source, "y");
 
-    return {
-        lines: tokenizedLines,
-        locale: settings.locale,
-        cancellationToken: settings.cancellationToken,
-        isTypeDirectiveAllowed: settings.isTypeDirectiveAllowed,
-    };
-}
+function lex(settings: LexSettings, text: string): LexerSnapshot {
+    const tokens: Token.Token[] = [];
+    const comments: Comment.TComment[] = [];
+    const lineTerminators: LineTerminator[] = [];
+    let position: number = 0;
+    let lineNumber: number = 0;
+    let lineStart: number = 0;
 
-function appendLine(state: State, text: string, lineTerminator: string): State {
-    state.cancellationToken?.throwIfCancelled();
+    settings.cancellationToken?.throwIfCancelled();
 
-    const lines: ReadonlyArray<TLine> = state.lines;
-    const numLines: number = lines.length;
-    const latestLine: TLine | undefined = lines[numLines - 1];
-    const lineModeStart: LineMode = latestLine ? latestLine.lineModeEnd : LineMode.Default;
-    const untokenizedLine: UntouchedLine = lineFrom(text, lineTerminator, lineModeStart);
-    const tokenizedLine: TLine = tokenize(untokenizedLine, numLines, state.locale, state.cancellationToken);
+    while (position < text.length) {
+        settings.cancellationToken?.throwIfCancelled();
+        position = drainWhitespace(text, position);
 
-    return {
-        ...state,
-        lines: state.lines.concat(tokenizedLine),
-    };
-}
-
-function updateLine(state: State, lineNumber: number, text: string): State {
-    state.cancellationToken?.throwIfCancelled();
-
-    const error: LexError.BadLineNumberError | undefined = testLineNumberError(state, lineNumber);
-
-    if (error !== undefined) {
-        throw error;
-    }
-
-    const line: TLine = ArrayUtils.assertGet(state.lines, lineNumber);
-    const range: Range = rangeFrom(line, lineNumber);
-
-    return updateRange(state, range, text);
-}
-
-function updateRange(state: State, range: Range, text: string): State {
-    state.cancellationToken?.throwIfCancelled();
-
-    const error: LexError.BadRangeError | undefined = testBadRangeError(state, range);
-
-    if (error !== undefined) {
-        throw error;
-    }
-
-    const splitLines: SplitLine[] = splitOnLineTerminators(text);
-
-    const rangeStart: RangePosition = range.start;
-    const lineStart: TLine = ArrayUtils.assertGet(state.lines, rangeStart.lineNumber);
-    const textPrefix: string = lineStart.text.substring(0, rangeStart.lineCodeUnit);
-    ArrayUtils.assertGet(splitLines, 0).text = textPrefix + ArrayUtils.assertGet(splitLines, 0).text;
-
-    const rangeEnd: RangePosition = range.end;
-    const lineEnd: TLine = ArrayUtils.assertGet(state.lines, rangeEnd.lineNumber);
-    const textSuffix: string = lineEnd.text.substr(rangeEnd.lineCodeUnit);
-    const lastSplitLine: SplitLine = ArrayUtils.assertGet(splitLines, splitLines.length - 1);
-    lastSplitLine.text = lastSplitLine.text + textSuffix;
-
-    // make sure we have a line terminator
-    lastSplitLine.lineTerminator = lineEnd.lineTerminator;
-
-    const previousLine: TLine | undefined = state.lines[rangeStart.lineNumber - 1];
-    const previousLineModeEnd: LineMode = previousLine?.lineModeEnd ?? LineMode.Default;
-
-    const newLines: ReadonlyArray<TLine> = tokenizedLinesFrom(
-        splitLines,
-        previousLineModeEnd,
-        state.locale,
-        state.cancellationToken,
-    );
-
-    const lines: ReadonlyArray<TLine> = [
-        ...state.lines.slice(0, rangeStart.lineNumber),
-        ...newLines,
-        ...retokenizeLines(
-            state,
-            rangeEnd.lineNumber + 1,
-            ArrayUtils.assertGet(newLines, newLines.length - 1).lineModeEnd,
-        ),
-    ];
-
-    return {
-        lines,
-        locale: state.locale,
-        cancellationToken: state.cancellationToken,
-        isTypeDirectiveAllowed: state.isTypeDirectiveAllowed,
-    };
-}
-
-function deleteLine(state: State, lineNumber: number): State {
-    state.cancellationToken?.throwIfCancelled();
-
-    const error: LexError.BadLineNumberError | undefined = testLineNumberError(state, lineNumber);
-
-    if (error !== undefined) {
-        throw error;
-    }
-
-    return {
-        ...state,
-        lines: ArrayUtils.assertRemoveAtIndex(state.lines, lineNumber),
-    };
-}
-
-function lineFrom(text: string, lineTerminator: string, lineModeStart: LineMode): UntouchedLine {
-    return {
-        kind: LineKind.Untouched,
-        text,
-        lineTerminator,
-        lineModeStart,
-        lineModeEnd: LineMode.Default,
-        tokens: [],
-    };
-}
-
-function graphemePositionFrom(text: string, lineNumber: number, lineCodeUnit: number): StringUtils.GraphemePosition {
-    return StringUtils.graphemePositionFrom(text, lineCodeUnit, lineNumber, undefined);
-}
-
-function rangeFrom(line: TLine, lineNumber: number): Range {
-    return {
-        start: {
-            lineNumber,
-            lineCodeUnit: 0,
-        },
-        end: {
-            lineNumber,
-            lineCodeUnit: line.text.length,
-        },
-    };
-}
-
-function tokenizedLinesFrom(
-    splitLines: ReadonlyArray<SplitLine>,
-    previousLineModeEnd: LineMode,
-    locale: string,
-    cancellationToken: ICancellationToken | undefined,
-): ReadonlyArray<TLine> {
-    const tokenizedLines: TLine[] = [];
-
-    for (const [splitLine, index] of ArrayUtils.enumerate(splitLines)) {
-        const untokenizedLine: UntouchedLine = lineFrom(splitLine.text, splitLine.lineTerminator, previousLineModeEnd);
-        const tokenizedLine: TLine = tokenize(untokenizedLine, index, locale, cancellationToken);
-        tokenizedLines.push(tokenizedLine);
-        previousLineModeEnd = tokenizedLine.lineModeEnd;
-    }
-
-    return tokenizedLines;
-}
-
-// If an earlier line changed its lineModeEnd, eg. inserting a `"` to start a string literal,
-// then the proceeding lines would need to be retokenized.
-// Stops retokenizing when previous.lineModeEnd !== current.lineModeStart.
-// Returns lines in the range [lineNumber, lines.length -1]
-function retokenizeLines(state: State, lineNumber: number, previousLineModeEnd: LineMode): ReadonlyArray<TLine> {
-    const lines: ReadonlyArray<TLine> = state.lines;
-
-    if (lines[lineNumber] === undefined) {
-        return [];
-    }
-
-    const retokenizedLines: TLine[] = [];
-
-    if (previousLineModeEnd !== ArrayUtils.assertGet(lines, lineNumber).lineModeStart) {
-        let currentLine: TLine | undefined = lines[lineNumber];
-
-        while (currentLine) {
-            const line: TLine = currentLine;
-
-            if (previousLineModeEnd !== line.lineModeStart) {
-                const untokenizedLine: UntouchedLine = lineFrom(line.text, line.lineTerminator, previousLineModeEnd);
-
-                const retokenizedLine: TLine = tokenize(
-                    untokenizedLine,
-                    lineNumber,
-                    state.locale,
-                    state.cancellationToken,
-                );
-
-                retokenizedLines.push(retokenizedLine);
-                previousLineModeEnd = retokenizedLine.lineModeEnd;
-                lineNumber += 1;
-                currentLine = lines[lineNumber];
-            } else {
-                return [...retokenizedLines, ...lines.slice(lineNumber)];
-            }
-        }
-
-        return retokenizedLines;
-    } else {
-        return lines.slice(lineNumber);
-    }
-}
-
-// The main function of the lexer's tokenizer.
-function tokenize(
-    line: TLine,
-    lineNumber: number,
-    locale: string,
-    cancellationToken: ICancellationToken | undefined,
-): TLine {
-    cancellationToken?.throwIfCancelled();
-
-    switch (line.kind) {
-        // Cannot tokenize something that ended with an error,
-        // nothing has changed since the last tokenize.
-        // Update the line's text before trying again.
-        case LineKind.Error:
-            return line;
-
-        case LineKind.Touched:
-            // The line was already fully lexed once.
-            // Without any text changes it should throw eof to help diagnose
-            // why it's trying to retokenize.
-            return {
-                ...line,
-                kind: LineKind.Error,
-                error: new LexError.LexError(new LexError.EndOfStreamError(locale)),
-            };
-
-        // Cannot tokenize something that previously ended with an error.
-        // Update the line's text before trying again.
-        case LineKind.TouchedWithError:
-            return {
-                kind: LineKind.Error,
-                text: line.text,
-                lineTerminator: line.lineTerminator,
-                lineModeStart: line.lineModeStart,
-                lineModeEnd: line.lineModeEnd,
-                tokens: line.tokens,
-                error: new LexError.LexError(new LexError.BadStateError(line.error, locale)),
-            };
-
-        case LineKind.Untouched:
+        if (position === text.length) {
             break;
-
-        default:
-            throw Assert.isNever(line);
-    }
-
-    const untouchedLine: UntouchedLine = line;
-    const text: string = untouchedLine.text;
-    const textLength: number = text.length;
-
-    // If there's nothing to tokenize set lineModeEnd to lineModeStart.
-    if (textLength === 0) {
-        return {
-            kind: LineKind.Touched,
-            text: line.text,
-            lineTerminator: line.lineTerminator,
-            lineModeStart: line.lineModeStart,
-            lineModeEnd: line.lineModeStart,
-            tokens: [],
-        };
-    }
-
-    let lineMode: LineMode = line.lineModeStart;
-    let currentPosition: number = 0;
-
-    if (lineMode === LineMode.Default) {
-        currentPosition = drainWhitespace(text, currentPosition);
-    }
-
-    const newTokens: Token.LineToken[] = [];
-    let continueLexing: boolean = currentPosition !== text.length;
-    let lexError: LexError.TLexError | undefined;
-
-    // While neither eof nor having encountered an error:
-    //  * Lex according to lineModeStart, starting from currentPosition.
-    //  * Update currentPosition and lineMode.
-    //  * Drain whitespace.
-    while (continueLexing) {
-        cancellationToken?.throwIfCancelled();
-
-        try {
-            let readOutcome: LineModeAlteringRead;
-
-            switch (lineMode) {
-                case LineMode.Comment:
-                    readOutcome = tokenizeMultilineCommentContentOrEnd(line, currentPosition);
-                    break;
-
-                case LineMode.Default:
-                    readOutcome = tokenizeDefault(line, lineNumber, currentPosition, locale);
-                    break;
-
-                case LineMode.QuotedIdentifier:
-                    readOutcome = tokenizeQuotedIdentifierContentOrEnd(line, currentPosition);
-                    break;
-
-                case LineMode.Text:
-                    readOutcome = tokenizeTextLiteralContentOrEnd(line, currentPosition);
-                    break;
-
-                default:
-                    throw Assert.isNever(lineMode);
-            }
-
-            lineMode = readOutcome.lineMode;
-            const token: Token.LineToken = readOutcome.token;
-            newTokens.push(token);
-
-            if (lineMode === LineMode.Default) {
-                currentPosition = drainWhitespace(text, token.positionEnd);
-            } else {
-                currentPosition = token.positionEnd;
-            }
-
-            if (currentPosition === textLength) {
-                continueLexing = false;
-            }
-        } catch (caught: unknown) {
-            let error: LexError.TLexError;
-
-            if (LexError.isTInnerLexError(caught)) {
-                error = new LexError.LexError(caught);
-            } else {
-                Assert.isInstanceofError(caught);
-                error = CommonError.ensureCommonError(caught, locale);
-            }
-
-            continueLexing = false;
-            lexError = error;
         }
-    }
 
-    let partialTokenizeResult: PartialLexResult;
+        const newlineLength: number = lineTerminatorLength(text, position);
 
-    if (lexError) {
-        if (newTokens.length) {
-            partialTokenizeResult = PartialResultUtils.incomplete<PartialLex>({
-                tokenizeChanges: {
-                    tokens: newTokens,
-                    lineModeEnd: lineMode,
-                },
-                error: lexError,
+        if (newlineLength !== 0) {
+            lineTerminators.push({ codeUnit: position, text: text.substring(position, position + newlineLength) });
+            position += newlineLength;
+            lineNumber += 1;
+            lineStart = position;
+
+            continue;
+        }
+
+        const token: ReadToken<Token.TokenKind | Comment.CommentKind> = tokenize(
+            text,
+            lineNumber,
+            position,
+            settings.locale,
+        );
+
+        const positionStart: Token.TokenPosition = {
+            codeUnit: position,
+            lineCodeUnit: position - lineStart,
+            lineNumber,
+        };
+
+        // Record source positions without splitting multiline tokens into line fragments.
+        while (position < token.positionEnd) {
+            const length: number = lineTerminatorLength(text, position);
+
+            if (length === 0) {
+                position += 1;
+            } else {
+                settings.cancellationToken?.throwIfCancelled();
+                lineTerminators.push({ codeUnit: position, text: text.substring(position, position + length) });
+                position += length;
+                lineNumber += 1;
+                lineStart = position;
+            }
+        }
+
+        const positionEnd: Token.TokenPosition = {
+            codeUnit: position,
+            lineCodeUnit: position - lineStart,
+            lineNumber,
+        };
+
+        if (token.kind === Comment.CommentKind.Line) {
+            comments.push(createLineComment(token.data, positionStart, positionEnd, settings.isTypeDirectiveAllowed));
+        } else if (token.kind === Comment.CommentKind.Multiline) {
+            comments.push({
+                kind: token.kind,
+                data: token.data,
+                containsNewline: positionStart.lineNumber !== positionEnd.lineNumber,
+                positionStart,
+                positionEnd,
             });
         } else {
-            partialTokenizeResult = PartialResultUtils.error(lexError);
+            tokens.push({ kind: token.kind, data: token.data, positionStart, positionEnd });
         }
-    } else {
-        partialTokenizeResult = PartialResultUtils.ok({
-            tokens: newTokens,
-            lineModeEnd: lineMode,
-        });
     }
 
-    return updateLineState(line, partialTokenizeResult);
+    lineTerminators.push({ codeUnit: text.length, text: "" });
+
+    return new LexerSnapshot(text, tokens, comments, lineTerminators);
 }
 
-// Takes the return from a tokenizeX function to updates the TLine's state.
-function updateLineState(line: TLine, potentiallyIncompleteResult: PartialLexResult): TLine {
-    switch (potentiallyIncompleteResult.kind) {
-        case PartialResultKind.Ok: {
-            const tokenizeChanges: TokenizeChanges = potentiallyIncompleteResult.value;
-            const newTokens: ReadonlyArray<Token.LineToken> = line.tokens.concat(tokenizeChanges.tokens);
+function graphemePositionFrom(text: string, lineNumber: number, position: number): StringUtils.GraphemePosition {
+    const lineStart: number =
+        position === 0
+            ? 0
+            : Math.max(
+                  text.lastIndexOf("\n", position - 1),
+                  text.lastIndexOf("\u2028", position - 1),
+                  text.lastIndexOf("\u2029", position - 1),
+              ) + 1;
 
-            return {
-                kind: LineKind.Touched,
-                text: line.text,
-                lineTerminator: line.lineTerminator,
-                lineModeStart: line.lineModeStart,
-                lineModeEnd: tokenizeChanges.lineModeEnd,
-                tokens: newTokens,
-            };
-        }
+    const lineText: string = text.substring(lineStart, indexOfLineEnd(text, position));
+    const lineCodeUnit: number = position - lineStart;
+    let columnNumber: number = 0;
+    let codeUnit: number = 0;
 
-        case PartialResultKind.Incomplete: {
-            const tokenizeChanges: TokenizeChanges = potentiallyIncompleteResult.partial.tokenizeChanges;
-            const newTokens: ReadonlyArray<Token.LineToken> = line.tokens.concat(tokenizeChanges.tokens);
+    // Invalid code units may lie inside a grapheme, such as a combining mark after a number.
+    for (const grapheme of StringUtils.graphemeSplitter.splitGraphemes(lineText)) {
+        codeUnit += grapheme.length;
 
-            return {
-                kind: LineKind.TouchedWithError,
-                text: line.text,
-                lineTerminator: line.lineTerminator,
-                lineModeStart: line.lineModeStart,
-                lineModeEnd: tokenizeChanges.lineModeEnd,
-                tokens: newTokens,
-                error: potentiallyIncompleteResult.partial.error,
-            };
+        if (codeUnit > lineCodeUnit) {
+            break;
         }
 
-        case PartialResultKind.Error:
-            return {
-                kind: LineKind.Error,
-                text: line.text,
-                lineModeStart: line.lineModeStart,
-                lineTerminator: line.lineTerminator,
-                lineModeEnd: line.lineModeEnd,
-                tokens: line.tokens,
-                error: potentiallyIncompleteResult.error,
-            };
-
-        default:
-            throw Assert.isNever(potentiallyIncompleteResult);
+        columnNumber += 1;
     }
+
+    return { lineNumber, lineCodeUnit, columnNumber, codeUnit: position };
 }
 
-// Read until either "*/" or eof
-function tokenizeMultilineCommentContentOrEnd(line: TLine, positionStart: number): LineModeAlteringRead {
-    const text: string = line.text;
-    const indexOfCloseComment: number = text.indexOf("*/", positionStart);
-
-    if (indexOfCloseComment === -1) {
-        return {
-            token: readRestOfLine(Token.LineTokenKind.MultilineCommentContent, text, positionStart),
-            lineMode: LineMode.Comment,
-        };
-    } else {
-        const positionEnd: number = indexOfCloseComment + 2;
-
-        return {
-            token: readTokenFrom(Token.LineTokenKind.MultilineCommentEnd, text, positionStart, positionEnd),
-            lineMode: LineMode.Default,
-        };
-    }
-}
-
-// Read until either string literal end or eof
-function tokenizeQuotedIdentifierContentOrEnd(line: TLine, currentPosition: number): LineModeAlteringRead {
-    const read: LineModeAlteringRead = tokenizeTextLiteralContentOrEnd(line, currentPosition);
-
-    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
-    switch (read.token.kind) {
-        case Token.LineTokenKind.TextLiteralContent:
-            return {
-                lineMode: LineMode.QuotedIdentifier,
-                token: {
-                    ...read.token,
-                    kind: Token.LineTokenKind.QuotedIdentifierContent,
-                },
-            };
-
-        case Token.LineTokenKind.TextLiteralEnd:
-            return {
-                lineMode: LineMode.Default,
-                token: {
-                    ...read.token,
-                    kind: Token.LineTokenKind.QuotedIdentifierEnd,
-                },
-            };
-
-        default:
-            throw new CommonError.InvariantError(
-                `expected the return to be either ${Token.LineTokenKind.TextLiteralContent} or ${Token.LineTokenKind.TextLiteralEnd}`,
-                { read },
-            );
-    }
-}
-
-// Read until either string literal end or eof
-function tokenizeTextLiteralContentOrEnd(line: TLine, currentPosition: number): LineModeAlteringRead {
-    const text: string = line.text;
-    const positionEnd: number | undefined = indexOfTextEnd(text, currentPosition);
-
-    if (positionEnd === undefined) {
-        return {
-            token: readRestOfLine(Token.LineTokenKind.TextLiteralContent, text, currentPosition),
-            lineMode: LineMode.Text,
-        };
-    } else {
-        return {
-            token: readTokenFrom(Token.LineTokenKind.TextLiteralEnd, text, currentPosition, positionEnd + 1),
-            lineMode: LineMode.Default,
-        };
-    }
-}
-
-function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number, locale: string): LineModeAlteringRead {
-    const text: string = line.text;
-
+function tokenize(
+    text: string,
+    lineNumber: number,
+    positionStart: number,
+    locale: string,
+): ReadToken<Token.TokenKind | Comment.CommentKind> {
     const chr1: string = StringUtils.assertGet(text, positionStart);
-    let token: Token.LineToken;
-    let lineMode: LineMode = LineMode.Default;
+    let token: ReadToken<Token.TokenKind | Comment.CommentKind>;
 
     if (chr1 === "!") {
-        token = readConstant(Token.LineTokenKind.Bang, text, positionStart, 1);
+        token = readConstant(Token.TokenKind.Bang, text, positionStart, 1);
     } else if (chr1 === "&") {
-        token = readConstant(Token.LineTokenKind.Ampersand, text, positionStart, 1);
+        token = readConstant(Token.TokenKind.Ampersand, text, positionStart, 1);
     } else if (chr1 === "(") {
-        token = readConstant(Token.LineTokenKind.LeftParenthesis, text, positionStart, 1);
+        token = readConstant(Token.TokenKind.LeftParenthesis, text, positionStart, 1);
     } else if (chr1 === ")") {
-        token = readConstant(Token.LineTokenKind.RightParenthesis, text, positionStart, 1);
+        token = readConstant(Token.TokenKind.RightParenthesis, text, positionStart, 1);
     } else if (chr1 === "*") {
-        token = readConstant(Token.LineTokenKind.Asterisk, text, positionStart, 1);
+        token = readConstant(Token.TokenKind.Asterisk, text, positionStart, 1);
     } else if (chr1 === "+") {
-        token = readConstant(Token.LineTokenKind.Plus, text, positionStart, 1);
+        token = readConstant(Token.TokenKind.Plus, text, positionStart, 1);
     } else if (chr1 === ",") {
-        token = readConstant(Token.LineTokenKind.Comma, text, positionStart, 1);
+        token = readConstant(Token.TokenKind.Comma, text, positionStart, 1);
     } else if (chr1 === "-") {
-        token = readConstant(Token.LineTokenKind.Minus, text, positionStart, 1);
+        token = readConstant(Token.TokenKind.Minus, text, positionStart, 1);
     } else if (chr1 === ";") {
-        token = readConstant(Token.LineTokenKind.Semicolon, text, positionStart, 1);
+        token = readConstant(Token.TokenKind.Semicolon, text, positionStart, 1);
     } else if (chr1 === "?") {
         const chr2: string | undefined = text[positionStart + 1];
 
         if (chr2 === "?") {
-            token = readConstant(Token.LineTokenKind.NullCoalescingOperator, text, positionStart, 2);
+            token = readConstant(Token.TokenKind.NullCoalescingOperator, text, positionStart, 2);
         } else {
-            token = readConstant(Token.LineTokenKind.QuestionMark, text, positionStart, 1);
+            token = readConstant(Token.TokenKind.QuestionMark, text, positionStart, 1);
         }
     } else if (chr1 === "@") {
-        token = readConstant(Token.LineTokenKind.AtSign, text, positionStart, 1);
+        token = readConstant(Token.TokenKind.AtSign, text, positionStart, 1);
     } else if (chr1 === "[") {
-        token = readConstant(Token.LineTokenKind.LeftBracket, text, positionStart, 1);
+        token = readConstant(Token.TokenKind.LeftBracket, text, positionStart, 1);
     } else if (chr1 === "]") {
-        token = readConstant(Token.LineTokenKind.RightBracket, text, positionStart, 1);
+        token = readConstant(Token.TokenKind.RightBracket, text, positionStart, 1);
     } else if (chr1 === "{") {
-        token = readConstant(Token.LineTokenKind.LeftBrace, text, positionStart, 1);
+        token = readConstant(Token.TokenKind.LeftBrace, text, positionStart, 1);
     } else if (chr1 === "}") {
-        token = readConstant(Token.LineTokenKind.RightBrace, text, positionStart, 1);
+        token = readConstant(Token.TokenKind.RightBrace, text, positionStart, 1);
     } else if (chr1 === '"') {
-        const read: LineModeAlteringRead = readOrStartTextLiteral(text, positionStart);
-        token = read.token;
-        lineMode = read.lineMode;
+        token = readQuotedToken(text, lineNumber, positionStart, locale);
     } else if (chr1 === "0") {
         const chr2: string | undefined = text[positionStart + 1];
 
@@ -859,7 +212,7 @@ function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number,
     } else if (chr1 === ".") {
         const chr2: string | undefined = text[positionStart + 1];
 
-        if (chr2 === undefined) {
+        if (chr2 === undefined || lineTerminatorLength(text, positionStart + 1) !== 0) {
             throw new LexError.UnexpectedEofError(graphemePositionFrom(text, lineNumber, positionStart), locale);
         } else if ("1" <= chr2 && chr2 <= "9") {
             token = readNumericLiteral(text, lineNumber, positionStart, locale);
@@ -867,9 +220,9 @@ function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number,
             const chr3: string | undefined = text[positionStart + 2];
 
             if (chr3 === ".") {
-                token = readConstant(Token.LineTokenKind.Ellipsis, text, positionStart, 3);
+                token = readConstant(Token.TokenKind.Ellipsis, text, positionStart, 3);
             } else {
-                token = readConstant(Token.LineTokenKind.DotDot, text, positionStart, 2);
+                token = readConstant(Token.TokenKind.DotDot, text, positionStart, 2);
             }
         } else {
             throw unexpectedReadError(locale, text, lineNumber, positionStart);
@@ -878,27 +231,27 @@ function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number,
         const chr2: string | undefined = text[positionStart + 1];
 
         if (chr2 === "=") {
-            token = readConstant(Token.LineTokenKind.GreaterThanEqualTo, text, positionStart, 2);
+            token = readConstant(Token.TokenKind.GreaterThanEqualTo, text, positionStart, 2);
         } else {
-            token = readConstant(Token.LineTokenKind.GreaterThan, text, positionStart, 1);
+            token = readConstant(Token.TokenKind.GreaterThan, text, positionStart, 1);
         }
     } else if (chr1 === "<") {
         const chr2: string | undefined = text[positionStart + 1];
 
         if (chr2 === "=") {
-            token = readConstant(Token.LineTokenKind.LessThanEqualTo, text, positionStart, 2);
+            token = readConstant(Token.TokenKind.LessThanEqualTo, text, positionStart, 2);
         } else if (chr2 === ">") {
-            token = readConstant(Token.LineTokenKind.NotEqual, text, positionStart, 2);
+            token = readConstant(Token.TokenKind.NotEqual, text, positionStart, 2);
         } else {
-            token = readConstant(Token.LineTokenKind.LessThan, text, positionStart, 1);
+            token = readConstant(Token.TokenKind.LessThan, text, positionStart, 1);
         }
     } else if (chr1 === "=") {
         const chr2: string | undefined = text[positionStart + 1];
 
         if (chr2 === ">") {
-            token = readConstant(Token.LineTokenKind.FatArrow, text, positionStart, 2);
+            token = readConstant(Token.TokenKind.FatArrow, text, positionStart, 2);
         } else {
-            token = readConstant(Token.LineTokenKind.Equal, text, positionStart, 1);
+            token = readConstant(Token.TokenKind.Equal, text, positionStart, 1);
         }
     } else if (chr1 === "/") {
         const chr2: string | undefined = text[positionStart + 1];
@@ -906,19 +259,15 @@ function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number,
         if (chr2 === "/") {
             token = readLineComment(text, positionStart);
         } else if (chr2 === "*") {
-            const read: LineModeAlteringRead = readOrStartMultilineComment(text, positionStart);
-            token = read.token;
-            lineMode = read.lineMode;
+            token = readMultilineComment(text, positionStart, lineNumber, locale);
         } else {
-            token = readConstant(Token.LineTokenKind.Division, text, positionStart, 1);
+            token = readConstant(Token.TokenKind.Division, text, positionStart, 1);
         }
     } else if (chr1 === "#") {
         const chr2: string | undefined = text[positionStart + 1];
 
         if (chr2 === '"') {
-            const read: LineModeAlteringRead = readOrStartQuotedIdentifier(text, positionStart);
-            token = read.token;
-            lineMode = read.lineMode;
+            token = readQuotedToken(text, lineNumber, positionStart, locale);
         } else {
             token = readKeyword(text, lineNumber, positionStart, locale);
         }
@@ -926,46 +275,47 @@ function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number,
         token = readKeywordOrIdentifier(text, lineNumber, positionStart, locale);
     }
 
-    return {
-        token,
-        lineMode,
-    };
+    return token;
 }
 
 // newlines are not considered whitespace
 function drainWhitespace(text: string, position: number): number {
-    let continueDraining: boolean = text[position] !== undefined;
-
-    while (continueDraining) {
-        const length: number | undefined = StringUtils.regexMatchLength(Pattern.Whitespace, text, position);
+    while (position < text.length) {
+        const length: number | undefined = StringUtils.regexMatchLength(WhitespacePattern, text, position);
 
         if (length) {
             position += length;
         } else {
-            continueDraining = false;
+            return position;
         }
     }
 
     return position;
 }
 
-function readOrStartTextLiteral(text: string, currentPosition: number): LineModeAlteringRead {
-    const positionEnd: number | undefined = indexOfTextEnd(text, currentPosition + 1);
+function readQuotedToken(text: string, lineNumber: number, positionStart: number, locale: string): ReadToken {
+    const isQuotedIdentifier: boolean = text[positionStart] === "#";
+    const positionEnd: number | undefined = indexOfTextEnd(text, positionStart + (isQuotedIdentifier ? 2 : 1));
 
     if (positionEnd !== undefined) {
-        return {
-            token: readTokenFrom(Token.LineTokenKind.TextLiteral, text, currentPosition, positionEnd + 1),
-            lineMode: LineMode.Default,
-        };
+        return readTokenFrom(
+            isQuotedIdentifier ? Token.TokenKind.Identifier : Token.TokenKind.TextLiteral,
+            text,
+            positionStart,
+            positionEnd + 1,
+        );
     } else {
-        return {
-            token: readRestOfLine(Token.LineTokenKind.TextLiteralStart, text, currentPosition),
-            lineMode: LineMode.Text,
-        };
+        throw new LexError.UnterminatedMultilineTokenError(
+            locale,
+            graphemePositionFrom(text, lineNumber, positionStart),
+            isQuotedIdentifier
+                ? LexError.UnterminatedMultilineTokenKind.QuotedIdentifier
+                : LexError.UnterminatedMultilineTokenKind.Text,
+        );
     }
 }
 
-function readHexLiteral(text: string, lineNumber: number, positionStart: number, locale: string): Token.LineToken {
+function readHexLiteral(text: string, lineNumber: number, positionStart: number, locale: string): ReadToken {
     const positionEnd: number | undefined = indexOfRegexEnd(Pattern.Hex, text, positionStart);
 
     if (positionEnd === undefined) {
@@ -976,10 +326,10 @@ function readHexLiteral(text: string, lineNumber: number, positionStart: number,
         );
     }
 
-    return readTokenFrom(Token.LineTokenKind.HexLiteral, text, positionStart, positionEnd);
+    return readTokenFrom(Token.TokenKind.HexLiteral, text, positionStart, positionEnd);
 }
 
-function readNumericLiteral(text: string, lineNumber: number, positionStart: number, locale: string): Token.LineToken {
+function readNumericLiteral(text: string, lineNumber: number, positionStart: number, locale: string): ReadToken {
     const positionEnd: number | undefined = indexOfRegexEnd(Pattern.Numeric, text, positionStart);
 
     if (positionEnd === undefined) {
@@ -990,161 +340,131 @@ function readNumericLiteral(text: string, lineNumber: number, positionStart: num
         );
     }
 
-    return readTokenFrom(Token.LineTokenKind.NumericLiteral, text, positionStart, positionEnd);
+    return readTokenFrom(Token.TokenKind.NumericLiteral, text, positionStart, positionEnd);
 }
 
-function readLineComment(text: string, positionStart: number): Token.LineToken {
-    return readRestOfLine(Token.LineTokenKind.LineComment, text, positionStart);
+function readLineComment(text: string, positionStart: number): ReadToken<Comment.CommentKind.Line> {
+    return readTokenFrom(Comment.CommentKind.Line, text, positionStart, indexOfLineEnd(text, positionStart));
 }
 
-function readOrStartMultilineComment(text: string, positionStart: number): LineModeAlteringRead {
+function readMultilineComment(
+    text: string,
+    positionStart: number,
+    lineNumber: number,
+    locale: string,
+): ReadToken<Comment.CommentKind.Multiline> {
     const indexOfCloseComment: number = text.indexOf("*/", positionStart + 2);
 
     if (indexOfCloseComment === -1) {
-        return {
-            token: readRestOfLine(Token.LineTokenKind.MultilineCommentStart, text, positionStart),
-            lineMode: LineMode.Comment,
-        };
+        throw new LexError.UnterminatedMultilineTokenError(
+            locale,
+            graphemePositionFrom(text, lineNumber, positionStart),
+            LexError.UnterminatedMultilineTokenKind.MultilineComment,
+        );
     } else {
         const positionEnd: number = indexOfCloseComment + 2;
 
-        return {
-            token: readTokenFrom(Token.LineTokenKind.MultilineComment, text, positionStart, positionEnd),
-            lineMode: LineMode.Default,
-        };
+        return readTokenFrom(Comment.CommentKind.Multiline, text, positionStart, positionEnd);
     }
 }
 
-function readKeyword(text: string, lineNumber: number, positionStart: number, locale: string): Token.LineToken {
-    const lineToken: Token.LineToken | undefined = readKeywordHelper(text, positionStart);
-
-    if (lineToken) {
-        return lineToken;
-    } else {
-        throw unexpectedReadError(locale, text, lineNumber, positionStart);
-    }
-}
-
-function readKeywordHelper(text: string, currentPosition: number): Token.LineToken | undefined {
-    const identifierPositionStart: number = text[currentPosition] === "#" ? currentPosition + 1 : currentPosition;
-    const identifierPositionEnd: number | undefined = indexOfIdentifierEnd(text, identifierPositionStart);
+function readKeyword(text: string, lineNumber: number, positionStart: number, locale: string): ReadToken {
+    const identifierPositionEnd: number | undefined = indexOfIdentifierEnd(text, positionStart + 1);
 
     if (identifierPositionEnd === undefined) {
-        return undefined;
+        throw unexpectedReadError(locale, text, lineNumber, positionStart);
     }
 
-    const data: string = text.substring(currentPosition, identifierPositionEnd);
-    const keywordTokenKind: Token.LineTokenKind | undefined = keywordLineTokenKindFrom(data);
+    const data: string = text.substring(positionStart, identifierPositionEnd);
+    const keywordTokenKind: Token.TokenKind | undefined = keywordTokenKindFrom(data);
 
     if (keywordTokenKind === undefined) {
-        return undefined;
+        throw unexpectedReadError(locale, text, lineNumber, positionStart);
     } else {
         return {
             kind: keywordTokenKind,
-            positionStart: currentPosition,
             positionEnd: identifierPositionEnd,
             data,
         };
     }
 }
 
-function readOrStartQuotedIdentifier(text: string, currentPosition: number): LineModeAlteringRead {
-    const positionEnd: number | undefined = indexOfTextEnd(text, currentPosition + 2);
-
-    if (positionEnd !== undefined) {
-        return {
-            token: readTokenFrom(Token.LineTokenKind.Identifier, text, currentPosition, positionEnd + 1),
-            lineMode: LineMode.Default,
-        };
-    } else {
-        return {
-            token: readRestOfLine(Token.LineTokenKind.QuotedIdentifierStart, text, currentPosition),
-            lineMode: LineMode.QuotedIdentifier,
-        };
-    }
-}
-
 // The case for quoted identifier has already been taken care of.
 // The null-literal is also read here.
-function readKeywordOrIdentifier(
-    text: string,
-    lineNumber: number,
-    positionStart: number,
-    locale: string,
-): Token.LineToken {
-    // keyword
-    if (text[positionStart] === "#") {
-        return readKeyword(text, lineNumber, positionStart, locale);
+function readKeywordOrIdentifier(text: string, lineNumber: number, positionStart: number, locale: string): ReadToken {
+    const positionEnd: number | undefined = indexOfIdentifierEnd(text, positionStart);
+
+    if (positionEnd === undefined) {
+        throw new LexError.ExpectedError(
+            graphemePositionFrom(text, lineNumber, positionStart),
+            LexError.ExpectedKind.KeywordOrIdentifier,
+            locale,
+        );
     }
-    // either keyword or identifier
-    else {
-        const positionEnd: number | undefined = indexOfIdentifierEnd(text, positionStart);
 
-        if (positionEnd === undefined) {
-            throw new LexError.ExpectedError(
-                graphemePositionFrom(text, lineNumber, positionStart),
-                LexError.ExpectedKind.KeywordOrIdentifier,
-                locale,
-            );
-        }
+    const data: string = text.substring(positionStart, positionEnd);
+    const keywordTokenKind: Token.TokenKind | undefined = keywordTokenKindFrom(data);
 
-        const data: string = text.substring(positionStart, positionEnd);
-        const keywordTokenKind: Token.LineTokenKind | undefined = keywordLineTokenKindFrom(data);
+    let tokenKind: Token.TokenKind;
 
-        let tokenKind: Token.LineTokenKind;
-
-        if (keywordTokenKind !== undefined) {
-            tokenKind = keywordTokenKind;
-        } else if (data === "null") {
-            tokenKind = Token.LineTokenKind.NullLiteral;
-        } else {
-            tokenKind = Token.LineTokenKind.Identifier;
-        }
-
-        return {
-            kind: tokenKind,
-            positionStart,
-            positionEnd,
-            data,
-        };
+    if (keywordTokenKind !== undefined) {
+        tokenKind = keywordTokenKind;
+    } else if (data === "null") {
+        tokenKind = Token.TokenKind.NullLiteral;
+    } else {
+        tokenKind = Token.TokenKind.Identifier;
     }
-}
 
-function readConstant(
-    lineTokenKind: Token.LineTokenKind,
-    text: string,
-    positionStart: number,
-    length: number,
-): Token.LineToken {
-    const positionEnd: number = positionStart + length;
-
-    return readTokenFrom(lineTokenKind, text, positionStart, positionEnd);
-}
-
-function readTokenFrom(
-    lineTokenKind: Token.LineTokenKind,
-    text: string,
-    positionStart: number,
-    positionEnd: number,
-): Token.LineToken {
     return {
-        kind: lineTokenKind,
-        positionStart,
+        kind: tokenKind,
         positionEnd,
-        data: text.substring(positionStart, positionEnd),
+        data,
     };
 }
 
-function readRestOfLine(lineTokenKind: Token.LineTokenKind, text: string, positionStart: number): Token.LineToken {
-    const positionEnd: number = text.length;
+function readConstant(tokenKind: Token.TokenKind, text: string, positionStart: number, length: number): ReadToken {
+    const positionEnd: number = positionStart + length;
 
-    return readTokenFrom(lineTokenKind, text, positionStart, positionEnd);
+    return readTokenFrom(tokenKind, text, positionStart, positionEnd);
+}
+
+function readTokenFrom<Kind extends Token.TokenKind | Comment.CommentKind>(
+    tokenKind: Kind,
+    text: string,
+    positionStart: number,
+    positionEnd: number,
+): ReadToken<Kind> {
+    return {
+        kind: tokenKind,
+        positionEnd,
+        data: text.substring(positionStart, positionEnd),
+    };
 }
 
 function indexOfRegexEnd(pattern: RegExp, text: string, positionStart: number): number | undefined {
     const length: number | undefined = StringUtils.regexMatchLength(pattern, text, positionStart);
 
     return length !== undefined ? positionStart + length : undefined;
+}
+
+function lineTerminatorLength(text: string, position: number): number {
+    const character: string | undefined = text[position];
+
+    if (character === "\r" && text[position + 1] === "\n") {
+        return 2;
+    } else if (character === "\n" || character === "\u2028" || character === "\u2029") {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+function indexOfLineEnd(text: string, position: number): number {
+    while (position < text.length && lineTerminatorLength(text, position) === 0) {
+        position += 1;
+    }
+
+    return position;
 }
 
 function indexOfIdentifierEnd(text: string, positionStart: number): number | undefined {
@@ -1155,100 +475,100 @@ function indexOfIdentifierEnd(text: string, positionStart: number): number | und
     return length !== undefined ? positionStart + length : undefined;
 }
 
-function keywordLineTokenKindFrom(data: string): Token.LineTokenKind | undefined {
+function keywordTokenKindFrom(data: string): Token.TokenKind | undefined {
     switch (data) {
         case Keyword.KeywordKind.And:
-            return Token.LineTokenKind.KeywordAnd;
+            return Token.TokenKind.KeywordAnd;
 
         case Keyword.KeywordKind.As:
-            return Token.LineTokenKind.KeywordAs;
+            return Token.TokenKind.KeywordAs;
 
         case Keyword.KeywordKind.Each:
-            return Token.LineTokenKind.KeywordEach;
+            return Token.TokenKind.KeywordEach;
 
         case Keyword.KeywordKind.Else:
-            return Token.LineTokenKind.KeywordElse;
+            return Token.TokenKind.KeywordElse;
 
         case Keyword.KeywordKind.Error:
-            return Token.LineTokenKind.KeywordError;
+            return Token.TokenKind.KeywordError;
 
         case Keyword.KeywordKind.False:
-            return Token.LineTokenKind.KeywordFalse;
+            return Token.TokenKind.KeywordFalse;
 
         case Keyword.KeywordKind.If:
-            return Token.LineTokenKind.KeywordIf;
+            return Token.TokenKind.KeywordIf;
 
         case Keyword.KeywordKind.In:
-            return Token.LineTokenKind.KeywordIn;
+            return Token.TokenKind.KeywordIn;
 
         case Keyword.KeywordKind.Is:
-            return Token.LineTokenKind.KeywordIs;
+            return Token.TokenKind.KeywordIs;
 
         case Keyword.KeywordKind.Let:
-            return Token.LineTokenKind.KeywordLet;
+            return Token.TokenKind.KeywordLet;
 
         case Keyword.KeywordKind.Meta:
-            return Token.LineTokenKind.KeywordMeta;
+            return Token.TokenKind.KeywordMeta;
 
         case Keyword.KeywordKind.Not:
-            return Token.LineTokenKind.KeywordNot;
+            return Token.TokenKind.KeywordNot;
 
         case Keyword.KeywordKind.Or:
-            return Token.LineTokenKind.KeywordOr;
+            return Token.TokenKind.KeywordOr;
 
         case Keyword.KeywordKind.Otherwise:
-            return Token.LineTokenKind.KeywordOtherwise;
+            return Token.TokenKind.KeywordOtherwise;
 
         case Keyword.KeywordKind.Section:
-            return Token.LineTokenKind.KeywordSection;
+            return Token.TokenKind.KeywordSection;
 
         case Keyword.KeywordKind.Shared:
-            return Token.LineTokenKind.KeywordShared;
+            return Token.TokenKind.KeywordShared;
 
         case Keyword.KeywordKind.Then:
-            return Token.LineTokenKind.KeywordThen;
+            return Token.TokenKind.KeywordThen;
 
         case Keyword.KeywordKind.True:
-            return Token.LineTokenKind.KeywordTrue;
+            return Token.TokenKind.KeywordTrue;
 
         case Keyword.KeywordKind.Try:
-            return Token.LineTokenKind.KeywordTry;
+            return Token.TokenKind.KeywordTry;
 
         case Keyword.KeywordKind.Type:
-            return Token.LineTokenKind.KeywordType;
+            return Token.TokenKind.KeywordType;
 
         case Keyword.KeywordKind.HashBinary:
-            return Token.LineTokenKind.KeywordHashBinary;
+            return Token.TokenKind.KeywordHashBinary;
 
         case Keyword.KeywordKind.HashDate:
-            return Token.LineTokenKind.KeywordHashDate;
+            return Token.TokenKind.KeywordHashDate;
 
         case Keyword.KeywordKind.HashDateTime:
-            return Token.LineTokenKind.KeywordHashDateTime;
+            return Token.TokenKind.KeywordHashDateTime;
 
         case Keyword.KeywordKind.HashDateTimeZone:
-            return Token.LineTokenKind.KeywordHashDateTimeZone;
+            return Token.TokenKind.KeywordHashDateTimeZone;
 
         case Keyword.KeywordKind.HashDuration:
-            return Token.LineTokenKind.KeywordHashDuration;
+            return Token.TokenKind.KeywordHashDuration;
 
         case Keyword.KeywordKind.HashInfinity:
-            return Token.LineTokenKind.KeywordHashInfinity;
+            return Token.TokenKind.KeywordHashInfinity;
 
         case Keyword.KeywordKind.HashNan:
-            return Token.LineTokenKind.KeywordHashNan;
+            return Token.TokenKind.KeywordHashNan;
 
         case Keyword.KeywordKind.HashSections:
-            return Token.LineTokenKind.KeywordHashSections;
+            return Token.TokenKind.KeywordHashSections;
 
         case Keyword.KeywordKind.HashShared:
-            return Token.LineTokenKind.KeywordHashShared;
+            return Token.TokenKind.KeywordHashShared;
 
         case Keyword.KeywordKind.HashTable:
-            return Token.LineTokenKind.KeywordHashTable;
+            return Token.TokenKind.KeywordHashTable;
 
         case Keyword.KeywordKind.HashTime:
-            return Token.LineTokenKind.KeywordHashTime;
+            return Token.TokenKind.KeywordHashTime;
 
         default:
             return undefined;
@@ -1256,13 +576,11 @@ function keywordLineTokenKindFrom(data: string): Token.LineTokenKind | undefined
 }
 
 function indexOfTextEnd(text: string, positionStart: number): number | undefined {
-    let indexLow: number = positionStart;
-    let positionEnd: number = text.indexOf('"', indexLow);
+    let positionEnd: number = text.indexOf('"', positionStart);
 
     while (positionEnd !== -1) {
         if (text[positionEnd + 1] === '"') {
-            indexLow = positionEnd + 2;
-            positionEnd = text.indexOf('"', indexLow);
+            positionEnd = text.indexOf('"', positionEnd + 2);
         } else {
             return positionEnd;
         }
@@ -1275,73 +593,92 @@ function unexpectedReadError(
     locale: string,
     text: string,
     lineNumber: number,
-    lineCodeUnit: number,
+    position: number,
 ): LexError.UnexpectedReadError {
-    return new LexError.UnexpectedReadError(graphemePositionFrom(text, lineNumber, lineCodeUnit), locale);
+    return new LexError.UnexpectedReadError(graphemePositionFrom(text, lineNumber, position), locale);
 }
 
-function testLineNumberError(state: State, lineNumber: number): LexError.BadLineNumberError | undefined {
-    const numLines: number = state.lines.length;
+function createLineComment(
+    data: string,
+    positionStart: Token.TokenPosition,
+    positionEnd: Token.TokenPosition,
+    isTypeDirectiveAllowed: boolean,
+): Comment.LineComment {
+    const lineComment: TypeScriptUtils.StripReadonly<Comment.LineComment> = {
+        kind: Comment.CommentKind.Line,
+        data,
+        directive: undefined,
+        containsNewline: true,
+        positionStart,
+        positionEnd,
+    };
 
-    if (lineNumber >= numLines) {
-        return new LexError.BadLineNumberError(
-            LexError.BadLineNumberKind.GreaterThanNumLines,
-            lineNumber,
-            numLines,
-            state.locale,
-        );
-    } else if (lineNumber < 0) {
-        return new LexError.BadLineNumberError(
-            LexError.BadLineNumberKind.LessThanZero,
-            lineNumber,
-            numLines,
-            state.locale,
-        );
-    } else {
+    if (isTypeDirectiveAllowed) {
+        const value: string | undefined = tryParseTypeDirectiveValue(data);
+
+        if (value !== undefined) {
+            lineComment.directive = {
+                kind: Comment.DirectiveKind.Type,
+                value,
+                comment: lineComment,
+            };
+        }
+    }
+
+    return lineComment;
+}
+
+function tryParseTypeDirectiveValue(commentData: string): string | undefined {
+    let position: number = 0;
+
+    if (!commentData.startsWith(TripleSlashPrefix)) {
         return undefined;
     }
+
+    position += TripleSlashPrefix.length;
+    position = indexAfterWhitespace(commentData, position);
+
+    if (!commentData.startsWith(TypeDirectiveKeyword, position)) {
+        return undefined;
+    }
+
+    position += TypeDirectiveKeyword.length;
+
+    const payloadStart: number = indexAfterWhitespace(commentData, position);
+
+    if (payloadStart === position || payloadStart >= commentData.length) {
+        return undefined;
+    }
+
+    const payloadEnd: number = indexBeforeTrailingWhitespace(commentData);
+
+    if (payloadStart >= payloadEnd) {
+        return undefined;
+    }
+
+    return commentData.slice(payloadStart, payloadEnd);
 }
 
-// Validator for Range.
-function testBadRangeError(state: State, range: Range): LexError.BadRangeError | undefined {
-    const start: RangePosition = range.start;
-    const end: RangePosition = range.end;
-    const numLines: number = state.lines.length;
+function indexAfterWhitespace(text: string, start: number): number {
+    let position: number = start;
 
-    let kind: LexError.BadRangeKind | undefined;
-
-    if (start.lineNumber === end.lineNumber && start.lineCodeUnit > end.lineCodeUnit) {
-        kind = LexError.BadRangeKind.SameLine_LineCodeUnitStart_Higher;
-    } else if (start.lineNumber > end.lineNumber) {
-        kind = LexError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd;
-    } else if (start.lineNumber < 0) {
-        kind = LexError.BadRangeKind.LineNumberStart_LessThan_Zero;
-    } else if (start.lineNumber >= numLines) {
-        kind = LexError.BadRangeKind.LineNumberStart_GreaterThan_NumLines;
-    } else if (end.lineNumber >= numLines) {
-        kind = LexError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines;
+    while (position < text.length && isWhitespace(text.charCodeAt(position))) {
+        position += 1;
     }
 
-    if (kind !== undefined) {
-        return new LexError.BadRangeError(range, kind, state.locale);
+    return position;
+}
+
+function indexBeforeTrailingWhitespace(text: string): number {
+    let position: number = text.length;
+
+    while (position > 0 && isWhitespace(text.charCodeAt(position - 1))) {
+        position -= 1;
     }
 
-    const lines: ReadonlyArray<TLine> = state.lines;
-    const rangeStart: RangePosition = range.start;
-    const rangeEnd: RangePosition = range.end;
+    return position;
+}
 
-    const lineStart: TLine = ArrayUtils.assertGet(lines, rangeStart.lineNumber);
-    const lineEnd: TLine = ArrayUtils.assertGet(lines, rangeEnd.lineNumber);
-
-    if (rangeStart.lineCodeUnit > lineStart.text.length) {
-        kind = LexError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength;
-    } else if (rangeEnd.lineCodeUnit > lineEnd.text.length) {
-        kind = LexError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength;
-    }
-
-    if (kind !== undefined) {
-        return new LexError.BadRangeError(range, kind, state.locale);
-    }
-
-    return undefined;
+function isWhitespace(charCode: number): boolean {
+    return charCode === 32 || charCode === 9;
 }
