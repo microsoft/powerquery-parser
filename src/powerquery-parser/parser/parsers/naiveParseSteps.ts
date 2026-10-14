@@ -1922,8 +1922,13 @@ export async function readType(
 
     state.cancellationToken?.throwIfCancelled();
 
-    // Only readType discards a failed primary-type diagnostic in favor of an expression.
-    // Skipped attempts emit no traces or checkpoint calls; cancellation is still checked by the readers.
+    // canStartPrimaryType covers every prefix accepted by tryReadPrimaryType. If false, that
+    // reader only creates a PrimitiveType context, rejects the token without consuming it,
+    // and rolls the context back. readType discards that diagnostic and calls the same
+    // primary-expression reader below, so skipping the attempt loses no valid type or diagnostic.
+    // Keep speculation without an enclosing context or at EOF, where its root/cached-token
+    // bookkeeping is observable. Cancellation checks remain above and in the fallback;
+    // traces and checkpoint hooks for the discarded attempt are intentionally omitted.
     if (
         state.currentContextNode !== undefined &&
         state.tokenIndex < state.lexerSnapshot.tokens.length &&
