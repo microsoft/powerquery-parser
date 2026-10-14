@@ -3,37 +3,10 @@
 
 import { CommonError, StringUtils } from "../common";
 import { Localization, LocalizationUtils } from "../localization";
-import { Lexer } from "..";
 
 export type TLexError = CommonError.CommonError | LexError;
 
-export type TInnerLexError =
-    | BadLineNumberError
-    | BadRangeError
-    | BadStateError
-    | EndOfStreamError
-    | ErrorLineMapError
-    | ExpectedError
-    | UnexpectedEofError
-    | UnexpectedReadError
-    | UnterminatedMultilineTokenError;
-
-export enum BadLineNumberKind {
-    LessThanZero = "LessThanZero",
-    GreaterThanNumLines = "GreaterThanNumLines",
-}
-
-// do not these sort variants,
-// they are in order that logical checks are made, which in turn help create logical variants
-export enum BadRangeKind {
-    SameLine_LineCodeUnitStart_Higher = "SameLine_LineCodeUnitStart_Higher",
-    LineNumberStart_GreaterThan_LineNumberEnd = "LineNumberStart_GreaterThan_LineNumberEnd",
-    LineNumberStart_LessThan_Zero = "LineNumberStart_LessThan_Zero",
-    LineNumberStart_GreaterThan_NumLines = "LineNumberStart_GreaterThan_NumLines",
-    LineNumberEnd_GreaterThan_NumLines = "LineNumberEnd_GreaterThan_NumLines",
-    LineCodeUnitStart_GreaterThan_LineLength = "LineCodeUnitStart_GreaterThan_LineLength",
-    LineCodeUnitEnd_GreaterThan_LineLength = "LineCodeUnitEnd_GreaterThan_LineLength",
-}
+export type TInnerLexError = ExpectedError | UnexpectedEofError | UnexpectedReadError | UnterminatedMultilineTokenError;
 
 export enum ExpectedKind {
     HexLiteral = "HexLiteral",
@@ -53,57 +26,7 @@ export class LexError extends Error {
     constructor(innerError: TInnerLexError) {
         super(innerError.message);
         this.innerError = innerError;
-        Object.setPrototypeOf(this, LexError);
-    }
-}
-
-export class BadLineNumberError extends Error {
-    constructor(
-        readonly kind: BadLineNumberKind,
-        readonly lineNumber: number,
-        readonly numLines: number,
-        locale: string,
-    ) {
-        super(Localization.error_lex_badLineNumber(LocalizationUtils.getLocalizationTemplates(locale), kind));
-        Object.setPrototypeOf(this, BadLineNumberError.prototype);
-    }
-}
-
-export class BadRangeError extends Error {
-    constructor(
-        readonly range: Lexer.Range,
-        readonly kind: BadRangeKind,
-        locale: string,
-    ) {
-        super(Localization.error_lex_badRange(LocalizationUtils.getLocalizationTemplates(locale), kind));
-        Object.setPrototypeOf(this, BadRangeError.prototype);
-    }
-}
-
-export class BadStateError extends Error {
-    constructor(
-        readonly innerError: TLexError,
-        locale: string,
-    ) {
-        super(Localization.error_lex_badState(LocalizationUtils.getLocalizationTemplates(locale)));
-        Object.setPrototypeOf(this, BadStateError.prototype);
-    }
-}
-
-export class ErrorLineMapError extends Error {
-    constructor(
-        readonly errorLineMap: Lexer.ErrorLineMap,
-        locale: string,
-    ) {
-        super(Localization.error_lex_lineMap(LocalizationUtils.getLocalizationTemplates(locale), errorLineMap));
-        Object.setPrototypeOf(this, ErrorLineMapError.prototype);
-    }
-}
-
-export class EndOfStreamError extends Error {
-    constructor(locale: string) {
-        super(Localization.error_lex_endOfStream(LocalizationUtils.getLocalizationTemplates(locale)));
-        Object.setPrototypeOf(this, EndOfStreamError.prototype);
+        Object.setPrototypeOf(this, LexError.prototype);
     }
 }
 
@@ -162,11 +85,6 @@ export function isTLexError(error: unknown): error is TLexError {
 
 export function isTInnerLexError(error: unknown): error is TInnerLexError {
     return (
-        error instanceof BadLineNumberError ||
-        error instanceof BadRangeError ||
-        error instanceof BadStateError ||
-        error instanceof EndOfStreamError ||
-        error instanceof ErrorLineMapError ||
         error instanceof ExpectedError ||
         error instanceof UnexpectedEofError ||
         error instanceof UnexpectedReadError ||

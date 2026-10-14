@@ -4,7 +4,6 @@
 import { Assert, StringUtils } from "../common";
 import { SequenceKind, TokenWithColumnNumber } from "../parser/error";
 import { ILocalizationTemplates } from "./templates";
-import { Lexer } from "..";
 import { LexError } from "../lexer";
 import { ParseError } from "../parser";
 import { Token } from "../language";
@@ -17,13 +16,8 @@ interface ILocalization {
         jsonDetails: object | undefined,
     ) => string;
     readonly error_common_unknown: (templates: ILocalizationTemplates, message: string) => string;
-    readonly error_lex_badLineNumber: (templates: ILocalizationTemplates, kind: LexError.BadLineNumberKind) => string;
-    readonly error_lex_badRange: (templates: ILocalizationTemplates, kind: LexError.BadRangeKind) => string;
-    readonly error_lex_badState: (templates: ILocalizationTemplates) => string;
-    readonly error_lex_endOfStream: (templates: ILocalizationTemplates) => string;
     readonly error_lex_endOfStreamPartwayRead: (templates: ILocalizationTemplates) => string;
     readonly error_lex_expectedKind: (templates: ILocalizationTemplates, kind: LexError.ExpectedKind) => string;
-    readonly error_lex_lineMap: (templates: ILocalizationTemplates, errorLineMap: Lexer.ErrorLineMap) => string;
     readonly error_lex_unexpectedRead: (templates: ILocalizationTemplates) => string;
     readonly error_lex_unterminatedMultilineToken: (
         templates: ILocalizationTemplates,
@@ -221,51 +215,6 @@ export const Localization: ILocalization = {
     error_common_unknown: (templates: ILocalizationTemplates, innerError: string) =>
         StringUtils.assertGetFormatted(templates.error_common_unknown, new Map([["innerError", innerError]])),
 
-    error_lex_badLineNumber: (templates: ILocalizationTemplates, kind: LexError.BadLineNumberKind) => {
-        switch (kind) {
-            case LexError.BadLineNumberKind.GreaterThanNumLines:
-                return templates.error_lex_badLineNumber_1_greaterThanNumLines;
-
-            case LexError.BadLineNumberKind.LessThanZero:
-                return templates.error_lex_badLineNumber_2_lessThanZero;
-
-            default:
-                throw Assert.isNever(kind);
-        }
-    },
-
-    error_lex_badRange: (templates: ILocalizationTemplates, kind: LexError.BadRangeKind) => {
-        switch (kind) {
-            case LexError.BadRangeKind.SameLine_LineCodeUnitStart_Higher:
-                return templates.error_lex_badRange_7_sameLine_codeUnitStartGreaterThanCodeUnitEnd;
-
-            case LexError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd:
-                return templates.error_lex_badRange_4_lineNumberStart_greaterThanLineNumberEnd;
-
-            case LexError.BadRangeKind.LineNumberStart_LessThan_Zero:
-                return templates.error_lex_badRange_6_lineNumberStart_lessThanZero;
-
-            case LexError.BadRangeKind.LineNumberStart_GreaterThan_NumLines:
-                return templates.error_lex_badRange_5_lineNumberStart_greaterThanNumLines;
-
-            case LexError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines:
-                return templates.error_lex_badRange_2_lineNumberEnd_greaterThanLineNumbers;
-
-            case LexError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength:
-                return templates.error_lex_badRange_3_lineNumberStart_greaterThanLineLength;
-
-            case LexError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength:
-                return templates.error_lex_badRange_1_lineNumberEnd_greaterThanLineLength;
-
-            default:
-                throw Assert.isNever(kind);
-        }
-    },
-
-    error_lex_badState: (templates: ILocalizationTemplates) => templates.error_lex_badState,
-
-    error_lex_endOfStream: (templates: ILocalizationTemplates) => templates.error_lex_endOfStream,
-
     error_lex_endOfStreamPartwayRead: (templates: ILocalizationTemplates) => templates.error_lex_endOfStreamPartwayRead,
 
     error_lex_expectedKind: (templates: ILocalizationTemplates, kind: LexError.ExpectedKind) => {
@@ -282,14 +231,6 @@ export const Localization: ILocalization = {
             default:
                 throw Assert.isNever(kind);
         }
-    },
-
-    error_lex_lineMap: (templates: ILocalizationTemplates, errorLineMap: Lexer.ErrorLineMap) => {
-        const lineNumbers: string = [...errorLineMap.keys()]
-            .map((lineNumber: number) => lineNumber.toString())
-            .join(",");
-
-        return StringUtils.assertGetFormatted(templates.error_lex_lineMap, new Map([["lineNumbers", lineNumbers]]));
     },
 
     error_lex_unexpectedRead: (templates: ILocalizationTemplates) => templates.error_lex_unexpectedRead,
