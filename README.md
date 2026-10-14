@@ -45,13 +45,6 @@ Cancellation still returns a `CommonError` wrapping `CancellationError`; polling
 
 The parser started off as a naive recursive descent parser with limited backtracking. It mostly followed the [official specification](https://docs.microsoft.com/en-us/powerquery-m/power-query-m-language-specification) released in October 2016. Deviations from the specification should be marked down in [specification.md](specification.md). A combinatorial parser has since been added which uses the naive parser as its base.
 
-`readType` skips impossible primary-type attempts before falling back to a
-primary expression. Strict primary-type reads retain their original diagnostics.
-Prediction also applies with custom parser objects, cancellation tokens, and tracing.
-Skipped attempts emit no traces or checkpoint calls; cancellation checks remain active.
-EOF and reads without an active context retain the speculative path.
-Return-type disambiguation is unchanged.
-
 ### Style
 
 This project uses [prettier](https://github.com/prettier/prettier) as the primary source of style enforcement. Additional style requirements are located in [style.md](style.md).

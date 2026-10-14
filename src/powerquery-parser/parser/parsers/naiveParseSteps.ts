@@ -2371,6 +2371,15 @@ export async function readFunctionType(
 function canStartPrimaryType(state: ParseState): boolean {
     const token: Token.Token | undefined = state.lexerSnapshot.tokens[state.tokenIndex];
 
+    // No token means no primary-type prefix. The token checks correspond to:
+    // LeftBracket: Ast.RecordType, such as [x = number].
+    // LeftBrace: Ast.ListType, such as {number}.
+    // KeywordType: Ast.PrimitiveType with primitive kind Type, not Ast.TypePrimaryType.
+    // NullLiteral: Ast.PrimitiveType with primitive kind Null, not Ast.LiteralExpression.
+    // Identifier "nullable": Ast.NullableType, such as nullable number.
+    // Other primitive-type identifiers: Ast.PrimitiveType (number, text, etc.).
+    // "table" and "function" also admit Ast.TableType and Ast.FunctionType;
+    // tryReadPrimaryType uses subsequent tokens to distinguish these from primitive types.
     return (
         token !== undefined &&
         (token.kind === TokenKind.LeftBracket ||
