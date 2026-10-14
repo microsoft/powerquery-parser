@@ -1922,6 +1922,21 @@ export async function readType(
 
     state.cancellationToken?.throwIfCancelled();
 
+    // Only readType discards a failed primary-type diagnostic in favor of an expression.
+    // Skipped attempts emit no traces or checkpoint calls; cancellation is still checked by the readers.
+    if (
+        state.currentContextNode !== undefined &&
+        state.tokenIndex < state.lexerSnapshot.tokens.length &&
+        !canStartPrimaryType(state)
+    ) {
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [TraceConstant.IsError]: true,
+        });
+
+        return parser.readPrimaryExpression(state, parser, trace.id);
+    }
+
     const triedReadPrimaryType: TriedReadPrimaryType = await tryReadPrimaryType(state, parser, trace.id);
 
     if (ResultUtils.isOk(triedReadPrimaryType)) {
@@ -2346,6 +2361,21 @@ export async function readFunctionType(
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return functionType;
+}
+
+function canStartPrimaryType(state: ParseState): boolean {
+    const token: Token.Token | undefined = state.lexerSnapshot.tokens[state.tokenIndex];
+
+    return (
+        token !== undefined &&
+        (token.kind === TokenKind.LeftBracket ||
+            token.kind === TokenKind.LeftBrace ||
+            token.kind === TokenKind.KeywordType ||
+            token.kind === TokenKind.NullLiteral ||
+            (token.kind === TokenKind.Identifier &&
+                (token.data === Constant.LanguageConstant.Nullable ||
+                    ConstantUtils.isPrimitiveTypeConstant(token.data))))
+    );
 }
 
 async function tryReadPrimaryType(
