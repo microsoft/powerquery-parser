@@ -494,6 +494,7 @@ export async function readExpression(
         case TokenKind.RightParenthesis:
         case TokenKind.Semicolon:
         case TokenKind.TextLiteral:
+        case TokenKind.VerbatimLiteral:
         case undefined:
             expression = await parser.readNullCoalescingExpression(state, parser, trace.id);
             break;
@@ -991,6 +992,7 @@ export async function readPrimaryExpression(
             case TokenKind.RightParenthesis:
             case TokenKind.Semicolon:
             case TokenKind.TextLiteral:
+            case TokenKind.VerbatimLiteral:
             case undefined:
                 primaryExpression = parser.readLiteralExpression(state, parser, trace.id);
                 break;
@@ -1121,6 +1123,7 @@ export function readLiteralExpression(
         TokenKind.NumericLiteral,
         TokenKind.NullLiteral,
         TokenKind.TextLiteral,
+        TokenKind.VerbatimLiteral,
     ];
 
     const error: ParseError.ExpectedAnyTokenKindError | undefined = ParseStateUtils.testIsOnAnyTokenKind(

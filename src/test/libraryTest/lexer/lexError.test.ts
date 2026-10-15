@@ -42,6 +42,7 @@ describe("Lexer.Error", () => {
             ["/*", Lexer.LexError.UnterminatedMultilineTokenKind.MultilineComment],
             ['"', Lexer.LexError.UnterminatedMultilineTokenKind.Text],
             ['#"', Lexer.LexError.UnterminatedMultilineTokenKind.QuotedIdentifier],
+            ['#!"', Lexer.LexError.UnterminatedMultilineTokenKind.Text],
         ] as const) {
             it(kind, () => {
                 const error: Lexer.LexError.TInnerLexError = assertGetLexError(opening);
@@ -67,6 +68,7 @@ describe("Lexer.Error", () => {
         for (const [opening, kind] of [
             ['"', Lexer.LexError.UnterminatedMultilineTokenKind.Text],
             ['#"', Lexer.LexError.UnterminatedMultilineTokenKind.QuotedIdentifier],
+            ['#!"', Lexer.LexError.UnterminatedMultilineTokenKind.Text],
         ] as const) {
             it(`${kind} does not treat a doubled quote at EOF as a closing delimiter`, () => {
                 const error: Lexer.LexError.TInnerLexError = assertGetLexError(`${opening}a""""`);

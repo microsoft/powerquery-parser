@@ -364,6 +364,7 @@ export enum LiteralKind {
     Numeric = "Numeric",
     Record = "Record",
     Text = "Text",
+    Verbatim = "Verbatim",
 }
 
 export interface LiteralExpression extends INode {
