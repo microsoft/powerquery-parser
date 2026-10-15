@@ -2,9 +2,23 @@
 // Licensed under the MIT license.
 
 import "mocha";
+import { expect } from "chai";
 
 import * as ParserTestUtils from "./parserTestUtils";
-import { Ast, Constant } from "../../../powerquery-parser/language";
+import { Assert, DefaultSettings, Settings, Task } from "../../..";
+import { Ast, AstUtils, Constant, Token } from "../../../powerquery-parser/language";
+import {
+    CombinatorialParserV2,
+    NodeIdMap,
+    NodeIdMapUtils,
+    ParseError,
+    Parser,
+    ParseState,
+    RecursiveDescentParser,
+    XorNode,
+    XorNodeUtils,
+} from "../../../powerquery-parser/parser";
+import { AssertTestUtils } from "../../testUtils";
 
 describe("Parser.AbridgedNode", () => {
     describe(`${Ast.NodeKind.ArithmeticExpression}`, () => {
@@ -1472,6 +1486,244 @@ describe("Parser.AbridgedNode", () => {
                 ],
             );
         });
+    });
+
+    describe(`${Ast.NodeKind.SectionAccessExpression}`, () => {
+        for (const [name, parser] of [
+            ["combinatorial", CombinatorialParserV2],
+            ["recursive descent", RecursiveDescentParser],
+        ] as const) {
+            describe(name, () => {
+                const settings: Settings = { ...DefaultSettings, parser };
+
+                for (const [text, sectionName, memberName] of [
+                    ["Section1!abc", "Section1", "abc"],
+                    ['#"Section one"!#"Member name"', '#"Section one"', '#"Member name"'],
+                    ['#"section"!#"let"', '#"section"', '#"let"'],
+                    ["Section.One!Member.Name", "Section.One", "Member.Name"],
+                    ["Section1 /* section */ ! // member\n abc", "Section1", "abc"],
+                ] as const) {
+                    it(`parses ${text}`, async () => {
+                        const parsed: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(settings, text);
+
+                        const node: Ast.SectionAccessExpression =
+                            AstUtils.assertAsNodeKind<Ast.SectionAccessExpression>(
+                                parsed.ast,
+                                Ast.NodeKind.SectionAccessExpression,
+                            );
+
+                        expect(node.sectionName.literal).to.equal(sectionName);
+                        expect(node.memberName.literal).to.equal(memberName);
+                        expect(node.sectionName.identifierContextKind).to.equal(Ast.IdentifierContextKind.Value);
+                        expect(node.memberName.identifierContextKind).to.equal(Ast.IdentifierContextKind.Value);
+                        expect(node.bangConstant.constantKind).to.equal(Constant.MiscConstant.Bang);
+                        expect(node.isLeaf).to.equal(false);
+                        expect(node.tokenRange.positionStart).to.deep.equal(node.sectionName.tokenRange.positionStart);
+                        expect(node.tokenRange.positionEnd).to.deep.equal(node.memberName.tokenRange.positionEnd);
+
+                        const children: ReadonlyArray<Ast.TNode> = [
+                            node.sectionName,
+                            node.bangConstant,
+                            node.memberName,
+                        ];
+
+                        const collection: NodeIdMap.Collection = parsed.nodeIdMapCollection;
+
+                        expect(collection.childIdsById.get(node.id)).to.deep.equal(
+                            children.map((child: Ast.TNode) => child.id),
+                        );
+
+                        children.forEach((child: Ast.TNode, index: number) => {
+                            expect(child.attributeIndex).to.equal(index);
+                            expect(collection.parentIdById.get(child.id)).to.equal(node.id);
+                            expect(collection.astNodeById.get(child.id)).to.equal(child);
+                        });
+                    });
+                }
+
+                it("supports traversal and classifies section access as a primary expression", async () => {
+                    const parsed: Task.ParseTaskOk | Task.ParseTaskParseError =
+                        await ParserTestUtils.runAbridgedNodeTest(
+                            "Section1!abc",
+                            [
+                                [Ast.NodeKind.SectionAccessExpression, undefined],
+                                [Ast.NodeKind.Identifier, 0],
+                                [Ast.NodeKind.Constant, 1],
+                                [Ast.NodeKind.Identifier, 2],
+                            ],
+                            { settings },
+                        );
+
+                    const node: Ast.SectionAccessExpression =
+                        NodeIdMapUtils.assertAstChecked<Ast.SectionAccessExpression>(
+                            parsed.nodeIdMapCollection,
+                            Assert.asDefined(
+                                parsed.nodeIdMapCollection.idsByNodeKind
+                                    .get(Ast.NodeKind.SectionAccessExpression)
+                                    ?.values()
+                                    .next().value,
+                            ),
+                            Ast.NodeKind.SectionAccessExpression,
+                        );
+
+                    expect(AstUtils.isTPrimaryExpression(node)).to.equal(true);
+                    expect(AstUtils.isTExpression(node)).to.equal(true);
+                    expect(AstUtils.isTType(node)).to.equal(true);
+                    expect(AstUtils.isTBinOpExpressionKind(node.kind)).to.equal(false);
+                    expect(AstUtils.isTKeyValuePair(node)).to.equal(false);
+                    expect(AstUtils.isTPairedConstant(node)).to.equal(false);
+                    expect(XorNodeUtils.isTExpression(XorNodeUtils.boxAst(node))).to.equal(true);
+                });
+
+                for (const suffix of ["()", "(1)", "[Field]", "[[Field]]", "{0}", "()[Field]{0}"]) {
+                    it(`supports recursive primary suffix ${suffix}`, async () => {
+                        const parsed: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(
+                            settings,
+                            `Section1!abc${suffix}`,
+                        );
+
+                        const node: Ast.RecursivePrimaryExpression =
+                            AstUtils.assertAsNodeKind<Ast.RecursivePrimaryExpression>(
+                                parsed.ast,
+                                Ast.NodeKind.RecursivePrimaryExpression,
+                            );
+
+                        expect(node.head.kind).to.equal(Ast.NodeKind.SectionAccessExpression);
+                    });
+                }
+
+                for (const text of [
+                    "1 + Section1!abc * 2",
+                    "-Section1!abc",
+                    "(Section1!abc)",
+                    "let value = Section1!abc in value",
+                    "[Value = Section1!abc]",
+                    "{Section1!abc, Section2!def}",
+                    "section Section1; shared Value = Section2!abc;",
+                    "type table Section1!Schema",
+                    "type function (value as Section1!Schema) as any",
+                    "Section1!abc ?? Section2!def",
+                    "if Section1!abc then Section2!def else Section3!ghi",
+                ]) {
+                    it(`parses section access within ${text}`, async () => {
+                        const parsed: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(settings, text);
+
+                        expect(
+                            parsed.nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.SectionAccessExpression)?.size,
+                        ).to.be.greaterThan(0);
+                    });
+                }
+
+                for (const text of ["Section1!", "Section1!123", "Section1!let", "Section1!@abc"]) {
+                    it(`reports an expected identifier for ${text}`, async () => {
+                        const parsed: Task.ParseTaskParseError = await AssertTestUtils.assertGetLexParseError(
+                            settings,
+                            text,
+                        );
+
+                        const error: ParseError.TInnerParseError = parsed.error.innerError;
+
+                        if (!(error instanceof ParseError.ExpectedTokenKindError)) {
+                            throw new Error(`Expected an identifier error, got ${error.message}`);
+                        }
+
+                        expect(error.expectedTokenKind).to.equal(Token.TokenKind.Identifier);
+                        const collection: NodeIdMap.Collection = parsed.nodeIdMapCollection;
+
+                        const nodeId: number = Assert.asDefined(
+                            collection.idsByNodeKind.get(Ast.NodeKind.SectionAccessExpression)?.values().next().value,
+                        );
+
+                        const node: XorNode<Ast.SectionAccessExpression> =
+                            NodeIdMapUtils.assertXorChecked<Ast.SectionAccessExpression>(
+                                collection,
+                                nodeId,
+                                Ast.NodeKind.SectionAccessExpression,
+                            );
+
+                        expect(XorNodeUtils.isContext(node)).to.equal(true);
+
+                        expect(
+                            NodeIdMapUtils.assertNthChildAstChecked<Ast.Identifier>(
+                                collection,
+                                nodeId,
+                                0,
+                                Ast.NodeKind.Identifier,
+                            ).literal,
+                        ).to.equal("Section1");
+
+                        expect(
+                            NodeIdMapUtils.assertNthChildAstChecked<Ast.TConstant>(
+                                collection,
+                                nodeId,
+                                1,
+                                Ast.NodeKind.Constant,
+                            ).constantKind,
+                        ).to.equal(Constant.MiscConstant.Bang);
+
+                        expect(
+                            XorNodeUtils.isContext(NodeIdMapUtils.assertNthChildXor(collection, nodeId, 2)),
+                        ).to.equal(true);
+                    });
+                }
+
+                for (const text of ["!abc", "Section1!abc!def", "@Section1!abc", "(Section1)!abc", "1!abc"]) {
+                    it(`rejects invalid section access ${text}`, async () => {
+                        await AssertTestUtils.assertGetLexParseError(settings, text);
+                    });
+                }
+
+                it("preserves ordinary and inclusive identifier expressions", async () => {
+                    for (const text of ["Section1", "@Section1"]) {
+                        // eslint-disable-next-line no-await-in-loop
+                        const parsed: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(settings, text);
+                        expect(parsed.ast.kind).to.equal(Ast.NodeKind.IdentifierExpression);
+                    }
+                });
+
+                it("honors a custom section-access parser step", async () => {
+                    let callCount: number = 0;
+
+                    const customParser: Parser = {
+                        ...parser,
+                        readSectionAccessExpression: (
+                            state: ParseState,
+                            currentParser: Parser,
+                            correlationId: number | undefined,
+                        ): Ast.SectionAccessExpression => {
+                            callCount += 1;
+
+                            return parser.readSectionAccessExpression(state, currentParser, correlationId);
+                        },
+                    };
+
+                    await AssertTestUtils.assertGetLexParseOk({ ...settings, parser: customParser }, "Section1!abc");
+                    expect(callCount).to.equal(1);
+                });
+
+                it("reports the missing bang when invoked as a parser entry point", async () => {
+                    const error: ParseError.ParseError = await AssertTestUtils.assertGetParseError(
+                        {
+                            ...settings,
+                            // eslint-disable-next-line require-await
+                            parserEntryPoint: async (
+                                state: ParseState,
+                                currentParser: Parser,
+                                correlationId: number | undefined,
+                            ): Promise<Ast.SectionAccessExpression> =>
+                                currentParser.readSectionAccessExpression(state, currentParser, correlationId),
+                        },
+                        "Section1 abc",
+                    );
+
+                    if (!(error.innerError instanceof ParseError.ExpectedTokenKindError)) {
+                        throw new Error(`Expected a bang error, got ${error.innerError.message}`);
+                    }
+
+                    expect(error.innerError.expectedTokenKind).to.equal(Token.TokenKind.Bang);
+                });
+            });
+        }
     });
 
     describe(`${Ast.NodeKind.Section}`, () => {
