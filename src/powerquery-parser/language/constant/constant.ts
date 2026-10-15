@@ -57,6 +57,7 @@ export enum KeywordConstant {
 export enum MiscConstant {
     Ampersand = "&",
     AtSign = "@",
+    Bang = "!",
     Comma = ",",
     DotDot = "..",
     Ellipsis = "...",
@@ -181,6 +182,7 @@ export const LogicalOperators: ReadonlyArray<LogicalOperator> = [LogicalOperator
 export const MiscConstants: ReadonlyArray<MiscConstant> = [
     MiscConstant.Ampersand,
     MiscConstant.AtSign,
+    MiscConstant.Bang,
     MiscConstant.Comma,
     MiscConstant.DotDot,
     MiscConstant.Ellipsis,
