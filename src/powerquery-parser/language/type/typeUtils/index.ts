@@ -4,6 +4,7 @@
 export * from "./assert";
 export * from "./categorize";
 export * from "./factories";
+export * from "./inspectedParameter";
 export * from "./isCompatible";
 export * from "./isEqualType";
 export * from "./isType";
