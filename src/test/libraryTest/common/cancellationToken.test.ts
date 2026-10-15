@@ -14,7 +14,6 @@ import {
     ResultUtils,
     Settings,
     TimedCancellationToken,
-    TypeScriptUtils,
 } from "../../..";
 
 function assertGetCancellationError<T, E>(tried: Result<T, E>): CommonError.CancellationError {
@@ -24,22 +23,13 @@ function assertGetCancellationError<T, E>(tried: Result<T, E>): CommonError.Canc
         throw new Error(`expected error to be a ${CommonError.CommonError.name}`);
     }
 
-    const innerError: Lexer.LexError.TInnerLexError = tried.error.innerError;
+    const innerError: Error = tried.error.innerError;
 
     if (!(innerError instanceof CommonError.CancellationError)) {
         throw new Error(`expected innerError to be a ${CommonError.CancellationError.name}`);
     }
 
     return innerError;
-}
-
-function assertGetLexerStateWithCancellationToken(): Lexer.State {
-    const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, "foo");
-    ResultUtils.assertIsOk(triedLex);
-    const state: TypeScriptUtils.StripReadonly<Lexer.State> = triedLex.value;
-    state.cancellationToken = new TimedCancellationToken(0);
-
-    return state;
 }
 
 function defaultSettingsWithExpiredCancellationToken(): Settings {
@@ -86,43 +76,22 @@ describe("CancellationToken", () => {
             assertGetCancellationError(triedLex);
         });
 
-        it(`Lexer.tryAppendLine`, () => {
-            const triedLex: Lexer.TriedLex = Lexer.tryAppendLine(
-                assertGetLexerStateWithCancellationToken(),
-                "bar",
-                "\n",
-            );
+        for (const text of ["", " ", "\r\n", "/*unfinished", '"unfinished', "#bad"]) {
+            it(`honors pre-cancellation for ${JSON.stringify(text)}`, () => {
+                const triedLex: Lexer.TriedLex = Lexer.tryLex(defaultSettingsWithExpiredCancellationToken(), text);
+                assertGetCancellationError(triedLex);
+            });
+        }
 
-            assertGetCancellationError(triedLex);
-        });
+        for (const text of ["a b c d", '"a\nb\nc"', '#"a\nb\nc"', "/*a\nb\nc*/", "\n\n\n\n"]) {
+            it(`checks cancellation while scanning ${JSON.stringify(text)}`, () => {
+                const triedLex: Lexer.TriedLex = Lexer.tryLex(
+                    { ...DefaultSettings, cancellationToken: new CounterCancellationToken(4) },
+                    text,
+                );
 
-        it(`Lexer.tryDeleteLine`, () => {
-            const triedLex: Lexer.TriedLex = Lexer.tryDeleteLine(assertGetLexerStateWithCancellationToken(), 0);
-            assertGetCancellationError(triedLex);
-        });
-
-        it(`Lexer.tryUpdateLine`, () => {
-            const triedLex: Lexer.TriedLex = Lexer.tryUpdateLine(assertGetLexerStateWithCancellationToken(), 0, "");
-            assertGetCancellationError(triedLex);
-        });
-
-        it(`Lexer.tryUpdateRange`, () => {
-            const triedLex: Lexer.TriedLex = Lexer.tryUpdateRange(
-                assertGetLexerStateWithCancellationToken(),
-                {
-                    start: {
-                        lineCodeUnit: 0,
-                        lineNumber: 0,
-                    },
-                    end: {
-                        lineNumber: 0,
-                        lineCodeUnit: 1,
-                    },
-                },
-                "",
-            );
-
-            assertGetCancellationError(triedLex);
-        });
+                assertGetCancellationError(triedLex);
+            });
+        }
     });
 });

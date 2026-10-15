@@ -6,7 +6,31 @@ A parser for the [Power Query/M](https://docs.microsoft.com/en-us/power-query/) 
 
 ## How to use
 
-The most common way to consume the project is to interact with the helper functions found in [taskUtils.ts](src/powerquery-parser/task/taskUtils.ts). There are all-in-one functions, such as `tryLexParse`, which does a full pass on a given document. There are also incremental functions, such as `tryLex` and `tryParse`, which perform one step at a time. Minimal code samples can be found in [example.ts](src/example.ts).
+The most common way to consume the project is to interact with the helper functions found in [taskUtils.ts](src/powerquery-parser/task/taskUtils.ts). There are all-in-one functions, such as `tryLexParse`, which does a full pass on a given document. There are also separate lexing and parsing steps, `tryLex` and `tryParse`. Minimal code samples can be found in [example.ts](src/example.ts).
+
+### Lexing
+
+`Lexer.tryLex(settings, text)` lexes the complete document and returns `Result<LexerSnapshot, LexError.TLexError>`. It stops at the first lexical error, including unterminated text, quoted identifiers, and multiline comments. Errors contain one localized diagnostic, not a map of line errors. Diagnostic positions include the absolute UTF-16 offset, zero-based line offset, and grapheme column.
+
+The lexer retains its function-based token readers. Tokens and comments are emitted directly; line information is used only for source positions and type directives. `TaskUtils.tryLex` and `TaskUtils.tryLexParse` use the same lexer, and parser inputs remain `LexerSnapshot` values.
+
+**Breaking change:** the incremental APIs (`tryAppendLine`, `tryUpdateLine`, `tryUpdateRange`, `tryDeleteLine`), editable `State`/line/range types, line-token kinds, line-error maps and predicates, and `trySnapshot` are removed. Apply edits to the document text and call `Lexer.tryLex` again. There is no intermediate line state or separate snapshot-validation step.
+
+Snapshots derive directive associations from their comments; the constructor no longer accepts a separate directive map. Grapheme-position queries index and cache the token's starting line, including for multiline tokens.
+
+```typescript
+import { DefaultSettings, Lexer, ResultUtils } from "@microsoft/powerquery-parser";
+
+const updatedDocumentText = "let x = 2 in x";
+const result = Lexer.tryLex(DefaultSettings, updatedDocumentText);
+if (ResultUtils.isOk(result)) {
+    console.log(result.value.tokens, result.value.comments);
+} else {
+    console.error(result.error.message);
+}
+```
+
+Cancellation still returns a `CommonError` wrapping `CancellationError`; polling occurs at entry and during scanning, rather than at incremental update or snapshot stages.
 
 ## Related projects
 

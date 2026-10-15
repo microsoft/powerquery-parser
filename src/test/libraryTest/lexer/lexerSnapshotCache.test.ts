@@ -10,12 +10,8 @@ import { ArrayUtils } from "../../../powerquery-parser/common";
 function assertGetLexerSnapshot(text: string): Lexer.LexerSnapshot {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
     ResultUtils.assertIsOk(triedLex);
-    const state: Lexer.State = triedLex.value;
 
-    const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(state);
-    ResultUtils.assertIsOk(triedSnapshot);
-
-    return triedSnapshot.value;
+    return triedLex.value;
 }
 
 // Asserts that for every token in the snapshot, the cached instance method produces
@@ -157,6 +153,106 @@ describe("LexerSnapshot.graphemePositionStartFrom cache", () => {
                         `but token.positionStart.codeUnit is ${token.positionStart.codeUnit}`,
                 );
             }
+        });
+    });
+
+    describe("indexed starting-line lookup", () => {
+        for (const newline of ["\n", "\r\n", "\u2028", "\u2029"]) {
+            it(`preserves multiline token columns with ${JSON.stringify(newline)}`, () => {
+                const text: string = `\n${newline}A\u0301 \u{10400} "first${newline}second" #"third${newline}fourth" tail`;
+
+                const snapshot: Lexer.LexerSnapshot = assertGetLexerSnapshot(text);
+                const textToken: Language.Token.Token = ArrayUtils.assertGet(snapshot.tokens, 2);
+                const identifierToken: Language.Token.Token = ArrayUtils.assertGet(snapshot.tokens, 3);
+
+                const expectedTextPosition: StringUtils.GraphemePosition = {
+                    codeUnit: text.indexOf('"first'),
+                    lineNumber: 2,
+                    lineCodeUnit: 6,
+                    columnNumber: 4,
+                };
+
+                const expectedIdentifierPosition: StringUtils.GraphemePosition = {
+                    codeUnit: text.indexOf('#"third'),
+                    lineNumber: 3,
+                    lineCodeUnit: 8,
+                    columnNumber: 8,
+                };
+
+                for (const token of [...snapshot.tokens].reverse()) {
+                    snapshot.graphemePositionStartFrom(token);
+                }
+
+                expect(snapshot.graphemePositionStartFrom(textToken)).to.deep.equal(expectedTextPosition);
+                expect(snapshot.graphemePositionStartFrom(identifierToken)).to.deep.equal(expectedIdentifierPosition);
+
+                expect(
+                    Lexer.LexerSnapshot.graphemePositionStartFrom(text, snapshot.lineTerminators, textToken),
+                ).to.deep.equal(expectedTextPosition);
+
+                expect(snapshot.graphemePositionStartFrom(ArrayUtils.assertGet(snapshot.tokens, 0))).to.deep.equal({
+                    codeUnit: 1 + newline.length,
+                    lineNumber: 2,
+                    lineCodeUnit: 0,
+                    columnNumber: 0,
+                });
+            });
+        }
+
+        it("reads only the starting line's terminator and reuses it through the cache", () => {
+            const text: string = `${"\n".repeat(4096)}"first\nsecond"`;
+            const original: Lexer.LexerSnapshot = assertGetLexerSnapshot(text);
+            const accessedIndices: number[] = [];
+
+            const lineTerminators: ReadonlyArray<Lexer.LineTerminator> = new Proxy(original.lineTerminators, {
+                get: (
+                    target: ReadonlyArray<Lexer.LineTerminator>,
+                    property: string | symbol,
+                    receiver: unknown,
+                ): unknown => {
+                    if (typeof property === "string" && /^\d+$/.test(property)) {
+                        accessedIndices.push(Number(property));
+                    }
+
+                    return Reflect.get(target, property, receiver);
+                },
+            });
+
+            const snapshot: Lexer.LexerSnapshot = new Lexer.LexerSnapshot(
+                text,
+                original.tokens,
+                original.comments,
+                lineTerminators,
+            );
+
+            const token: Language.Token.Token = ArrayUtils.assertGet(snapshot.tokens, 0);
+            const first: StringUtils.GraphemePosition = snapshot.graphemePositionStartFrom(token);
+            expect(accessedIndices).to.deep.equal([4096]);
+            expect(first).to.deep.equal({ codeUnit: 4096, lineNumber: 4096, lineCodeUnit: 0, columnNumber: 0 });
+
+            expect(snapshot.graphemePositionStartFrom(token)).to.deep.equal(first);
+            expect(accessedIndices).to.deep.equal([4096]);
+
+            expect(Lexer.LexerSnapshot.graphemePositionStartFrom(text, lineTerminators, token)).to.deep.equal(first);
+            expect(accessedIndices).to.deep.equal([4096, 4096]);
+        });
+
+        it("uses the final unterminated line for EOF token positions", () => {
+            const snapshot: Lexer.LexerSnapshot = assertGetLexerSnapshot("\r\nA\u0301 value");
+            const token: Language.Token.Token = ArrayUtils.assertGet(snapshot.tokens, 1);
+
+            const expected: StringUtils.GraphemePosition = {
+                codeUnit: 5,
+                lineNumber: 1,
+                lineCodeUnit: 3,
+                columnNumber: 2,
+            };
+
+            expect(snapshot.graphemePositionStartFrom(token)).to.deep.equal(expected);
+
+            expect(
+                Lexer.LexerSnapshot.graphemePositionStartFrom(snapshot.text, snapshot.lineTerminators, token),
+            ).to.deep.equal(expected);
         });
     });
 });
