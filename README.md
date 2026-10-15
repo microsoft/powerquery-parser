@@ -32,6 +32,28 @@ if (ResultUtils.isOk(result)) {
 
 Cancellation still returns a `CommonError` wrapping `CancellationError`; polling occurs at entry and during scanning, rather than at incremental update or snapshot stages.
 
+### Type annotation inspection
+
+`AstUtils.simplifyType` simplifies type syntax without resolving names or evaluating expressions.
+It returns `SimplifiedType | undefined`: `undefined` means the type cannot be determined from syntax
+alone. Primitive and structured types, including nullable and parenthesized forms, are simplified;
+an alias such as `T` requires semantic inspection by the caller.
+
+`TypeUtils.inspectParameter` returns `InspectedParameter | undefined`. Resolved results contain
+`isTypeResolved: true` and the existing `Type.FunctionParameter` fields, including `type: undefined`
+when no annotation is present. When an annotation cannot be simplified, the result has
+`isTypeResolved: false`, `nameLiteral`,
+`isOptional`, and `annotation`. The annotation is the complete `AsType` or `AsNullablePrimitiveType`
+node, boxed as an AST or parse-context node. This preserves nullable wrappers and distinguishes
+an unfinished annotation from an absent one. A parameter with no parsed name still returns `undefined`.
+
+**API change:** callers must handle both the optional `simplifyType` result and unresolved parameter
+results. Check `parameter.isTypeResolved` to narrow the result: the true branch exposes `type` and
+`isNullable`, and the false branch exposes `annotation`.
+For an unresolved AST annotation, a semantic layer such as powerquery-language-services can inspect
+`parameter.annotation.node.id` in the original document. Incomplete annotations remain unresolved.
+Neither API silently substitutes `any` for a type requiring semantic resolution.
+
 ## Related projects
 
 - [powerquery-formatter](https://github.com/microsoft/powerquery-formatter): A code formatter for Power Query which is bundled in the VSCode extension.

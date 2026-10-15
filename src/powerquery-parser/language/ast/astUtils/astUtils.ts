@@ -1,12 +1,8 @@
 import { Assert, CommonError } from "../../../common";
 import { Ast } from "..";
 import { Constant } from "../../constant";
+import type { SimplifiedType } from "./simplifiedType";
 import { TokenKind } from "../../token";
-
-export interface SimplifiedType {
-    readonly isNullable: boolean;
-    readonly primitiveTypeConstantKind: Constant.PrimitiveTypeConstant;
-}
 
 export function assertIsLeaf(node: Ast.TNode): asserts node is Ast.TLeaf {
     Assert.isTrue(node.isLeaf, "Assert(node.isLeaf)", { nodeId: node.id, nodeKind: node.kind });
@@ -205,7 +201,8 @@ export function literalKindFrom(
     }
 }
 
-export function simplifyType(type: Ast.TType): SimplifiedType {
+// Returns undefined when the type cannot be determined from syntax alone.
+export function simplifyType(type: Ast.TType): SimplifiedType | undefined {
     let isNullable: boolean;
     let primitiveTypeConstantKind: Constant.PrimitiveTypeConstant;
 
@@ -215,10 +212,17 @@ export function simplifyType(type: Ast.TType): SimplifiedType {
             primitiveTypeConstantKind = type.primitiveTypeKind;
             break;
 
-        case Ast.NodeKind.NullableType:
-            isNullable = true;
-            primitiveTypeConstantKind = simplifyType(type.paired).primitiveTypeConstantKind;
-            break;
+        case Ast.NodeKind.NullableType: {
+            const simplified: SimplifiedType | undefined = simplifyType(type.paired);
+
+            return simplified === undefined ? undefined : { ...simplified, isNullable: true };
+        }
+
+        case Ast.NodeKind.ParenthesizedExpression:
+            return simplifyType(type.content);
+
+        case Ast.NodeKind.TypePrimaryType:
+            return simplifyType(type.paired);
 
         case Ast.NodeKind.FunctionType:
             isNullable = false;
@@ -261,16 +265,11 @@ export function simplifyType(type: Ast.TType): SimplifiedType {
         case Ast.NodeKind.MetadataExpression:
         case Ast.NodeKind.NotImplementedExpression:
         case Ast.NodeKind.NullCoalescingExpression:
-        case Ast.NodeKind.ParenthesizedExpression:
         case Ast.NodeKind.RecordExpression:
         case Ast.NodeKind.RecursivePrimaryExpression:
         case Ast.NodeKind.RelationalExpression:
-        case Ast.NodeKind.TypePrimaryType:
         case Ast.NodeKind.UnaryExpression:
-            throw new CommonError.InvariantError("this should never be reached", {
-                nodeId: type.id,
-                nodeKind: type.kind,
-            });
+            return undefined;
 
         default:
             throw Assert.isNever(type);

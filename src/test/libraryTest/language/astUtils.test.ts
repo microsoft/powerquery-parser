@@ -4,12 +4,58 @@
 import "mocha";
 import { expect } from "chai";
 
-import { Ast, AstUtils } from "../../../powerquery-parser/language";
-import { DefaultSettings, Task } from "../../../powerquery-parser";
+import { Assert, DefaultSettings, Task } from "../../../powerquery-parser";
+import { Ast, AstUtils, Constant } from "../../../powerquery-parser/language";
 import { AssertTestUtils } from "../../testUtils";
 import { ParseOk } from "../../../powerquery-parser/parser";
 
 describe(`AstUtils`, () => {
+    describe("simplifyType", () => {
+        async function annotationType(text: string): Promise<Ast.TType> {
+            const parsed: ParseOk = await AssertTestUtils.assertGetParseOk(
+                DefaultSettings,
+                `type function (x as ${text}) as any`,
+            );
+
+            const typeExpression: Ast.TypePrimaryType = AstUtils.assertAsNodeKind<Ast.TypePrimaryType>(
+                parsed.root,
+                Ast.NodeKind.TypePrimaryType,
+            );
+
+            const functionType: Ast.FunctionType = AstUtils.assertAsNodeKind<Ast.FunctionType>(
+                typeExpression.paired,
+                Ast.NodeKind.FunctionType,
+            );
+
+            return Assert.asDefined(functionType.parameters.content.elements[0]).node.parameterType.paired;
+        }
+
+        for (const [text, primitiveTypeConstantKind, isNullable] of [
+            ["text", Constant.PrimitiveTypeConstant.Text, false],
+            ["nullable text", Constant.PrimitiveTypeConstant.Text, true],
+            ["[Value = text]", Constant.PrimitiveTypeConstant.Record, false],
+            ["{text}", Constant.PrimitiveTypeConstant.List, false],
+            ["table [Value = text]", Constant.PrimitiveTypeConstant.Table, false],
+            ["function () as text", Constant.PrimitiveTypeConstant.Function, false],
+            ["(type text)", Constant.PrimitiveTypeConstant.Text, false],
+            ["((type nullable text))", Constant.PrimitiveTypeConstant.Text, true],
+            ["nullable (type text)", Constant.PrimitiveTypeConstant.Text, true],
+        ] as const) {
+            it(`simplifies ${text}`, async () => {
+                expect(AstUtils.simplifyType(await annotationType(text))).to.deep.equal({
+                    isNullable,
+                    primitiveTypeConstantKind,
+                });
+            });
+        }
+
+        for (const text of ["T", "nullable T", "(T)", "nullable (T)", "(if true then T else U)", "GetType()", "42"]) {
+            it(`reports unresolved syntax for ${text}`, async () => {
+                expect(AstUtils.simplifyType(await annotationType(text))).to.equal(undefined);
+            });
+        }
+    });
+
     describe(`getIdentifierLiteral`, () => {
         async function runTest(params: {
             readonly text: string;

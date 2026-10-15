@@ -3,4 +3,5 @@
 
 export * from "./assert";
 export * from "./astUtils";
+export * from "./simplifiedType";
 export * from "./typeGuards";
