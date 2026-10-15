@@ -41,10 +41,6 @@ Cancellation still returns a `CommonError` wrapping `CancellationError`; polling
 
 ## Things to note
 
-### Lexer
-
-Whitespace and unquoted identifier matching is anchored at the current cursor to avoid repeated searches through the rest of long lines. The language's Unicode character sets are preserved. Exported `Pattern` regular expressions retain their global matching behavior.
-
 ### Parser
 
 The parser started off as a naive recursive descent parser with limited backtracking. It mostly followed the [official specification](https://docs.microsoft.com/en-us/powerquery-m/power-query-m-language-specification) released in October 2016. Deviations from the specification should be marked down in [specification.md](specification.md). A combinatorial parser has since been added which uses the naive parser as its base.
