@@ -1172,6 +1172,10 @@ describe("Parser.AbridgedNode", () => {
             await ParserTestUtils.runAbridgedNodeTest(`false`, [[Ast.NodeKind.LiteralExpression, undefined]]);
         });
 
+        it(`#!"a"`, async () => {
+            await ParserTestUtils.runAbridgedNodeTest(`#!"a"`, [[Ast.NodeKind.LiteralExpression, undefined]]);
+        });
+
         it(`1`, async () => {
             await ParserTestUtils.runAbridgedNodeTest(`1`, [[Ast.NodeKind.LiteralExpression, undefined]]);
         });

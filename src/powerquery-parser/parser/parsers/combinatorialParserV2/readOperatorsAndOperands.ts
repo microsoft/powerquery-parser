@@ -349,6 +349,7 @@ function nextOperatorAndOperandRead(tokenKind: Token.TokenKind): NextOperatorAnd
         case Token.TokenKind.RightParenthesis:
         case Token.TokenKind.Semicolon:
         case Token.TokenKind.TextLiteral:
+        case Token.TokenKind.VerbatimLiteral:
             return undefined;
 
         default:
