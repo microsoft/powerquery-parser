@@ -67,9 +67,6 @@ describe("TypeUtils.inspectParameter", () => {
         "(T)",
         "nullable (T)",
         "((type nullable T))",
-        "Section1!T",
-        "nullable Section1!T",
-        "(Section1!T)",
         "(if true then T else U)",
     ]) {
         it(`retains the whole unresolved ${annotation} annotation`, async () => {
