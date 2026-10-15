@@ -120,7 +120,7 @@ export function isValidInvocation(
     return true;
 }
 
-// MissingName means no name was parsed; Unresolved preserves an annotation requiring further inspection.
+// Maps parser AST/context nodes to metadata PQLS can use, annotations to inspect or diagnose, or MissingName.
 export function inspectParameter(
     nodeIdMapCollection: NodeIdMap.Collection,
     parameter: XorNode<Ast.TParameter>,
@@ -203,19 +203,34 @@ function inspectParameterType(
                 ? AstUtils.simplifyType(annotation.node.paired)
                 : AstUtils.simplifyAsNullablePrimitiveType(annotation.node);
 
-        if (simplified.kind === AstUtils.SimplifiedTypeKind.Resolved) {
-            return {
-                kind: InspectedParameterKind.Resolved,
-                nameLiteral,
-                isOptional,
-                isNullable: simplified.isNullable,
-                type: typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind),
-            };
+        switch (simplified.kind) {
+            case AstUtils.SimplifiedTypeKind.Resolved:
+                return {
+                    kind: InspectedParameterKind.Resolved,
+                    nameLiteral,
+                    isOptional,
+                    isNullable: simplified.isNullable,
+                    type: typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind),
+                };
+
+            case AstUtils.SimplifiedTypeKind.NotType:
+                return {
+                    kind: InspectedParameterKind.NotType,
+                    nameLiteral,
+                    isOptional,
+                    node: simplified.node,
+                };
+
+            case AstUtils.SimplifiedTypeKind.RequiresResolution:
+                break;
+
+            default:
+                throw Assert.isNever(simplified);
         }
     }
 
     return {
-        kind: InspectedParameterKind.Unresolved,
+        kind: InspectedParameterKind.RequiresResolution,
         nameLiteral,
         isOptional,
         annotation,

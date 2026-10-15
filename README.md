@@ -32,31 +32,6 @@ if (ResultUtils.isOk(result)) {
 
 Cancellation still returns a `CommonError` wrapping `CancellationError`; polling occurs at entry and during scanning, rather than at incremental update or snapshot stages.
 
-### Type annotation inspection
-
-`AstUtils.simplifyType` simplifies type syntax without resolving names or evaluating expressions.
-It returns a `SimplifiedType` discriminated by `kind` (`SimplifiedTypeKind`): `Resolved` contains
-`isNullable` and `primitiveTypeConstantKind`; `Unresolved` retains the original type expression
-in `node`, including nullable and parenthesized wrappers. Primitive and structured type syntax is
-simplified where possible; an alias such as `T` requires semantic inspection by the caller.
-`simplifyAsNullablePrimitiveType` always returns the resolved variant.
-
-`TypeUtils.inspectParameter` returns `InspectedParameter`, discriminated by `kind`
-(`InspectedParameterKind`). `Resolved` contains the existing `Type.FunctionParameter` fields, including `type: undefined`
-when no annotation is present. When an annotation cannot be simplified, the result has
-`kind: Unresolved`, `nameLiteral`,
-`isOptional`, and `annotation`. The annotation is the complete `AsType` or `AsNullablePrimitiveType`
-node, boxed as an AST or parse-context node. This preserves nullable wrappers and distinguishes
-an unfinished annotation from an absent one. A parameter with no parsed name returns `MissingName`.
-
-**API change:** neither API returns `undefined`. Switch on `kind` to narrow the result.
-For parameter inspection, `Resolved` exposes `type` and `isNullable`, `Unresolved` exposes
-`annotation`, and `MissingName` contains only its discriminator. A named parameter without an
-annotation is still `Resolved`, not `MissingName`.
-For an unresolved AST annotation, a semantic layer such as powerquery-language-services can inspect
-`parameter.annotation.node.id` in the original document. Incomplete annotations remain unresolved.
-Neither API silently substitutes `any` for a type requiring semantic resolution.
-
 ## Related projects
 
 - [powerquery-formatter](https://github.com/microsoft/powerquery-formatter): A code formatter for Power Query which is bundled in the VSCode extension.

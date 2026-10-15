@@ -32,6 +32,7 @@ describe(`AstUtils`, () => {
 
         for (const [text, primitiveTypeConstantKind, isNullable] of [
             ["text", Constant.PrimitiveTypeConstant.Text, false],
+            ["null", Constant.PrimitiveTypeConstant.Null, false],
             ["nullable text", Constant.PrimitiveTypeConstant.Text, true],
             ["[Value = text]", Constant.PrimitiveTypeConstant.Record, false],
             ["{text}", Constant.PrimitiveTypeConstant.List, false],
@@ -59,17 +60,46 @@ describe(`AstUtils`, () => {
             "((type nullable T))",
             "(if true then T else U)",
             "GetType()",
-            "42",
+            "R[T]",
+            "Types{0}",
+            "(let T = type text in T)",
+            "(T ?? U)",
         ]) {
             it(`reports unresolved syntax for ${text}`, async () => {
                 const node: Ast.TType = await annotationType(text);
                 const simplified: AstUtils.SimplifiedType = AstUtils.simplifyType(node);
 
-                if (simplified.kind !== AstUtils.SimplifiedTypeKind.Unresolved) {
-                    throw new Error("Expected an unresolved type");
+                if (simplified.kind !== AstUtils.SimplifiedTypeKind.RequiresResolution) {
+                    throw new Error("Expected a type requiring resolution");
                 }
 
-                expect(simplified).to.deep.equal({ kind: AstUtils.SimplifiedTypeKind.Unresolved, node });
+                expect(simplified).to.deep.equal({ kind: AstUtils.SimplifiedTypeKind.RequiresResolution, node });
+                expect(simplified.node).to.equal(node);
+            });
+        }
+
+        for (const text of [
+            "42",
+            '"text"',
+            "true",
+            "(null)",
+            "({type text})",
+            "([T = type text])",
+            "(() => type text)",
+            "(each type text)",
+            "(42)",
+            "nullable 42",
+            "((type nullable 42))",
+        ]) {
+            it(`reports a known non-type value for ${text}`, async () => {
+                const node: Ast.TType = await annotationType(text);
+                const simplified: AstUtils.SimplifiedType = AstUtils.simplifyType(node);
+
+                if (simplified.kind !== AstUtils.SimplifiedTypeKind.NotType) {
+                    throw new Error("Expected a non-type expression");
+                }
+
+                expect(simplified).to.deep.equal({ kind: AstUtils.SimplifiedTypeKind.NotType, node });
                 expect(simplified.node).to.equal(node);
             });
         }

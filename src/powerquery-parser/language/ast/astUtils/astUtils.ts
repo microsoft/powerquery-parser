@@ -217,9 +217,29 @@ export function simplifyType(type: Ast.TType): SimplifiedType {
                   isNullable: type.kind === Ast.NodeKind.NullableType || simplified.isNullable,
               }
             : {
-                  kind: SimplifiedTypeKind.Unresolved,
+                  ...simplified,
                   node: type,
               };
+    }
+
+    if (
+        type.kind === Ast.NodeKind.LiteralExpression ||
+        type.kind === Ast.NodeKind.ListExpression ||
+        type.kind === Ast.NodeKind.RecordExpression ||
+        type.kind === Ast.NodeKind.FunctionExpression ||
+        type.kind === Ast.NodeKind.EachExpression
+    ) {
+        return {
+            kind: SimplifiedTypeKind.NotType,
+            node: type,
+        };
+    }
+
+    if (!isTPrimaryType(type)) {
+        return {
+            kind: SimplifiedTypeKind.RequiresResolution,
+            node: type,
+        };
     }
 
     let isNullable: boolean;
@@ -250,36 +270,6 @@ export function simplifyType(type: Ast.TType): SimplifiedType {
             isNullable = false;
             primitiveTypeConstantKind = Constant.PrimitiveTypeConstant.Table;
             break;
-
-        case Ast.NodeKind.ArithmeticExpression:
-        case Ast.NodeKind.AsExpression:
-        case Ast.NodeKind.EachExpression:
-        case Ast.NodeKind.EqualityExpression:
-        case Ast.NodeKind.ErrorHandlingExpression:
-        case Ast.NodeKind.ErrorRaisingExpression:
-        case Ast.NodeKind.FieldProjection:
-        case Ast.NodeKind.FieldSelector:
-        case Ast.NodeKind.FunctionExpression:
-        case Ast.NodeKind.IdentifierExpression:
-        case Ast.NodeKind.IfExpression:
-        case Ast.NodeKind.InvokeExpression:
-        case Ast.NodeKind.IsExpression:
-        case Ast.NodeKind.ItemAccessExpression:
-        case Ast.NodeKind.LetExpression:
-        case Ast.NodeKind.ListExpression:
-        case Ast.NodeKind.LiteralExpression:
-        case Ast.NodeKind.LogicalExpression:
-        case Ast.NodeKind.MetadataExpression:
-        case Ast.NodeKind.NotImplementedExpression:
-        case Ast.NodeKind.NullCoalescingExpression:
-        case Ast.NodeKind.RecordExpression:
-        case Ast.NodeKind.RecursivePrimaryExpression:
-        case Ast.NodeKind.RelationalExpression:
-        case Ast.NodeKind.UnaryExpression:
-            return {
-                kind: SimplifiedTypeKind.Unresolved,
-                node: type,
-            };
 
         default:
             throw Assert.isNever(type);

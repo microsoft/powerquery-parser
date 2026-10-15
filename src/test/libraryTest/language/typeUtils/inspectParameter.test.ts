@@ -79,11 +79,11 @@ describe("TypeUtils.inspectParameter", () => {
                 parameter,
             );
 
-            if (inspected.kind !== TypeUtils.InspectedParameterKind.Unresolved) {
+            if (inspected.kind !== TypeUtils.InspectedParameterKind.RequiresResolution) {
                 throw new Error("Expected an unresolved parameter");
             }
 
-            expect(inspected.kind).to.equal(TypeUtils.InspectedParameterKind.Unresolved);
+            expect(inspected.kind).to.equal(TypeUtils.InspectedParameterKind.RequiresResolution);
             expect(inspected.nameLiteral).to.equal("x");
             expect(inspected.isOptional).to.equal(true);
             expect(XorNodeUtils.isAst(inspected.annotation)).to.equal(true);
@@ -112,6 +112,7 @@ describe("TypeUtils.inspectParameter", () => {
         "type function (x as",
         "type function (optional x as nullable",
         "type function (x as (T",
+        "type function (x as (42",
         "(x as",
     ]) {
         it(`distinguishes an incomplete annotation in ${text} from no annotation`, async () => {
@@ -122,11 +123,11 @@ describe("TypeUtils.inspectParameter", () => {
                 parameter,
             );
 
-            if (inspected.kind !== TypeUtils.InspectedParameterKind.Unresolved) {
+            if (inspected.kind !== TypeUtils.InspectedParameterKind.RequiresResolution) {
                 throw new Error("Expected an unresolved parameter");
             }
 
-            expect(inspected.kind).to.equal(TypeUtils.InspectedParameterKind.Unresolved);
+            expect(inspected.kind).to.equal(TypeUtils.InspectedParameterKind.RequiresResolution);
             expect(inspected.isOptional).to.equal(text.includes("optional"));
             expect(XorNodeUtils.isContext(inspected.annotation)).to.equal(true);
 
@@ -169,14 +170,49 @@ describe("TypeUtils.inspectParameter", () => {
                     type: Type.TypeKind.Text,
                 });
             } else {
-                if (inspected.kind !== TypeUtils.InspectedParameterKind.Unresolved) {
+                if (inspected.kind !== TypeUtils.InspectedParameterKind.RequiresResolution) {
                     throw new Error("Expected an unresolved parameter");
                 }
 
-                expect(inspected.kind).to.equal(TypeUtils.InspectedParameterKind.Unresolved);
+                expect(inspected.kind).to.equal(TypeUtils.InspectedParameterKind.RequiresResolution);
                 expect(XorNodeUtils.isAst(inspected.annotation)).to.equal(true);
             }
         });
+    }
+
+    for (const annotation of ["42", "nullable 42", "((type nullable 42))", "({type text})", "(() => type text)"]) {
+        for (const isIncomplete of [false, true]) {
+            it(`retains the non-type ${annotation} expression in ${isIncomplete ? "incomplete" : "complete"} input`, async () => {
+                const { parsed, parameter }: ParsedParameter = await parseParameter(
+                    `type function (optional x as ${annotation}${isIncomplete ? "" : ") as any"}`,
+                    isIncomplete,
+                );
+
+                const inspected: TypeUtils.InspectedParameter = TypeUtils.inspectParameter(
+                    parsed.nodeIdMapCollection,
+                    parameter,
+                );
+
+                if (inspected.kind !== TypeUtils.InspectedParameterKind.NotType) {
+                    throw new Error("Expected a non-type parameter annotation");
+                }
+
+                expect(inspected.nameLiteral).to.equal("x");
+                expect(inspected.isOptional).to.equal(true);
+
+                const asType: Ast.AsType = NodeIdMapUtils.assertNthChildAstChecked<Ast.AsType>(
+                    parsed.nodeIdMapCollection,
+                    parameter.node.id,
+                    2,
+                    Ast.NodeKind.AsType,
+                );
+
+                expect(inspected.node).to.equal(asType.paired);
+                expect(inspected).not.to.have.property("annotation");
+                expect(inspected).not.to.have.property("type");
+                expect(inspected).not.to.have.property("isNullable");
+            });
+        }
     }
 
     for (const text of ["type function (optional", "(optional"]) {
@@ -215,7 +251,8 @@ describe("TypeUtils.inspectParameter", () => {
 
         expect(
             inspectedParameters.filter(
-                (item: TypeUtils.InspectedParameter) => item.kind === TypeUtils.InspectedParameterKind.Unresolved,
+                (item: TypeUtils.InspectedParameter) =>
+                    item.kind === TypeUtils.InspectedParameterKind.RequiresResolution,
             ),
         ).to.have.length(1);
     });

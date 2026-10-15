@@ -4,13 +4,14 @@
 import type { Ast } from "..";
 import type { Constant } from "../../constant";
 
-// Syntax-only output of AstUtils simplification, converted by TypeUtils into parameter type metadata.
-// Unresolved results retain the complete type expression for semantic inspection in PQLS.
-export type SimplifiedType = ResolvedType | UnresolvedType;
+// Syntax inspection outcomes that TypeUtils maps to parameter metadata, resolution requests, or non-type diagnostics.
+// Both non-resolved variants preserve the original expression and wrappers for PQLS.
+export type SimplifiedType = ResolvedType | TypeRequiringResolution | NonTypeExpression;
 
 export enum SimplifiedTypeKind {
     Resolved = "Resolved",
-    Unresolved = "Unresolved",
+    RequiresResolution = "RequiresResolution",
+    NotType = "NotType",
 }
 
 // Syntax-derived AstUtils metadata that TypeUtils converts into FunctionParameter fields without PQLS resolution.
@@ -20,8 +21,16 @@ export interface ResolvedType {
     readonly primitiveTypeConstantKind: Constant.PrimitiveTypeConstant;
 }
 
-// Preserves wrappers such as nullable so PQLS can resolve the original expression without losing meaning.
-export interface UnresolvedType {
-    readonly kind: SimplifiedTypeKind.Unresolved;
+// PQP cannot determine whether this expression produces a type; PQLS must inspect it in its semantic context.
+// The original node retains wrappers such as nullable, and resolution may still reveal a non-type value.
+export interface TypeRequiringResolution {
+    readonly kind: SimplifiedTypeKind.RequiresResolution;
+    readonly node: Ast.TType;
+}
+
+// PQP can prove this expression cannot produce a type value; PQLS can diagnose it without resolving references.
+// The original node retains wrappers so diagnostics can identify the complete annotation expression.
+export interface NonTypeExpression {
+    readonly kind: SimplifiedTypeKind.NotType;
     readonly node: Ast.TType;
 }
