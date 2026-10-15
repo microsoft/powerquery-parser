@@ -35,21 +35,24 @@ Cancellation still returns a `CommonError` wrapping `CancellationError`; polling
 ### Type annotation inspection
 
 `AstUtils.simplifyType` simplifies type syntax without resolving names or evaluating expressions.
-It returns `SimplifiedType | undefined`: `undefined` means the type cannot be determined from syntax
-alone. Primitive and structured types, including nullable and parenthesized forms, are simplified;
-an alias such as `T` requires semantic inspection by the caller.
+It returns a `SimplifiedType` discriminated by `kind` (`SimplifiedTypeKind`): `Resolved` contains
+`isNullable` and `primitiveTypeConstantKind`; `Unresolved` retains the original type expression
+in `node`, including nullable and parenthesized wrappers. Primitive and structured type syntax is
+simplified where possible; an alias such as `T` requires semantic inspection by the caller.
+`simplifyAsNullablePrimitiveType` always returns the resolved variant.
 
-`TypeUtils.inspectParameter` returns `InspectedParameter | undefined`. Resolved results contain
-`isTypeResolved: true` and the existing `Type.FunctionParameter` fields, including `type: undefined`
+`TypeUtils.inspectParameter` returns `InspectedParameter`, discriminated by `kind`
+(`InspectedParameterKind`). `Resolved` contains the existing `Type.FunctionParameter` fields, including `type: undefined`
 when no annotation is present. When an annotation cannot be simplified, the result has
-`isTypeResolved: false`, `nameLiteral`,
+`kind: Unresolved`, `nameLiteral`,
 `isOptional`, and `annotation`. The annotation is the complete `AsType` or `AsNullablePrimitiveType`
 node, boxed as an AST or parse-context node. This preserves nullable wrappers and distinguishes
-an unfinished annotation from an absent one. A parameter with no parsed name still returns `undefined`.
+an unfinished annotation from an absent one. A parameter with no parsed name returns `MissingName`.
 
-**API change:** callers must handle both the optional `simplifyType` result and unresolved parameter
-results. Check `parameter.isTypeResolved` to narrow the result: the true branch exposes `type` and
-`isNullable`, and the false branch exposes `annotation`.
+**API change:** neither API returns `undefined`. Switch on `kind` to narrow the result.
+For parameter inspection, `Resolved` exposes `type` and `isNullable`, `Unresolved` exposes
+`annotation`, and `MissingName` contains only its discriminator. A named parameter without an
+annotation is still `Resolved`, not `MissingName`.
 For an unresolved AST annotation, a semantic layer such as powerquery-language-services can inspect
 `parameter.annotation.node.id` in the original document. Incomplete annotations remain unresolved.
 Neither API silently substitutes `any` for a type requiring semantic resolution.

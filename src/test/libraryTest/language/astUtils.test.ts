@@ -43,15 +43,67 @@ describe(`AstUtils`, () => {
         ] as const) {
             it(`simplifies ${text}`, async () => {
                 expect(AstUtils.simplifyType(await annotationType(text))).to.deep.equal({
+                    kind: AstUtils.SimplifiedTypeKind.Resolved,
                     isNullable,
                     primitiveTypeConstantKind,
                 });
             });
         }
 
-        for (const text of ["T", "nullable T", "(T)", "nullable (T)", "(if true then T else U)", "GetType()", "42"]) {
+        for (const text of [
+            "T",
+            "nullable T",
+            "(T)",
+            "nullable (T)",
+            "(type nullable T)",
+            "((type nullable T))",
+            "(if true then T else U)",
+            "GetType()",
+            "42",
+        ]) {
             it(`reports unresolved syntax for ${text}`, async () => {
-                expect(AstUtils.simplifyType(await annotationType(text))).to.equal(undefined);
+                const node: Ast.TType = await annotationType(text);
+                const simplified: AstUtils.SimplifiedType = AstUtils.simplifyType(node);
+
+                if (simplified.kind !== AstUtils.SimplifiedTypeKind.Unresolved) {
+                    throw new Error("Expected an unresolved type");
+                }
+
+                expect(simplified).to.deep.equal({ kind: AstUtils.SimplifiedTypeKind.Unresolved, node });
+                expect(simplified.node).to.equal(node);
+            });
+        }
+    });
+
+    describe("simplifyAsNullablePrimitiveType", () => {
+        for (const [annotation, isNullable] of [
+            ["text", false],
+            ["nullable text", true],
+        ] as const) {
+            it(`always resolves ${annotation}`, async () => {
+                const parsed: ParseOk = await AssertTestUtils.assertGetParseOk(
+                    DefaultSettings,
+                    `(x as ${annotation}) => x`,
+                );
+
+                const fn: Ast.FunctionExpression = AstUtils.assertAsNodeKind<Ast.FunctionExpression>(
+                    parsed.root,
+                    Ast.NodeKind.FunctionExpression,
+                );
+
+                const parameter: Ast.IParameter<Ast.AsNullablePrimitiveType | undefined> = Assert.asDefined(
+                    fn.parameters.content.elements[0],
+                ).node;
+
+                const simplified: AstUtils.ResolvedType = AstUtils.simplifyAsNullablePrimitiveType(
+                    Assert.asDefined(parameter.parameterType),
+                );
+
+                expect(simplified).to.deep.equal({
+                    kind: AstUtils.SimplifiedTypeKind.Resolved,
+                    isNullable,
+                    primitiveTypeConstantKind: Constant.PrimitiveTypeConstant.Text,
+                });
             });
         }
     });

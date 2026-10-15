@@ -3,9 +3,9 @@
 
 import { ArrayUtils, Assert } from "../../../common";
 import { Ast, AstUtils } from "../..";
+import { InspectedParameter, InspectedParameterKind } from "./inspectedParameter";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, XorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { Trace, TraceManager } from "../../../common/trace";
-import type { InspectedParameter } from "./inspectedParameter";
 import { isCompatible } from "./isCompatible";
 import { isEqualType } from "./isEqualType";
 import { primitiveType } from "./factories";
@@ -120,11 +120,11 @@ export function isValidInvocation(
     return true;
 }
 
-// Undefined means no name was parsed; Unresolved preserves an annotation requiring further inspection.
+// MissingName means no name was parsed; Unresolved preserves an annotation requiring further inspection.
 export function inspectParameter(
     nodeIdMapCollection: NodeIdMap.Collection,
     parameter: XorNode<Ast.TParameter>,
-): InspectedParameter | undefined {
+): InspectedParameter {
     switch (parameter.kind) {
         case XorNodeKind.Ast:
             return inspectParameterType(
@@ -146,7 +146,7 @@ export function inspectParameter(
 function inspectContextParameter(
     nodeIdMapCollection: NodeIdMap.Collection,
     parameter: ParseContext.Node<Ast.TParameter>,
-): InspectedParameter | undefined {
+): InspectedParameter {
     const name: Ast.Identifier | undefined = NodeIdMapUtils.nthChildAstChecked(
         nodeIdMapCollection,
         parameter.id,
@@ -155,7 +155,7 @@ function inspectContextParameter(
     );
 
     if (name === undefined) {
-        return undefined;
+        return { kind: InspectedParameterKind.MissingName };
     }
 
     const optionalConstant: Ast.TConstant | undefined = NodeIdMapUtils.nthChildAstChecked(
@@ -189,7 +189,7 @@ function inspectParameterType(
 ): InspectedParameter {
     if (annotation === undefined) {
         return {
-            isTypeResolved: true,
+            kind: InspectedParameterKind.Resolved,
             nameLiteral,
             isOptional,
             isNullable: true,
@@ -197,29 +197,27 @@ function inspectParameterType(
         };
     }
 
-    let simplified: AstUtils.SimplifiedType | undefined;
-
     if (XorNodeUtils.isAst(annotation)) {
-        simplified =
+        const simplified: AstUtils.SimplifiedType =
             annotation.node.kind === Ast.NodeKind.AsType
                 ? AstUtils.simplifyType(annotation.node.paired)
                 : AstUtils.simplifyAsNullablePrimitiveType(annotation.node);
-    }
 
-    if (simplified === undefined) {
-        return {
-            isTypeResolved: false,
-            nameLiteral,
-            isOptional,
-            annotation,
-        };
+        if (simplified.kind === AstUtils.SimplifiedTypeKind.Resolved) {
+            return {
+                kind: InspectedParameterKind.Resolved,
+                nameLiteral,
+                isOptional,
+                isNullable: simplified.isNullable,
+                type: typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind),
+            };
+        }
     }
 
     return {
-        isTypeResolved: true,
+        kind: InspectedParameterKind.Unresolved,
         nameLiteral,
         isOptional,
-        isNullable: simplified.isNullable,
-        type: typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind),
+        annotation,
     };
 }

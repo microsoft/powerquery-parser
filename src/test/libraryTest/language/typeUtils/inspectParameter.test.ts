@@ -9,6 +9,7 @@ import { Ast, Type, TypeUtils } from "../../../../powerquery-parser/language";
 import { NodeIdMapUtils, XorNode, XorNodeUtils } from "../../../../powerquery-parser/parser";
 import { AssertTestUtils } from "../../../testUtils";
 
+// Couples the parser's node map with an AST or context parameter for TypeUtils.inspectParameter tests.
 interface ParsedParameter {
     readonly parsed: Task.ParseTaskOk | Task.ParseTaskParseError;
     readonly parameter: XorNode<Ast.TParameter>;
@@ -50,7 +51,7 @@ describe("TypeUtils.inspectParameter", () => {
                 );
 
                 expect(TypeUtils.inspectParameter(parsed.nodeIdMapCollection, parameter)).to.deep.equal({
-                    isTypeResolved: true,
+                    kind: TypeUtils.InspectedParameterKind.Resolved,
                     nameLiteral: "x",
                     isOptional,
                     isNullable,
@@ -60,21 +61,29 @@ describe("TypeUtils.inspectParameter", () => {
         }
     }
 
-    for (const annotation of ["T", "nullable T", "(T)", "nullable (T)", "(if true then T else U)"]) {
+    for (const annotation of [
+        "T",
+        "nullable T",
+        "(T)",
+        "nullable (T)",
+        "((type nullable T))",
+        "(if true then T else U)",
+    ]) {
         it(`retains the whole unresolved ${annotation} annotation`, async () => {
             const { parsed, parameter }: ParsedParameter = await parseParameter(
                 `let T = type text in type function (optional x as ${annotation}) as any`,
             );
 
-            const inspected: TypeUtils.InspectedParameter = Assert.asDefined(
-                TypeUtils.inspectParameter(parsed.nodeIdMapCollection, parameter),
+            const inspected: TypeUtils.InspectedParameter = TypeUtils.inspectParameter(
+                parsed.nodeIdMapCollection,
+                parameter,
             );
 
-            if (inspected.isTypeResolved) {
+            if (inspected.kind !== TypeUtils.InspectedParameterKind.Unresolved) {
                 throw new Error("Expected an unresolved parameter");
             }
 
-            expect(inspected.isTypeResolved).to.equal(false);
+            expect(inspected.kind).to.equal(TypeUtils.InspectedParameterKind.Unresolved);
             expect(inspected.nameLiteral).to.equal("x");
             expect(inspected.isOptional).to.equal(true);
             expect(XorNodeUtils.isAst(inspected.annotation)).to.equal(true);
@@ -90,7 +99,7 @@ describe("TypeUtils.inspectParameter", () => {
             const { parsed, parameter }: ParsedParameter = await parseParameter(text);
 
             expect(TypeUtils.inspectParameter(parsed.nodeIdMapCollection, parameter)).to.deep.equal({
-                isTypeResolved: true,
+                kind: TypeUtils.InspectedParameterKind.Resolved,
                 nameLiteral: "x",
                 isOptional: text.includes("optional"),
                 isNullable: !text.includes("as text"),
@@ -108,15 +117,16 @@ describe("TypeUtils.inspectParameter", () => {
         it(`distinguishes an incomplete annotation in ${text} from no annotation`, async () => {
             const { parsed, parameter }: ParsedParameter = await parseParameter(text, true);
 
-            const inspected: TypeUtils.InspectedParameter = Assert.asDefined(
-                TypeUtils.inspectParameter(parsed.nodeIdMapCollection, parameter),
+            const inspected: TypeUtils.InspectedParameter = TypeUtils.inspectParameter(
+                parsed.nodeIdMapCollection,
+                parameter,
             );
 
-            if (inspected.isTypeResolved) {
+            if (inspected.kind !== TypeUtils.InspectedParameterKind.Unresolved) {
                 throw new Error("Expected an unresolved parameter");
             }
 
-            expect(inspected.isTypeResolved).to.equal(false);
+            expect(inspected.kind).to.equal(TypeUtils.InspectedParameterKind.Unresolved);
             expect(inspected.isOptional).to.equal(text.includes("optional"));
             expect(XorNodeUtils.isContext(inspected.annotation)).to.equal(true);
 
@@ -130,7 +140,7 @@ describe("TypeUtils.inspectParameter", () => {
         const { parsed, parameter }: ParsedParameter = await parseParameter("type function (x", true);
 
         expect(TypeUtils.inspectParameter(parsed.nodeIdMapCollection, parameter)).to.deep.equal({
-            isTypeResolved: true,
+            kind: TypeUtils.InspectedParameterKind.Resolved,
             nameLiteral: "x",
             isOptional: false,
             isNullable: true,
@@ -145,34 +155,39 @@ describe("TypeUtils.inspectParameter", () => {
                 true,
             );
 
-            const inspected: TypeUtils.InspectedParameter = Assert.asDefined(
-                TypeUtils.inspectParameter(parsed.nodeIdMapCollection, parameter),
+            const inspected: TypeUtils.InspectedParameter = TypeUtils.inspectParameter(
+                parsed.nodeIdMapCollection,
+                parameter,
             );
 
             if (annotation === "text") {
                 expect(inspected).to.deep.equal({
-                    isTypeResolved: true,
+                    kind: TypeUtils.InspectedParameterKind.Resolved,
                     nameLiteral: "x",
                     isOptional: false,
                     isNullable: false,
                     type: Type.TypeKind.Text,
                 });
             } else {
-                if (inspected.isTypeResolved) {
+                if (inspected.kind !== TypeUtils.InspectedParameterKind.Unresolved) {
                     throw new Error("Expected an unresolved parameter");
                 }
 
-                expect(inspected.isTypeResolved).to.equal(false);
+                expect(inspected.kind).to.equal(TypeUtils.InspectedParameterKind.Unresolved);
                 expect(XorNodeUtils.isAst(inspected.annotation)).to.equal(true);
             }
         });
     }
 
-    it("returns undefined when a parameter name has not been parsed", async () => {
-        const { parsed, parameter }: ParsedParameter = await parseParameter("type function (optional", true);
+    for (const text of ["type function (optional", "(optional"]) {
+        it(`reports a missing parameter name in ${text}`, async () => {
+            const { parsed, parameter }: ParsedParameter = await parseParameter(text, true);
 
-        expect(TypeUtils.inspectParameter(parsed.nodeIdMapCollection, parameter)).to.equal(undefined);
-    });
+            expect(TypeUtils.inspectParameter(parsed.nodeIdMapCollection, parameter)).to.deep.equal({
+                kind: TypeUtils.InspectedParameterKind.MissingName,
+            });
+        });
+    }
 
     it("reports the annotation in the invocation-validation reproduction as unresolved", async () => {
         const { parsed, parameter }: ParsedParameter = await parseParameter(
@@ -180,9 +195,12 @@ describe("TypeUtils.inspectParameter", () => {
         );
 
         TaskUtils.assertIsParseStageOk(parsed);
-        expect(TypeUtils.inspectParameter(parsed.nodeIdMapCollection, parameter)).not.to.equal(undefined);
 
-        const inspectedParameters: ReadonlyArray<TypeUtils.InspectedParameter | undefined> = [
+        expect(TypeUtils.inspectParameter(parsed.nodeIdMapCollection, parameter).kind).to.equal(
+            TypeUtils.InspectedParameterKind.Resolved,
+        );
+
+        const inspectedParameters: ReadonlyArray<TypeUtils.InspectedParameter> = [
             ...Assert.asDefined(parsed.nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.Parameter)),
         ].map((nodeId: number) =>
             TypeUtils.inspectParameter(
@@ -197,7 +215,7 @@ describe("TypeUtils.inspectParameter", () => {
 
         expect(
             inspectedParameters.filter(
-                (item: TypeUtils.InspectedParameter | undefined) => item?.isTypeResolved === false,
+                (item: TypeUtils.InspectedParameter) => item.kind === TypeUtils.InspectedParameterKind.Unresolved,
             ),
         ).to.have.length(1);
     });

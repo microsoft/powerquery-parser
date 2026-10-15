@@ -1,7 +1,7 @@
 import { Assert, CommonError } from "../../../common";
+import { ResolvedType, SimplifiedType, SimplifiedTypeKind } from "./simplifiedType";
 import { Ast } from "..";
 import { Constant } from "../../constant";
-import type { SimplifiedType } from "./simplifiedType";
 import { TokenKind } from "../../token";
 
 export function assertIsLeaf(node: Ast.TNode): asserts node is Ast.TLeaf {
@@ -201,8 +201,27 @@ export function literalKindFrom(
     }
 }
 
-// Returns undefined when the type cannot be determined from syntax alone.
-export function simplifyType(type: Ast.TType): SimplifiedType | undefined {
+export function simplifyType(type: Ast.TType): SimplifiedType {
+    if (
+        type.kind === Ast.NodeKind.NullableType ||
+        type.kind === Ast.NodeKind.TypePrimaryType ||
+        type.kind === Ast.NodeKind.ParenthesizedExpression
+    ) {
+        const simplified: SimplifiedType = simplifyType(
+            type.kind === Ast.NodeKind.ParenthesizedExpression ? type.content : type.paired,
+        );
+
+        return simplified.kind === SimplifiedTypeKind.Resolved
+            ? {
+                  ...simplified,
+                  isNullable: type.kind === Ast.NodeKind.NullableType || simplified.isNullable,
+              }
+            : {
+                  kind: SimplifiedTypeKind.Unresolved,
+                  node: type,
+              };
+    }
+
     let isNullable: boolean;
     let primitiveTypeConstantKind: Constant.PrimitiveTypeConstant;
 
@@ -211,18 +230,6 @@ export function simplifyType(type: Ast.TType): SimplifiedType | undefined {
             isNullable = false;
             primitiveTypeConstantKind = type.primitiveTypeKind;
             break;
-
-        case Ast.NodeKind.NullableType: {
-            const simplified: SimplifiedType | undefined = simplifyType(type.paired);
-
-            return simplified === undefined ? undefined : { ...simplified, isNullable: true };
-        }
-
-        case Ast.NodeKind.ParenthesizedExpression:
-            return simplifyType(type.content);
-
-        case Ast.NodeKind.TypePrimaryType:
-            return simplifyType(type.paired);
 
         case Ast.NodeKind.FunctionType:
             isNullable = false;
@@ -269,13 +276,17 @@ export function simplifyType(type: Ast.TType): SimplifiedType | undefined {
         case Ast.NodeKind.RecursivePrimaryExpression:
         case Ast.NodeKind.RelationalExpression:
         case Ast.NodeKind.UnaryExpression:
-            return undefined;
+            return {
+                kind: SimplifiedTypeKind.Unresolved,
+                node: type,
+            };
 
         default:
             throw Assert.isNever(type);
     }
 
     return {
+        kind: SimplifiedTypeKind.Resolved,
         isNullable,
         primitiveTypeConstantKind,
     };
@@ -323,7 +334,7 @@ export function nodeKindFromTBinOpExpressionOperator(
     }
 }
 
-export function simplifyAsNullablePrimitiveType(node: Ast.AsNullablePrimitiveType): SimplifiedType {
+export function simplifyAsNullablePrimitiveType(node: Ast.AsNullablePrimitiveType): ResolvedType {
     let isNullable: boolean;
     let primitiveTypeConstantKind: Constant.PrimitiveTypeConstant;
 
@@ -345,6 +356,7 @@ export function simplifyAsNullablePrimitiveType(node: Ast.AsNullablePrimitiveTyp
     }
 
     return {
+        kind: SimplifiedTypeKind.Resolved,
         primitiveTypeConstantKind,
         isNullable,
     };
