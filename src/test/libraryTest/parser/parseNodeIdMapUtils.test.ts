@@ -309,6 +309,138 @@ describe(`nodeIdMapUtils`, () => {
         });
     });
 
+    describe("invokeExpressionIdentifierLiteral", () => {
+        for (const [name, parser] of [
+            ["combinatorial", Parser.CombinatorialParserV2],
+            ["recursive descent", Parser.RecursiveDescentParser],
+        ] as const) {
+            describe(name, () => {
+                for (const [text, expected, incomplete] of [
+                    ["Foo(1)", ["Foo"], false],
+                    ["@Foo(1)", ["@Foo"], false],
+                    ['#"Foo name"(1)', ['#"Foo name"'], false],
+                    ["Foo(1, ", ["Foo"], true],
+                    ["Section1!Foo(1)", ["Section1!Foo"], false],
+                    ["Section1!Foo(1, ", ["Section1!Foo"], true],
+                    ['#"Section one"!#"Foo name"(1)', ['#"Section one"!#"Foo name"'], false],
+                    ['#"Section one"!#"Foo name"(1, ', ['#"Section one"!#"Foo name"'], true],
+                    ['#"Section ""one"""!#"Foo ""name"""()', ['#"Section ""one"""!#"Foo ""name"""'], false],
+                    ["Section.One!Foo.Bar()", ["Section.One!Foo.Bar"], false],
+                    ["Section1 /* section */ ! // member\n Foo()", ["Section1!Foo"], false],
+                    ["Foo()()", ["Foo", undefined], false],
+                    ["Section1!Foo()()", ["Section1!Foo", undefined], false],
+                    ["Section1!Foo()(1, ", ["Section1!Foo", undefined], true],
+                    ["Section1!Foo[Bar]()", [undefined], false],
+                    ["Section1!Foo{0}()", [undefined], false],
+                    ["(Section1!Foo)()", [undefined], false],
+                    ["(Foo)()", [undefined], false],
+                ] as const) {
+                    it(text, async () => {
+                        const settings: typeof DefaultSettings = { ...DefaultSettings, parser };
+                        let collection: NodeIdMap.Collection;
+
+                        if (incomplete) {
+                            const parsed: Task.ParseTaskParseError = await AssertTestUtils.assertGetLexParseError(
+                                settings,
+                                text,
+                            );
+
+                            collection = parsed.error.state.contextState.nodeIdMapCollection;
+                        } else {
+                            const parsed: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(settings, text);
+                            collection = parsed.nodeIdMapCollection;
+                        }
+
+                        const invocationIds: number[] = [
+                            ...MapUtils.assertGet(collection.idsByNodeKind, Ast.NodeKind.InvokeExpression),
+                        ].sort((left: number, right: number) => left - right);
+
+                        expect(
+                            invocationIds.map((id: number) =>
+                                NodeIdMapUtils.invokeExpressionIdentifierLiteral(collection, id),
+                            ),
+                        ).to.deep.equal(expected);
+                    });
+                }
+
+                it("keeps the identifier-node selector restricted to identifier expressions", async () => {
+                    const parsed: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(
+                        { ...DefaultSettings, parser },
+                        "Section1!Foo(1)",
+                    );
+
+                    const collection: NodeIdMap.Collection = parsed.nodeIdMapCollection;
+
+                    const id: number = Assert.asDefined(
+                        MapUtils.assertGet(collection.idsByNodeKind, Ast.NodeKind.InvokeExpression).values().next()
+                            .value,
+                    );
+
+                    expect(NodeIdMapUtils.invokeExpressionIdentifier(collection, id)).to.equal(undefined);
+
+                    expect(() =>
+                        NodeIdMapUtils.invokeExpressionIdentifierLiteral(collection, parsed.ast.id),
+                    ).to.throw();
+                });
+
+                for (const [text, headKind] of [
+                    ["Foo(1)", Ast.NodeKind.IdentifierExpression],
+                    ["Section1!Foo(1)", Ast.NodeKind.SectionAccessExpression],
+                ] as const) {
+                    it(`handles an unfinished ${headKind} head`, async () => {
+                        const parsed: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(
+                            { ...DefaultSettings, parser },
+                            text,
+                        );
+
+                        const collection: NodeIdMap.Collection = parsed.nodeIdMapCollection;
+
+                        const headId: number = Assert.asDefined(
+                            MapUtils.assertGet(collection.idsByNodeKind, headKind).values().next().value,
+                        );
+
+                        const head: Ast.TNode = NodeIdMapUtils.assertAst(collection, headId);
+
+                        const invocationId: number = Assert.asDefined(
+                            MapUtils.assertGet(collection.idsByNodeKind, Ast.NodeKind.InvokeExpression).values().next()
+                                .value,
+                        );
+
+                        collection.astNodeById.delete(headId);
+
+                        collection.contextNodeById.set(headId, {
+                            id: headId,
+                            kind: headKind,
+                            tokenIndexStart: head.tokenRange.tokenIndexStart,
+                            tokenStart: undefined,
+                            attributeCounter: 0,
+                            attributeIndex: head.attributeIndex,
+                            isClosed: false,
+                        });
+
+                        if (headKind === Ast.NodeKind.IdentifierExpression) {
+                            expect(() => NodeIdMapUtils.invokeExpressionIdentifier(collection, invocationId)).to.throw(
+                                "should've finished parsing",
+                            );
+
+                            expect(() =>
+                                NodeIdMapUtils.invokeExpressionIdentifierLiteral(collection, invocationId),
+                            ).to.throw("should've finished parsing");
+                        } else {
+                            expect(NodeIdMapUtils.invokeExpressionIdentifier(collection, invocationId)).to.equal(
+                                undefined,
+                            );
+
+                            expect(NodeIdMapUtils.invokeExpressionIdentifierLiteral(collection, invocationId)).to.equal(
+                                undefined,
+                            );
+                        }
+                    });
+                }
+            });
+        }
+    });
+
     describe("wrappedContentXor", () => {
         it("Ast", async () => {
             const text: string = `[a = 1]`;
