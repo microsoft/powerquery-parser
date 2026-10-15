@@ -28,6 +28,8 @@ import { NodeIdMap } from "..";
 export interface State {
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     root: Node<Ast.TNode> | undefined;
+    // Allocation high-water mark: every live AST/context node ID must be <= idCounter.
+    // Copy/apply it with the node maps; rollback may rewind it when removing newer nodes.
     idCounter: number;
 }
 
