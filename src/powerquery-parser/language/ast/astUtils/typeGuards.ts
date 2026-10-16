@@ -90,7 +90,6 @@ export function isTBinOpExpressionKind(nodeKind: Ast.NodeKind): nodeKind is Ast.
         case Ast.NodeKind.RecordType:
         case Ast.NodeKind.RecursivePrimaryExpression:
         case Ast.NodeKind.Section:
-        case Ast.NodeKind.SectionAccessExpression:
         case Ast.NodeKind.SectionMember:
         case Ast.NodeKind.TableType:
         case Ast.NodeKind.TypePrimaryType:
@@ -161,7 +160,6 @@ export function isTKeyValuePair(node: Ast.TNode): node is Ast.TKeyValuePair {
         case Ast.NodeKind.RecursivePrimaryExpression:
         case Ast.NodeKind.RelationalExpression:
         case Ast.NodeKind.Section:
-        case Ast.NodeKind.SectionAccessExpression:
         case Ast.NodeKind.SectionMember:
         case Ast.NodeKind.TableType:
         case Ast.NodeKind.TypePrimaryType:
@@ -233,7 +231,6 @@ export function isTPairedConstant(node: Ast.TNode): node is Ast.TPairedConstant 
         case Ast.NodeKind.RecursivePrimaryExpression:
         case Ast.NodeKind.RelationalExpression:
         case Ast.NodeKind.Section:
-        case Ast.NodeKind.SectionAccessExpression:
         case Ast.NodeKind.SectionMember:
         case Ast.NodeKind.TableType:
         case Ast.NodeKind.UnaryExpression:
