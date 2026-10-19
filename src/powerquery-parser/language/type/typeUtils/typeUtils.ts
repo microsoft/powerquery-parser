@@ -31,6 +31,7 @@ export function typeKindFromLiteralKind(literalKind: Ast.LiteralKind): Type.Type
             return Type.TypeKind.Record;
 
         case Ast.LiteralKind.Text:
+        case Ast.LiteralKind.Verbatim:
             return Type.TypeKind.Text;
 
         default:
