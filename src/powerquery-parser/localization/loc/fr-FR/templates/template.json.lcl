@@ -49,111 +49,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";error_lex_badLineNumber_1_greaterThanNumLines" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[lineNumber is greater than or equal to the number of lines]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[lineNumber est supérieur ou égal au nombre de lignes]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_badLineNumber_2_lessThanZero" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[lineNumber is less than or equal 0]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[lineNumber est inférieur ou égal à 0]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_badRange_1_lineNumberEnd_greaterThanLineLength" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[end.lineCodeUnit is higher than line's length]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[end.lineCodeUnit est supérieur à la longueur de la ligne]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_badRange_2_lineNumberEnd_greaterThanLineNumbers" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[end.lineNumber is higher than State's number of lines]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[end.lineNumber est supérieur au nombre de lignes de l'état]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_badRange_3_lineNumberStart_greaterThanLineLength" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[start.lineCodeUnit is higher than line's length]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[start.lineCodeUnit est supérieur à la longueur de la ligne]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_badRange_4_lineNumberStart_greaterThanLineNumberEnd" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[start.lineNumber is larger than end.lineNumber]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[start.lineNumber est supérieur à end.lineNumber]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_badRange_5_lineNumberStart_greaterThanNumLines" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[start.lineNumber is higher than State's number of lines]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[start.lineNumber est supérieur au nombre de lignes de l'état]]></Val>
-          </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[start.lineNumber is higher than State's number of lines.]]></Val>
-          </Prev>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_badRange_6_lineNumberStart_lessThanZero" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[start.lineNumber is less than 0]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[start.lineNumber est inférieur ou égal à 0]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_badRange_7_sameLine_codeUnitStartGreaterThanCodeUnitEnd" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Start and end shared the same line, but start.lineCodeUnit was higher than end.lineCodeUnit]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Les valeurs de début et fin partagent la même ligne, mais start.lineCodeUnit est supérieur à end.lineCodeUnit]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_badState" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The lexer encountered an error last run. Either feed the lexer more text or review previous error.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[L'analyseur lexical a rencontré une erreur pendant la dernière exécution. Injectez plus de texte dans l'analyseur lexical ou examinez l'erreur précédente.]]></Val>
-          </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[The lexer encountered an error last run. Either feed the lexer more text or review lastError]]></Val>
-          </Prev>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_endOfStream" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The lexer reached end-of-stream]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[L'analyseur lexical a atteint la fin de flux]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";error_lex_endOfStreamPartwayRead" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[While attempting to read a token the document stream ended part way through]]></Val>
@@ -186,15 +81,6 @@
           <Val><![CDATA[Expected a numeric literal]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Littéral numérique attendu]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_lineMap" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Error on line(s): {lineNumbers}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Erreur sur la ou les lignes : {lineNumbers}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

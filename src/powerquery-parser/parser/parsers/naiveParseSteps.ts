@@ -1922,6 +1922,26 @@ export async function readType(
 
     state.cancellationToken?.throwIfCancelled();
 
+    // canStartPrimaryType covers every prefix accepted by tryReadPrimaryType. If false, that
+    // reader only creates a PrimitiveType context, rejects the token without consuming it,
+    // and rolls the context back. readType discards that diagnostic and calls the same
+    // primary-expression reader below, so skipping the attempt loses no valid type or diagnostic.
+    // Keep speculation without an enclosing context or at EOF, where its root/cached-token
+    // bookkeeping is observable. Cancellation checks remain above and in the fallback;
+    // traces and checkpoint hooks for the discarded attempt are intentionally omitted.
+    if (
+        state.currentContextNode !== undefined &&
+        state.tokenIndex < state.lexerSnapshot.tokens.length &&
+        !canStartPrimaryType(state)
+    ) {
+        trace.exit({
+            [NaiveTraceConstant.TokenIndex]: state.tokenIndex,
+            [TraceConstant.IsError]: true,
+        });
+
+        return parser.readPrimaryExpression(state, parser, trace.id);
+    }
+
     const triedReadPrimaryType: TriedReadPrimaryType = await tryReadPrimaryType(state, parser, trace.id);
 
     if (ResultUtils.isOk(triedReadPrimaryType)) {
@@ -2346,6 +2366,30 @@ export async function readFunctionType(
     trace.exit({ [NaiveTraceConstant.TokenIndex]: state.tokenIndex });
 
     return functionType;
+}
+
+function canStartPrimaryType(state: ParseState): boolean {
+    const token: Token.Token | undefined = state.lexerSnapshot.tokens[state.tokenIndex];
+
+    // No token means no primary-type prefix. The token checks correspond to:
+    // LeftBracket: Ast.RecordType, such as [x = number].
+    // LeftBrace: Ast.ListType, such as {number}.
+    // KeywordType: Ast.PrimitiveType with primitive kind Type, not Ast.TypePrimaryType.
+    // NullLiteral: Ast.PrimitiveType with primitive kind Null, not Ast.LiteralExpression.
+    // Identifier "nullable": Ast.NullableType, such as nullable number.
+    // Other primitive-type identifiers: Ast.PrimitiveType (number, text, etc.).
+    // "table" and "function" also admit Ast.TableType and Ast.FunctionType;
+    // tryReadPrimaryType uses subsequent tokens to distinguish these from primitive types.
+    return (
+        token !== undefined &&
+        (token.kind === TokenKind.LeftBracket ||
+            token.kind === TokenKind.LeftBrace ||
+            token.kind === TokenKind.KeywordType ||
+            token.kind === TokenKind.NullLiteral ||
+            (token.kind === TokenKind.Identifier &&
+                (token.data === Constant.LanguageConstant.Nullable ||
+                    ConstantUtils.isPrimitiveTypeConstant(token.data))))
+    );
 }
 
 async function tryReadPrimaryType(

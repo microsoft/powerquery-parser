@@ -183,12 +183,12 @@ export function isEqualDefinedTable(left: Type.DefinedTable, right: Type.Defined
 }
 
 function isEqualDefinedTableRows(
-    left: ReadonlyArray<Type.UnorderedFields>,
-    right: ReadonlyArray<Type.UnorderedFields>,
+    left: ReadonlyArray<Type.UnorderedFields> | undefined,
+    right: ReadonlyArray<Type.UnorderedFields> | undefined,
 ): boolean {
     if (left === right) {
         return true;
-    } else if (left.length !== right.length) {
+    } else if (left === undefined || right === undefined || left.length !== right.length) {
         return false;
     }
 

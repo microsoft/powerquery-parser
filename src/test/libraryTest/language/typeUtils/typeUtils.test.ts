@@ -247,6 +247,12 @@ describe(`TypeUtils`, () => {
             expect(type.rows).to.equal(rows);
         });
 
+        it(`allows unknown rows`, () => {
+            const type: Type.DefinedTable = TypeUtils.definedTable(false, fields);
+
+            expect(type.rows).to.be.undefined;
+        });
+
         it(`accepts null for a nullable column`, () => {
             const nullableFields: Type.OrderedFields = new OrderedMap([["Value", Type.NullableNumberInstance]]);
 

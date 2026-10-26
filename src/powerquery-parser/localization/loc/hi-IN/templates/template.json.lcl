@@ -49,111 +49,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";error_lex_badLineNumber_1_greaterThanNumLines" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[lineNumber is greater than or equal to the number of lines]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[lineNumber पंक्तियों की संख्या से अधिक या उनके बराबर है]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_badLineNumber_2_lessThanZero" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[lineNumber is less than or equal 0]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[lineNumber 0 से कम या उसके बराबर है]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_badRange_1_lineNumberEnd_greaterThanLineLength" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[end.lineCodeUnit is higher than line's length]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[end.lineCodeUnit पंक्ति की लंबाई से अधिक है]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_badRange_2_lineNumberEnd_greaterThanLineNumbers" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[end.lineNumber is higher than State's number of lines]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[end.lineNumber स्थिति की पंक्तियों की संख्या से अधिक है]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_badRange_3_lineNumberStart_greaterThanLineLength" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[start.lineCodeUnit is higher than line's length]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[start.lineCodeUnit पंक्ति की लंबाई से अधिक है]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_badRange_4_lineNumberStart_greaterThanLineNumberEnd" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[start.lineNumber is larger than end.lineNumber]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[start.lineNumber, end.lineNumber से बड़ा है]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_badRange_5_lineNumberStart_greaterThanNumLines" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[start.lineNumber is higher than State's number of lines]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[start.lineNumber, स्थिति की पंक्तियों की संख्या से अधिक है.]]></Val>
-          </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[start.lineNumber is higher than State's number of lines.]]></Val>
-          </Prev>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_badRange_6_lineNumberStart_lessThanZero" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[start.lineNumber is less than 0]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[start.lineNumber 0 से कम है]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_badRange_7_sameLine_codeUnitStartGreaterThanCodeUnitEnd" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Start and end shared the same line, but start.lineCodeUnit was higher than end.lineCodeUnit]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[प्रारंभ और अंत ने एक ही समान पंक्ति को साझा किया, लेकिन start.lineCodeUnit, end.lineCodeUnit से अधिक थी.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_badState" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The lexer encountered an error last run. Either feed the lexer more text or review previous error.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[पिछली बार lexer को चलाने पर त्रुटि का सामना हुआ. या तो lexer को और पाठ फ़ीड करें या पिछली त्रुटि की समीक्षा करें.]]></Val>
-          </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[The lexer encountered an error last run. Either feed the lexer more text or review lastError]]></Val>
-          </Prev>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_endOfStream" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The lexer reached end-of-stream]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Lexer एंड-ऑफ़-स्ट्रीम तक पहुँच गया]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";error_lex_endOfStreamPartwayRead" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[While attempting to read a token the document stream ended part way through]]></Val>
@@ -186,15 +81,6 @@
           <Val><![CDATA[Expected a numeric literal]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[एक सांख्यिक अक्षरशः की अपेक्षा थी]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";error_lex_lineMap" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Error on line(s): {lineNumbers}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[पंक्ति (यों) में त्रुटि: {lineNumbers}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
