@@ -10,8 +10,8 @@
     ],
     "scripts": {
         "build": "node_modules\\.bin\\tsc",
-        "test": "mocha --no-package --reporter mocha-multi-reporters --reporter-options configFile=mochaReporterConfig.json --spec src/test/libraryTest/**/*.ts",
-        "test:resources": "mocha --no-package --reporter mocha-multi-reporters --reporter-options configFile=mochaReporterConfig.json --spec src/test/resourceTest/**/*.ts",
+        "test": "mocha --no-package --reporter ./mochaReporter.js --reporter-option output=test-results.xml --spec src/test/libraryTest/**/*.ts",
+        "test:resources": "mocha --no-package --reporter ./mochaReporter.js --reporter-option output=test-results.xml --spec src/test/resourceTest/**/*.ts",
         "script:benchmark": "npx ts-node src/test/scripts/createBenchmark.ts",
         "script:nodeDump": "npx ts-node src/test/scripts/createNodeDump.ts",
         "lint": "eslint src --ext ts",
@@ -30,9 +30,6 @@
     "engines": {
         "node": ">=22"
     },
-    "overrides": {
-        "serialize-javascript": "7.0.4"
-    },
     "dependencies": {
         "grapheme-splitter": "^1.0.4",
         "performance-now": "^2.1.0"
@@ -49,9 +46,7 @@
         "eslint-plugin-prettier": "^5.5.4",
         "eslint-plugin-promise": "^7.2.1",
         "eslint-plugin-security": "^3.0.1",
-        "mocha": "^11.3.0",
-        "mocha-junit-reporter": "^2.0.2",
-        "mocha-multi-reporters": "^1.5.1",
+        "mocha": "^12.0.3",
         "prettier": "^3.6.2",
         "ts-loader": "^9.5.4",
         "ts-node": "^10.9.2",

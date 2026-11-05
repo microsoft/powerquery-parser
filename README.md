@@ -59,7 +59,11 @@ This project uses [prettier](https://github.com/prettier/prettier) as the primar
 
 - Install NodeJS
 - `npm install`
-- `npm test`
+- `npm test` runs the library test suite
+- `npm run test:resources` runs the resource test suite
+
+Tests use Mocha's built-in Spec and XUnit reporters through `mochaReporter.js` to produce readable
+console output and `test-results.xml` for CI.
 
 ## Contributing
 
