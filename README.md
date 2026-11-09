@@ -1,69 +1,27 @@
 # powerquery-parser
 
-[![Build Status](https://dev.azure.com/ms/powerquery-parser/_apis/build/status/microsoft.powerquery-parser?branchName=master)](https://dev.azure.com/ms/powerquery-parser/_build/latest?definitionId=134&branchName=master)
-
 A parser for the [Power Query/M](https://docs.microsoft.com/en-us/power-query/) language, written in TypeScript. Designed to be consumed by other projects.
 
-## How to use
+## Development has moved
 
-The most common way to consume the project is to interact with the helper functions found in [taskUtils.ts](src/powerquery-parser/task/taskUtils.ts). There are all-in-one functions, such as `tryLexParse`, which does a full pass on a given document. There are also separate lexing and parsing steps, `tryLex` and `tryParse`. Minimal code samples can be found in [example.ts](src/example.ts).
+**Active development has moved to the [microsoft/powerquery-language-services monorepo](https://github.com/microsoft/powerquery-language-services).**
 
-### Lexing
+See the **[parser package README](https://github.com/microsoft/powerquery-language-services/blob/master/packages/powerquery-parser/README.md)** for current installation, usage, build, and test instructions.
+The npm package name remains `@microsoft/powerquery-parser`; the repository move does not deprecate or remove the package.
 
-`Lexer.tryLex(settings, text)` lexes the complete document and returns `Result<LexerSnapshot, LexError.TLexError>`. It stops at the first lexical error, including unterminated text, quoted identifiers, and multiline comments. Errors contain one localized diagnostic, not a map of line errors. Diagnostic positions include the absolute UTF-16 offset, zero-based line offset, and grapheme column.
+Use the [parser source](https://github.com/microsoft/powerquery-language-services/tree/master/packages/powerquery-parser)
+in the monorepo for ongoing development, and file new bugs and feature requests in its
+[issue tracker](https://github.com/microsoft/powerquery-language-services/issues).
+See the [monorepo contribution guidance](https://github.com/microsoft/powerquery-language-services/blob/master/README.md#contributing) before contributing.
 
-The lexer retains its function-based token readers. Tokens and comments are emitted directly; line information is used only for source positions and type directives. `TaskUtils.tryLex` and `TaskUtils.tryLexParse` use the same lexer, and parser inputs remain `LexerSnapshot` values.
+## Reference documentation
 
-**Breaking change:** the incremental APIs (`tryAppendLine`, `tryUpdateLine`, `tryUpdateRange`, `tryDeleteLine`), editable `State`/line/range types, line-token kinds, line-error maps and predicates, and `trySnapshot` are removed. Apply edits to the document text and call `Lexer.tryLex` again. There is no intermediate line state or separate snapshot-validation step.
+The [Power Query M language specification](https://docs.microsoft.com/en-us/powerquery-m/power-query-m-language-specification)
+defines the language. Current parser-specific [specification notes](https://github.com/microsoft/powerquery-language-services/blob/master/packages/powerquery-parser/specification.md)
+and [style requirements](https://github.com/microsoft/powerquery-language-services/blob/master/packages/powerquery-parser/style.md) are maintained with the parser package.
+The versions in this repository remain available for historical reference: [specification.md](specification.md) and [style.md](style.md).
 
-Snapshots derive directive associations from their comments; the constructor no longer accepts a separate directive map. Grapheme-position queries index and cache the token's starting line, including for multiline tokens.
-
-```typescript
-import { DefaultSettings, Lexer, ResultUtils } from "@microsoft/powerquery-parser";
-
-const updatedDocumentText = "let x = 2 in x";
-const result = Lexer.tryLex(DefaultSettings, updatedDocumentText);
-if (ResultUtils.isOk(result)) {
-    console.log(result.value.tokens, result.value.comments);
-} else {
-    console.error(result.error.message);
-}
-```
-
-Cancellation still returns a `CommonError` wrapping `CancellationError`; polling occurs at entry and during scanning, rather than at incremental update or snapshot stages.
-
-## Related projects
-
-- [powerquery-formatter](https://github.com/microsoft/powerquery-formatter): A code formatter for Power Query which is bundled in the VSCode extension.
-- [powerquery-language-services](https://github.com/microsoft/powerquery-language-services): A high level library that wraps the parser for external projects, such as the VSCode extension. Includes features such as Intellisense.
-- [vscode-powerquery](https://github.com/microsoft/vscode-powerquery): The VSCode extension for Power Query language support.
-- [vscode-powerquery-sdk](https://github.com/microsoft/vscode-powerquery-sdk): The VSCode extension for Power Query connector SDK.
-
-## Things to note
-
-### Parser
-
-The parser started off as a naive recursive descent parser with limited backtracking. It mostly followed the [official specification](https://docs.microsoft.com/en-us/powerquery-m/power-query-m-language-specification) released in October 2016. Deviations from the specification should be marked down in [specification.md](specification.md). A combinatorial parser has since been added which uses the naive parser as its base.
-
-### Style
-
-This project uses [prettier](https://github.com/prettier/prettier) as the primary source of style enforcement. Additional style requirements are located in [style.md](style.md).
-
-## How to build
-
-- Install NodeJS
-- `npm install`
-- `npm run-script build`
-
-## How to run tests
-
-- Install NodeJS
-- `npm install`
-- `npm test` runs the library test suite
-- `npm run test:resources` runs the resource test suite
-
-Tests use Mocha's built-in Spec and XUnit reporters through `mochaReporter.js` to produce readable
-console output and `test-results.xml` for CI.
+See [LICENSE](LICENSE) and [NOTICE.txt](NOTICE.txt) for this repository's license and third-party notices.
 
 ## Contributing
 
