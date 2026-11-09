@@ -268,6 +268,8 @@ function tokenize(
 
         if (chr2 === '"') {
             token = readQuotedToken(text, lineNumber, positionStart, locale);
+        } else if (chr2 === "!" && text[positionStart + 2] === '"') {
+            token = readVerbatimLiteral(text, lineNumber, positionStart, locale);
         } else {
             token = readKeyword(text, lineNumber, positionStart, locale);
         }
@@ -311,6 +313,20 @@ function readQuotedToken(text: string, lineNumber: number, positionStart: number
             isQuotedIdentifier
                 ? LexError.UnterminatedMultilineTokenKind.QuotedIdentifier
                 : LexError.UnterminatedMultilineTokenKind.Text,
+        );
+    }
+}
+
+function readVerbatimLiteral(text: string, lineNumber: number, positionStart: number, locale: string): ReadToken {
+    const positionEnd: number | undefined = indexOfTextEnd(text, positionStart + 3);
+
+    if (positionEnd !== undefined) {
+        return readTokenFrom(Token.TokenKind.VerbatimLiteral, text, positionStart, positionEnd + 1);
+    } else {
+        throw new LexError.UnterminatedMultilineTokenError(
+            locale,
+            graphemePositionFrom(text, lineNumber, positionStart),
+            LexError.UnterminatedMultilineTokenKind.Text,
         );
     }
 }

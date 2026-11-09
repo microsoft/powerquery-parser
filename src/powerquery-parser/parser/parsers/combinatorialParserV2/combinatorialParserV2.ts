@@ -241,6 +241,7 @@ async function readUnaryExpression(
         case Token.TokenKind.NumericLiteral:
         case Token.TokenKind.NullLiteral:
         case Token.TokenKind.TextLiteral:
+        case Token.TokenKind.VerbatimLiteral:
             trace.exit();
 
             return NaiveParseSteps.readLiteralExpression(state, parser, trace.id);

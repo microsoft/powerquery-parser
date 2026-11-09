@@ -64,6 +64,7 @@ export enum TokenKind {
     RightParenthesis = "RightParenthesis",
     Semicolon = "Semicolon",
     TextLiteral = "TextLiteral",
+    VerbatimLiteral = "VerbatimLiteral",
 }
 
 export interface IToken<Kind, Position> {

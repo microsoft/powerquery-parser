@@ -255,6 +255,7 @@ export function isOnGeneralizedIdentifierStart(state: ParseState, tokenIndex: nu
         case Token.TokenKind.RightParenthesis:
         case Token.TokenKind.Semicolon:
         case Token.TokenKind.TextLiteral:
+        case Token.TokenKind.VerbatimLiteral:
             return false;
 
         default:

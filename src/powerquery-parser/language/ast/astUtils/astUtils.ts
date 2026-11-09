@@ -121,7 +121,13 @@ export function isTUnaryExpression(node: Ast.TNode): node is Ast.TUnaryExpressio
 
 export function literalKindFrom(
     tokenKind: TokenKind | undefined,
-): Ast.LiteralKind.Numeric | Ast.LiteralKind.Logical | Ast.LiteralKind.Null | Ast.LiteralKind.Text | undefined {
+):
+    | Ast.LiteralKind.Numeric
+    | Ast.LiteralKind.Logical
+    | Ast.LiteralKind.Null
+    | Ast.LiteralKind.Text
+    | Ast.LiteralKind.Verbatim
+    | undefined {
     switch (tokenKind) {
         case TokenKind.HexLiteral:
         case TokenKind.KeywordHashNan:
@@ -138,6 +144,9 @@ export function literalKindFrom(
 
         case TokenKind.TextLiteral:
             return Ast.LiteralKind.Text;
+
+        case TokenKind.VerbatimLiteral:
+            return Ast.LiteralKind.Verbatim;
 
         case TokenKind.Ampersand:
         case TokenKind.Asterisk:

@@ -180,6 +180,7 @@ export function localizeTokenKind(localizationTemplates: ILocalizationTemplates,
         case Token.TokenKind.Semicolon:
             return localizationTemplates.tokenKind_semicolon;
         case Token.TokenKind.TextLiteral:
+        case Token.TokenKind.VerbatimLiteral:
             return localizationTemplates.tokenKind_textLiteral;
 
         default:

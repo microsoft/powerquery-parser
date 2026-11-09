@@ -228,6 +228,22 @@ type
 
         assertGetSnapshotAbridgedTokens(text, expected, true);
     });
+
+    it(`VerbatimLiteral`, () => {
+        const text: string = `
+#!""
+#!"a"
+#!"a""b"
+`;
+
+        const expected: ReadonlyArray<[Language.Token.TokenKind, string]> = [
+            [Language.Token.TokenKind.VerbatimLiteral, `#!""`],
+            [Language.Token.TokenKind.VerbatimLiteral, `#!"a"`],
+            [Language.Token.TokenKind.VerbatimLiteral, `#!"a""b"`],
+        ];
+
+        assertGetSnapshotAbridgedTokens(text, expected, true);
+    });
 });
 
 describe(`Lexer.Simple.Whitespace`, () => {
