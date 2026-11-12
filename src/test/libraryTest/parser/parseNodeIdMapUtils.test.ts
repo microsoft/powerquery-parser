@@ -309,6 +309,275 @@ describe(`nodeIdMapUtils`, () => {
         });
     });
 
+    describe("invokeExpressionIdentifierLiteral", () => {
+        for (const [name, parser] of [
+            ["combinatorial", Parser.CombinatorialParserV2],
+            ["recursive descent", Parser.RecursiveDescentParser],
+        ] as const) {
+            describe(name, () => {
+                for (const [text, expected, incomplete] of [
+                    ["Foo(1)", ["Foo"], false],
+                    ["@Foo(1)", ["@Foo"], false],
+                    ['#"Foo name"(1)', ['#"Foo name"'], false],
+                    ["Foo(1, ", ["Foo"], true],
+                    ["Section1!Foo(1)", ["Section1!Foo"], false],
+                    ["Section1!Foo(1, ", ["Section1!Foo"], true],
+                    ['#"Section one"!#"Foo name"(1)', ['#"Section one"!#"Foo name"'], false],
+                    ['#"Section one"!#"Foo name"(1, ', ['#"Section one"!#"Foo name"'], true],
+                    ['#"Section ""one"""!#"Foo ""name"""()', ['#"Section ""one"""!#"Foo ""name"""'], false],
+                    ["Section.One!Foo.Bar()", ["Section.One!Foo.Bar"], false],
+                    ["Section1 /* section */ ! // member\n Foo()", ["Section1!Foo"], false],
+                    ["S!Outer(T!Inner())", ["S!Outer", "T!Inner"], false],
+                    ["S!Outer(T!Inner(1, ", ["S!Outer", "T!Inner"], true],
+                    ["S!Outer(T!", ["S!Outer"], true],
+                    ['#"S!one"!#"F!two"()', ['#"S!one"!#"F!two"'], false],
+                    ['#""!#""()', ['#""!#""'], false],
+                    ["\u0394!\u{10400}()", ["\u0394!\u{10400}"], false],
+                    ["#date(2026, 10, 15)", ["#date"], false],
+                    ["Foo()()", ["Foo", undefined], false],
+                    ["Section1!Foo()()", ["Section1!Foo", undefined], false],
+                    ["Section1!Foo()(1, ", ["Section1!Foo", undefined], true],
+                    ["Section1!Foo[Bar]()", [undefined], false],
+                    ["Section1!Foo{0}()", [undefined], false],
+                    ["(Section1!Foo)()", [undefined], false],
+                    ["(Foo)()", [undefined], false],
+                ] as const) {
+                    it(text, async () => {
+                        const settings: typeof DefaultSettings = { ...DefaultSettings, parser };
+
+                        const parsed: Task.ParseTaskOk | Task.ParseTaskParseError = incomplete
+                            ? await AssertTestUtils.assertGetLexParseError(settings, text)
+                            : await AssertTestUtils.assertGetLexParseOk(settings, text);
+
+                        const collection: NodeIdMap.Collection = parsed.nodeIdMapCollection;
+
+                        const invocationIds: number[] = [
+                            ...MapUtils.assertGet(collection.idsByNodeKind, Ast.NodeKind.InvokeExpression),
+                        ].sort((left: number, right: number) => left - right);
+
+                        expect(
+                            invocationIds.map((id: number) =>
+                                NodeIdMapUtils.invokeExpressionIdentifierLiteral(collection, id),
+                            ),
+                        ).to.deep.equal(expected);
+
+                        invocationIds.forEach((id: number, index: number) => {
+                            const reference:
+                                | XorNode<Ast.IdentifierExpression | Ast.SectionAccessExpression>
+                                | undefined = NodeIdMapUtils.invokeExpressionReference(collection, id);
+
+                            if (expected[index] === undefined) {
+                                expect(reference).to.equal(undefined);
+                            } else {
+                                Assert.isDefined(reference);
+                                XorNodeUtils.assertIsAst(reference);
+                                expect(reference.node).to.equal(collection.astNodeById.get(reference.node.id));
+                            }
+                        });
+                    });
+                }
+
+                it("keeps the identifier-node selector restricted to identifier expressions", async () => {
+                    const parsed: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(
+                        { ...DefaultSettings, parser },
+                        "Section1!Foo(1)",
+                    );
+
+                    const collection: NodeIdMap.Collection = parsed.nodeIdMapCollection;
+
+                    const id: number = Assert.asDefined(
+                        MapUtils.assertGet(collection.idsByNodeKind, Ast.NodeKind.InvokeExpression).values().next()
+                            .value,
+                    );
+
+                    expect(NodeIdMapUtils.invokeExpressionIdentifier(collection, id)).to.equal(undefined);
+
+                    expect(NodeIdMapUtils.invokeExpressionReference(collection, id)?.node.kind).to.equal(
+                        Ast.NodeKind.SectionAccessExpression,
+                    );
+
+                    expect(() => NodeIdMapUtils.invokeExpressionReference(collection, parsed.ast.id)).to.throw();
+                    expect(() => NodeIdMapUtils.invokeExpressionReference(collection, -1)).to.throw();
+
+                    expect(() =>
+                        NodeIdMapUtils.invokeExpressionIdentifierLiteral(collection, parsed.ast.id),
+                    ).to.throw();
+                });
+
+                for (const [text, headKind] of [
+                    ["Foo(1)", Ast.NodeKind.IdentifierExpression],
+                    ["Section1!Foo(1)", Ast.NodeKind.SectionAccessExpression],
+                ] as const) {
+                    it(`handles an unfinished ${headKind} head`, async () => {
+                        const parsed: Task.ParseTaskOk = await AssertTestUtils.assertGetLexParseOk(
+                            { ...DefaultSettings, parser },
+                            text,
+                        );
+
+                        const collection: NodeIdMap.Collection = parsed.nodeIdMapCollection;
+
+                        const headId: number = Assert.asDefined(
+                            MapUtils.assertGet(collection.idsByNodeKind, headKind).values().next().value,
+                        );
+
+                        const head: Ast.TNode = NodeIdMapUtils.assertAst(collection, headId);
+
+                        const invocationId: number = Assert.asDefined(
+                            MapUtils.assertGet(collection.idsByNodeKind, Ast.NodeKind.InvokeExpression).values().next()
+                                .value,
+                        );
+
+                        collection.astNodeById.delete(headId);
+
+                        collection.contextNodeById.set(headId, {
+                            id: headId,
+                            kind: headKind,
+                            tokenIndexStart: head.tokenRange.tokenIndexStart,
+                            tokenStart: undefined,
+                            attributeCounter: 0,
+                            attributeIndex: head.attributeIndex,
+                            isClosed: false,
+                        });
+
+                        const reference: XorNode<Ast.IdentifierExpression | Ast.SectionAccessExpression> =
+                            Assert.asDefined(NodeIdMapUtils.invokeExpressionReference(collection, invocationId));
+
+                        expect(XorNodeUtils.isContext(reference)).to.equal(true);
+                        expect(reference.node).to.equal(collection.contextNodeById.get(headId));
+
+                        if (headKind === Ast.NodeKind.IdentifierExpression) {
+                            expect(() => NodeIdMapUtils.invokeExpressionIdentifier(collection, invocationId)).to.throw(
+                                "should've finished parsing",
+                            );
+
+                            expect(() =>
+                                NodeIdMapUtils.invokeExpressionIdentifierLiteral(collection, invocationId),
+                            ).to.throw("should've finished parsing");
+                        } else {
+                            expect(NodeIdMapUtils.invokeExpressionIdentifier(collection, invocationId)).to.equal(
+                                undefined,
+                            );
+
+                            expect(NodeIdMapUtils.invokeExpressionIdentifierLiteral(collection, invocationId)).to.equal(
+                                undefined,
+                            );
+                        }
+                    });
+                }
+            });
+        }
+    });
+
+    describe("sectionAccessExpressionComponents", () => {
+        for (const [name, parser] of [
+            ["combinatorial", Parser.CombinatorialParserV2],
+            ["recursive descent", Parser.RecursiveDescentParser],
+        ] as const) {
+            describe(name, () => {
+                for (const [text, sectionLiteral, memberLiteral] of [
+                    ["S!F", "S", "F"],
+                    ['#"Section one"!#"Member name"', '#"Section one"', '#"Member name"'],
+                    ['#"S!one"!#"F!two"', '#"S!one"', '#"F!two"'],
+                    ['#"S ""one"""!#"F ""two"""', '#"S ""one"""', '#"F ""two"""'],
+                    ['#""!#""', '#""', '#""'],
+                    ["\u0394!\u{10400}", "\u0394", "\u{10400}"],
+                    ["S /* comment */ ! // member\n F", "S", "F"],
+                    ["S!", "S", undefined],
+                    ['#"Section one"! /* member */', '#"Section one"', undefined],
+                    ["S!123", "S", undefined],
+                ] as const) {
+                    it(text, async () => {
+                        const settings: typeof DefaultSettings = { ...DefaultSettings, parser };
+
+                        const parsed: Task.ParseTaskOk | Task.ParseTaskParseError =
+                            memberLiteral === undefined
+                                ? await AssertTestUtils.assertGetLexParseError(settings, text)
+                                : await AssertTestUtils.assertGetLexParseOk(settings, text);
+
+                        const collection: NodeIdMap.Collection = parsed.nodeIdMapCollection;
+
+                        const id: number = Assert.asDefined(
+                            MapUtils.assertGet(collection.idsByNodeKind, Ast.NodeKind.SectionAccessExpression)
+                                .values()
+                                .next().value,
+                        );
+
+                        const components: NodeIdMapUtils.SectionAccessExpressionComponents =
+                            NodeIdMapUtils.sectionAccessExpressionComponents(collection, id);
+
+                        const section: XorNode<Ast.Identifier> = Assert.asDefined(components.sectionName);
+                        XorNodeUtils.assertIsAst(section);
+                        expect(section.node.literal).to.equal(sectionLiteral);
+                        expect(section.node).to.equal(collection.astNodeById.get(section.node.id));
+                        expect(section.node.tokenRange.positionStart.codeUnit).to.equal(text.indexOf(sectionLiteral));
+
+                        expect(section.node.tokenRange.positionEnd.codeUnit).to.equal(
+                            text.indexOf(sectionLiteral) + sectionLiteral.length,
+                        );
+
+                        const member: XorNode<Ast.Identifier> = Assert.asDefined(components.memberName);
+
+                        if (memberLiteral === undefined) {
+                            expect(XorNodeUtils.isContext(member)).to.equal(true);
+                            expect(member.node).to.equal(collection.contextNodeById.get(member.node.id));
+                        } else {
+                            XorNodeUtils.assertIsAst(member);
+                            expect(member.node.literal).to.equal(memberLiteral);
+                            expect(member.node).to.equal(collection.astNodeById.get(member.node.id));
+
+                            expect(member.node.tokenRange.positionStart.codeUnit).to.equal(
+                                text.lastIndexOf(memberLiteral),
+                            );
+
+                            expect(member.node.tokenRange.positionEnd.codeUnit).to.equal(
+                                text.lastIndexOf(memberLiteral) + memberLiteral.length,
+                            );
+                        }
+
+                        expect(() =>
+                            NodeIdMapUtils.sectionAccessExpressionComponents(collection, section.node.id),
+                        ).to.throw();
+                    });
+                }
+            });
+        }
+
+        it("distinguishes unstarted children from unfinished identifiers", () => {
+            const state: Parser.ParseContext.State = Parser.ParseContextUtils.newState();
+
+            const sectionAccess: Parser.ParseContext.Node<Ast.SectionAccessExpression> =
+                Parser.ParseContextUtils.startContext<Ast.SectionAccessExpression>(
+                    state,
+                    Ast.NodeKind.SectionAccessExpression,
+                    0,
+                    undefined,
+                    undefined,
+                );
+
+            expect(
+                NodeIdMapUtils.sectionAccessExpressionComponents(state.nodeIdMapCollection, sectionAccess.id),
+            ).to.deep.equal({ sectionName: undefined, memberName: undefined });
+
+            const identifier: Parser.ParseContext.Node<Ast.Identifier> =
+                Parser.ParseContextUtils.startContext<Ast.Identifier>(
+                    state,
+                    Ast.NodeKind.Identifier,
+                    0,
+                    undefined,
+                    sectionAccess,
+                );
+
+            const components: NodeIdMapUtils.SectionAccessExpressionComponents =
+                NodeIdMapUtils.sectionAccessExpressionComponents(state.nodeIdMapCollection, sectionAccess.id);
+
+            const section: XorNode<Ast.Identifier> = Assert.asDefined(components.sectionName);
+            expect(XorNodeUtils.isContext(section)).to.equal(true);
+            expect(section.node).to.equal(identifier);
+            expect(components.memberName).to.equal(undefined);
+            expect(() => NodeIdMapUtils.sectionAccessExpressionComponents(state.nodeIdMapCollection, -1)).to.throw();
+        });
+    });
+
     describe("wrappedContentXor", () => {
         it("Ast", async () => {
             const text: string = `[a = 1]`;
